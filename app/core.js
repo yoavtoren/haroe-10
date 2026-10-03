@@ -12,24 +12,24 @@ const A=window.APP={};
    90 cm wardrobe.
    ===================================================================== */
 const D=A.D={
-  W:4.4,    // living room width, sofa wall -> TV wall      (±0.2)
+  W:3.5,    // living room width, sofa wall -> TV wall      (±0.25, see README)
   L:6.2,    // living room length, bedroom wall -> entrance (±0.4)
   H:2.93,   // ceiling                                       (±0.08)
-  T:0.8,    // floor tile                                     (assumed 80 x 80)
-  KX:7.0,   // kitchen window wall, i.e. W + 2.6              (±0.2)
+  T:0.6,    // floor tile                                     (assumed 60 x 60)
+  KX:6.1,   // kitchen window wall, i.e. W + 2.6              (±0.2)
   KZ:2.8,   // kitchen sink wall                              (±0.2)
-  door1:[0.75,1.55],   // bedroom 1 opening on the far wall   (±0.08)
-  door2:[3.42,4.22],   // bedroom 2 opening on the far wall   (±0.10)
-  painting:[1.90,3.15,1.36,2.31], // x0,x1,y0,y1 of the bus canvas
-  entrance:[2.00,2.90],// entrance door opening on the end wall
+  door1:[0.50,1.28],   // bedroom 1 opening on the far wall   (±0.10)
+  door2:[2.66,3.44],   // bedroom 2 opening on the far wall   (±0.10)
+  painting:[1.47,2.57,1.40,2.22], // x0,x1,y0,y1 of the bus canvas
+  entrance:[1.30,2.20],// entrance door opening on the end wall, right next to the sofa corner
   wcDoor:[5.2,6.0],    // toilet door opening on the TV wall (z)
   bedDepth:4.0,        // both bedrooms, door wall -> window wall (guess)
   bedSplit:2.55        // wall between the two bedrooms (guess, behind the painting)
 };
 const W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ;
 const AZ=A.AZ=-D.bedDepth, SPLIT=A.SPLIT=D.bedSplit;
-const BA=A.BA={x0:W,x1:6.9,z0:L-3.1,z1:L-1.15};   // bathroom with the shower, behind the TV wall
-const WC=A.WC={x0:W,x1:6.1,z0:L-1.05,z1:L};       // toilet room, behind the TV wall at the entrance corner
+const BA=A.BA={x0:W,x1:W+2.5,z0:L-3.1,z1:L-1.15};   // bathroom with the shower, behind the TV wall
+const WC=A.WC={x0:W,x1:W+1.7,z0:L-1.05,z1:L};       // toilet room, behind the TV wall at the entrance corner
 
 const stage=A.stage=document.getElementById('stage'), labelsEl=A.labelsEl=document.getElementById('labels');
 const renderer=A.renderer=new THREE.WebGLRenderer({antialias:true});
@@ -40,7 +40,7 @@ stage.insertBefore(renderer.domElement, labelsEl);
 const scene=A.scene=new THREE.Scene();
 const camera=A.camera=new THREE.PerspectiveCamera(40,1,0.1,100);
 const controls=A.controls=new THREE.OrbitControls(camera,renderer.domElement);
-const home=A.home=new THREE.Vector3(3.2,0.6,1.6);
+const home=A.home=new THREE.Vector3(2.8,0.6,1.6);
 controls.target.copy(home); controls.enableDamping=true; controls.dampingFactor=.08;
 controls.maxPolarAngle=Math.PI/2-0.04; controls.minDistance=1.6; controls.maxDistance=50;
 

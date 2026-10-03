@@ -4,10 +4,12 @@
 const A=window.APP, D=A.D, K=A.kit, W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ;
 const box=A.box, cyl=A.cyl, sph=A.sph, M=A.M, G=A.G, scene=A.scene, canvasTex=A.canvasTex;
 const R=Math.PI, OAK=0xc99a5b, INK=0x22262a, SAGE=A.SAGE, MUSTARD=0xd6a21e, TERRA=0xc4673f, CREAM=0xf3ebdc;
-const pc=(D.painting[0]+D.painting[1])/2, DC=2.485;      // painting centre; centre of the wall between the two bedroom doors
+const pc=(D.painting[0]+D.painting[1])/2, DC=(D.door1[1]+D.door2[0])/2, EX=(D.entrance[0]+D.entrance[1])/2;      // painting centre; centre of the wall between the two bedroom doors
 const $=function(id){return document.getElementById(id);};
 
 const P=A.pieces={};
+const SOFA={a:3.8,b:3.56,c:4.3};                       // where the sofa is centred in each option; the lights follow it
+
 function piece(id,opt,build){const g=G(); P[id]=Object.assign({id:id,g:g,cur:[0,0,0,0],to:[0,0,0,0],h:1},opt||{}); build(g); return P[id];}
 /* stretch a unit bar (built 1 long on x) between two points in the xy plane */
 function barXY(m,x0,y0,x1,y1){m.position.x=(x0+x1)/2; m.position.y=(y0+y1)/2; m.rotation.z=Math.atan2(y1-y0,x1-x0); m.scale.x=Math.hypot(x1-x0,y1-y0);}
@@ -121,18 +123,11 @@ function sideChairs(prefix,n,frame,seatCol){for(let i=1;i<=n;i++)
   piece(prefix+i,{seats:chairSeat(prefix+i,'Table chair '+i),isNew:true},function(g){K.chair(g,frame,seatCol);});}
 sideChairs('fc',2,OAK,SAGE);
 
-/* ---------- option C: drop-leaf table. A 26 cm console against the wall, opens to 85 x 150 for four ---------- */
-piece('gate',{label:'Drop-leaf table',h:1.15,isNew:true},function(g){
-  box(0.85,0.03,0.26,OAK,0,0.745,0,g); box(0.7,0.5,0.2,0xf7f5ef,0,0.47,0,g);
-  [-0.2,0.05].forEach(function(y){box(0.66,0.004,0.004,0xcfc8b8,0,0.47+y,0.101,g); box(0.66,0.004,0.004,0xcfc8b8,0,0.47+y,-0.101,g);});
-  [[-.33,-.08],[.33,-.08],[-.33,.08],[.33,.08]].forEach(function(p){box(0.04,0.72,0.04,OAK,p[0],0.36,p[1],g);});
-  const leaves=[1,-1].map(function(s){const lg=G(g); lg.position.set(0,0.745,s*0.13); box(0.85,0.026,0.62,OAK,0,0,s*0.31,lg); return {g:lg,s:s};});
-  const legs=[1,-1].map(function(s){const m=box(0.04,0.72,0.04,OAK,0,0.36,s*0.68,g); return m;});
-  const stuff=G(g); cyl(0.06,0.2,0x26386b,0.2,0.86,0,stuff,14,0.035); sph(0.07,0x3f9160,0.2,1.0,0,stuff); K.bookStack(stuff,-0.2,0.76,0,3,3);
-  tableFns.push(function(t){
-    leaves.forEach(function(l){l.g.rotation.x=l.s*(1-t)*R/2;});
-    legs.forEach(function(m){m.visible=t>0.05; m.scale.y=Math.max(0.01,t); m.position.y=0.73-0.36*t;});
-  });
+/* ---------- option C: a real dining table for four in the middle of the top zone ---------- */
+piece('dtable',{label:'Dining table for four',h:1.15,isNew:true},function(g){
+  box(0.85,0.04,1.4,OAK,0,0.74,0,g);
+  [[-.36,-.62],[.36,-.62],[-.36,.62],[.36,.62]].forEach(function(p){box(0.05,0.72,0.05,INK,p[0],0.36,p[1],g);});
+  box(0.3,0.006,1.1,0xf3ebdc,0,0.763,0,g); cyl(0.06,0.2,0x26386b,0,0.866,0.1,g,14,0.035); sph(0.07,0x3f9160,0,1.0,0.1,g); K.candle(g,0,0.766,-0.25,0.1);
 });
 sideChairs('gc',4,0x22262a,TERRA);
 
@@ -155,28 +150,55 @@ piece('benchA',{label:'TV on a floating oak bench',h:1.75,isNew:true},function(g
   K.bookStack(g,0.02,0.55,-0.72,3,7); cyl(0.05,0.22,TERRA,0.02,0.66,0.74,g,14,0.03); K.bush(g,0.02,0.55,0.5,0.06);
   A.pool('L:living',0xffc47a,0.25,0.03,0,0.95,g,0.3);
 });
-piece('towerB',{label:'Oak cube shelf hides the fridge',h:1.95,isNew:true},function(g){
-  const k=K.kallax(g,['vb','b ','xp','bx'],OAK,{box:0xf3ebdc,vase:0x22262a});
-  K.pothos(g,0.02,k.h,-0.1,0.65,6); box(0.24,0.04,0.3,0x22262a,0.02,k.h+0.02,0.2,g);
-});
-const caneTex=canvasTex(64,64,function(g){g.fillStyle='#d8c39a'; g.fillRect(0,0,64,64); g.strokeStyle='#b39a6b'; g.lineWidth=2;
-  for(let i=-64;i<128;i+=8){g.beginPath(); g.moveTo(i,0); g.lineTo(i+64,64); g.stroke(); g.beginPath(); g.moveTo(i+64,0); g.lineTo(i,64); g.stroke();}});
-caneTex.wrapS=caneTex.wrapT=THREE.RepeatWrapping; caneTex.repeat.set(3,3);
-piece('sideB',{label:'TV on a cane sideboard',h:1.75,isNew:true},function(g){
-  box(0.42,0.46,1.7,OAK,0,0.43,0,g); box(0.44,0.03,1.74,OAK,0,0.675,0,g);
-  [[-.17,-.8],[.17,-.8],[-.17,.8],[.17,.8]].forEach(function(p){cyl(0.018,0.2,INK,p[0],0.1,p[1],g,8);});
-  [-0.555,0,0.555].forEach(function(z){const m=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.38),A.MT(caneTex,null,true)); m.position.set(0.2115,0.43,z); m.rotation.y=R/2; g.add(m); cyl(0.012,0.02,INK,0.222,0.56,z+0.2,g,8).rotation.z=R/2;});
-  K.tv(g,-0.05,1.13,0); box(0.2,0.08,0.5,0x101214,-0.05,0.73,0,g);
-  K.bush(g,0.03,0.69,-0.7,0.07); K.tableLamp(g,0.03,0.69,0.72,'L:living',0.9);
-});
-piece('mediaC',{label:'Media wall hides the fridge',h:1.95,isNew:true},function(g){
-  const o={box:TERRA,box2:0x26386b,vase:MUSTARD};
+piece('mediaC',{label:'Cube wall hides the fridge',h:1.95,isNew:true},function(g){
+  const o={box:SAGE,box2:0xd9c9a8,vase:MUSTARD};
   const t1=G(g); t1.position.z=1.112; K.kallax(t1,['pb','bx','yb','sb'],0xf7f5ef,Object.assign({seed:3},o));      // fridge side
   const t2=G(g); t2.position.z=-1.112; K.kallax(t2,['bl','vb','by','xb'],0xf7f5ef,Object.assign({seed:9},o));
   K.kallax(g,['xbsy'],0xf7f5ef,o);
   box(0.39,0.038,1.47,0xf7f5ef,0,1.446,0,g); K.books(g,0.02,1.465,-0.35,0.5,0.22,0.18,44); K.pothos(g,0.02,1.465,0.45,0.12,12);
   K.tv(g,-0.16,0.93,0);
   K.bush(g,0.03,0.41,-0.55,0.06); box(0.24,0.012,0.3,0x22262a,0.03,0.417,0.5,g);
+});
+
+/* ---------- what replaces the coffee corner ---------- */
+piece('ladder',{label:'Plant shelf',h:2.0,isNew:true},function(g){              // A: a green corner
+  [[-.15,-.39],[.15,-.39],[-.15,.39],[.15,.39]].forEach(function(p){box(0.025,1.8,0.025,INK,p[0],0.9,p[1],g);});
+  [0.3,0.75,1.2,1.65].forEach(function(y){box(0.34,0.025,0.8,OAK,0,y,0,g);});
+  K.books(g,0,0.3125,-0.12,0.45,0.24,0.2,61); K.bush(g,0,0.3125,0.25,0.08,TERRA);
+  K.bush(g,0,0.7625,-0.2,0.09); K.bookStack(g,0,0.7625,0.2,4,8);
+  K.tableLamp(g,0,1.2125,0.22,'L:living',0.9); cyl(0.05,0.2,MUSTARD,0,1.3125,-0.2,g,14,0.03);
+  K.pothos(g,0,1.6625,-0.15,0.6,14); K.bush(g,0,1.6625,0.24,0.07);
+});
+piece('music',{label:'Record corner',h:1.2,isNew:true},function(g){              // B: music instead of coffee
+  box(0.42,0.38,1.3,OAK,0,0.45,0,g); [-0.2,0.2].forEach(function(z){box(0.004,0.34,0.004,0x8a6a3c,0.211,0.45,z,g);});
+  [[-.17,-.6],[.17,-.6],[-.17,.6],[.17,.6]].forEach(function(p){cyl(0.016,0.26,INK,p[0],0.13,p[1],g,8);});
+  box(0.34,0.06,0.42,INK,0,0.67,-0.38,g); cyl(0.15,0.012,0x111214,0,0.706,-0.38,g,28); cyl(0.045,0.014,TERRA,0,0.708,-0.38,g,16);
+  K.books(g,0.0,0.64,0.02,0.22,0.31,0.3,55);
+  box(0.2,0.3,0.2,0x2b2b2b,-0.06,0.79,0.5,g); cyl(0.06,0.004,0x55585c,0.042,0.8,0.5,g,14).rotation.z=R/2;
+  K.tableLamp(g,-0.04,0.64,0.25,'L:living',0.9);
+});
+piece('cbar',{label:'Coffee bar',h:1.45,isNew:true},function(g){                  // C: the coffee moves under the painting
+  box(0.4,0.75,1.2,OAK,0,0.475,0,g); box(0.42,0.025,1.24,OAK,0,0.862,0,g);
+  [-0.2,0.2].forEach(function(z){box(0.004,0.7,0.004,0x8a6a3c,0.201,0.475,z,g);});
+  [[-.16,-.55],[.16,-.55],[-.16,.55],[.16,.55]].forEach(function(p){box(0.04,0.1,0.04,INK,p[0],0.05,p[1],g);});
+  box(0.3,0.36,0.26,0xc9ccd0,-0.02,1.055,0.28,g); box(0.16,0.4,0.14,0x2b2b2b,-0.04,1.075,-0.02,g);
+  box(0.24,0.015,0.34,INK,0.0,0.882,-0.36,g); [-0.44,-0.36,-0.28].forEach(function(z){cyl(0.032,0.07,0xf3ebdc,0.02,0.925,z,g,12);});
+});
+piece('bench',{label:'Bench',h:0.9,isNew:true,seats:[{id:'benchA',label:'Bench, left',lx:0.02,lz:-0.4,y:0.5,type:'sit'},{id:'benchB',label:'Bench, right',lx:0.02,lz:0.4,y:0.5,type:'sit'}]},function(g){
+  box(0.42,0.06,1.6,OAK,0,0.41,0,g); [[-.17,-.74],[.17,-.74],[-.17,.74],[.17,.74]].forEach(function(p){box(0.04,0.38,0.04,INK,p[0],0.19,p[1],g);});
+  box(0.4,0.06,0.76,SAGE,0,0.47,-0.4,g); box(0.4,0.06,0.76,SAGE,0,0.47,0.4,g);
+  box(0.32,0.24,0.4,0xd9c9a8,0,0.13,-0.4,g); box(0.32,0.24,0.4,0xd9c9a8,0,0.13,0.4,g);
+  K.cushion(g,MUSTARD,-0.14,0.66,-0.6,0.9,0.2); K.cushion(g,TERRA,-0.14,0.66,0.62,0.9,0.2);
+});
+A.inRoom('kitchen',function(){
+  piece('cart',{label:'Coffee cart',h:1.4,isNew:true},function(g){                // B: the coffee rolls into the kitchen
+    [0.34,0.85].forEach(function(y){box(0.38,0.02,0.6,OAK,0,y,0,g);});
+    [[-.17,-.28],[.17,-.28],[-.17,.28],[.17,.28]].forEach(function(p){box(0.02,0.83,0.02,INK,p[0],0.455,p[1],g); cyl(0.025,0.02,INK,p[0],0.025,p[1],g,10).rotation.x=R/2;});
+    box(0.28,0.34,0.24,0xc9ccd0,-0.02,1.03,0.14,g); box(0.14,0.36,0.13,0x2b2b2b,-0.04,1.04,-0.16,g);
+    [-0.15,0,0.15].forEach(function(z){cyl(0.035,0.08,0xf3ebdc,0,0.39,z,g,12);});
+  });
+  const ka=G(null,'a'), cx=KX-1.8;                                                // A: the coffee sits on the kitchen counter, by the fridge
+  box(0.26,0.36,0.3,0xc9ccd0,cx+0.24,1.1,KZ-0.3,ka); box(0.14,0.4,0.16,0x2b2b2b,cx+0.5,1.12,KZ-0.3,ka);
 });
 
 /* ---------- plants and lamps that move between options ---------- */
@@ -192,52 +214,52 @@ function mattress(id,label,col){
     box(0.8,0.15,1.9,0xf3efe6,0,0.075,0,g); box(0.78,0.03,1.15,col,0,0.165,0.34,g); box(0.5,0.08,0.32,0xffffff,0,0.19,-0.72,g);
   });
 }
-mattress('mat1','Mattress by the table',0xe3b7a0); mattress('mat2','Mattress by the TV',0x9db7dd);
+mattress('mat1','Mattress by the sofa',0xe3b7a0); mattress('mat2','Mattress by the TV',0x9db7dd);
 
-/* ---------- fixed decoration for the redesign ---------- */
-const dn=G(null,'abc'), dbc=G(null,'bc');
-K.stringLights(dn,0,2.42,1.9,5.4,24);
-K.pendant(dn,1.95,2.5,3.65,'L:living','paper',null,1.9);
+/* ---------- fixed decoration for the proposals ---------- */
+const dn=G(null,'abc'), dab=G(null,'ab'), dc=G(null,'c'), db=G(null,'b');
+['a','b','c'].forEach(function(k){const g=G(null,k), z=SOFA[k];
+  K.stringLights(g,0,2.42,z-1.7,z+1.7,24); K.pendant(g,1.875,2.5,z,'L:living','paper',null,1.8);});
 box(0.5,0.025,0.05,A.lampMat('L:living',0xb08d4a,0xffe2b0,0.8),pc,2.4,0.07,dn); box(0.02,0.02,0.07,0xb08d4a,pc,2.4,0.035,dn);   // picture light
 A.pool('L:living',0xffd9a0,pc,1.85,0.03,0.95,dn,0.32,0);
-K.pendant(dbc,DC,1.78,0.55,'L:living','dome',MUSTARD,1.2);
-// entrance: round gold mirror, shelf, doormat, hooks
-A.torus(0.3,0.022,0xd9aa12,0.62,1.56,L-0.03,dn); const mir=cyl(0.29,0.008,0xcfdadd,0.62,1.56,L-0.012,dn,40); mir.rotation.x=R/2;
-box(0.6,0.03,0.2,OAK,0.62,0.95,L-0.1,dn); cyl(0.07,0.04,TERRA,0.48,0.985,L-0.1,dn,16,0.09); K.bush(dn,0.78,0.965,L-0.1,0.055);
-box(0.8,0.014,0.5,0x7a6a4a,2.45,0.007,5.9,dn).castShadow=false;
-box(0.02,0.07,0.7,OAK,0.012,1.72,5.7,dn); [5.45,5.7,5.95].forEach(function(z){cyl(0.012,0.07,INK,0.05,1.72,z,dn,8).rotation.z=R/2;});
-box(0.06,0.55,0.3,0x1f5a41,0.07,1.42,5.45,dn); box(0.05,0.3,0.26,0xd9c9a8,0.06,1.5,5.95,dn);
-box(0.4,0.22,0.36,0xd9c9a8,3.3,1.86,L-0.23,dn);                                  // basket on the wardrobe
+K.pendant(db,DC,1.78,0.55,'L:living','dome',MUSTARD,1.2);
+K.pendant(dc,DC,1.72,1.675,'L:living','dome',MUSTARD,1.4);
+// entrance: round gold mirror, doormat, hooks
+A.torus(0.26,0.022,0xd9aa12,0.62,1.62,L-0.03,dab); const mir=cyl(0.25,0.008,0xcfdadd,0.62,1.62,L-0.012,dab,40); mir.rotation.x=R/2;
+box(0.8,0.014,0.5,0x7a6a4a,EX,0.007,5.9,dn).castShadow=false;
+box(0.02,0.07,0.6,OAK,0.012,1.72,5.85,dab); [5.65,5.85,6.05].forEach(function(z){cyl(0.012,0.07,INK,0.05,1.72,z,dab,8).rotation.z=R/2;});
+box(0.06,0.55,0.3,0x1f5a41,0.07,1.42,5.68,dab);
+box(0.4,0.22,0.36,0xd9c9a8,2.6,1.86,L-0.23,dn);                                  // basket on the wardrobe
 });
-K.onlyAll(K.frame('left',2.72,1.78,0.62,0.82,0).concat(K.frame('left',3.65,1.78,0.62,0.82,1),K.frame('left',4.58,1.78,0.62,0.82,3)),'abc');
+['a','b','c'].forEach(function(k){const z=SOFA[k];
+  K.onlyAll(K.frame('left',z-0.93,1.78,0.62,0.82,0).concat(K.frame('left',z,1.78,0.62,0.82,1),K.frame('left',z+0.93,1.78,0.62,0.82,3)),k);});
+K.onlyAll(K.frame('left',0.62,1.5,0.5,0.62,6,0xc99a5b).concat(K.frame('left',1.32,1.5,0.5,0.62,5,0xc99a5b)),'c');
+K.onlyAll(K.frame('left',0.62,1.62,0.48,0.6,2).concat(K.frame('left',1.25,1.62,0.48,0.6,7)),'b');
 
 /* ---------- layouts: x, z, rotation. A piece that is not listed is hidden. ---------- */
-const sofaZ=3.65;
 const LAY={
-  n:{sofa:[0.60,sofaZ,0], table:[1.95,3.60,0], tvOld:[W-0.235,4.05,R], station:[0.30,0.72,0],
-     dining:[pc,0.48,0], chairA:[pc-0.95,0.50,0], chairB:[pc+0.95,0.50,R], rack1:[1.30,1.75,R/2], rack2:[2.90,1.55,0]},
-  a:{sofa:[0.60,sofaZ,0], station:[0.30,0.72,0], rugA:[1.90,sofaZ,0], lift:[1.95,sofaZ,0],
-     towerA:[W-0.195,2.44,R], benchA:[W-0.19,3.80,R], armA:[2.5,0.78,-R/2+0.3], poufA1:[2.75,2.95,0], poufA2:[2.75,4.35,0],
-     flamp:[3.1,0.3,0], arc:[0.32,5.62,0.91], monst:[0.36,1.66,0], fid:[4.12,4.93,0], snk:[1.7,5.95,0]},
-  b:{sofa:[0.60,sofaZ,0], station:[0.30,0.72,0], rugB:[1.90,sofaZ,0], nest:[1.95,sofaZ,0],
-     towerB:[W-0.195,2.44,R], sideB:[W-0.22,3.78,R], fold:[DC,0,0], fc1:[1.80,0.27,-R/2], fc2:[3.17,0.27,-R/2],
-     poufB1:[2.72,3.0,0], poufB2:[2.72,4.3,0], arc:[0.32,5.62,0.91], monst:[0.36,1.66,0], fid:[4.12,4.95,0], snk:[1.7,5.95,0]},
-  c:{sofa:[0.60,3.56,0], station:[0.30,0.72,0], rugC:[1.90,3.56,0], nest:[1.95,3.56,0],
-     mediaC:[W-0.195,3.555,R], gate:[DC,0.17,0], gc1:[1.80,0.27,-R/2], gc2:[3.17,0.27,-R/2],
-     poufC1:[2.72,2.95,0], poufC2:[2.72,4.2,0], arc:[0.32,5.62,0.91], monst:[0.36,1.66,0], snk:[1.7,5.95,0]}
+  n:{sofa:[0.60,4.3,0], table:[1.72,4.2,0], tvOld:[W-0.235,4.3,R], station:[0.30,0.72,0],
+     dining:[pc,0.48,0], chairA:[pc-0.95,0.50,0], chairB:[pc+0.95,0.50,R], rack1:[1.0,1.98,0], rack2:[2.45,1.5,0]},
+  a:{sofa:[0.60,3.8,0], rugA:[1.85,3.8,0], lift:[1.875,3.8,0], ladder:[0.2,0.62,0],
+     towerA:[W-0.195,2.44,R], benchA:[W-0.19,3.80,R], armA:[DC+0.05,0.75,-R/2+0.25], poufA1:[2.1,1.62,0], poufA2:[1.25,1.85,0],
+     flamp:[1.5,0.28,0], arc:[0.32,5.82,0.91], monst:[0.36,1.5,0], fid:[W-0.28,4.93,0]},
+  b:{sofa:[0.60,3.56,0], rugB:[1.85,3.56,0], nest:[1.9,3.56,0], music:[0.22,0.95,0], cart:[KX-0.24,1.8,R],
+     mediaC:[W-0.195,3.555,R], fold:[DC,0,0], poufB1:[1.7,1.85,0], poufB2:[2.3,1.85,0], arc:[0.32,5.6,0.91]},
+  c:{sofa:[0.60,4.3,0], rugC:[1.85,4.3,0], nest:[1.9,4.3,0], bench:[0.23,1.0,0], cbar:[DC,0.22,-R/2],
+     dtable:[DC,1.675,R/2], gc1:[DC-0.37,0.98,-R/2], gc2:[DC+0.37,0.98,-R/2], gc3:[DC-0.37,2.37,R/2], gc4:[DC+0.37,2.37,R/2],
+     towerA:[W-0.195,2.44,R], benchA:[W-0.19,4.08,R], monst:[0.36,2.2,0]}
 };
 const ALT={   // with the table set for a meal
-  a:{poufA1:[2.62,3.25,0], poufA2:[2.62,4.05,0]},
-  b:{fc1:[1.815,0.45,0], fc2:[3.155,0.45,R]},
-  c:{gate:[DC,0.93,0], gc1:[1.78,0.6,0], gc2:[3.19,0.6,R], gc3:[1.78,1.25,0], gc4:[3.19,1.25,R]}
+  a:{poufA1:[2.5,3.45,0], poufA2:[2.5,4.15,0]},
+  b:{fc1:[DC-0.52,0.5,0], fc2:[DC+0.52,0.5,R]}
 };
-const PJ={    // pajama party
-  n:{mat1:[2.72,3.9,0], mat2:[3.56,3.9,0], rack1:null, rack2:null},
-  a:{mat1:[2.72,3.9,0], mat2:[3.56,3.9,0], poufA1:[2.2,1.8,0], poufA2:[3.3,1.9,0]},
-  b:{mat1:[2.72,3.9,0], mat2:[3.56,3.9,0], poufB1:[2.2,1.8,0], poufB2:[3.3,1.9,0]},
-  c:{mat1:[2.72,3.9,0], mat2:[3.56,3.9,0], poufC1:[2.2,1.8,0], poufC2:[3.3,1.9,0]}
+const PJ={    // pajama party: the coffee table is put away and two mattresses go down in front of the TV
+  n:{mat1:[1.72,4.3,0], mat2:[2.6,4.3,0], table:null, rack1:null, rack2:null},
+  a:{mat1:[1.72,3.8,0], mat2:[2.6,3.8,0], lift:null},
+  b:{mat1:[1.72,3.56,0], mat2:[2.6,3.56,0], nest:null},
+  c:{mat1:[1.72,4.3,0], mat2:[2.6,4.3,0], nest:null}
 };
-const FOCUS=[1.95,3.65];
+const FOCUS={n:[1.9,4.3],a:[1.9,3.8],b:[1.9,3.56],c:[1.9,4.3]};
 
 /* ---------- copy ---------- */
 const DESIGNS=A.DESIGNS={
@@ -249,32 +271,31 @@ const DESIGNS=A.DESIGNS={
       ['Drying racks','Fill the floor between the sofa, the dining table and the kitchen.'],
       ['Kitchen','Charcoal cabinets, a full counter, things stored on top of the cabinet and the fridge.'],
       ['Bedrooms','Bedroom 1: desk and a single bed. Bedroom 2: bed, and a pine desk under the big window.']]},
-  a:{name:'A', title:'A · Lift-top lunch', sub:'Oak, mustard and sage. One table does both jobs, right in front of the sofa.', table:['Raise the table for lunch','Lower to coffee height'], pal:['#1F5A41','#8fbd9b','#D6A21E','#C99A5B','#F3EBDC'],
+  a:{name:'A', title:'A · Green corner', sub:'Oak, mustard and sage. The coffee corner becomes plants, and one table does coffee and lunch.', table:['Raise the table for lunch','Lower to coffee height'], pal:['#1F5A41','#8fbd9b','#D6A21E','#C99A5B','#F3EBDC'],
      list:[
+      ['Coffee corner','Gone. A slim plant shelf and the monstera take the corner. The espresso machine and grinder move to the kitchen counter, next to the fridge.'],
       ['Table','A 140 × 65 lift-top table. Coffee height most of the day. The top rises 34 cm and slides toward the sofa for lunch, and the two poufs pull up as extra seats.'],
-      ['TV wall','A white 2 × 4 cube shelf stands against the side of the fridge and hides it. Next to it, the TV hangs over a floating oak bench, nearly centred on the sofa.'],
-      ['Rug','Jute, 200 × 300. Tucked 30 cm under the sofa, ending 1.1 m short of the TV bench so the walkway stays open.'],
-      ['Seats','A mustard armchair under the bus painting, between the two bedroom doors, angled at the TV, with a floor lamp. Two sage poufs face the sofa. The kitchen-to-entrance path stays 1 m wide.'],
-      ['Light','Paper pendant over the table, arc lamp at the sofa, picture light on the painting, string lights on the sofa wall, candles.'],
-      ['Kitchen','Cabinets in a slightly deep pastel green. Counter and sink unchanged, everything cleared off the counter, the cabinet top and the fridge. Bin gone. Pendant, light strip, runner.'],
-      ['Bedroom 1','A study: second desk where the bed was, shelves above it, two desk lamps.'],
-      ['Bedroom 2','Reading nook where the desk was: green armchair, floor lamp, low bookcase, round rug.']]},
-  b:{name:'B', title:'B · Fold-away', sub:'Calm, light, more floor. The dining table disappears into the wall.', table:['Fold the table down','Fold the table away'], pal:['#1F5A41','#8fbd9b','#F3EBDC','#C99A5B','#22262a'],
+      ['TV wall','A white 2 × 4 cube shelf stands against the side of the fridge and hides it. Next to it, the TV hangs over a floating oak bench.'],
+      ['Seats','A mustard armchair under the bus painting, between the two bedroom doors, with a floor lamp and two sage poufs.'],
+      ['Rug','Jute, 200 × 300, tucked 35 cm under the sofa. 90 cm stays clear between the table and the TV bench.'],
+      ['Light','Paper pendant over the table, arc lamp at the sofa, picture light on the painting, string lights, candles.'],
+      ['Kitchen','Cabinets in a muted, slightly yellow sage. Counter and sink unchanged and cleared, bin gone. Pendant, light strip, runner.'],
+      ['Bedrooms','Bedroom 1 is a study with two desks. Bedroom 2 gets a reading nook where the desk was.']]},
+  b:{name:'B', title:'B · Record corner', sub:'Calm and light. Music where the coffee was, a cube wall around the TV, a table that folds into the wall.', table:['Fold the table down','Fold the table away'], pal:['#1F5A41','#8fbd9b','#F3EBDC','#C99A5B','#22262a'],
      list:[
-      ['Table','An 80 × 72 leaf hinged to the wall under the bus painting. Folded, it is a sage panel 3 cm deep. Down, it seats two, and both chairs clear the bedroom doors.'],
-      ['Coffee table','Two round nesting tables on the rug, light enough to push aside.'],
-      ['TV wall','An oak 2 × 4 cube shelf hides the side of the fridge. The TV stands on a low cane-front sideboard.'],
-      ['Rug','Cream with sage stripes, 200 × 300.'],
-      ['Seats','Two cream poufs opposite the sofa instead of an armchair, so the room stays open.'],
-      ['Light','Paper pendant, mustard pendant over the fold-down table, arc lamp, lamp on the sideboard, string lights, candles.'],
+      ['Coffee corner','Becomes a record corner: a low oak console with the turntable, a speaker and a lamp. The coffee moves onto a small cart in the kitchen, by the window.'],
+      ['Table','An 80 × 72 leaf hinged to the wall under the bus painting. Folded, it is a sage panel 3 cm deep. Down, it seats two on folding chairs that live in the wardrobe.'],
+      ['TV wall','Two 2 × 4 cube towers, a low 4-cube unit and a bridge shelf frame the TV. 3 m wide. The first tower hides the side of the fridge.'],
+      ['Sofa','Centred on the TV, 75 cm further from the front door than today.'],
+      ['Seats and rug','Two cream poufs, two round nesting tables, a cream rug with sage stripes.'],
       ['Kitchen and bedrooms','Same as option A.']]},
-  c:{name:'C', title:'C · Library wall', sub:'The boldest one. A full wall of cubes around the TV, and a table for four when friends come.', table:['Open the table for four','Close it to a console'], pal:['#1F5A41','#C4673F','#D6A21E','#26386b','#F3EBDC'],
+  c:{name:'C', title:'C · Dining first', sub:'The top of the room rearranged into a real dining area by the kitchen, with the coffee right next to it.', table:null, pal:['#1F5A41','#C4673F','#D6A21E','#26386b','#F3EBDC'],
      list:[
-      ['TV wall','Two 2 × 4 cube towers, a low 4-cube unit and a bridge shelf frame the TV. 3 m wide, from the fridge to just before the toilet door. The first tower hides the side of the fridge.'],
-      ['Table','A drop-leaf table. Closed, it is a 26 cm console under the painting. Open, it is 85 × 150 and seats four. Chairs still clear both bedroom doors.'],
-      ['Sofa','Moves 9 cm toward the kitchen so it is centred on the TV.'],
-      ['Rug','Terracotta kilim, 200 × 300, with two terracotta poufs.'],
-      ['Light','Paper pendant, mustard pendant over the table, lamp inside the shelving, arc lamp, string lights, candles.'],
+      ['Dining','A fixed 85 × 140 table for four stands across the top zone, under its own pendant. Both bedroom doors open onto a clear path past its ends.'],
+      ['Coffee corner','The coffee moves 1.5 m, onto an oak sideboard under the bus painting, right by the table. The old corner gets a storage bench with cushions.'],
+      ['Sofa','Stays in the entrance corner where it is today, which leaves the whole top zone for dining.'],
+      ['TV wall','The white cube shelf hides the fridge. The TV hangs over a floating oak bench, opposite the sofa.'],
+      ['Rug','Terracotta kilim, 200 × 300, with two round nesting tables.'],
       ['Kitchen and bedrooms','Same as option A.']]}
 };
 
@@ -282,9 +303,12 @@ const DESIGNS=A.DESIGNS={
 const S=A.state={design:'a',table:0,pj:false,labels:true,dims:false};
 A.tableT=0; A.layoutFns=[];
 let anim=null;
+const USER={};
+function ukey(){return S.design+(S.table?'1':'0')+(S.pj?'p':'');}
 function targets(){
   const out={}, put=function(o){for(const k in o) out[k]=o[k];};
   put(LAY[S.design]); if(S.table&&ALT[S.design]) put(ALT[S.design]); if(S.pj) put(PJ[S.design]);
+  const u=USER[ukey()]; if(u) for(const k in u) if(out[k]) out[k]=u[k];          // furniture you moved yourself
   return out;
 }
 A.layout=function(instant){
@@ -322,14 +346,14 @@ function resolveSeats(){
     const x=p.to[0], z=p.to[1], f=p.to[2], c=Math.cos(f), sn=Math.sin(f);
     p.seats.forEach(function(s){
       s.x=x+s.lx*c+s.lz*sn; s.z=z-s.lx*sn+s.lz*c; s.room='living';
-      s.h=s.face?Math.atan2(FOCUS[0]-s.x,FOCUS[1]-s.z):f+R/2+(s.dh||0);
+      s.h=s.face?Math.atan2(FOCUS[S.design][0]-s.x,FOCUS[S.design][1]-s.z):f+R/2+(s.dh||0);
       live.push(s);
     });
   }
 }
 A.liveSeats=function(){return live;};
 A.setDesign=function(k,instant){
-  S.design=k; S.table=0; S.pj=false;
+  S.design=k; S.table=0; S.pj=false; if(typeof select==='function') select(null);
   A.layout(instant); renderPanel();
   if(A.onDesign) A.onDesign();
 };
@@ -337,18 +361,18 @@ A.setTable=function(on){S.table=on?1:0; A.layout(); renderPanel();};
 
 /* ---------- labels and dimension lines ---------- */
 const fixedLabels=[
- {label:'Kitchen', pos:new THREE.Vector3(5.9,2.5,2.05)},
- {label:'Entrance', pos:new THREE.Vector3(2.45,2.35,L)},
+ {label:'Kitchen', pos:new THREE.Vector3(W+1.5,2.5,2.05)},
+ {label:'Entrance', pos:new THREE.Vector3(EX,2.35,L)},
  {label:'Bedroom 1', alt:'Bedroom 1 · study', pos:new THREE.Vector3(1.2,1.5,-2.3)},
- {label:'Bedroom 2', alt:'Bedroom 2 · reading nook', pos:new THREE.Vector3(4.9,1.5,-2.0)},
- {label:'Bathroom and shower', pos:new THREE.Vector3(5.6,1.6,L-2.1)},
- {label:'Toilet', pos:new THREE.Vector3(5.3,1.6,L-0.5)},
+ {label:'Bedroom 2', alt:'Bedroom 2 · reading nook', pos:new THREE.Vector3(W+0.9,1.5,-2.0)},
+ {label:'Bathroom and shower', pos:new THREE.Vector3(W+1.2,1.6,L-2.1)},
+ {label:'Toilet', pos:new THREE.Vector3(W+0.9,1.6,L-0.5)},
  {label:'≈ '+L.toFixed(1)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
  {label:'≈ '+W.toFixed(1)+' m', pos:new THREE.Vector3(W/2,0.05,L+0.35), dim:true},
  {label:'ceiling ≈ '+H.toFixed(2)+' m', pos:new THREE.Vector3(0.05,H-0.2,L-1.2), dim:true},
  {label:'kitchen ≈ '+(KX-W).toFixed(1)+' × '+KZ.toFixed(1)+' m', pos:new THREE.Vector3((W+KX)/2,0.05,0.95), dim:true},
- {label:'tiles 80 × 80', pos:new THREE.Vector3(2.0,0.05,5.6), dim:true},
- {label:'doors 80 × 205', pos:new THREE.Vector3((D.door2[0]+D.door2[1])/2,0.1,0.45), dim:true}
+ {label:'tiles 60 × 60', pos:new THREE.Vector3(2.4,0.05,5.4), dim:true},
+ {label:'doors 78 × 205', pos:new THREE.Vector3((D.door2[0]+D.door2[1])/2,0.1,0.45), dim:true}
 ];
 for(const id in P){const p=P[id]; if(p.label) p.el=A.tag(p.label,p.isNew?'new':'');}
 fixedLabels.forEach(function(f){f.el=A.tag(f.label,f.dim?'dim':'');});
@@ -371,7 +395,9 @@ A.labelFns.push(function(){
 /* ---------- Design tab ---------- */
 function renderPanel(){
   const d=DESIGNS[S.design];
-  ['n','a','b','c'].forEach(function(k){$('d_'+k).setAttribute('aria-pressed',k===S.design);});
+  const now=S.design==='n';
+  $('d_now').setAttribute('aria-pressed',now); $('d_new').setAttribute('aria-pressed',!now); $('segABC').hidden=now;
+  ['a','b','c'].forEach(function(k){$('d_'+k).setAttribute('aria-pressed',k===S.design);});
   $('dTitle').textContent=d.title; $('dSub').textContent=d.sub;
   $('dPal').innerHTML=d.pal.map(function(c){return '<i style="background:'+c+'"></i>';}).join('');
   $('list').innerHTML=d.list.map(function(r){return '<li><b>'+r[0]+'</b><span>'+r[1]+'</span></li>';}).join('');
@@ -380,7 +406,9 @@ function renderPanel(){
   if(A.onPanel) A.onPanel();
 }
 A.renderPanel=renderPanel;
-['n','a','b','c'].forEach(function(k){$('d_'+k).onclick=function(){A.setDesign(k);};});
+let lastNew='a';
+['a','b','c'].forEach(function(k){$('d_'+k).onclick=function(){lastNew=k; A.setDesign(k);};});
+$('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){A.setDesign(lastNew);};
 $('bTable').onclick=function(){A.setTable(!S.table);};
 function fitDist(){const a=A.stage.clientWidth/A.stage.clientHeight; return 19*Math.max(1,1.0/Math.max(a,0.5));}
 A.viewPos=function(v){
@@ -393,9 +421,68 @@ A.setView=function(v,instant){
   A.fly(A.viewPos(v),A.home,700,instant);
 };
 $('b3d').onclick=function(){A.setView('3d');}; $('bTop').onclick=function(){A.setView('top');};
-$('cLabels').onchange=function(e){S.labels=e.target.checked;};
+A.setLabels=function(on){S.labels=on; $('cLabels').checked=on; $('bLabels').setAttribute('aria-pressed',on); $('bLabels').textContent=on?'Hide labels':'Show labels';};
+$('cLabels').onchange=function(e){A.setLabels(e.target.checked);}; $('bLabels').onclick=function(){A.setLabels(!S.labels);};
+$('bMenu').onclick=function(){const off=document.body.classList.toggle('nomenu'); $('bMenu').textContent=off?'Show menu':'Hide menu'; $('bMenu').setAttribute('aria-pressed',!off);};
 $('cDims').onchange=function(e){S.dims=e.target.checked; dims.visible=S.dims;};
 $('cCut').onchange=function(e){A.cut.constant=e.target.checked?1.25:100;};
-$('note').textContent='Scaled from the photos, not measured: living room about '+W.toFixed(1)+' × '+L.toFixed(1)+' m, ceiling '+H.toFixed(2)+' m, kitchen '+(KX-W).toFixed(1)+' × '+KZ.toFixed(1)+' m, tiles 80 × 80 cm. Width and door positions are good to about 10 cm; length, kitchen depth and the other rooms are rougher. New furniture is drawn at typical catalogue sizes.';
+$('note').textContent='Scaled from the photos, not measured: living room about '+W.toFixed(1)+' × '+L.toFixed(1)+' m, ceiling '+H.toFixed(2)+' m, kitchen '+(KX-W).toFixed(1)+' × '+KZ.toFixed(1)+' m, tiles 60 × 60 cm. Nothing here was measured with a tape, so the width in particular may be off by 20 to 30 cm. New furniture is drawn at typical catalogue sizes.';
 A.renderer.domElement.addEventListener('pointerdown',function(){A.stopFly(); $('hint').style.opacity=0;});
+
+/* ---------- moving furniture: touch a piece and drag it across the floor ---------- */
+const NAMES={table:'Coffee table',chairA:'Chair',chairB:'Chair',rack2:'Drying rack',flamp:'Floor lamp',arc:'Arc lamp',monst:'Monstera',fid:'Fiddle-leaf fig',snk:'Snake plant',
+  fc1:'Chair',fc2:'Chair',gc1:'Chair',gc2:'Chair',gc3:'Chair',gc4:'Chair',poufA2:'Pouf',poufB2:'Pouf',poufC2:'Pouf'};
+for(const id in P) P[id].g.userData.piece=id;
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), floor=new THREE.Plane(new THREE.Vector3(0,1,0),0), hit=new THREE.Vector3();
+let drag=null, sel=null;
+function aim(e){const r=A.renderer.domElement.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1); ray.setFromCamera(ndc,A.camera);}
+function shown(o,top){for(;o&&o!==top;o=o.parent) if(!o.visible||o.userData.nc) return false; return true;}
+function pick(){
+  let best=null, bd=1e9;
+  for(const id in P){const p=P[id]; if(p.cur[3]<0.9||id.indexOf('rug')===0) continue;
+    const hs=ray.intersectObject(p.g,true);
+    for(let i=0;i<hs.length;i++){if(!shown(hs[i].object,p.g)) continue; if(hs[i].distance<bd){bd=hs[i].distance; best=p;} break;}
+  }
+  return best;
+}
+function clampPos(p){
+  let x=Math.min(KX-0.15,Math.max(0.1,p.cur[0])), z=Math.min(L-0.1,Math.max(0.1,p.cur[1]));
+  if(x>W-0.05&&z>KZ-0.1){if(p.from[0]>W-0.05) z=KZ-0.1; else x=W-0.05;}          // the kitchen ends at its sink wall
+  p.cur[0]=x; p.cur[1]=z;
+}
+function place(p){p.to=[p.cur[0],p.cur[1],p.cur[2],1]; p.g.position.set(p.cur[0],0,p.cur[1]); p.g.rotation.y=p.cur[2];}
+function commit(p){
+  const k=ukey(); (USER[k]||(USER[k]={}))[p.id]=[p.cur[0],p.cur[1],p.cur[2]];
+  resolveSeats(); for(let i=0;i<A.layoutFns.length;i++) A.layoutFns[i]();
+  $('bResetMoves').hidden=false;
+}
+function select(p){
+  sel=p; $('pieceBar').hidden=!p; if(p) $('pieceName').textContent=p.label||NAMES[p.id]||'Item';
+}
+A.stage.addEventListener('pointerdown',function(e){
+  if(e.target!==A.renderer.domElement||anim||(A.eyeView&&A.eyeView())) return;
+  if(drag){drag=null; A.controls.enabled=true; return;}                           // second finger: this is a pinch, not a move
+  if(e.button) return;
+  aim(e); const p=pick(); if(!p){select(null); return;}
+  if(p.seats&&p.seats.some(function(s){return s.occ;})) return;                   // someone is sitting on it
+  if(!ray.ray.intersectPlane(floor,hit)) return;
+  drag={p:p,ox:hit.x-p.cur[0],oz:hit.z-p.cur[1],sx:e.clientX,sy:e.clientY,moved:false,id:e.pointerId};
+  p.from=p.cur.slice(); A.controls.enabled=false;
+},true);
+window.addEventListener('pointermove',function(e){
+  if(!drag||e.pointerId!==drag.id) return;
+  if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6) return;
+  drag.moved=true; aim(e); if(!ray.ray.intersectPlane(floor,hit)) return;
+  const p=drag.p; p.cur[0]=hit.x-drag.ox; p.cur[1]=hit.z-drag.oz; clampPos(p); place(p);
+});
+function endDrag(e){
+  if(!drag||e.pointerId!==drag.id) return;
+  const d=drag; drag=null; A.controls.enabled=!(A.eyeView&&A.eyeView());
+  if(d.moved){commit(d.p); A.justDragged=performance.now();}
+  select(d.p);
+}
+window.addEventListener('pointerup',endDrag); window.addEventListener('pointercancel',endDrag);
+$('bRotate').onclick=function(){if(!sel) return; sel.cur[2]+=R/4; place(sel); commit(sel);};
+$('bPieceDone').onclick=function(){select(null);};
+$('bResetMoves').onclick=function(){for(const k in USER) delete USER[k]; $('bResetMoves').hidden=true; select(null); A.layout();};
 })();

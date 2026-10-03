@@ -35,6 +35,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none !important}
 html,body{height:100%;margin:0}
+body{height:100dvh}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{
   background:var(--bg); color:var(--ink);
@@ -64,6 +65,19 @@ body{
   opacity:0; transition:opacity .3s; pointer-events:none; text-align:center;
 }
 #toast.show{opacity:.94}
+#stageBtns{position:absolute; right:10px; top:calc(10px + env(safe-area-inset-top,0px)); display:flex; gap:6px; z-index:3}
+.fab{font:inherit; font-size:12px; font-weight:700; color:var(--ink); background:var(--label-bg); border:1px solid var(--line); border-radius:99px; padding:6px 11px; cursor:pointer}
+#rotateTip{position:absolute; left:10px; right:10px; top:48px; z-index:3; background:#E8C91A; color:#163F2E; font-size:13px; font-weight:600; padding:8px 34px 8px 12px; border-radius:12px}
+#rotateTip button{position:absolute; right:6px; top:3px; border:0; background:transparent; font-size:20px; color:#163F2E; cursor:pointer; padding:2px 6px}
+#pieceBar{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:6px; background:var(--label-bg); border:1px solid var(--yellow); border-radius:99px; padding:5px 6px 5px 14px; font-size:13px; white-space:nowrap}
+.stick{position:absolute; bottom:calc(18px + env(safe-area-inset-bottom,0px)); width:112px; height:112px; border-radius:50%; background:rgba(23,33,28,.28); border:2px solid rgba(255,255,255,.55); touch-action:none; z-index:3; user-select:none; -webkit-user-select:none}
+.stick i{position:absolute; left:50%; top:50%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(0,0,0,.3); pointer-events:none}
+#stickMove{left:calc(18px + env(safe-area-inset-left,0px))} #stickLook{right:calc(18px + env(safe-area-inset-right,0px))}
+.stick::after{position:absolute; left:0; right:0; top:-20px; text-align:center; font-size:11px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6)}
+#stickMove::after{content:"WALK"} #stickLook::after{content:"LOOK"}
+body.nomenu #panel{display:none}
+body.sticks #hint{display:none}
+body.sticks #pieceBar{bottom:140px}
 #panel{
   flex:0 1 44%; min-height:0; overflow:auto; background:var(--panel);
   border-top:1px solid var(--line); padding:14px 16px 18px;
@@ -138,6 +152,13 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   .brand h1{font-size:30px}
   h2{font-size:22px}
 }
+@media (orientation:landscape) and (max-height:520px){
+  body{flex-direction:row}
+  #stage{flex:1 1 auto}
+  #panel{flex:0 0 300px; border-top:0; border-left:1px solid var(--line); padding:10px 12px}
+  .brand{display:none}
+  .stick{width:96px; height:96px}
+}
 @media (prefers-reduced-motion: reduce){.tag.zzz{animation:none}}
 </style>
 </head>
@@ -145,6 +166,14 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 <div id="stage">
   <div id="labels"></div>
   <div id="toast" role="status" aria-live="polite"></div>
+  <div id="stageBtns">
+    <button class="fab" id="bLabels" aria-pressed="true">Hide labels</button>
+    <button class="fab" id="bMenu" aria-pressed="true">Hide menu</button>
+  </div>
+  <div id="rotateTip" hidden>Tip: turn your phone sideways (rotation unlocked) for easier control. <button id="bTipClose" aria-label="Close">×</button></div>
+  <div id="pieceBar" hidden><b id="pieceName"></b><button class="fab" id="bRotate">Rotate 45°</button><button class="fab" id="bPieceDone">Done</button></div>
+  <div class="stick" id="stickMove" hidden aria-label="Move"><i></i></div>
+  <div class="stick" id="stickLook" hidden aria-label="Look"><i></i></div>
   <div id="hint">Drag to rotate, pinch or scroll to zoom</div>
 </div>
 <aside id="panel">
@@ -180,18 +209,23 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   </div>
 
   <section id="pDesign">
-    <div class="seg wide" role="group" aria-label="Design option" style="margin-bottom:12px">
-      <button id="d_n" aria-pressed="false">Now</button>
-      <button id="d_a" aria-pressed="true">A</button>
-      <button id="d_b" aria-pressed="false">B</button>
-      <button id="d_c" aria-pressed="false">C</button>
+    <div class="seg wide" role="group" aria-label="Current or proposed" style="margin-bottom:8px">
+      <button id="d_now" aria-pressed="false">Now</button>
+      <button id="d_new" aria-pressed="true">Proposed</button>
+    </div>
+    <div class="seg wide" role="group" aria-label="Proposal" id="segABC" style="margin-bottom:12px">
+      <button id="d_a" aria-pressed="true">Option A</button>
+      <button id="d_b" aria-pressed="false">Option B</button>
+      <button id="d_c" aria-pressed="false">Option C</button>
     </div>
     <h2 id="dTitle"></h2>
     <p class="sub" id="dSub"></p>
     <div class="pal" id="dPal" aria-hidden="true"></div>
     <div class="row">
       <button class="btn primary" id="bTable"></button>
+      <button class="btn" id="bResetMoves" hidden>Put furniture back</button>
     </div>
+    <p class="note" style="margin:-4px 0 12px">Touch any piece of living-room furniture and drag it to move it.</p>
     <div class="row">
       <div class="seg" role="group" aria-label="View">
         <button id="b3d" aria-pressed="true">3D</button>
