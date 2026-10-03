@@ -270,7 +270,7 @@ const DESIGNS=A.DESIGNS={
       ['Coffee station','On the sofa wall, in the corner next to bedroom 1.'],
       ['Drying racks','Fill the floor between the sofa, the dining table and the kitchen.'],
       ['Kitchen','Charcoal cabinets, a full counter, things stored on top of the cabinet and the fridge.'],
-      ['Bedrooms','Bedroom 1: desk and a single bed. Bedroom 2: bed, and a pine desk under the big window.']]},
+      ['Bedrooms','Bedroom 1: desk and a single bed. Bedroom 2: bed behind the cube shelf and the column, TV on a wall arm, bike under it, pine desk under the big window.']]},
   a:{name:'A', title:'A · Green corner', sub:'Oak, mustard and sage. The coffee corner becomes plants, and one table does coffee and lunch.', table:['Raise the table for lunch','Lower to coffee height'], pal:['#1F5A41','#8fbd9b','#D6A21E','#C99A5B','#F3EBDC'],
      list:[
       ['Coffee corner','Gone. A slim plant shelf and the monstera take the corner. The espresso machine and grinder move to the kitchen counter, next to the fridge.'],
@@ -280,7 +280,7 @@ const DESIGNS=A.DESIGNS={
       ['Rug','Jute, 200 × 300, tucked 35 cm under the sofa. 90 cm stays clear between the table and the TV bench.'],
       ['Light','Paper pendant over the table, arc lamp at the sofa, picture light on the painting, string lights, candles.'],
       ['Kitchen','Cabinets in a muted, slightly yellow sage. Counter and sink unchanged and cleared, bin gone. Pendant, light strip, runner.'],
-      ['Bedrooms','Bedroom 1 is a study with two desks. Bedroom 2 gets a reading nook where the desk was.']]},
+      ['Bedrooms','Bedroom 1 is a study with two desks. In bedroom 2 the bike and scooter go, and a reading nook takes the place of the desk under the big window.']]},
   b:{name:'B', title:'B · Record corner', sub:'Calm and light. Music where the coffee was, a cube wall around the TV, a table that folds into the wall.', table:['Fold the table down','Fold the table away'], pal:['#1F5A41','#8fbd9b','#F3EBDC','#C99A5B','#22262a'],
      list:[
       ['Coffee corner','Becomes a record corner: a low oak console with the turntable, a speaker and a lamp. The coffee moves onto a small cart in the kitchen, by the window.'],

@@ -24,7 +24,7 @@ const D=A.D={
   entrance:[1.30,2.20],// entrance door opening on the end wall, right next to the sofa corner
   wcDoor:[5.2,6.0],    // toilet door opening on the TV wall (z)
   bedDepth:4.0,        // both bedrooms, door wall -> window wall (guess)
-  bedSplit:2.55        // wall between the two bedrooms (guess, behind the painting)
+  bedSplit:2.2         // wall between the two bedrooms (leaves a 40 cm niche beside the bedroom 2 door)
 };
 const W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ;
 const AZ=A.AZ=-D.bedDepth, SPLIT=A.SPLIT=D.bedSplit;

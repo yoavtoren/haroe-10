@@ -145,98 +145,108 @@ inRoom('kitchen',function(){
 });
 
 /* ---------- bedroom 1 (the smaller one): today desk + bed, redesigned as a study with two desks ---------- */
-A.windowOn('a_far',0.6,2.0,1.0,2.1,3,0,'bed1');
-A.sunPatch('bed1',1.3,AZ+0.05,1.3,2.6,0);
+A.windowOn('a_far',0.55,1.95,1.0,2.1,3,0,'bed1');
+A.sunPatch('bed1',1.25,AZ+0.05,1.3,2.6,0);
 inRoom('bed1',function(){
   const n=G(null,'n'), d=G(null,'abc'), r=SPLIT-0.05;
   box(0.85,0.28,0.2,0xf6f7f5,1.3,2.5,AZ+0.11);                          // air conditioner
-  box(1.2,0.03,0.6,0xd9bf8c,0.75,0.74,AZ+0.32);                         // desk under the window
-  [[0.18,AZ+0.05],[1.32,AZ+0.05],[0.18,AZ+0.59],[1.32,AZ+0.59]].forEach(function(p){box(0.03,0.73,0.03,0xf2f2f0,p[0],0.365,p[1]);});
-  box(0.56,0.33,0.03,0x111315,0.8,1.08,AZ+0.16); box(0.2,0.14,0.12,0x111315,0.8,0.83,AZ+0.16); // monitor
-  box(0.5,0.08,0.5,0xd8d8d2,0.8,0.48,AZ+0.95); box(0.46,0.6,0.06,0xd8d8d2,0.8,0.85,AZ+1.2); cyl(0.03,0.4,0x8d9092,0.8,0.24,AZ+0.95); cyl(0.28,0.04,0x8d9092,0.8,0.04,AZ+0.95); // chair
-  seat({id:'desk1',label:'Desk by the window',room:'bed1',x:0.8,z:AZ+0.95,y:0.52,h:R,type:'sit'});
+  box(1.2,0.03,0.6,0xd9bf8c,0.65,0.74,AZ+0.32);                         // desk under the window
+  [[0.08,AZ+0.05],[1.22,AZ+0.05],[0.08,AZ+0.59],[1.22,AZ+0.59]].forEach(function(p){box(0.03,0.73,0.03,0xf2f2f0,p[0],0.365,p[1]);});
+  box(0.56,0.33,0.03,0x111315,0.7,1.08,AZ+0.16); box(0.2,0.14,0.12,0x111315,0.7,0.83,AZ+0.16); // monitor
+  box(0.5,0.08,0.5,0xd8d8d2,0.65,0.48,AZ+0.95); box(0.46,0.6,0.06,0xd8d8d2,0.65,0.85,AZ+1.2); cyl(0.03,0.4,0x8d9092,0.65,0.24,AZ+0.95); cyl(0.28,0.04,0x8d9092,0.65,0.04,AZ+0.95); // chair
+  seat({id:'desk1',label:'Desk by the window',room:'bed1',x:0.65,z:AZ+0.95,y:0.52,h:R,type:'sit'});
   // today: bed along the right wall
-  box(1.2,0.22,2.0,0xc9a66b,r-0.62,0.2,AZ+1.02,n); box(1.2,0.2,2.0,0xd9c7b0,r-0.62,0.41,AZ+1.02,n); box(0.6,0.1,0.38,0xe9e2d4,r-0.62,0.56,AZ+0.3,n);
-  seat({id:'bed1',label:'Bed (bedroom 1)',room:'bed1',x:r-0.62,z:AZ+1.1,y:0.51,h:0,type:'lie',only:'n'});
-  K.ceilDisc(n,1.25,-2.0,'L:bed1');
+  box(0.9,0.22,2.0,0xc9a66b,r-0.46,0.2,AZ+1.02,n); box(0.9,0.2,2.0,0xd9c7b0,r-0.46,0.41,AZ+1.02,n); box(0.6,0.1,0.38,0xe9e2d4,r-0.46,0.56,AZ+0.3,n);
+  seat({id:'bed1',label:'Bed (bedroom 1)',room:'bed1',x:r-0.46,z:AZ+1.1,y:0.51,h:0,type:'lie',only:'n'});
+  K.ceilDisc(n,1.05,-2.0,'L:bed1');
   box(0.6,2.3,1.6,0xe9dfcf,r-0.3,1.15,-1.1);                            // wardrobe
   [-1.6,-1.07,-0.55].forEach(function(z){box(0.004,2.26,0.006,0xcfc4b2,r-0.602,1.15,z);});
   [0.25,0.5,0.75].forEach(function(y){box(0.02,0.012,0.3,0xa9a59c,r-0.61,y,-0.82);});
   [-1.2,-1.0].forEach(function(z){box(0.02,0.2,0.014,0xa9a59c,r-0.61,1.25,z);});
   // redesign: second desk where the bed was, shelves, lamps, rug, plants
-  const dz=-2.75;
-  box(0.65,0.035,1.3,0xc99a5b,r-0.335,0.74,dz,d);
-  [[r-0.62,dz-0.61],[r-0.05,dz-0.61],[r-0.62,dz+0.61],[r-0.05,dz+0.61]].forEach(function(p){box(0.035,0.72,0.035,0x22262a,p[0],0.36,p[1],d);});
+  const dz=-2.5;
+  box(0.65,0.035,1.1,0xc99a5b,r-0.335,0.74,dz,d);
+  [[r-0.62,dz-0.51],[r-0.05,dz-0.51],[r-0.62,dz+0.51],[r-0.05,dz+0.51]].forEach(function(p){box(0.035,0.72,0.035,0x22262a,p[0],0.36,p[1],d);});
   box(0.03,0.36,0.62,0x111315,r-0.16,1.1,dz-0.1,d); box(0.1,0.16,0.18,0x111315,r-0.16,0.84,dz-0.1,d);   // monitor
-  box(0.14,0.012,0.4,0xe9e9e6,r-0.42,0.765,dz-0.1,d); box(0.24,0.012,0.32,0xb9bdc0,r-0.35,0.765,dz+0.42,d); // keyboard, laptop
-  const lid=box(0.012,0.22,0.32,0xb9bdc0,r-0.22,0.87,dz+0.42,d); lid.rotation.z=-0.25;
-  const ch=G(d); ch.position.set(1.42,0,dz); K.officeChair(ch,0x2f7d4f);
-  seat({id:'desk2',label:'New desk',room:'bed1',x:1.42,z:dz,y:0.52,h:R/2,type:'sit',only:'abc'});
-  [1.32,1.68].forEach(function(y,i){box(0.22,0.03,1.2,0xc99a5b,r-0.11,y,dz,d); K.books(d,r-0.12,y+0.015,dz-0.25+i*0.5,0.5,0.22,0.16,71+i);});
-  K.bush(d,r-0.12,1.335,dz+0.45,0.07); cyl(0.05,0.18,0xc4673f,r-0.12,1.785,dz-0.4,d,12,0.03);
-  K.deskLamp(d,r-0.2,0.758,dz-0.52,'L:bed1',R*0.75); K.deskLamp(d,0.28,0.755,AZ+0.2,'L:bed1',-0.4);
-  K.pendant(d,1.2,2.3,-2.1,'L:bed1','rattan',null,1.6);
-  const rg=G(d); rg.position.set(0.95,0,-1.75); K.rug(rg,1.3,1.9,'wool');
-  K.snake(d,0.2,-0.35,0.75); K.bush(d,1.2,0.755,AZ+0.12,0.06,0xc4673f);
-  K.curtain(d,0.47,AZ+0.07,0.24,true,0.25,2.3); K.curtain(d,2.13,AZ+0.07,0.24,true,0.25,2.3);
+  box(0.14,0.012,0.4,0xe9e9e6,r-0.42,0.765,dz-0.1,d); box(0.24,0.012,0.32,0xb9bdc0,r-0.35,0.765,dz+0.36,d); // keyboard, laptop
+  const lid=box(0.012,0.22,0.32,0xb9bdc0,r-0.22,0.87,dz+0.36,d); lid.rotation.z=-0.25;
+  const ch=G(d); ch.position.set(r-1.05,0,dz); K.officeChair(ch,0x2f7d4f);
+  seat({id:'desk2',label:'New desk',room:'bed1',x:r-1.05,z:dz,y:0.52,h:R/2,type:'sit',only:'abc'});
+  [1.32,1.68].forEach(function(y,i){box(0.22,0.03,1.0,0xc99a5b,r-0.11,y,dz,d); K.books(d,r-0.12,y+0.015,dz-0.2+i*0.4,0.45,0.22,0.16,71+i);});
+  K.bush(d,r-0.12,1.335,dz+0.38,0.07); cyl(0.05,0.18,0xc4673f,r-0.12,1.785,dz-0.36,d,12,0.03);
+  K.deskLamp(d,r-0.2,0.758,dz-0.43,'L:bed1',R*0.75); K.deskLamp(d,0.2,0.755,AZ+0.2,'L:bed1',-0.4);
+  K.pendant(d,1.05,2.3,-2.0,'L:bed1','rattan',null,1.6);
+  const rg=G(d); rg.position.set(0.8,0,-1.75); K.rug(rg,1.2,1.9,'wool');
+  K.snake(d,0.2,-0.35,0.75); K.bush(d,1.1,0.755,AZ+0.12,0.06,0xc4673f);
+  K.curtain(d,0.47,AZ+0.07,0.24,true,0.25,2.3); K.curtain(d,2.06,AZ+0.07,0.16,true,0.25,2.3);
   box(0.02,0.5,0.7,0xcfa97a,0.012,1.45,-3.0,d);                         // cork board on the left wall
   [[1.52,-3.18,0xf3ebdc],[1.58,-2.95,0xd6a21e],[1.36,-3.05,0x8fbd9b],[1.4,-2.82,0xe3b7a0]].forEach(function(q){box(0.006,0.12,0.14,q[2],0.026,q[0],q[1],d);});
 });
 K.onlyAll(K.frame('a_l',1.2,1.5,0.5,0.65,9,0xc99a5b).concat(K.frame('a_l',1.85,1.5,0.5,0.65,6,0xc99a5b)),'abc');
 
-/* ---------- bedroom 2: bed in the far-left corner, big window on the right wall ---------- */
-A.windowOn('b_far',0.5,1.25,1.25,2.0,1,0,'bed2');                      // small window above the bed
-A.windowOn('b_r',0.7,2.5,0.95,2.2,2,6,'bed2');                         // big window with bars
-A.sunPatch('bed2',KX-0.05,-2.4,1.7,3.0,-R/2);
+/* ---------- bedroom 2, from the photos: bed in the far-left corner behind a cube-shelf divider and a column,
+   a window above the bed, TV on an arm, pine desk under the big window on the right wall ---------- */
+A.windowOn('b_far',0.45,1.75,1.0,2.05,2,0,'bed2');                     // window above the bed
+A.windowOn('b_r',0.35,2.0,0.95,2.2,2,6,'bed2');                        // big window with bars, over the desk
+A.sunPatch('bed2',KX-0.05,-2.82,1.6,2.8,-R/2);
 inRoom('bed2',function(){
-  const n=G(null,'n'), d=G(null,'abc'), l=bl;
+  const n=G(null,'n'), d=G(null,'abc'), l=bl, dkz=-2.78;
   box(1.5,0.14,2.0,0xc9a66b,l+0.78,0.1,AZ+1.02); box(1.5,0.22,2.0,0xf1efec,l+0.78,0.3,AZ+1.02); box(1.3,0.1,0.4,0xfafafa,l+0.78,0.46,AZ+0.3); // bed on pallets
   seat({id:'bedL',label:'Bed, wall side',room:'bed2',x:l+0.45,z:AZ+1.12,y:0.41,h:0,type:'lie'});
   seat({id:'bedR',label:'Bed, room side',room:'bed2',x:l+1.12,z:AZ+1.12,y:0.41,h:0,type:'lie'});
-  box(0.4,0.4,0.35,0xb98a4e,l+1.78,0.2,AZ+0.22);                        // bedside table
-  box(1.0,0.58,0.04,0x25272b,l+2.4,1.75,AZ+0.25).rotation.y=-0.3;       // TV on a wall arm
-  box(0.06,0.06,0.25,0x25272b,l+2.5,1.75,AZ+0.12);
-  (function(){const g=G(); g.position.set(l+2.35,0,AZ+0.5); g.rotation.y=0.12;      // bike
+  box(0.42,0.4,0.36,0xc79a5c,l+1.78,0.2,AZ+0.22); box(0.34,0.26,0.006,0xdcc59a,l+1.78,0.2,AZ+0.403);   // bedside table with a cane front
+  box(1.0,0.58,0.04,0x25272b,l+2.35,1.7,AZ+0.3).rotation.y=0.35;       // TV on a wall arm, turned toward the bed
+  box(0.06,0.06,0.3,0x25272b,l+2.5,1.7,AZ+0.15);
+  (function(){const g=G(n); g.position.set(l+2.55,0,AZ+0.42); g.rotation.y=0.1;      // mountain bike against the far wall (today only)
     [-0.52,0.52].forEach(function(x){A.torus(0.33,0.025,0x1b1c1e,x,0.36,0,g);});
-    const a=box(0.62,0.04,0.04,0xc2362c,-0.18,0.62,0,g); a.rotation.z=0.5; const b=box(0.62,0.04,0.04,0xc2362c,0.2,0.62,0,g); b.rotation.z=-0.55;
+    const a=box(0.62,0.04,0.04,0xd9652c,-0.18,0.62,0,g); a.rotation.z=0.5; const b=box(0.62,0.04,0.04,0x1b1c1e,0.2,0.62,0,g); b.rotation.z=-0.55;
     box(0.7,0.04,0.04,0x1b1c1e,0.02,0.83,0,g); box(0.04,0.04,0.56,0xd98a2b,0.42,0.98,0,g); box(0.2,0.05,0.1,0x1b1c1e,-0.3,0.92,0,g);})();
-  // today: pine desk under the big window
-  box(0.7,0.05,1.7,0xd2b07a,KX-0.36,0.74,-2.35,n);
-  [-3.15,-1.55].forEach(function(z){box(0.08,0.72,0.08,0xd2b07a,KX-0.66,0.36,z,n); box(0.08,0.72,0.08,0xd2b07a,KX-0.08,0.36,z,n);});
-  box(0.04,0.36,0.62,0x111315,KX-0.2,1.1,-2.3,n); box(0.14,0.14,0.2,0x111315,KX-0.2,0.84,-2.3,n);
-  box(0.5,0.08,0.5,0x2a2d31,KX-1.1,0.48,-2.4,n); box(0.06,0.6,0.46,0x2a2d31,KX-1.36,0.85,-2.4,n); cyl(0.03,0.4,0x2a2d31,KX-1.1,0.24,-2.4,n); cyl(0.3,0.04,0x2a2d31,KX-1.1,0.04,-2.4,n);
-  seat({id:'desk3',label:'Desk (bedroom 2)',room:'bed2',x:KX-1.1,z:-2.4,y:0.52,h:R/2,type:'sit',only:'n'});
+  // today: pine desk under the big window, mesh chair, scooter by the desk
+  box(0.7,0.05,1.6,0xd2b07a,KX-0.36,0.74,dkz,n);
+  [dkz-0.75,dkz+0.75].forEach(function(z){box(0.08,0.72,0.08,0xd2b07a,KX-0.66,0.36,z,n); box(0.08,0.72,0.08,0xd2b07a,KX-0.08,0.36,z,n);});
+  box(0.04,0.36,0.62,0x111315,KX-0.2,1.1,dkz-0.1,n); box(0.14,0.14,0.2,0x111315,KX-0.2,0.84,dkz-0.1,n); box(0.16,0.02,0.45,0x1b1c1e,KX-0.42,0.775,dkz-0.1,n);
+  box(0.5,0.08,0.5,0x2a2d31,KX-1.1,0.48,dkz,n); box(0.06,0.6,0.46,0x2a2d31,KX-1.36,0.85,dkz,n); cyl(0.03,0.4,0x2a2d31,KX-1.1,0.24,dkz,n); cyl(0.3,0.04,0x2a2d31,KX-1.1,0.04,dkz,n);
+  seat({id:'desk3',label:'Desk (bedroom 2)',room:'bed2',x:KX-1.1,z:dkz,y:0.52,h:R/2,type:'sit',only:'n'});
+  box(0.14,0.06,0.9,0x1b1c1e,KX-0.3,0.12,-1.35,n); box(0.04,1.05,0.04,0x1b1c1e,KX-0.3,0.62,-1.75,n); box(0.5,0.04,0.04,0x1b1c1e,KX-0.3,1.14,-1.75,n);   // electric scooter
+  [-1.72,-0.98].forEach(function(z){cyl(0.1,0.04,0x1b1c1e,KX-0.3,0.1,z,n,14).rotation.z=R/2;});
   K.ceilDisc(n,(l+KX)/2,-2.0,'L:bed2');
   box(1.17,1.9,0.5,0xf8f8f6,KX-1.55,0.95,-0.25);                        // 3-door wardrobe with mirror
   [KX-1.94,KX-1.55,KX-1.16].forEach(function(x){box(0.37,1.82,0.006,0xfdfdfb,x,0.97,-0.503);}); box(0.12,1.4,0.004,0xb9c6cc,KX-1.55,1.05,-0.508);
   box(0.5,0.3,0.4,0x202a44,KX-1.75,2.05,-0.25,n); box(0.4,0.3,0.36,0x3b3d40,KX-1.25,2.05,-0.25,n);
   box(0.8,1.0,0.45,0xc7a878,KX-0.5,0.5,-0.225); [0.34,0.67].forEach(function(y){box(0.78,0.012,0.006,0x7d674a,KX-0.5,y,-0.452);}); // dresser
-  box(0.39,1.47,0.77,0xfafaf8,l+0.2,0.735,-1.75);                       // 2 x 4 cube shelf
-  [0.37,0.735,1.1].forEach(function(y){box(0.006,0.02,0.73,0xcfd2ce,l+0.397,y,-1.75);}); box(0.006,1.43,0.02,0xcfd2ce,l+0.397,0.735,-1.75);
-  box(0.3,H,0.3,M(0xf5f6f3),l+0.75,H/2,-1.25);                          // column
-  box(0.8,0.1,0.25,0x3b8f8a,l+0.1,0.06,-2.6).rotation.y=0.3;            // skateboard
-  // redesign: reading nook where the desk was, softer bed, layered light
-  const nk=G(d); nk.position.set(KX-0.8,0,-2.55); nk.rotation.y=R-0.5; K.armchair(nk,0x2f7d4f,0x24623f);
+  // plastic cube tower in the niche beside the door
+  box(0.36,1.75,0.36,0xeef0f1,l+0.2,0.875,-0.2); [0.35,0.7,1.05,1.4].forEach(function(y){box(0.365,0.012,0.365,0xd5d8da,l+0.2,y,-0.2);});
+  box(0.34,0.14,0.3,0x1b1c1e,l+0.2,1.82,-0.2,n);
+  // 2 x 4 cube shelf standing across the room as a divider, with the column next to it
+  const kz=-1.78, kx=l+0.64;
+  box(0.77,1.47,0.39,0xfafaf8,kx,0.735,kz);
+  [0.37,0.735,1.1].forEach(function(y){box(0.73,0.02,0.006,0xcfd2ce,kx,y,kz+0.197);}); box(0.02,1.43,0.006,0xcfd2ce,kx,0.735,kz+0.197);
+  [[-0.2,0xf0d21c],[-0.02,0xd9463e],[0.16,0x9fb4c8]].forEach(function(q){box(0.14,0.05,0.07,q[1],kx+q[0],1.5,kz,n);});   // model cars on top
+  box(0.4,H,0.4,M(0xf5f6f3),l+1.26,H/2,kz);                             // column
+  const sk=box(0.22,0.8,0.06,0x3b8f8a,l+0.3,0.42,kz+0.26); sk.rotation.x=-0.2;                                       // skateboard leaning on the shelf
+  // proposal: no bike or scooter, a reading nook where the desk was, softer bed, layered light
+  const nk=G(d); nk.position.set(KX-0.8,0,-2.75); nk.rotation.y=R-0.5; K.armchair(nk,0x2f7d4f,0x24623f);
   K.cushion(nk,0xd6a21e,-0.12,0.62,0.05,0.9,0.35);
-  seat({id:'nook',label:'Reading nook',room:'bed2',x:KX-0.8,z:-2.55,y:0.43,h:R-0.5+R/2,type:'sit',only:'abc',recline:0.2});
-  const fl=G(d); fl.position.set(KX-0.28,0,-3.3); K.floorLamp(fl,'L:bed2');
-  K.roundRug(d,KX-1.0,-2.5,0.95,0xcbb890,0xe7dcc4);
-  cyl(0.2,0.03,0xc99a5b,KX-1.28,0.5,-3.15,d,24); cyl(0.02,0.5,0x22262a,KX-1.28,0.25,-3.15,d,8); cyl(0.14,0.02,0x22262a,KX-1.28,0.01,-3.15,d,16);   // side table
-  K.bookStack(d,KX-1.3,0.515,-3.17,3,5); cyl(0.04,0.08,0xf3ebdc,KX-1.2,0.555,-3.05,d,12);
-  const pf=G(d); pf.position.set(KX-1.5,0,-2.2); K.pouf(pf,0xd6a21e);
-  box(0.3,0.8,1.2,0xc99a5b,KX-0.16,0.4,-1.35,d);                        // low bookcase by the window
-  [0.14,0.47].forEach(function(y,i){box(0.006,0.3,1.14,0x2a2622,KX-0.3,y+0.13,-1.35,d); K.books(d,KX-0.2,y,-1.35,1.1,0.26,0.2,90+i);});
-  K.tableLamp(d,KX-0.16,0.8,-0.95,'L:bed2'); K.bush(d,KX-0.16,0.8,-1.7,0.09);
-  K.fiddle(d,KX-0.34,-3.68,1.75,8);
-  K.curtain(d,KX-0.07,-3.42,0.26,false,0.2,2.35); K.curtain(d,KX-0.07,-1.38,0.26,false,0.2,2.35);
-  const rg=G(d); rg.position.set(l+1.7,0,-2.75); K.rug(rg,1.3,2.2,'stripe');
+  seat({id:'nook',label:'Reading nook',room:'bed2',x:KX-0.8,z:-2.75,y:0.43,h:R-0.5+R/2,type:'sit',only:'abc',recline:0.2});
+  const fl=G(d); fl.position.set(KX-0.28,0,-3.5); K.floorLamp(fl,'L:bed2');
+  K.roundRug(d,KX-1.0,-2.7,0.95,0xcbb890,0xe7dcc4);
+  cyl(0.2,0.03,0xc99a5b,KX-1.3,0.5,-3.4,d,24); cyl(0.02,0.5,0x22262a,KX-1.3,0.25,-3.4,d,8); cyl(0.14,0.02,0x22262a,KX-1.3,0.01,-3.4,d,16);   // side table
+  K.bookStack(d,KX-1.32,0.515,-3.42,3,5); cyl(0.04,0.08,0xf3ebdc,KX-1.22,0.555,-3.3,d,12);
+  const pf=G(d); pf.position.set(KX-1.55,0,-2.4); K.pouf(pf,0xd6a21e);
+  box(0.3,0.8,1.1,0xc99a5b,KX-0.16,0.4,-1.3,d);                         // low bookcase after the window
+  [0.14,0.47].forEach(function(y,i){box(0.006,0.3,1.04,0x2a2622,KX-0.3,y+0.13,-1.3,d); K.books(d,KX-0.2,y,-1.3,1.0,0.26,0.2,90+i);});
+  K.tableLamp(d,KX-0.16,0.8,-0.95,'L:bed2'); K.bush(d,KX-0.16,0.8,-1.62,0.09);
+  K.fiddle(d,l+2.6,-3.66,1.75,8);                                       // where the bike stood
+  K.curtain(d,KX-0.07,-3.78,0.22,false,0.2,2.35); K.curtain(d,KX-0.07,-1.88,0.22,false,0.2,2.35);
+  const rg=G(d); rg.position.set(l+2.3,0,-2.95); K.rug(rg,1.3,1.8,'stripe');
   box(1.52,0.05,0.7,SAGE,l+0.78,0.435,AZ+1.6,d);                        // throw across the bed
   box(0.36,0.14,0.3,0xd6a21e,l+0.5,0.5,AZ+0.62,d); box(0.36,0.14,0.3,0xc4673f,l+1.08,0.5,AZ+0.62,d);
   box(1.5,0.55,0.05,0xc99a5b,l+0.78,0.72,AZ+0.035,d);                   // headboard
   K.tableLamp(d,l+1.78,0.4,AZ+0.22,'L:bed2');
-  K.pendant(d,(l+KX)/2,2.3,-2.0,'L:bed2','rattan',null,1.8);
+  K.pendant(d,(l+KX)/2+0.3,2.3,-2.6,'L:bed2','rattan',null,1.8);
+  K.pothos(d,kx-0.15,1.47,kz,0.5,17); K.bush(d,kx+0.2,1.47,kz,0.07);
 });
-K.onlyAll(K.frame('b_l',1.75,1.95,0.55,0.4,4,0xc99a5b).concat(K.frame('b_door',KX-0.5-bl,1.55,0.5,0.6,7,0xb08d4a)),'abc');
+K.onlyAll(K.frame('b_l',2.9,1.6,0.5,0.62,4,0xc99a5b).concat(K.frame('b_door',KX-0.5-bl,1.55,0.5,0.6,7,0xb08d4a)),'abc');
 
 /* ---------- toilet room: unchanged ---------- */
 const tileWhite=canvasTex(128,128,function(g){g.fillStyle='#f6f6f3'; g.fillRect(0,0,128,128); g.strokeStyle='#d9dad6'; g.lineWidth=2; g.strokeRect(0,0,128,128);});
