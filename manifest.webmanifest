@@ -1,0 +1,14 @@
+{
+  "name": "Haroe 10",
+  "short_name": "Haroe 10",
+  "description": "Designing our place: living room and kitchen in 3D",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#E9ECE7",
+  "theme_color": "#1F5A41",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

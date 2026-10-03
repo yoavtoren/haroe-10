@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haroe 10</title>
+<meta name="description" content="Designing our place: living room and kitchen in 3D">
+<meta name="theme-color" content="#1F5A41">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Haroe 10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9ECE7; --panel:#FFFFFF; --ink:#17211C; --muted:#5C6861; --line:#D3D8D1;
+  --green:#1F5A41; --yellow:#E8C91A; --chip:#F3F5F1; --label-bg:rgba(255,255,255,.92);
+  --arch-top:#2E7D5A; --arch-bot:#163F2E;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111714; --panel:#19211D; --ink:#E8EEE9; --muted:#9BA9A1; --line:#2C3731;
+    --green:#63C398; --yellow:#E8C91A; --chip:#222C27; --label-bg:rgba(25,33,29,.92);
+    --arch-top:#3E9C71; --arch-bot:#1F5A41;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111714; --panel:#19211D; --ink:#E8EEE9; --muted:#9BA9A1; --line:#2C3731;
+  --green:#63C398; --yellow:#E8C91A; --chip:#222C27; --label-bg:rgba(25,33,29,.92);
+  --arch-top:#3E9C71; --arch-bot:#1F5A41;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:15px; line-height:1.45; display:flex; flex-direction:column; overflow:hidden;
+}
+#stage{position:relative; flex:1 1 58%; min-height:0; touch-action:none}
+#stage canvas{display:block; width:100%; height:100%}
+#labels{position:absolute; inset:0; pointer-events:none; overflow:hidden}
+.tag{
+  position:absolute; transform:translate(-50%,-50%); white-space:nowrap;
+  background:var(--label-bg); color:var(--ink); border:1px solid var(--line);
+  padding:2px 8px; border-radius:99px; font-size:12px; font-weight:600;
+  transition:opacity .25s;
+}
+.tag.new{border-color:var(--yellow); box-shadow:inset 0 0 0 1px var(--yellow)}
+#hint{position:absolute; left:12px; bottom:10px; font-size:12px; color:var(--muted)}
+#panel{
+  flex:0 1 42%; min-height:0; overflow:auto; background:var(--panel);
+  border-top:1px solid var(--line); padding:14px 16px 18px;
+}
+.brand{display:flex; align-items:center; gap:12px; margin:0 0 14px; padding-bottom:14px; border-bottom:1px solid var(--line)}
+.brand svg{width:40px; height:40px; flex:none}
+.brand h1{margin:0; font-size:24px; line-height:1; font-weight:800; letter-spacing:-.035em; display:flex; align-items:center; gap:7px}
+.brand .no{
+  background:linear-gradient(135deg,#FFE77A,#EBC21C 55%,#D9AA12); color:#163F2E;
+  font-size:.6em; font-weight:800; letter-spacing:0; padding:4px 9px; border-radius:99px; line-height:1;
+}
+.brand p{margin:5px 0 0; font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+h2{font-size:19px; line-height:1.15; margin:0 0 10px; font-weight:700; letter-spacing:-.01em}
+.row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+.seg{display:inline-flex; background:var(--chip); border:1px solid var(--line); border-radius:10px; padding:3px}
+.seg button{
+  font:inherit; font-weight:600; color:var(--muted); background:transparent; border:0;
+  padding:7px 14px; border-radius:7px; cursor:pointer;
+}
+.seg button[aria-pressed="true"]{background:var(--green); color:#fff}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#0d1411}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#0d1411}}
+.seg button:focus-visible, .check input:focus-visible{outline:2px solid var(--yellow); outline-offset:2px}
+.check{display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-weight:600; padding:0 4px}
+ul{margin:0; padding:0; list-style:none}
+li{padding:8px 0; border-top:1px solid var(--line); display:grid; grid-template-columns:104px 1fr; gap:10px}
+li b{font-weight:600}
+li span{color:var(--muted)}
+.note{margin:12px 0 0; font-size:13px; color:var(--muted)}
+@media (min-width:860px){
+  body{flex-direction:row}
+  #stage{flex:1 1 auto}
+  #panel{flex:0 0 370px; border-top:0; border-left:1px solid var(--line); padding:26px 24px}
+  .brand{margin-bottom:20px; padding-bottom:20px}
+  .brand svg{width:52px; height:52px}
+  .brand h1{font-size:30px}
+  h2{font-size:22px; margin-bottom:14px}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="labels"></div>
+  <div id="hint">Drag to rotate, pinch or scroll to zoom</div>
+</div>
+<aside id="panel">
+  <header class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="hArch" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color:var(--arch-top)"/>
+          <stop offset="1" style="stop-color:var(--arch-bot)"/>
+        </linearGradient>
+        <linearGradient id="hGold" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#FFE77A"/><stop offset=".5" stop-color="#EBC21C"/><stop offset="1" stop-color="#C99A0E"/>
+        </linearGradient>
+        <radialGradient id="hMirror" cx=".35" cy=".3" r=".8">
+          <stop offset="0" stop-color="#F6F0E2" stop-opacity=".35"/><stop offset="1" stop-color="#F6F0E2" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <path d="M8 60V30a24 24 0 0 1 48 0v30z" fill="url(#hArch)"/>
+      <path d="M13 55V30a19 19 0 0 1 38 0v25" fill="none" stroke="#F6F0E2" stroke-opacity=".22" stroke-width="1.2"/>
+      <path d="M13 55h38" stroke="#F6F0E2" stroke-opacity=".5" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M16.25 55V33.5a4.5 4.5 0 0 1 9 0V55z" fill="#F6F0E2"/>
+      <circle cx="23.6" cy="44" r="1" fill="#1F5A41"/>
+      <circle cx="38" cy="45.25" r="7.75" fill="url(#hMirror)" stroke="url(#hGold)" stroke-width="4"/>
+    </svg>
+    <div>
+      <h1>Haroe <span class="no">10</span></h1>
+      <p>Designing our place</p>
+    </div>
+  </header>
+  <h2>Living room and kitchen</h2>
+  <div class="row">
+    <div class="seg" role="group" aria-label="Layout">
+      <button id="bPlan" aria-pressed="true">Proposed</button>
+      <button id="bNow" aria-pressed="false">Now</button>
+    </div>
+    <div class="seg" role="group" aria-label="View">
+      <button id="b3d" aria-pressed="true">3D</button>
+      <button id="bTop" aria-pressed="false">From above</button>
+    </div>
+    <label class="check"><input type="checkbox" id="cLabels" checked> Labels</label>
+  </div>
+  <ul id="list"></ul>
+  <p class="note">Sizes are estimated from your photos: room about 3.7 × 7.4 m, sofa about 2.9 m. The kitchen position at the end of the room is an assumption.</p>
+</aside>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script>
+(function(){
+const W=3.7, L=7.4, H=2.6;            // room: x 0..W (sofa wall -> TV wall), z 0..L (doors wall -> kitchen wall)
+const stage=document.getElementById('stage'), labelsEl=document.getElementById('labels');
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+stage.insertBefore(renderer.domElement, labelsEl);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,1,0.1,100);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+const target=new THREE.Vector3(W/2,0.5,L/2);
+controls.target.copy(target); controls.enableDamping=true; controls.dampingFactor=.08;
+controls.maxPolarAngle=Math.PI/2-0.05; controls.minDistance=3; controls.maxDistance=32;
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x8d958f,0.62));
+const sun=new THREE.DirectionalLight(0xffffff,0.42);
+sun.position.set(W/2+2,7,L/2-1); sun.target.position.copy(target); scene.add(sun,sun.target);
+sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-5,right:5,top:5,bottom:-5,near:1,far:15}); sun.shadow.radius=4;
+
+const M=c=>new THREE.MeshLambertMaterial({color:c});
+function box(w,h,d,color,x,y,z,parent){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), typeof color==='number'?M(color):color);
+  m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; (parent||scene).add(m); return m;
+}
+function cyl(r,h,color,x,y,z,parent){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),M(color));
+  m.position.set(x,y,z); m.castShadow=true; (parent||scene).add(m); return m;
+}
+
+/* ---------- floor with 60 cm tiles ---------- */
+(function(){
+  const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d');
+  g.fillStyle='#cfd3ce'; g.fillRect(0,0,128,128); g.strokeStyle='#aeb3ad'; g.lineWidth=2; g.strokeRect(0,0,128,128);
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(W/0.6,L/0.6);
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(W,L),new THREE.MeshLambertMaterial({map:t}));
+  f.rotation.x=-Math.PI/2; f.position.set(W/2,0,L/2); f.receiveShadow=true; scene.add(f);
+  box(W+0.16,0.1,L+0.16,0xb9beb8,W/2,-0.055,L/2).castShadow=false;
+})();
+
+/* ---------- walls: single-sided so the ones facing you disappear ---------- */
+const wallMat=M(0xf4f5f2);
+const walls={
+  far:  {len:W, pos:[W/2,0], rot:0,           u:(u)=>[u,0]},
+  kit:  {len:W, pos:[W/2,L], rot:Math.PI,     u:(u)=>[u,L]},
+  left: {len:L, pos:[0,L/2], rot:Math.PI/2,   u:(u)=>[0,u]},
+  right:{len:L, pos:[W,L/2], rot:-Math.PI/2,  u:(u)=>[W,u]}
+};
+const inward={far:[0,1],kit:[0,-1],left:[1,0],right:[-1,0]};
+for(const k in walls){const w=walls[k];
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w.len,H),wallMat);
+  m.position.set(w.pos[0],H/2,w.pos[1]); m.rotation.y=w.rot; scene.add(m);
+}
+function wallRect(k,u0,u1,y0,y1,color,off){
+  const w=walls[k], p=w.u((u0+u1)/2), n=inward[k], o=off||0.006;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(u1-u0,y1-y0),new THREE.MeshBasicMaterial({color}));
+  m.position.set(p[0]+n[0]*o,(y0+y1)/2,p[1]+n[1]*o); m.rotation.y=w.rot; scene.add(m); return m;
+}
+// doors wall: bedroom door, bus painting, second doorway
+wallRect('far',0.55,1.40,0,2.05,0x6f7873); wallRect('far',0.60,1.35,0,2.0,0x3d4541,0.008);
+wallRect('far',1.62,2.58,1.25,1.95,0xe9e7df); wallRect('far',1.85,2.35,1.42,1.68,0x7fc4b5,0.008);
+wallRect('far',2.72,3.52,0,2.05,0x6f7873); wallRect('far',2.77,3.47,0,2.0,0xf1dfa8,0.008);
+// photo wall on the TV wall near the doors
+wallRect('right',0.25,0.95,0.5,2.0,0x8d8a86);
+// kitchen: barred window/door on the TV-side wall, backsplash
+wallRect('right',5.75,7.2,0,2.2,0xd7dbd6); wallRect('right',5.82,7.13,0.07,2.13,0xa9cfd8,0.008);
+wallRect('right',5.82,7.13,1.08,1.14,0xd7dbd6,0.01);
+wallRect('kit',1.9,3.7,0.9,1.4,0xe7e3d6);
+
+/* ---------- kitchen (unchanged in both layouts) ---------- */
+(function(){
+  const z=L-0.3;
+  box(1.8,0.82,0.58,0x3b3e43,2.8,0.45,z);              // base cabinets
+  box(1.8,0.1,0.56,0x1f2123,2.8,0.05,z+0.01);
+  box(1.84,0.04,0.62,0xeeebe2,2.8,0.89,z-0.01);        // worktop
+  box(0.5,0.02,0.36,0xcfd3d0,2.55,0.915,z-0.02);       // sink
+  box(0.42,0.18,0.3,0x2a2c2e,3.25,1.0,z+0.05);         // dish rack
+  [2.2,2.8,3.4].forEach(x=>box(0.02,0.12,0.02,0x111111,x,0.72,L-0.6));
+  box(1.15,0.5,0.34,0xf0d21c,2.75,1.72,L-0.17);        // yellow wall cabinet
+  box(0.7,1.72,0.68,0xf7f7f5,1.55,0.86,L-0.34);        // fridge
+  box(0.66,0.01,0.01,0xbfc3c0,1.55,0.95,L-0.685);
+  box(0.48,0.28,0.36,0xe9e9e6,1.5,1.86,L-0.32);        // microwave
+  box(0.3,0.2,0.005,0x2b2d2f,1.45,1.86,L-0.502);
+  cyl(0.17,0.68,0x2f8f95,3.42,0.34,6.0);               // bin
+  box(0.8,0.22,0.2,0xf4f5f2,W-0.1,2.3,6.2);            // air conditioner
+})();
+
+/* ---------- movable furniture; every piece is built facing +x, centred on its footprint ---------- */
+function G(){const g=new THREE.Group(); scene.add(g); return g;}
+const sofa=G(); (function(){
+  const c=0x1f5a41, d=0x194a36;
+  box(1.1,0.42,2.9,c,0,0.21,0,sofa);
+  box(0.28,0.42,2.9,d,-0.41,0.63,0,sofa);
+  box(0.82,0.2,0.26,d,0.14,0.52,-1.32,sofa); box(0.82,0.2,0.26,d,0.14,0.52,1.32,sofa);
+  [-0.8,0,0.8].forEach(z=>{const p=box(0.2,0.42,0.7,0x246a4c,-0.2,0.66,z,sofa); p.rotation.z=0.22;});
+})();
+const table=G(); (function(){
+  box(0.5,0.05,1.2,0xc99a5b,0,0.43,0,table);
+  [[-.22,-.57],[.22,-.57],[-.22,.57],[.22,.57]].forEach(p=>box(0.035,0.4,0.035,0x1b1b1b,p[0],0.2,p[1],table));
+})();
+const tv=G(); (function(){                      // console back at -x? no: console front faces +x
+  box(0.4,0.6,1.6,0xf2f2ee,0,0.3,0,tv);
+  box(0.04,0.72,1.25,0x121416,-0.05,1.02,0,tv);
+  box(0.2,0.03,0.5,0x121416,-0.05,0.615,0,tv);
+})();
+const station=G(); (function(){                 // coffee station, back against a wall at -x
+  box(0.6,0.04,1.2,0xc99a5b,0,0.9,0,station);
+  [[-.26,-.56],[.26,-.56],[-.26,.56],[.26,.56]].forEach(p=>box(0.04,0.88,0.04,0x1b1b1b,p[0],0.44,p[1],station));
+  box(0.3,0.36,0.26,0xc9ccd0,-0.08,1.1,-0.1,station);      // espresso machine
+  box(0.16,0.38,0.14,0x2b2b2b,-0.1,1.11,0.18,station);     // grinder
+  box(0.2,0.12,0.26,0xb98a4e,-0.1,0.98,-0.44,station);
+  box(0.02,0.56,0.72,0xf7f7f4,-0.285,1.72,0.1,station);    // pegboard
+  [-0.12,0.08,0.3].forEach(z=>cyl(0.045,0.08,0xb7bbbf,-0.24,1.86,z,station));
+  box(0.01,0.26,0.2,0xd9463e,-0.292,1.78,-0.5,station);    // poster
+})();
+function chair(parent,x,z,ry){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=ry; parent.add(g);
+  box(0.4,0.04,0.4,0xf4f4f1,0,0.45,0,g); box(0.36,0.035,0.36,0x8fb59c,0,0.485,0,g);
+  box(0.035,0.45,0.4,0xf4f4f1,-0.19,0.7,0,g);
+  [[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]].forEach(p=>box(0.035,0.45,0.035,0xf4f4f1,p[0],0.225,p[1],g));
+}
+const dining=G(); (function(){                  // table long side along x, chairs on both long sides
+  box(1.1,0.04,0.7,0xfafaf7,0,0.74,0,dining);
+  [[-.5,-.3],[.5,-.3],[-.5,.3],[.5,.3]].forEach(p=>box(0.05,0.72,0.05,0xf0f0ec,p[0],0.36,p[1],dining));
+  chair(dining,-0.22,-0.56,-Math.PI/2); chair(dining,0.26,-0.56,-Math.PI/2);
+  chair(dining,-0.22,0.56,Math.PI/2);  chair(dining,0.26,0.56,Math.PI/2);
+})();
+const rug=G(); (function(){
+  const a=box(2.0,0.012,3.0,0xb89a63,0,0.006,0,rug); a.castShadow=false;
+  const b=box(1.76,0.014,2.76,0xd2bb8a,0,0.007,0,rug); b.castShadow=false;
+})();
+const armchair=G(); (function(){
+  const c=0xd6a21e, d=0xb98a14;
+  box(0.78,0.36,0.8,c,0,0.24,0,armchair);
+  box(0.2,0.5,0.8,d,-0.3,0.62,0,armchair);
+  box(0.6,0.22,0.14,d,0.08,0.5,-0.33,armchair); box(0.6,0.22,0.14,d,0.08,0.5,0.33,armchair);
+  [[-.32,-.33],[.32,-.33],[-.32,.33],[.32,.33]].forEach(p=>box(0.04,0.1,0.04,0x3a2c1a,p[0],0.05,p[1],armchair));
+})();
+function rackGroup(){
+  const g=G(), s=0xb9bec2;
+  box(1.5,0.02,0.55,s,0,0.9,0,g);
+  const l1=box(0.02,1.0,0.02,s,-0.3,0.45,0,g); l1.rotation.z=0.5;
+  const l2=box(0.02,1.0,0.02,s,0.3,0.45,0,g); l2.rotation.z=-0.5;
+  box(0.5,0.4,0.5,0x2c3a55,0.3,0.72,0,g); box(0.4,0.5,0.5,0xf2f2f2,-0.4,0.67,0,g);
+  return g;
+}
+const rack1=rackGroup(), rack2=rackGroup();
+
+const R=Math.PI;
+// x, z, rotationY, visible
+const items=[
+ {g:sofa,    label:'Sofa',              h:1.15, now:[0.55,3.25,0,1],     plan:[0.55,2.45,0,1]},
+ {g:table,   label:null,                h:0.6,  now:[1.75,3.20,0,1],     plan:[1.85,2.45,0,1]},
+ {g:tv,      label:'TV',                h:1.65, now:[3.50,3.10,R,1],     plan:[3.50,2.45,R,1]},
+ {g:station, label:'Coffee station',    h:2.2,  now:[0.30,1.00,0,1],     plan:[3.40,4.90,R,1]},
+ {g:dining,  label:'Dining nook',       h:1.15, now:[2.20,0.90,0,1],     plan:[0.55,4.90,0,1]},
+ {g:rug,     label:'Rug 200 × 300',     h:0.25, now:[1.90,3.20,0,0],     plan:[1.90,2.45,0,1], isNew:true, lx:0.75, lz:1.3},
+ {g:armchair,label:'Armchair',          h:1.1,  now:[2.10,0.75,-1.13,0], plan:[2.10,0.75,-1.13,1], isNew:true},
+ {g:rack1,   label:'Drying racks',      h:1.3,  now:[1.25,2.00,R/2,1],   plan:[1.25,2.00,R/2,0]},
+ {g:rack2,   label:null,                h:1.3,  now:[2.30,1.55,0,1],     plan:[2.30,1.55,0,0]},
+];
+const fixedLabels=[{label:'Kitchen (unchanged)', pos:new THREE.Vector3(2.6,2.25,L-0.3)}];
+
+function makeTag(text,isNew){const e=document.createElement('div'); e.className='tag'+(isNew?' new':''); e.textContent=text; labelsEl.appendChild(e); return e;}
+items.forEach(it=>{ if(it.label) it.el=makeTag(it.label,it.isNew); it.cur=it.plan.slice(); });
+fixedLabels.forEach(f=>f.el=makeTag(f.label));
+
+/* ---------- layout switching ---------- */
+const copy={
+ plan:[
+  ['Sofa','Stays on the long wall, slides about 80 cm toward the doors to free the kitchen end.'],
+  ['TV','Stays opposite the sofa and moves with it. About 2.4 m from the seat.'],
+  ['Rug','200 × 300 cm under the coffee table, tucked under the sofa front.'],
+  ['Armchair','Under the bus painting, turned toward the TV, closing the seating area.'],
+  ['Dining nook','Your white table, short end against the wall, right beside the kitchen. Seats 4.'],
+  ['Coffee station','Crosses to the TV-side wall, facing the dining table.'],
+  ['Kitchen','Unchanged. About 1 m of working space stays clear in front of the counter.'],
+ ],
+ now:[
+  ['Sofa','Centred on the long wall.'],
+  ['TV','Opposite the sofa on the white console.'],
+  ['Dining table','In front of the two doors, so it sits in the walkway.'],
+  ['Coffee station','In the corner next to the bedroom door.'],
+  ['Drying racks','Take up the open floor between the sofa and the doors.'],
+  ['Kitchen end','About 2.5 m of floor next to the kitchen is unused.'],
+ ]};
+let mode='plan', anim=null;
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function setMode(m){
+  mode=m;
+  document.getElementById('bPlan').setAttribute('aria-pressed',m==='plan');
+  document.getElementById('bNow').setAttribute('aria-pressed',m==='now');
+  document.getElementById('list').innerHTML=copy[m].map(r=>'<li><b>'+r[0]+'</b><span>'+r[1]+'</span></li>').join('');
+  items.forEach(it=>{it.from=it.cur.slice(); it.to=it[m];});
+  anim={t0:performance.now(),dur:reduce?1:800};
+}
+function applyItems(){
+  if(anim){
+    let k=Math.min(1,(performance.now()-anim.t0)/anim.dur); const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    items.forEach(it=>{for(let i=0;i<4;i++) it.cur[i]=it.from[i]+(it.to[i]-it.from[i])*e;});
+    if(k>=1) anim=null;
+  }
+  items.forEach(it=>{
+    it.g.position.set(it.cur[0],0,it.cur[1]); it.g.rotation.y=it.cur[2];
+    const s=Math.max(0.0001,it.cur[3]); it.g.scale.set(s,s,s); it.g.visible=it.cur[3]>0.02;
+  });
+}
+
+/* ---------- camera views ---------- */
+let camAnim=null;
+function fitDist(){const a=stage.clientWidth/stage.clientHeight; return 10.5*Math.max(1,1.08/Math.max(a,0.5));}
+function viewPos(v){
+  if(v==='top'){const wide=stage.clientWidth>stage.clientHeight; return new THREE.Vector3(W/2+(wide?0.01:0),(wide?12:fitDist()*0.95),L/2+(wide?0:0.01));}
+  const d=fitDist(); return new THREE.Vector3(W/2+d*0.62,d*0.62,L/2-d*0.5);
+}
+function setView(v,instant){
+  document.getElementById('b3d').setAttribute('aria-pressed',v==='3d');
+  document.getElementById('bTop').setAttribute('aria-pressed',v==='top');
+  const to=viewPos(v);
+  if(instant||reduce){camera.position.copy(to); controls.target.copy(target); controls.update(); return;}
+  camAnim={from:camera.position.clone(),to,t0:performance.now(),dur:700};
+}
+
+/* ---------- theme-aware background ---------- */
+function syncBg(){
+  const c=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#E9ECE7';
+  renderer.setClearColor(new THREE.Color(c));
+}
+new MutationObserver(syncBg).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',syncBg);
+
+function resize(){
+  const w=stage.clientWidth,h=stage.clientHeight; renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+let showLabels=true; const v=new THREE.Vector3();
+function place(el,p,visible){
+  v.copy(p).project(camera);
+  const ok=showLabels&&visible&&v.z<1;
+  el.style.opacity=ok?1:0;
+  if(ok){el.style.left=((v.x+1)/2*stage.clientWidth)+'px'; el.style.top=((1-v.y)/2*stage.clientHeight)+'px';}
+}
+const tmp=new THREE.Vector3();
+function frame(){
+  requestAnimationFrame(frame);
+  applyItems();
+  if(camAnim){
+    const k=Math.min(1,(performance.now()-camAnim.t0)/camAnim.dur), e=1-Math.pow(1-k,3);
+    camera.position.lerpVectors(camAnim.from,camAnim.to,e); controls.target.lerp(target,e);
+    if(k>=1) camAnim=null;
+  }
+  controls.update(); renderer.render(scene,camera);
+  items.forEach(it=>{ if(!it.el) return;
+    tmp.set(it.cur[0]+(it.lx||0),it.h,it.cur[1]+(it.lz||0)); place(it.el,tmp,it.cur[3]>0.6); });
+  fixedLabels.forEach(f=>place(f.el,f.pos,true));
+}
+document.getElementById('bPlan').onclick=()=>setMode('plan');
+document.getElementById('bNow').onclick=()=>setMode('now');
+document.getElementById('b3d').onclick=()=>setView('3d');
+document.getElementById('bTop').onclick=()=>setView('top');
+document.getElementById('cLabels').onchange=e=>{showLabels=e.target.checked;};
+renderer.domElement.addEventListener('pointerdown',()=>{camAnim=null; document.getElementById('hint').style.opacity=0;});
+
+syncBg(); resize(); setMode('plan'); anim=null; items.forEach(it=>it.cur=it.plan.slice()); setView('3d',true); frame();
+})();
+</script>
+</body>
+</html>

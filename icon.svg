@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- full-bleed version of logo.svg for home-screen icons -->
+  <defs>
+    <linearGradient id="arch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2E7D5A"/>
+      <stop offset="1" stop-color="#163F2E"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE77A"/>
+      <stop offset=".5" stop-color="#EBC21C"/>
+      <stop offset="1" stop-color="#C99A0E"/>
+    </linearGradient>
+    <radialGradient id="mirror" cx=".35" cy=".3" r=".8">
+      <stop offset="0" stop-color="#F6F0E2" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#F6F0E2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" fill="#F3EEE2"/>
+  <g transform="translate(6.4 5.6) scale(.8)">
+    <path d="M8 60V30a24 24 0 0 1 48 0v30z" fill="url(#arch)"/>
+    <path d="M13 55V30a19 19 0 0 1 38 0v25" fill="none" stroke="#F6F0E2" stroke-opacity=".22" stroke-width="1.2"/>
+    <path d="M13 55h38" stroke="#F6F0E2" stroke-opacity=".5" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M16.25 55V33.5a4.5 4.5 0 0 1 9 0V55z" fill="#F6F0E2"/>
+    <circle cx="23.6" cy="44" r="1" fill="#1F5A41"/>
+    <circle cx="38" cy="45.25" r="7.75" fill="url(#mirror)" stroke="url(#gold)" stroke-width="4"/>
+  </g>
+</svg>
