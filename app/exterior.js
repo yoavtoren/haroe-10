@@ -23,8 +23,10 @@ wall('st_w',[2.6,CZ],[2.6,CZ+2.6],[1,0],'hall'); wall('st_n',[2.6,CZ+2.6],[5.3,C
 wall('lb_e',[-5.5,CZ],[-5.5,LZ],[-1,0],'hall'); wall('lb_w',[-9,L],[-9,LZ],[1,0],'hall');
 wall('lb_n',[-9,LZ],[-5.5,LZ],[0,-1],'hall',{holes:[[1.0,2.5,2.2]]});       // building entrance
 A.doorFrame('h_s',en[0]+9,en[1]+9);
-// painted dado, typical of old stairwells: glossy colour to shoulder height
-['h_s','h_n','h_e','st_w','st_n','lb_e','lb_w','lb_n'].forEach(function(k){A.spans(k).forEach(function(s){rect(k,s[0],s[1],0.08,1.35,0xb9c3a6,0.003); rect(k,s[0],s[1],1.35,1.39,0x6f7d5c,0.004);});});
+// terrazzo cladding on the lower half of the walls, typical of old stairwells
+['h_s','h_n','h_e','st_w','st_n','lb_e','lb_w','lb_n'].forEach(function(k){A.spans(k).forEach(function(s){
+  const t=terrazzo.clone(); t.needsUpdate=true; t.repeat.set(s[1]-s[0],1.35);          // same terrazzo as the floor, up to half height
+  rect(k,s[0],s[1],0,1.35,A.MT(t,'hall'),0.005); rect(k,s[0],s[1],1.35,1.39,0xa89f8c,0.006);});});
 /* the other five flats: wooden doors with a number, a bell and a small light above */
 function flatDoor(k,u,no){
   const tex=canvasTex(128,256,function(g){
