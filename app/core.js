@@ -13,12 +13,12 @@ const A=window.APP={};
    ===================================================================== */
 const D=A.D={
   W:3.1,    // living room width at the sofa, sofa wall -> TV wall   (±0.2, not measured)
-  L:5.75,   // living room length, bedroom wall -> entrance wall     (±0.3)
+  L:5.95,   // living room length, bedroom wall -> entrance wall     (±0.3)
   H:2.93,   // ceiling                                                (±0.08)
   T:0.6,    // floor tile                                              (assumed 60 x 60)
   KX:5.7,   // kitchen window wall, i.e. W + 2.6                       (±0.2)
   KZ:2.8,   // kitchen sink wall; the TV wall starts here              (±0.2)
-  ZW:4.55,  // front wall of the guest toilet, which juts into the room at the entrance
+  ZW:4.75,  // front wall of the guest toilet, which juts into the room at the entrance
   BLK:2.3,  // how far that block reaches: the entrance wall is only this wide
   BX:4.9,   // bedroom 2 right-hand wall (window, TV, desk)
   NX:2.05, NZ:-1.9,    // the wardrobe niche in bedroom 2: its back wall, and how far it runs from the door wall
@@ -26,7 +26,7 @@ const D=A.D={
   door2:[2.75,3.53],   // bedroom 2 opening on the far wall, toward the kitchen
   painting:[1.50,2.60,1.40,2.22], // x0,x1,y0,y1 of the bus canvas
   entrance:[0.20,1.05],// front door, right next to the sofa wall
-  bathDoor:[3.72,4.42],// bathroom door, in the same plane as the TV wall, right of the TV. Only 0.8 m of wall before it.
+  bathDoor:[3.92,4.62],// bathroom door, in the same plane as the TV wall, right of the TV. Only 0.8 m of wall before it.
   wcDoor:[2.42,3.07],  // guest toilet door (x), at a right angle to the bathroom door
   bedDepth:4.4,        // both bedrooms, door wall -> window wall (guess)
   bedSplit:2.5         // wall between the two bedrooms, behind the niche (guess)
@@ -65,7 +65,7 @@ const rooms=A.rooms={
   bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
-  hall:{name:'Corridor and lobby', rs:[[-9,5.3,L,L+1.7],[-9,-5.5,L+1.7,L+4.7]], win:null, dl:0.75, node:'hall', on:true},
+  hall:{name:'Lobby', rs:[[-6.5,5.3,L,L+6.5],[-1.7,0.5,L+6.5,L+11.5]], win:null, dl:0.75, node:'hall', on:true},
   out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true}       // garden, street and the neighbouring building
 };
 const chans=A.chans={};

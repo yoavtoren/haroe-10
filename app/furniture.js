@@ -9,7 +9,7 @@ const pc=(D.painting[0]+D.painting[1])/2, DC=(D.door1[1]+D.door2[0])/2, EX=(D.en
 const $=function(id){return document.getElementById(id);};
 
 const P=A.pieces={};
-const SZ=3.2;                 // the sofa is centred here, between the top zone and the front door
+const SZ=3.3;                 // the sofa is centred here, between the top zone and the front door
 function piece(id,opt,build){const g=G(); P[id]=Object.assign({id:id,g:g,cur:[0,0,0,0],to:[0,0,0,0],h:1},opt||{}); build(g); return P[id];}
 /* stretch a unit bar (built 1 long on x) between two points in the xy plane */
 function barXY(m,x0,y0,x1,y1){m.position.x=(x0+x1)/2; m.position.y=(y0+y1)/2; m.rotation.z=Math.atan2(y1-y0,x1-x0); m.scale.x=Math.hypot(x1-x0,y1-y0);}
@@ -153,9 +153,9 @@ piece('towerA',{label:'Cube shelf hides the fridge',h:1.95,isNew:true,shop:['Cub
   const k=K.kallax(g,['pb','xb','by','sx'],WHITE,{box:RATTAN,box2:SAGE});
   box(0.3,0.2,0.34,RATTAN,0,k.h+0.1,-0.17,g); K.pothos(g,0.02,k.h,0.2,0.7,2);          // basket and a trailing plant cover the fridge top
 });
-piece('towerB',{label:'Oak cube shelf hides the fridge',h:1.95,isNew:true,shop:['Cube shelf 2 × 4','KALLAX 77x147 oak effect','ikea','Oak effect.']},function(g){
-  const k=K.kallax(g,['vb','b ','xp','bx'],OAK,{box:WHITE,vase:BLUE});
-  K.pothos(g,0.02,k.h,-0.1,0.65,6); box(0.24,0.2,0.3,RATTAN,0.02,k.h+0.1,0.2,g);
+piece('towerB',{label:'Cube tower hides the fridge',h:1.95,isNew:true,shop:['Cube shelf 1 × 4','KALLAX 42x147','ikea','White, 42 cm wide. It stands against the side of the fridge.']},function(g){
+  const k=K.kallax(g,['p','b','x','b'],WHITE,{box:RATTAN});
+  box(0.3,0.26,0.34,RATTAN,0,k.h+0.13,0,g); K.pothos(g,0.1,k.h,0,0.5,6);          // basket and trailing plant reach the top of the fridge
 });
 function tvBench(id,body,top,floating,shop){
   piece(id,{label:'TV bench 130 cm',h:1.75,isNew:true,shop:shop},function(g){
@@ -259,7 +259,7 @@ const LAY={
   n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.235,TVZ,R], station:[0.30,0.72,0],
      dining:[pc,0.48,0], chairA:[pc-0.92,0.50,0], chairB:[pc+0.92,0.50,R], rack1:[1.2,1.38,0], rack2:[2.55,1.5,0]},
   a:lay({rugA:[1.75,SZ,0], lift:[1.95,SZ,0], kbench:[W-0.2,TVZ,R], poufA1:[1.95,SZ-1.03,0], poufA2:[1.95,SZ+1.03,0], shoeCab:CAB}),
-  b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], benchB:[W-0.2,TVZ+0.05,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
+  b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
   c:lay({rugC:[1.75,SZ,0], table:[1.8,SZ,0], tvOld:[W-0.235,TVZ,R], poufA1:[1.95,SZ+1.03,0], hallBench:HALL})
 };
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
@@ -276,7 +276,7 @@ const FOCUS={n:[1.9,SZ],a:[1.9,SZ],b:[1.9,SZ],c:[1.9,SZ]};
 const DESIGNS=A.DESIGNS={
   n:{name:'Current', title:'Current state', sub:'How the flat is today, modelled from your photos and the video.', table:null, pal:['#1F5A41','#34373c','#f0d21c','#C99A5B','#f3f3ef'],
      list:[
-      ['Living room','About 3.1 m wide and 5.75 m long. Between the fridge and the bathroom door there is only 0.8 m of wall, so the TV bench stands in front of the fridge side. The guest toilet juts in at the entrance, so the entrance wall is 2.3 m: front door, wardrobe, vacuum. Outside the door: the corridor, the stairs on the left, and the lobby.'],
+      ['Living room','About 3.1 m wide and 5.95 m long. Between the fridge and the bathroom door there is about 1 m of wall, so the TV bench stands in front of the fridge side. The guest toilet juts in at the entrance, so the entrance wall is 2.3 m: front door, wardrobe, vacuum. Outside the door: the lobby with the stairs on the left, and the bridge to the street.'],
       ['Sofa and TV','Sofa on the long wall, white TV bench opposite, 55 cm from the coffee table.'],
       ['Top of the room','Coffee station in the corner, dining table under the bus painting, drying racks in between.'],
       ['Bathroom','Its door is in the same wall as the TV, right next to it. Sink on the right, washing machine opposite it under the boiler, toilet on the far wall under the window, shower to its right.'],
@@ -287,7 +287,7 @@ const DESIGNS=A.DESIGNS={
       ['Dining','The drop-leaf table: a 26 cm console with drawers under the bus painting. Open, it moves out and seats four at 75 × 150, clear of both bedroom doors.'],
       ['Coffee table','A 120 × 60 lift-top in oak and white, with a linen pouf at each end. Raised, it is a second eating or laptop spot at the sofa.'],
       ['Record corner','Where the coffee station was: a low white and oak sideboard with the turntable, a speaker and a lamp. The espresso machine moves to the kitchen counter.'],
-      ['TV wall','Only 0.8 m of wall between the fridge and the bathroom door, so the TV stays on a stand in front of the fridge side, as today. A white 4 × 2 cube shelf with woven baskets replaces the bench.'],
+      ['TV wall','About 1 m of wall between the fridge and the bathroom door, so the TV stays on a stand. A white 4 × 2 cube shelf with woven baskets lies in front of the fridge side and hides its lower half; the TV on top covers most of the rest.'],
       ['Entrance','The wardrobe goes. A slim white shoe cabinet with an oak top takes its place, with the round mirror beside it.'],
       ['Light','The flush round ceiling lights stay. Added: lamp at the record corner, picture light, string lights, candles.'],
       ['Kitchen','Deep muted sage fronts, counter and sink unchanged and cleared, bin gone, light strip, runner.'],
@@ -297,7 +297,7 @@ const DESIGNS=A.DESIGNS={
       ['Dining','The drop-leaf table, as in option A.'],
       ['Coffee table','Two round nesting tables, easy to push aside, and one light blue pouf.'],
       ['Record corner','As in option A. Here the coffee moves onto a cart in the kitchen, by the window.'],
-      ['TV wall','The TV stands on a white panelled bench with an oak top, 130 cm, in the same spot as today.'],
+      ['TV wall','A white 1 × 4 cube tower, 42 cm wide, stands against the side of the fridge and hides it from the sofa. Next to it the TV stands on a white bench with an oak top, 130 cm, which ends exactly at the bathroom door frame.'],
       ['Entrance','A bench with shoe baskets and a hook rail replaces the wardrobe.'],
       ['Rug','Cream with light blue stripes, 160 × 230.'],
       ['Kitchen and bedrooms','Same as option A.']]},
@@ -381,9 +381,10 @@ const fixedLabels=[
  {label:'Bedroom 2', alt:'Bedroom 2 · reading nook', pos:new THREE.Vector3(3.7,1.5,-1.4)},
  {label:'Bathroom and shower', pos:new THREE.Vector3(4.7,1.6,3.7)},
  {label:'Guest toilet', pos:new THREE.Vector3(3.2,1.6,L-0.5)},
- {label:'Stairs', pos:new THREE.Vector3(4.0,1.6,L+2.6)},
- {label:'Lobby', pos:new THREE.Vector3(-7.2,1.6,L+3.0)},
- {label:'Garden, one floor down', pos:new THREE.Vector3(9,-1.6,-1)},
+ {label:'Stairs', pos:new THREE.Vector3(6.6,1.9,L+1.6)},
+ {label:'Lobby', pos:new THREE.Vector3(-3.2,1.6,L+3.8)},
+ {label:'Bridge to the street', pos:new THREE.Vector3(-0.6,1.3,L+9)},
+ {label:'Yard, one floor down', pos:new THREE.Vector3(9,-1.6,-1)},
  {label:'≈ '+L.toFixed(1)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
  {label:'≈ '+W.toFixed(1)+' m', pos:new THREE.Vector3(W/2,0.05,2.3), dim:true},
  {label:'ceiling ≈ '+H.toFixed(2)+' m', pos:new THREE.Vector3(0.05,H-0.2,L-1.2), dim:true},

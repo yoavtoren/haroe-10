@@ -112,12 +112,12 @@ function makePerson(spec){
 /* =====================================================================
    Walking: a 10 cm grid over the flat, A* and string pulling
    ===================================================================== */
-const CS=0.1, GX0=-9.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.6-GX0)/CS), NZ=Math.ceil((L+4.9-GZ0)/CS), RAD=0.13;
+const CS=0.1, GX0=-9.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.6-GX0)/CS), NZ=Math.ceil((L+11.7-GZ0)/CS), RAD=0.13;
 const free=new Uint8Array(NX*NZ);
-const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+0.85, LOBBY=[-7.25,L+4.2];      // centre of the front door; where people stand just inside it
+const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+0.85, LOBBY=[-0.6,L+11.2];      // centre of the front door; where people stand just inside it
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
   [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
-  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[-8.8,-5.7,L+1.4,L+2.0],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
+  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[-1.4,0.2,L+6.2,L+6.8],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
   const i0=Math.max(0,Math.ceil((x0-GX0)/CS-0.5)), i1=Math.min(NX-1,Math.floor((x1-GX0)/CS-0.5));
@@ -149,7 +149,7 @@ function cell(x,z){const i=Math.floor((x-GX0)/CS), j=Math.floor((z-GZ0)/CS); ret
 function isFree(x,z){const c=cell(x,z); return c>=0&&free[c]===1;}
 function cx(c){return GX0+((c%NX)+0.5)*CS;} function cz(c){return GZ0+(Math.floor(c/NX)+0.5)*CS;}
 function nearest(x,z){
-  const c0=cell(Math.min(KX+0.1,Math.max(GX0+0.1,x)),Math.min(L+4.8,Math.max(AZ-0.1,z))); if(c0>=0&&free[c0]) return c0;
+  const c0=cell(Math.min(KX+0.1,Math.max(GX0+0.1,x)),Math.min(L+11.5,Math.max(AZ-0.1,z))); if(c0>=0&&free[c0]) return c0;
   const i0=Math.floor((x-GX0)/CS), j0=Math.floor((z-GZ0)/CS); let best=-1, bd=1e9;
   for(let r=1;r<40;r++){
     for(let j=j0-r;j<=j0+r;j++) for(let i=i0-r;i<=i0+r;i++){
@@ -452,7 +452,7 @@ function arrive(list,each){
       a.cb=function(){a.say(['Hi!','Hey!','Shalom!','We are here!'][i%4]); each(a,it);};
     },a);
   });
-  later(0.7+list.length*1.0+8,function(){if(DOOR.entrance.force===1) DOOR.entrance.force=null; refresh();},guests);
+  later(0.7+list.length*1.0+10,function(){if(DOOR.entrance.force===1) DOOR.entrance.force=null; refresh();},guests);
   refresh();
 }
 function goodbye(){
@@ -731,7 +731,7 @@ window.addEventListener('pointerup',function(e){
   walkTo(hit.x,hit.z);
 });
 function walkTo(x,z){
-  if(x<-9.3||x>KX+0.3||z<AZ-0.3||z>L+4.9) return;
+  if(x<-9.3||x>KX+0.3||z<AZ-0.3||z>L+11.6) return;
   if(pj.asleep) return;
   stopAction(); const c=nearest(x,z); if(c<0) return;
   marker.position.set(cx(c),0.03,cz(c)); marker.material.opacity=0.9;
