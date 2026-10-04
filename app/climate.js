@@ -47,7 +47,7 @@ function applySun(){
   A.sun.target.position.copy(c); A.sun.position.copy(c).addScaledVector(s.dir.clone().setY(Math.max(0.05,s.dir.y)).normalize(),32);
   A.sun.intensity=0.62*up; A.sun.color.setRGB(1,0.86+0.14*Math.min(1,s.el/(25*RAD)),0.68+0.32*Math.min(1,s.el/(25*RAD)));
   A.hemi.intensity=0.36+0.3*up;
-  A.set('day',up);
+  A.set('day',up); A.touch(3);
   $('sunClock').textContent=hhmm(sunS.hour);
   const litNow=WINDOWS.filter(function(w){return lit(w,s);}).map(function(w){return w.name;});
   $('sunInfo').textContent=s.el<=0?'The sun is below the horizon.':'Sun in the '+COMP[Math.round(s.az/(Math.PI/4))%8]+', '+Math.round(s.el/RAD)+'° high. '+(litNow.length?'Direct sun on: '+litNow.join(', ')+'.':'No direct sun on any window.');
@@ -68,7 +68,7 @@ let playing=false;
 $('sunPlay').onclick=function(){playing=!playing; $('sunPlay').textContent=playing?'Pause':'Play the day'; if(playing&&sunS.hour>=19.9) sunS.hour=5;};
 function realSun(v){
   A.sunReal=v; A.set('fake',v?0:1);
-  A.shells.forEach(function(m){m.castShadow=v;});
+  A.shells.forEach(function(m){m.castShadow=v;}); A.touch(4);
   const sc=A.sun.shadow.camera;
   if(v){
     if(!sunDef.cam) sunDef.cam={l:sc.left,r:sc.right,t:sc.top,b:sc.bottom,f:sc.far,ms:A.sun.shadow.mapSize.x};
@@ -79,7 +79,7 @@ function realSun(v){
   }else{
     A.sun.position.copy(sunDef.pos); A.sun.target.position.copy(A.home); A.sun.intensity=sunDef.int; A.sun.color.set(0xffffff); A.hemi.intensity=sunDef.hemi;
     if(sunDef.cam){Object.assign(sc,{left:sunDef.cam.l,right:sunDef.cam.r,top:sunDef.cam.t,bottom:sunDef.cam.b,far:sunDef.cam.f}); sc.updateProjectionMatrix();}
-    A.sun.shadow.bias=0; A.sun.shadow.normalBias=0; A.sun.shadow.radius=4;
+    A.sun.shadow.bias=-0.0009; A.sun.shadow.normalBias=0.025; A.sun.shadow.radius=4; A.touch(4);
     A.set('day',1);
   }
 }

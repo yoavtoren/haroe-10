@@ -113,6 +113,10 @@ function makePerson(spec){
     if(pj){mats[1].b.set(spec.pj); mats[2].b.set(spec.pj).multiplyScalar(0.86); mats[5].b.set(0xf3ebdc); mats[10].b.set(0xffffff);}
     else{mats[1].b.copy(baseTop); mats[2].b.copy(basePants); mats[5].b.copy(baseShoe); mats[10].b.copy(baseTrim);}
   };
+  p.hand=Rm.fore;
+  p.setClothes=function(t,q){baseTop.set(t); basePants.set(q); baseTrim.copy(baseTop).multiplyScalar(0.78); if(!p.pjOn) p.outfit(false);};
+  p.shoes=function(on){mats[5].b.copy(on?baseShoe:new THREE.Color(0xf1efe8)); p.shoesOn=on;};
+  p.shoesOn=true;
   p.tint=function(t){for(let i=0;i<mats.length;i++) mats[i].m.color.copy(mats[i].b).multiply(t);};
   p.update=function(dt){
     const k=Math.min(1,dt*9);
@@ -126,6 +130,13 @@ function makePerson(spec){
     Lm.knee.rotation.x=s*R/2*kn+Math.max(0,-Math.sin(p.phase))*0.75*p.walk; Rm.knee.rotation.x=s*R/2*kn+Math.max(0,Math.sin(p.phase))*0.75*p.walk;
     Lm.arm.rotation.x=-sw*0.8-0.2*s+br*0.015*still; Rm.arm.rotation.x=sw*0.8-0.2*s-br*0.015*still;
     Lm.fore.rotation.x=Rm.fore.rotation.x=-0.25*p.walk-1.05*s*(1-p.lie)-0.08*still;
+    if(p.act){const o=Math.sin(p.t*7), a=p.act;                 // what the hands are busy with
+      if(a==='massage'){Lm.arm.rotation.x=-1.2+o*0.14; Rm.arm.rotation.x=-1.2-o*0.14; Lm.fore.rotation.x=Rm.fore.rotation.x=-0.35;}
+      else if(a==='cook'){Rm.arm.rotation.x=-0.9+o*0.12; Rm.fore.rotation.x=-0.6;}
+      else if(a==='vacuum'){Lm.arm.rotation.x=Rm.arm.rotation.x=-0.55; Lm.fore.rotation.x=Rm.fore.rotation.x=-0.5;}
+      else if(a==='read'){Lm.arm.rotation.x=Rm.arm.rotation.x=-0.5; Lm.fore.rotation.x=Rm.fore.rotation.x=-1.45;}
+      else if(a==='study'||a==='eat'){Lm.arm.rotation.x=Rm.arm.rotation.x=-0.45; Lm.fore.rotation.x=-1.0+o*0.06; Rm.fore.rotation.x=-1.0-o*0.06;}
+    }
     torso.rotation.x=-p.recline*s+0.05*p.walk; torso.scale.set(1,1+br*0.008*still,1+br*0.02*still);       // breathing
     head.rotation.y=Math.sin(p.t*0.43)*0.22*still*(1-p.lie); head.rotation.x=Math.sin(p.t*0.31)*0.05*still-0.05*p.walk;
     if((p.blink-=dt)<0){p.blink=p.lie>0.5?0.1:2.5+Math.random()*3.5;} eyes.scale.y=(p.blink<0.12||p.lie>0.8&&p.asleep)?0.12:1;
@@ -224,7 +235,7 @@ function angLerp(a,b,k){let d=b-a; while(d>R) d-=2*R; while(d<-R) d+=2*R; return
 function Actor(spec,me){
   this.spec=spec; this.me=!!me; this.p=makePerson(spec);
   this.x=EX; this.z=SPAWN; this.h=R; this.hT=R; this.path=[]; this.cb=null; this.seat=null; this.held=null;
-  this.speed=me?2.3:1.8; this.tag=A.tag(spec.name,me?'me':'who'); this.bubble=null; this.zz=null; this.room=null; this.ver=-1; this.slide=null;
+  this.speed=me?1.7:1.5; this.tag=A.tag(spec.name,me?'me':'who'); this.bubble=null; this.zz=null; this.room=null; this.ver=-1; this.slide=null;
   this.gone=false;
 }
 Actor.prototype.release=function(){
@@ -297,6 +308,7 @@ const hv=new THREE.Vector3();
 Actor.prototype.headPos=function(v){return this.p.head.getWorldPosition(v);};
 
 let player=null, who='angela';
+const extras=[];              // other people at home who are not guests: the partner
 const guests=[];
 function makePlayer(){
   let x=EX, z=SPAWN, h=R;
@@ -317,6 +329,7 @@ function stopAction(){
   cancelTimers(token); token={}; doing='';
   DOOR.wc.force=null; DOOR.bath.force=null; shower.on(false);
   if(layoutWait){layoutWait=null;}
+  if(A.sims&&A.sims.onStop) A.sims.onStop();
 }
 function seatBy(id){const l=A.liveSeats(); for(let i=0;i<l.length;i++) if(l[i].id===id) return l[i]; return null;}
 function firstFree(ids){for(let i=0;i<ids.length;i++){const s=seatBy(ids[i]); if(s&&(!s.occ||s.occ===player)) return s;} return null;}
@@ -466,7 +479,7 @@ function anyoneIn(room,except){
 /* =====================================================================
    Friends
    ===================================================================== */
-function roster(){const partner=LOOKS[who==='angela'?'yoav':'angela']; return FRIENDS.concat([partner]).filter(function(f){return !guests.some(function(g){return g.spec.id===f.id;});});}
+function roster(){return FRIENDS.filter(function(f){return !guests.some(function(g){return g.spec.id===f.id;});});}
 function freeSeats(){return A.liveSeats().filter(function(s){return s.type==='sit'&&!s.hidden&&s.room==='living'&&!s.occ;});}
 function arrive(list,each){
   DOOR.entrance.force=1; player.say('Come in!');
@@ -676,7 +689,7 @@ $('social').addEventListener('click',function(e){
 function setWho(w){
   who=w; $('whoAngela').setAttribute('aria-pressed',w==='angela'); $('whoYoav').setAttribute('aria-pressed',w==='yoav');
   for(let i=guests.length-1;i>=0;i--) if(guests[i].spec.id===w){guests[i].remove(); guests.splice(i,1);}
-  stopAction(); makePlayer(); refresh(); renderRooms();
+  stopAction(); makePlayer(); if(A.life) A.life.respawn(); refresh(); renderRooms();
 }
 $('whoAngela').onclick=function(){setWho('angela');}; $('whoYoav').onclick=function(){setWho('yoav');};
 
@@ -696,9 +709,9 @@ function setCam(m){
     if(A.simsOn) flyToPlayer();
   }
 }
-function wideFov(){          // eye view: an ultra-wide lens, about 125 degrees across, so a whole room fits
+function wideFov(){          // eye view: a wide lens, about 100 degrees across
   const a=A.stage.clientWidth/Math.max(1,A.stage.clientHeight);
-  camera.fov=Math.min(104,Math.max(78,2*Math.atan(Math.tan(62.5*Math.PI/180)/a)*180/Math.PI)); camera.updateProjectionMatrix();
+  camera.fov=Math.min(84,Math.max(62,2*Math.atan(Math.tan(50*Math.PI/180)/a)*180/Math.PI)); camera.updateProjectionMatrix();
 }
 window.addEventListener('resize',function(){if(A.simsOn&&camMode==='eye') wideFov();});
 function flyToPlayer(){
@@ -754,6 +767,7 @@ window.addEventListener('pointerup',function(e){
   ray.setFromCamera(ndc,camera);
   for(let i=0;i<guests.length;i++){if(guests[i].leaving) continue; if(ray.intersectObject(guests[i].p.g,true).length){kickBar(guests[i]); return;}}   // tap a friend to send them home
   kickBar(null);
+  if(A.life&&A.life.tap(ray.ray)) return;
   if(!ray.ray.intersectPlane(floorPlane,hit)) return;
   walkTo(hit.x,hit.z);
 });
@@ -781,6 +795,7 @@ function stick(el){
   el.addEventListener('pointermove',mv); el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
   return s;
 }
+let manSpeed=0;
 const jMove=stick($('stickMove')), jLook=stick($('stickLook')), sphc=new THREE.Spherical(), offv=new THREE.Vector3();
 A.sticks={move:jMove,look:jLook};
 function showSticks(on){on=on&&TOUCH; $('stickMove').hidden=!on; $('stickLook').hidden=!on; document.body.classList.toggle('sticks',on);}
@@ -792,16 +807,21 @@ function driveSticks(dt){
     let fx, fz;
     if(camMode==='eye'){fx=Math.sin(yaw); fz=Math.cos(yaw);}
     else{fx=controls.target.x-camera.position.x; fz=controls.target.z-camera.position.z; const n=Math.hypot(fx,fz)||1; fx/=n; fz/=n;}
-    const mx=fx*(-jMove.y)-fz*jMove.x, mz=fz*(-jMove.y)+fx*jMove.x, sp=2.4*Math.min(1,mag)*dt;
-    const nx=player.x+mx/mag*sp, nz=player.z+mz/mag*sp;
-    if(isFree(nx,nz)){player.x=nx; player.z=nz;} else if(isFree(nx,player.z)) player.x=nx; else if(isFree(player.x,nz)) player.z=nz;
-    player.hT=Math.atan2(mx,mz); player.manual=true;
-  }
+    const mx=fx*(-jMove.y)-fz*jMove.x, mz=fz*(-jMove.y)+fx*jMove.x, want=1.45*Math.min(1,(mag-0.18)/0.72);
+    manSpeed+=(want-manSpeed)*Math.min(1,dt*5);
+    const base=Math.atan2(mx,mz), sp=manSpeed*dt, TRY=[0,0.45,-0.45,0.9,-0.9,1.35,-1.35];
+    for(let i=0;i<TRY.length;i++){                       // blocked straight ahead: slide round the obstacle
+      const a=base+TRY[i], nx=player.x+Math.sin(a)*sp, nz=player.z+Math.cos(a)*sp;
+      if(isFree(nx,nz)&&isFree(player.x+Math.sin(a)*0.12,player.z+Math.cos(a)*0.12)){player.x=nx; player.z=nz; player.hT=i?base+TRY[i]*0.6:base; break;}
+    }
+    player.manual=true;
+  }else manSpeed=0;
   if(Math.hypot(jLook.x,jLook.y)>0.15){
-    if(camMode==='eye'){yaw-=jLook.x*dt*2.2; pitch=Math.max(-1.1,Math.min(1.1,pitch+jLook.y*dt*1.5)); freeLook=true; lastDrag=A.t;}
+    const lx=jLook.x*Math.abs(jLook.x), ly=jLook.y*Math.abs(jLook.y);        // squared response: small pushes turn slowly
+    if(camMode==='eye'){yaw-=lx*dt*1.5; pitch=Math.max(-1.0,Math.min(1.0,pitch+ly*dt*1.0)); freeLook=true; lastDrag=A.t;}
     else if(!A.flying()){
       offv.copy(camera.position).sub(controls.target); sphc.setFromVector3(offv);
-      sphc.theta-=jLook.x*dt*2.2; sphc.phi=Math.max(0.2,Math.min(Math.PI/2-0.06,sphc.phi-jLook.y*dt*1.4));
+      sphc.theta-=lx*dt*1.5; sphc.phi=Math.max(0.2,Math.min(Math.PI/2-0.06,sphc.phi-ly*dt*1.0));
       offv.setFromSpherical(sphc); camera.position.copy(controls.target).add(offv);
     }
   }
@@ -816,6 +836,10 @@ A.frameFns.push(function(dt,t){
   const before=player.room;
   driveSticks(dt);
   player.update(dt); for(let i=0;i<guests.length;i++) guests[i].update(dt);
+  let moving=player.p.walking||player.slide||Math.abs(player.p.sit-player.p.sitT)>0.01||Math.abs(player.p.lie-player.p.lieT)>0.01;
+  for(let i=0;i<guests.length&&!moving;i++) moving=guests[i].p.walking||guests[i].slide;
+  for(let i=0;i<extras.length&&!moving;i++) moving=extras[i].p.walking||extras[i].slide;
+  if(moving||(A.frameNo=(A.frameNo||0)+1)%20===0) A.touch(2);
   if(player.room!==before){
     focusRooms();
     if(auto&&before){if(!anyoneIn(before,player)) A.set('L:'+before,0); A.set('L:'+player.room,1);}
@@ -826,12 +850,13 @@ A.frameFns.push(function(dt,t){
   for(let i=0;i<A.doors.length;i++){const d=A.doors[i];
     let near=Math.hypot(player.x-d.cx,player.z-d.cz)<1.0&&!player.seat;
     for(let j=0;j<guests.length&&!near;j++) near=Math.hypot(guests[j].x-d.cx,guests[j].z-d.cz)<1.0&&!guests[j].seat;
+    for(let j=0;j<extras.length&&!near;j++) near=Math.hypot(extras[j].x-d.cx,extras[j].z-d.cz)<1.0&&!extras[j].seat;
     d.target=near?1:0;}
   if(marker.material.opacity>0){marker.material.opacity=Math.max(0,marker.material.opacity-dt*(player.path.length?0.25:2.5)); marker.scale.setScalar(1+0.12*Math.sin(t*7));}
   if(camMode==='eye'){
     if(player.path.length||player.slide||player.manual){if(t-lastDrag>1.2) freeLook=false;}
     if(!freeLook) yaw=angLerp(yaw,player.h,Math.min(1,dt*5));
-    player.headPos(eye); camera.position.copy(eye); camera.position.y+=0.03;
+    player.headPos(eye); eye.y+=0.03; if(camera.position.distanceTo(eye)>1) camera.position.copy(eye); else camera.position.lerp(eye,1-Math.exp(-dt*16));
     camera.rotation.order='YXZ'; camera.rotation.set(-pitch,yaw+R,0);
   }else if(!A.flying()){
     tgt.set(player.x,1.0,player.z); delta.copy(tgt).sub(controls.target).multiplyScalar(1-Math.exp(-dt*5));
@@ -841,7 +866,7 @@ A.frameFns.push(function(dt,t){
 });
 const tv3=new THREE.Vector3();
 A.labelFns.push(function(){
-  const all=[player].concat(guests);
+  const all=[player].concat(guests,extras);
   for(let i=0;i<all.length;i++){const a=all[i]; if(!a) continue;
     const show=A.simsOn&&S.labels&&!(a.me&&camMode==='eye');
     a.headPos(tv3); tv3.y+=0.28; A.place(a.tag,tv3,show&&!a.zz&&!a.bubble);
@@ -857,6 +882,7 @@ function resetSims(){
   stopAction(); clearGuests(); timers.length=0;
   if(pj.on){pj.on=false; pj.asleep=false; S.pj=false; A.set('string',0); A.set('tv',0); K.tvShow='day'; if(player){player.sleep(false); player.p.outfit(false); player.ver=-1;}}
   if(player){player.release(); player.path=[]; player.x=EX; player.z=SPAWN; player.h=player.hT=R;}
+  if(A.life) A.life.reset();
 }
 A.onDesign=function(){resetSims(); afterLayout(function(){if(player){const c=nearest(player.x,player.z); if(c>=0){player.x=cx(c); player.z=cz(c);}} refresh();});};
 A.onPanel=function(){if(player) refresh();};
@@ -867,6 +893,7 @@ function setMode(sims){
   if(sims){
     if(!player){buildNav(); makePlayer();}
     $('hint').textContent='Tap the floor to walk. Drag to rotate, pinch or scroll to zoom'; $('hint').style.opacity=1;
+    if(A.life) A.life.enter();
     setCam('follow'); renderRooms(); refresh(); showSticks(true); player.room=A.roomAt(player.x,player.z); focusRooms(); A.setEdit(false);
   }else{
     showSticks(false);
@@ -881,7 +908,10 @@ function setMode(sims){
 }
 A.setMode=setMode;
 $('tabDesign').onclick=function(){setMode(false);}; $('tabSims').onclick=function(){setMode(true);};
-A.sims={ACT:ACT,guests:guests,pj:pj,setEvening:setEvening,setLight:setLight,setShutter:setShutter,setCam:setCam,setWho:setWho,startPJ:startPJ,lightsOut:lightsOut,morning:morning,arrive:arrive,goodbye:goodbye,roster:roster,freeSeats:freeSeats,openInvite:openInvite,openPJ:openPJ,get player(){return player;}};
+A.sims={Actor:Actor,LOOKS:LOOKS,extras:extras,later:later,cancel:cancelTimers,toast:toast,stop:stopAction,seatBy:seatBy,firstFree:firstFree,afterLayout:afterLayout,refresh:refresh,isFree:isFree,
+  nearestXZ:function(x,z){const c=nearest(x,z); return c<0?null:[cx(c),cz(c)];},setDoing:function(t){doing=t; refresh();},getDoing:function(){return doing;},renderRooms:renderRooms,
+  view:function(){return camMode==='eye'?yaw:player.h;},EX:EX,SPAWN:SPAWN,get who(){return who;},get evening(){return evening;},
+  ACT:ACT,guests:guests,pj:pj,setEvening:setEvening,setLight:setLight,setShutter:setShutter,setCam:setCam,setWho:setWho,startPJ:startPJ,lightsOut:lightsOut,morning:morning,arrive:arrive,goodbye:goodbye,roster:roster,freeSeats:freeSeats,openInvite:openInvite,openPJ:openPJ,get player(){return player;}};
 
 /* ---------- phone in portrait: suggest turning it sideways, once ---------- */
 (function(){

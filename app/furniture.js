@@ -279,7 +279,7 @@ A.inRoom('living',function(){
 
 /* ---------- layouts: x, z, rotation. A piece that is not listed is hidden. ---------- */
 const TVZ=2.9, HALL=[1.68,L-0.19,R/2], CAB=[1.6,L-0.13,R/2];
-const COMMON={sofa:[0.60,SZ,0], music:[0.22,0.9,0], gate:[DC,0.17,0]};          // every proposal keeps the record corner and the drop-leaf table
+const COMMON={sofa:[0.60,SZ,0], music:[0.22,0.9,0], gate:[DC,0.17,0], rack1:[0.45,-2.0,R/2]};          // the drying rack lives in the study          // every proposal keeps the record corner and the drop-leaf table
 function lay(o){for(const k in COMMON) o[k]=COMMON[k]; return o;}
 const LAY={
   n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.235,TVZ,R], station:[0.30,0.72,0],
@@ -322,7 +322,7 @@ const DESIGNS=A.DESIGNS={
       ['Entrance','The wardrobe goes. A slim white shoe cabinet with an oak top takes its place, with the round mirror beside it.'],
       ['Light','The flush round ceiling lights stay. Added: lamp at the record corner, picture light, string lights, candles.'],
       ['Kitchen','Deep muted sage fronts, counter and sink unchanged and cleared, bin gone, light strip, runner.'],
-      ['Bedrooms','Bedroom 1 becomes a study with two desks. In bedroom 2 the bed turns 90° to face the TV, the bike goes, and a reading nook replaces the desk.']]},
+      ['Bedrooms','Bedroom 1 becomes a study with two desks, and the drying rack moves in there, out of the living room. In bedroom 2 the bed turns 90° to face the TV, the bike goes, and a reading nook replaces the desk.']]},
   b:{name:'B', title:'B · Light and open', sub:'The same bones with the lightest furniture: nesting tables and a coffee cart.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
       ['Dining','The drop-leaf table, as in option A.'],
@@ -395,7 +395,7 @@ function stepLayout(){
     for(let i=0;i<tableFns.length;i++) tableFns[i](A.tableT);
     A.liftT=anim.lf+(anim.lt-anim.lf)*e; for(let i=0;i<liftFns.length;i++) liftFns[i](A.liftT);
     for(const id in P){const p=P[id];
-      p.g.position.set(p.cur[0],0,p.cur[1]); p.g.rotation.y=p.cur[2];
+      p.g.position.set(p.cur[0],0,p.cur[1]); p.g.rotation.y=p.cur[2]; A.touch(3);
       const s=Math.max(0.0001,p.cur[3]); p.g.scale.set(s,s,s); p.g.visible=p.cur[3]>0.02;
     }
     if(k>=1){anim=null; for(let i=0;i<A.layoutFns.length;i++) A.layoutFns[i]();}
@@ -526,7 +526,7 @@ function clampPos(p){
   if(z>D.ZW-0.05&&x>D.BLK-0.05) x=D.BLK-0.05;
   p.cur[0]=x; p.cur[1]=z;
 }
-function place(p){p.to=[p.cur[0],p.cur[1],p.cur[2],1]; p.g.position.set(p.cur[0],0,p.cur[1]); p.g.rotation.y=p.cur[2];}
+function place(p){A.touch(3); p.to=[p.cur[0],p.cur[1],p.cur[2],1]; p.g.position.set(p.cur[0],0,p.cur[1]); p.g.rotation.y=p.cur[2];}
 function commit(p){
   const k=ukey(); (USER[k]||(USER[k]={}))[p.id]=[p.cur[0],p.cur[1],p.cur[2]];
   resolveSeats(); for(let i=0;i<A.layoutFns.length;i++) A.layoutFns[i]();

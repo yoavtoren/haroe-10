@@ -53,7 +53,11 @@ scene.add(new THREE.HemisphereLight(0xffffff,0x8d958f,0.66));
 const hemi=A.hemi=scene.children[scene.children.length-1];
 const sun=A.sun=new THREE.DirectionalLight(0xffffff,0.4);
 sun.position.set(6,9,-0.5); sun.target.position.copy(home); scene.add(sun,sun.target);
-sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+const TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+if(TOUCH) renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+sun.castShadow=true; sun.shadow.mapSize.set(TOUCH?1536:2048,TOUCH?1536:2048); sun.shadow.bias=-0.0009; sun.shadow.normalBias=0.025;
+renderer.shadowMap.autoUpdate=false; A.shadowFrames=4;
+A.touch=function(n){A.shadowFrames=Math.max(A.shadowFrames,n||2);};      // something moved: redraw shadows for a few frames
 Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:26}); sun.shadow.radius=4;
 
 /* ---------- rooms and light channels ----------
@@ -281,12 +285,15 @@ A.door=function(id){for(let i=0;i<doors.length;i++) if(doors[i].id===id) return 
 A.thicken=function(){
   const keys=Object.keys(walls), caps=[];
   const twin=function(w){            // is there a wall back to back with this one?
-    return keys.some(function(k){const o=walls[k]; if(o===w||o.n[0]*w.n[0]+o.n[1]*w.n[1]>-0.99) return false;
+    let found=null; keys.some(function(k){const o=walls[k]; if(o===w||o.n[0]*w.n[0]+o.n[1]*w.n[1]>-0.99) return false;
       const mx=(w.a[0]+w.b[0])/2, mz=(w.a[1]+w.b[1])/2, dx=mx-o.a[0], dz=mz-o.a[1], along=dx*o.d[0]+dz*o.d[1], off=Math.abs(dx*o.n[0]+dz*o.n[1]);
-      return off<0.12&&along>-0.05&&along<o.len+0.05;});
+      if(off<0.12&&along>-0.05&&along<o.len+0.05){found=k; return true;} return false;});
+    return found;
   };
+  const done={};
   keys.forEach(function(k){
-    const w=walls[k], tw=twin(w), t=tw?0.1:0.2, zc=tw?0:-0.1, hl=w.len/2, g=new THREE.Group(); w.g.add(g);
+    const w=walls[k], tw=twin(w); if(tw&&done[tw]){done[k]=1; return;} done[k]=1;      // one cap per pair of back-to-back walls
+    const t=tw?0.1:0.2, zc=tw?0:-0.1, hl=w.len/2, g=new THREE.Group(); w.g.add(g);
     const core=M(0x7f8682,w.room), trim=M(0xe9ebe7,w.room);
     const bx=function(sx,sy,sz,mat,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat); m.position.set(x,y,z); m.receiveShadow=true; g.add(m); return m;};
     bx(w.len+(tw?0:0.2),0.03,t,core,0,H+0.016,zc);                                            // the cut top
@@ -353,9 +360,9 @@ let last=0;
 function frame(now){
   requestAnimationFrame(frame);
   const dt=Math.min(0.1,Math.max(0.001,(now-last)/1000)); last=now; A.t=now/1000;
-  if(stepChans(dt)||A.dirty){A.dirty=false; applyShutters(); relight();}
+  if(stepChans(dt)||A.dirty){A.dirty=false; applyShutters(); relight(); A.touch();}
   for(let i=0;i<doors.length;i++){const d=doors[i], tg=d.force!=null?d.force:d.target;
-    if(d.cur!==tg){const s=3.2*dt, df=tg-d.cur; d.cur=Math.abs(df)<=s?tg:d.cur+Math.sign(df)*s; d.p.rotation.y=d.closed+(d.open-d.closed)*d.cur*0.94;}}
+    if(d.cur!==tg){const s=3.2*dt, df=tg-d.cur; d.cur=Math.abs(df)<=s?tg:d.cur+Math.sign(df)*s; d.p.rotation.y=d.closed+(d.open-d.closed)*d.cur*0.94; A.touch();}}
   for(let i=0;i<A.frameFns.length;i++) A.frameFns[i](dt,A.t);
   if(camAnim){
     const k=Math.min(1,(now-camAnim.t0)/camAnim.dur), e=1-Math.pow(1-k,3);
@@ -363,6 +370,7 @@ function frame(now){
     if(k>=1) camAnim=null;
   }
   if(controls.enabled) controls.update();
+  if(A.shadowFrames>0){A.shadowFrames--; renderer.shadowMap.needsUpdate=true;}
   renderer.render(scene,camera);
   for(let i=0;i<A.labelFns.length;i++) A.labelFns[i]();
 }

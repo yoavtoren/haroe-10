@@ -75,6 +75,17 @@ body{
 #stickMove{left:calc(18px + env(safe-area-inset-left,0px))} #stickLook{right:calc(18px + env(safe-area-inset-right,0px))}
 .stick::after{position:absolute; left:0; right:0; top:-20px; text-align:center; font-size:11px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6)}
 #stickMove::after{content:"WALK"} #stickLook::after{content:"LOOK"}
+#useBar{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center; max-width:92%; background:var(--label-bg); border:1px solid var(--line); border-radius:16px; padding:5px 6px 5px 12px; font-size:13px}
+#useBtns{display:flex; gap:5px; flex-wrap:wrap}
+#useBtns .fab{background:var(--green); color:var(--on); border-color:var(--green)}
+body.sticks #useBar{bottom:138px}
+.needs{display:grid; grid-template-columns:auto 1fr; gap:4px 10px; align-items:center; font-size:12px; font-weight:600; color:var(--muted); margin:8px 0}
+.needs i{display:block; height:7px; border-radius:99px; background:var(--chip); border:1px solid var(--line); overflow:hidden}
+.needs i b{display:block; height:100%; background:var(--green)}
+.needs i b.low{background:#d9463e}
+.goals{margin:0; padding:0; list-style:none; font-size:13px}
+.goals li{display:block; border:0; padding:2px 0; color:var(--muted)}
+.goals li.done{color:var(--green); text-decoration:line-through}
 #guestBar{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:6px; background:var(--label-bg); border:1px solid var(--yellow); border-radius:99px; padding:5px 6px 5px 14px; font-size:13px; white-space:nowrap}
 body.sticks #guestBar{bottom:140px}
 #shopCard{position:absolute; left:12px; bottom:36px; z-index:3; max-width:270px; background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:14px; padding:12px 34px 12px 14px; box-shadow:0 8px 28px rgba(0,0,0,.2); display:flex; flex-direction:column; gap:5px; font-size:13px}
@@ -181,6 +192,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   <div id="rotateTip" hidden>Tip: turn your phone sideways (rotation unlocked) for easier control. <button id="bTipClose" aria-label="Close">×</button></div>
   <div id="pieceBar" hidden><b id="pieceName"></b><button class="fab" id="bRotate">Rotate 45°</button><button class="fab" id="bPieceDone">Done</button></div>
   <div id="shopCard" hidden><button id="shopClose" aria-label="Close">×</button><b id="shopName"></b><span id="shopNote"></span><a id="shopLink" target="_blank" rel="noopener"></a></div>
+  <div id="useBar" hidden><b id="useName"></b><span id="useBtns"></span></div>
   <div id="guestBar" hidden><b id="guestName"></b><button class="fab" id="bKick">Send home</button><button class="fab" id="bGuestKeep">Cancel</button></div>
   <div class="stick" id="stickMove" hidden aria-label="Move"><i></i></div>
   <div class="stick" id="stickLook" hidden aria-label="Look"><i></i></div>
@@ -273,7 +285,12 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
     </div>
     <p class="status" id="status"></p>
     <p class="note" style="margin-top:0">Tap the floor to walk there.</p>
-    <h3>Do</h3>
+    <div class="needs" id="needs"></div>
+    <h3>Live</h3>
+    <div class="acts" id="lifeActs"></div>
+    <h3>Today</h3>
+    <ul class="goals" id="goals"></ul>
+    <h3>More</h3>
     <div class="acts" id="acts"></div>
     <h3>Friends</h3>
     <div class="acts" id="social"></div>
@@ -334,5 +351,6 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 <script src="app/furniture.js"></script>
 <script src="app/climate.js"></script>
 <script src="app/sims.js"></script>
+<script src="app/life.js"></script>
 </body>
 </html>
