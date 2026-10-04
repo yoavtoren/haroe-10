@@ -269,6 +269,22 @@ function drawTV(t){
     g.fillStyle='#e9ecef'; g.beginPath(); g.ellipse(x,y+5,24,9,0,0,7); g.fill(); g.fillStyle='#d9463e'; g.beginPath(); g.moveTo(x+18,y-2); g.lineTo(x+34,y+5); g.lineTo(x+18,y+12); g.fill();
     g.fillStyle='#7fc4f5'; g.beginPath(); g.arc(x+4,y+4,4,0,7); g.fill();
     g.fillStyle='#1c2a4a'; g.beginPath(); g.moveTo(0,144); g.lineTo(0,126); g.quadraticCurveTo(70,108,128,128); g.quadraticCurveTo(190,112,256,130); g.lineTo(256,144); g.fill();
+  }else if(K.tvShow==='football'){ // a match seen from the stand
+    g.fillStyle='#2f8f4a'; g.fillRect(0,0,256,144); for(let i=0;i<8;i++){g.fillStyle=i%2?'#2a8444':'#35994f'; g.fillRect(i*32,0,32,144);}
+    g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=2; g.strokeRect(8,10,240,112); g.beginPath(); g.moveTo(128,10); g.lineTo(128,122); g.stroke(); g.beginPath(); g.arc(128,66,20,0,7); g.stroke();
+    g.strokeRect(8,40,30,52); g.strokeRect(218,40,30,52);
+    const bx=128+Math.sin(t*0.9)*95, by=66+Math.sin(t*1.7)*38, r=rng(3);
+    for(let i=0;i<10;i++){const px=30+r()*196+Math.sin(t*0.8+i)*10+(bx-128)*0.25, py=20+r()*92+Math.cos(t*0.9+i*2)*8; g.fillStyle=i%2?'#f0d21c':'#d9463e'; g.beginPath(); g.arc(px,py,4,0,7); g.fill();}
+    g.fillStyle='#fff'; g.beginPath(); g.arc(bx,by,3,0,7); g.fill();
+    g.fillStyle='rgba(0,0,0,.6)'; g.fillRect(0,124,256,20); g.fillStyle='#fff'; g.font='bold 12px sans-serif'; g.fillText('MAC 1 : 1 HAP   '+(60+Math.floor(t)%30)+"'",8,138);
+  }else if(K.tvShow==='netflix'){  // a streaming drama: red title card, then two people talking at night
+    const ph=(t%14);
+    if(ph<2.2){g.fillStyle='#000'; g.fillRect(0,0,256,144); g.fillStyle='#e50914'; g.font='bold 54px sans-serif'; g.textAlign='center'; g.globalAlpha=Math.min(1,ph); g.fillText('N',128,92); g.globalAlpha=1; g.textAlign='left';}
+    else{const sky=g.createLinearGradient(0,0,0,144); sky.addColorStop(0,'#1a1430'); sky.addColorStop(1,'#5a2a3a'); g.fillStyle=sky; g.fillRect(0,0,256,144);
+      g.fillStyle='#f4c27a'; for(let i=0;i<14;i++) g.fillRect(10+i*18,70+((i*7)%5)*6,6,8);
+      g.fillStyle='#120e1c'; g.fillRect(0,110,256,34);
+      [[86,0],[170,1]].forEach(function(q){const bob=Math.sin(t*2+q[1]*2)*1.5; g.fillStyle=q[1]?'#3a5a7a':'#7a3a4a'; g.fillRect(q[0]-16,74+bob,32,50); g.fillStyle='#e2b28f'; g.beginPath(); g.arc(q[0],62+bob,13,0,7); g.fill(); g.fillStyle='#2a1a12'; g.beginPath(); g.arc(q[0],57+bob,13,Math.PI,0); g.fill();});
+      g.fillStyle='rgba(0,0,0,.55)'; g.fillRect(40,124,176,14); g.fillStyle='#fff'; g.font='10px sans-serif'; g.fillText(['I never said I was leaving.','Then why is the bag packed?','It is for the weekend.'][Math.floor(ph/4)%3],48,134);}
   }else{                         // sunny road trip in the mint bus from the painting
     const sky=g.createLinearGradient(0,0,0,100); sky.addColorStop(0,'#7fc4f5'); sky.addColorStop(1,'#fbe3b0'); g.fillStyle=sky; g.fillRect(0,0,256,144);
     g.fillStyle='#fff2b0'; g.beginPath(); g.arc(200,36,17,0,7); g.fill();

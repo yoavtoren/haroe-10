@@ -5,9 +5,10 @@ const A=window.APP, D=A.D, SM=A.sims, K=A.kit, ST=A.state, R=Math.PI, L=D.L, W=D
 const $=function(id){return document.getElementById(id);};
 const me=function(){return SM.player;};
 let partner=null, tok={}, mode='', pin=null, pinT=0;
-const st={need:{energy:72,food:55,fun:60,clean:78},carry:null,outfit:0,pile:null,music:false,asleep:false,chapters:0,done:{},warned:{}};
+const WCS=A.WC, mzW=(A.WC.z0+A.WC.z1)/2, tzB=(D.bathDoor[0]+D.bathDoor[1])/2;
+const st={dishes:0,need:{energy:72,food:55,fun:60,clean:78},carry:null,outfit:0,pile:null,music:false,asleep:false,chapters:0,done:{},warned:{}};
 const NEEDS=[['energy','Energy'],['food','Food'],['fun','Fun'],['clean','Hygiene']];
-const GOALS=[['shoes','Take your shoes off at the door'],['coffee','Make a coffee'],['record','Put a record on'],['cook','Cook and eat together'],['study','Study a chapter'],
+const GOALS=[['shoes','Take your shoes off at the door'],['coffee','Make a coffee'],['record','Put a record on'],['cook','Cook and eat together'],['dishes','Wash the dishes'],['study','Study a chapter'],
   ['vacuum','Vacuum the flat'],['clothes','Change clothes and deal with the old ones'],['massage','Give or get a massage'],['read','Read a book on the sofa'],['sleep','Go to sleep together']];
 const OUTFITS={angela:[[0xd6a21e,0x3d5a80],[0x8fbd9b,0xf3ebdc],[0x9fc4d6,0x2b2f38],[0xc4673f,0x3d5a80]],yoav:[[0x2f6f52,0x2b2f38],[0xf3ebdc,0x3d5a80],[0x26386b,0x6b6f76],[0x9fc4d6,0x2b2f38]]};
 
@@ -33,6 +34,54 @@ function addDirt(x,z){
 function cleanNear(x,z,r){for(let i=dirt.length-1;i>=0;i--){const m=dirt[i]; if(Math.hypot(m.position.x-x,m.position.z-z)<r){props.remove(m); m.geometry.dispose(); dirt.splice(i,1);}}}
 const notes=[];
 function note(x,z){const e=A.tag(['♪','♫','♩'][notes.length%3],'zzz'); e.style.color='#1F5A41'; notes.push({e:e,p:new THREE.Vector3(x+(Math.random()-0.5)*0.5,1.1,z+(Math.random()-0.5)*0.5),t:0});}
+
+/* ---------- kitchen doors and drawers that open, in both colourways ---------- */
+const movers=[];                 // {o, prop axis, closed, open, cur, target}
+function mover(o,axis,closed,open){const m={o:o,axis:axis,closed:closed,open:open,cur:0,target:0}; movers.push(m); return m;}
+const KIT={fridge:[],cab:[],drawer:[]};
+function openK(k,v){KIT[k].forEach(function(m){m.target=v?1:0;});}
+A.inRoom('kitchen',function(){
+  const x0=KX-1.8;
+  // fridge: a door on a hinge, shelves and food behind it
+  const fd=A.G(); fd.position.set(W+0.71,0,KZ-0.725); A.box(0.68,1.72,0.03,0xf7f7f5,-0.34,0.875,-0.015,fd); A.box(0.02,0.5,0.03,0xdedfdc,-0.62,0.95,-0.04,fd);
+  KIT.fridge.push(mover(fd,'ry',0,-1.75));
+  const fin=A.G(); A.box(0.6,1.6,0.006,0xfff6d8,W+0.36,0.86,KZ-0.722,fin); [0.45,0.85,1.25].forEach(function(y){A.box(0.6,0.012,0.02,0xcfd6d8,W+0.36,y,KZ-0.728,fin);});
+  [[0.2,0.52,0x5b8f4a],[0.4,0.52,0xd9463e],[0.52,0.93,0xf0d21c],[0.24,0.93,0xfbfaf6],[0.38,1.33,0x9fc4d6],[0.2,1.33,0xd9863e]].forEach(function(q){A.box(0.1,0.12,0.02,q[2],W+q[0],q[1],KZ-0.732,fin);});
+  KIT.fridge.fin=fin; fin.visible=false;
+  [['n',0x34373c,0xf0d21c],['abcdef',0x7b8a60,0x7b8a60]].forEach(function(v){
+    const g=A.G(); g.userData.only2=v[0];
+    const cd=A.G(g); cd.position.set(x0+0.325,0,KZ-0.362); A.box(0.56,0.56,0.02,v[2],0.28,1.76,0,cd); A.box(0.012,0.1,0.02,0x17181a,0.52,1.56,-0.016,cd);     // wall cabinet door
+    KIT.cab.push(mover(cd,'ry',0,1.6));
+    const dr=A.G(g); A.box(0.56,0.24,0.5,v[1],KX-1.5,0.48,0.36,dr); A.box(0.26,0.014,0.02,0x17181a,KX-1.5,0.52,0.618,dr);                                 // pan drawer by the hob
+    KIT.drawer.push(mover(dr,'pz',0,0.32));
+    KIT[v[0]]=g;
+  });
+  const cin=A.G(); A.box(0.5,0.5,0.006,0x2a2c2e,x0+0.61,1.76,KZ-0.33,cin); [0,1,2,3].forEach(function(i){A.cyl(0.11,0.012,0xfbfaf6,x0+0.5,1.5+i*0.016,KZ-0.2,cin,16);}); [0,1,2].forEach(function(i){A.cyl(0.035,0.09,0x9fc4d6,x0+0.72+i*0.09,1.54,KZ-0.2,cin,12);});
+  KIT.cab.fin=cin; cin.visible=false;
+});
+const pan=new THREE.Group(); props.add(pan); pan.visible=false;
+(function(){let m=mesh(new THREE.CylinderGeometry(0.13,0.11,0.05,20),lam(0x2a2c2e),pan); m=mesh(new THREE.BoxGeometry(0.2,0.02,0.03),lam(0x2a2c2e),pan); m.position.set(0.22,0.01,0);})();
+const sinkPile=new THREE.Group(); props.add(sinkPile); sinkPile.position.set(KX-1.05,0.93,KZ-0.32);
+const dishMesh=[0,1,2,3,4,5,6,7].map(function(i){const m=i%4===3?mesh(new THREE.CylinderGeometry(0.11,0.1,0.045,16),lam(0x2a2c2e),sinkPile):i%4===2?mesh(new THREE.CylinderGeometry(0.035,0.03,0.09,12),lam(0x9fc4d6),sinkPile):mesh(new THREE.CylinderGeometry(0.1,0.08,0.014,16),lam(0xfbfaf6),sinkPile);
+  m.position.set((i%3-1)*0.13,0.02+Math.floor(i/3)*0.03,(i%2?0.06:-0.06)); m.rotation.z=(i%2?0.25:-0.15); m.visible=false; return m;});
+function dishes(n){st.dishes=Math.max(0,Math.min(8,n)); dishMesh.forEach(function(m,i){m.visible=i<st.dishes;});}
+const food=mesh(new THREE.BoxGeometry(0.12,0.1,0.1),lam(0x5b8f4a)); food.visible=false;
+const plateH=mesh(new THREE.CylinderGeometry(0.1,0.08,0.014,16),lam(0xfbfaf6)); plateH.visible=false;
+const heap=new THREE.Group(); props.add(heap); heap.visible=false;
+[[0,0,0],[0.07,0.03,0.04],[-0.05,0.05,-0.03]].forEach(function(q,i){const m=mesh(new THREE.SphereGeometry(0.11,10,8),lam(0xffffff),heap); m.position.set(q[0],q[1],q[2]); m.scale.set(1.3,0.45,1.1); m.userData.i=i;});
+
+/* ---------- toilets: a lid and a seat on a hinge, each remembered up or down ---------- */
+const WCs={};
+function toilet(id,hx,z,room,door){
+  const t={id:id,x:hx-0.25,z:z,door:door,lid:null,seat:null,seatUp:false};
+  A.inRoom(room,function(){
+    const sp=A.G(); sp.position.set(hx,0.6,z); A.box(0.42,0.018,0.34,0xf4f4f1,-0.21,0,0,sp); A.box(0.3,0.02,0.22,0x3c4043,-0.21,-0.004,0,sp).visible=false;
+    const lp=A.G(); lp.position.set(hx,0.62,z); A.box(0.43,0.02,0.35,0xffffff,-0.215,0,0,lp);
+    t.seat=mover(sp,'rz',0,-1.5); t.lid=mover(lp,'rz',0,-1.62);
+  });
+  WCs[id]=t; return t;
+}
+toilet('guest',WCS.x1-0.2,mzW,'wc','wc'); toilet('bath',BA.x1-0.03,tzB,'bath','bath');
 
 /* ---------- music: a soft generated loop, no files ---------- */
 let ac=null, musicTimer=null, bar=0;
@@ -65,11 +114,14 @@ function cancel(){              // whatever was going on stops here
   if(partner){partner.p.act=null; partner.busy=false;}
   steam.forEach(function(m){m.visible=false;}); plates.forEach(function(g){g.visible=false;});
   if(st.asleep){st.asleep=false; if(p) p.sleep(false); if(partner) partner.sleep(false);}
-  if(p) p.speed=1.7;
+  if(p){p.speed=1.7; if(p.p.isNude){p.p.nude(false); p.ver=-1;}}
+  heap.visible=false; ['fridge','cab','drawer'].forEach(function(k){openK(k,false);}); if(pan.parent===props&&st.carry!=='pan'&&mode!=='cookdone') pan.visible=false;
+  if(st.carry==='food'||st.carry==='plate'||st.carry==='pan') carry(null);
+  ['wc','bath'].forEach(function(d){const q=A.door(d); if(q) q.force=null;});
 }
 SM.onStop=cancel;
-function carry(v){st.carry=v; const p=me(); book.visible=false; bundle.visible=false; if(!p||!v) return;
-  const m=v==='book'?book:bundle; p.p.hand.add(m); m.position.set(0,-0.3,0.06); m.visible=true;}
+function carry(v){st.carry=v; const p=me(); [book,bundle,food,plateH].forEach(function(m){m.visible=false;}); if(pan.parent!==props){props.add(pan); pan.visible=false;} if(!p||!v) return;
+  const m=v==='book'?book:v==='food'?food:v==='plate'?plateH:v==='pan'?pan:bundle; p.p.hand.add(m); m.position.set(0,-0.3,0.06); m.visible=true;}
 
 /* =====================================================================
    Things to do
@@ -80,28 +132,78 @@ const DO={
     walk(SM.EX+0.35,L-0.8,0,function(){const p=me(), off=p.p.shoesOn; p.p.shoes(!off); p.ver=-1; SM.setDoing('');
       SM.toast(off?'Shoes off. The floor stays clean.':'Shoes on.'); if(off) goal('shoes'); hud();});
   },
-  coffee:function(){SM.ACT.coffee(); mode='coffee'; tok={}; later(9,function(){add('energy',18); goal('coffee');});},
+  coffee:function(){
+    begin('coffee'); SM.setDoing('getting a cup');
+    cupboard('plate',function(){SM.ACT.coffee(); tok={}; mode='coffee'; later(10,function(){add('energy',18); dishes(st.dishes+1); goal('coffee');});});
+  },
   cook:function(){
-    begin('cook'); SM.setDoing('going to cook');
-    walk(KX-0.38,0.95,R,function(){
-      const p=me(); p.p.act='cook'; SM.setDoing('cooking'); steam.forEach(function(m){m.visible=true;});
-      if(partner&&!partner.busy) partner.say(['Smells good!','What are you making?','I am starving.'][Math.floor(Math.random()*3)],3);
-      later(7,function(){p.p.act=null; steam.forEach(function(m){m.visible=false;}); SM.toast('Lunch is ready. Setting the table.'); eat();});
+    begin('cook'); SM.setDoing('getting food from the fridge');
+    fridge(function(){
+      SM.setDoing('getting a pan');
+      walk(KX-1.5,1.08,R,function(){openK('drawer',true); later(1.3,function(){
+        carry('pan'); openK('drawer',false);
+        walk(KX-0.38,0.95,R,function(){
+          const p=me(); carry(null); props.add(pan); pan.position.set(KX-0.38,0.96,0.3); pan.rotation.set(0,0.6,0); pan.visible=true;
+          p.p.act='cook'; SM.setDoing('cooking'); steam.forEach(function(m){m.visible=true;});
+          if(partner&&!partner.busy) partner.say(['Smells good!','What are you making?','I am starving.'][Math.floor(Math.random()*3)],3);
+          later(7,function(){p.p.act=null; steam.forEach(function(m){m.visible=false;}); SM.setDoing('getting plates');
+            cupboard('plate',function(){carry(null); SM.toast('Lunch is ready.'); eat();});});
+        });});});
     });
   },
-  snack:function(){begin(); SM.setDoing('at the fridge'); walk(W+0.36,KZ-1.15,0,function(){later(2,function(){add('food',22); me().say('Mmm.'); SM.setDoing('');});});},
+  snack:function(){
+    begin('snack'); SM.setDoing('getting a plate');
+    cupboard('plate',function(){fridge(function(){
+      SM.setDoing('having a snack'); me().p.act='eat';
+      later(3.5,function(){me().p.act=null; carry(null); add('food',25); dishes(st.dishes+1); me().say('Mmm.'); SM.setDoing(''); SM.toast('The plate went in the sink.');});});});
+  },
+  wash:function(){
+    if(!st.dishes){SM.toast('The sink is empty.'); return;}
+    begin('wash'); SM.setDoing('going to the sink');
+    walk(KX-1.05,KZ-1.02,0,function(){me().p.act='cook'; SM.setDoing('washing the dishes');
+      (function one(){later(1.1,function(){dishes(st.dishes-1); if(st.dishes>0) one(); else{me().p.act=null; SM.setDoing(''); SM.toast('Sink is clear.'); goal('dishes');}});})();});
+  },
   study:function(){
     begin('study'); const s=SM.firstFree(['desk2','desk1','desk3']); if(!s){SM.toast('No free desk.'); return;}
     SM.setDoing('going to study');
     me().sitOn(s,function(){me().p.act='study'; SM.setDoing('studying'); (function chapter(){later(10,function(){st.chapters++; add('fun',-6); SM.toast('Chapter '+st.chapters+' done.'); goal('study'); chapter();});})();});
   },
-  tv:function(){
-    begin('tv'); K.tvShow='day'; A.set('tv',1); SM.setDoing('going to watch TV');
+  tv:function(show){
+    begin('tv'); K.tvShow=show||'netflix'; A.set('tv',1); SM.setDoing('going to watch '+(K.tvShow==='football'?'the match':'Netflix'));
     const s=SM.firstFree(['sofaM','sofaL','sofaR']); if(!s) return;
-    me().sitOn(s,function(){SM.setDoing('watching TV together');});
-    if(partner){const q=SM.firstFree(['sofaR','sofaL','sofaM'].filter(function(i){return i!==s.id;})); if(q){partner.busy=true; partner.sitOn(q,function(){partner.say('What are we watching?');});}}
+    me().sitOn(s,function(){SM.setDoing(K.tvShow==='football'?'watching football together':'watching Netflix together');});
+    if(partner){const q=SM.firstFree(['sofaR','sofaL','sofaM'].filter(function(i){return i!==s.id;})); if(q){partner.busy=true; partner.sitOn(q,function(){partner.say(K.tvShow==='football'?'Come on!':'What are we watching?');});}}
   },
-  tvToggle:function(){SM.ACT.tv(); hud();},
+  tvOff:function(){A.set('tv',0); SM.refresh(); hud();},
+  toilet:function(id,standing){
+    const t=WCs[id], p=me(), tk=begin('toilet'), fem=SM.who==='angela';
+    SM.setDoing('going to the toilet');
+    walk(t.x-0.62,t.z,R/2,function(){
+      A.door(t.door).force=0; A.set('L:'+(id==='guest'?'wc':'bath'),1); SM.renderRooms();
+      t.lid.target=1; t.seat.target=standing?1:0; if(!standing&&t.seatUp&&fem) p.say('Who left the seat up?',2.5); t.seatUp=!!standing;
+      later(1.0,function(){
+        const fin=function(){SM.toast('Flush.'); if(fem){t.lid.target=0;} else if(standing&&partner) SM.later(6,function(){partner.say('Seat down, please!',3);},st); A.door(t.door).force=null; p.release(); add('clean',-4); SM.setDoing(''); hud();};
+        if(standing){p.slide={fx:p.x,fz:p.z,tx:t.x-0.42,tz:t.z,t:0,dur:0.4,then:null}; SM.setDoing('at the toilet'); later(5,fin);}
+        else{p.settle({id:'wc_'+id,x:t.x-0.02,z:t.z,y:0.6,h:-R/2,type:'sit'},null); SM.setDoing('on the toilet'); later(6,fin);}
+      });
+    });
+  },
+  shower:function(where){
+    begin('shower'); const p=me(), sp=A.showerSpot; SM.setDoing('heading for the shower');
+    walk(sp.ax,sp.az,null,function(){
+      A.door('bath').force=0; A.set('L:bath',1); SM.renderRooms(); SM.setDoing('undressing');
+      later(1.2,function(){
+        const o=OUTFITS[SM.who][st.outfit]; heap.children.forEach(function(m){m.material.color.set(m.userData.i===1?o[1]:o[0]);});
+        if(where==='toilet'){WCs.bath.lid.target=0; WCs.bath.seat.target=0; heap.position.set(BA.x1-0.3,0.66,tzB);} else heap.position.set(BA.x0+0.42,0.9,BA.z0+0.5);
+        heap.visible=true; p.p.nude(true); p.ver=-1; SM.fx.on(true);
+        p.slide={fx:p.x,fz:p.z,tx:sp.x,tz:sp.z,t:0,dur:0.6,then:null}; p.hT=R; SM.setDoing('in the shower');
+        later(8,function(){
+          p.slide={fx:p.x,fz:p.z,tx:sp.ax,tz:sp.az,t:0,dur:0.6,then:null}; SM.setDoing('getting dressed');
+          later(1.6,function(){SM.fx.on(false); p.p.nude(false); p.ver=-1; heap.visible=false; A.door('bath').force=null; st.need.clean=100; SM.setDoing(''); SM.toast('Fresh and clean.'); hud();});
+        });
+      });
+    });
+  },
   flop:function(){
     begin('flop'); const s=SM.seatBy('sofaLie'), p=me(); if(!s) return;
     if(partner&&partner.seat&&partner.seat.id.indexOf('sofa')===0) roam(true);
@@ -173,6 +275,12 @@ const DO={
 function shelf(){return firstPiece(['kbench','towerB','towerA','benchB','tvOld'],0.75)||(ST.design!=='n'?{sx:D.BX-0.8,sz:-0.75,h:R/2,obj:[D.BX-0.31,D.BX-0.01,0,0.82,-1.25,-0.25]}:null);}
 function sitRead(){const s=SM.firstFree(['sofaM','sofaR','sofaL','nook']); if(!s) return; SM.setDoing('finding a seat');
   me().sitOn(s,function(){me().p.act='read'; SM.setDoing('reading'); later(9,function(){goal('read');});});}
+function fridge(cb){              // walk to the fridge, open it, take something out, close it
+  walk(W+0.36,KZ-1.32,0,function(){openK('fridge',true); later(1.5,function(){food.material.color.set([0x5b8f4a,0xd9463e,0xf0d21c][Math.floor(Math.random()*3)]); carry('food'); openK('fridge',false); later(0.5,cb);});});
+}
+function cupboard(what,cb){        // open the wall cabinet over the sink and take a plate or a cup
+  walk(KX-1.2,KZ-1.02,0,function(){openK('cab',true); later(1.3,function(){carry(what); openK('cab',false); later(0.4,cb);});});
+}
 function eat(){
   const n=ST.design==='n', ids=n?['chairB','chairA']:['gc1','gc2'];
   mode='eat'; if(!n&&ST.table===0) A.setTable(2);
@@ -184,7 +292,7 @@ function eat(){
     [a,b].forEach(function(s,i){if(!s) return; const g=plates[i]; g.position.set(s.x+Math.sin(s.h)*0.36,0.78,s.z+Math.cos(s.h)*0.36); g.visible=true;});
     if(partner&&b){partner.busy=true; partner.sitOn(b,function(){partner.p.act='eat';});}
     me().sitOn(a,function(){me().p.act='eat'; SM.setDoing('eating together');
-      later(8,function(){add('food',100); me().p.act=null; if(partner){partner.p.act=null; partner.busy=false; partner.say('That was great.');} plates.forEach(function(g){g.visible=false;}); goal('cook'); SM.setDoing('sitting at the table');});});
+      later(8,function(){add('food',100); me().p.act=null; if(partner){partner.p.act=null; partner.busy=false; partner.say('That was great.');} plates.forEach(function(g){g.visible=false;}); pan.visible=false; dishes(st.dishes+3); goal('cook'); SM.setDoing('sitting at the table'); SM.toast('Plates and the pan are in the sink.');});});
   });
 }
 
@@ -195,9 +303,13 @@ function items(){
   const around=function(s,rx,rz,y1){return [s.x-rx,s.x+rx,0,y1,s.z-rz,s.z+rz];}, en=D.entrance;
   add('Front door and shoes',{x:SM.EX+0.4,z:L-0.3,sx:SM.EX+0.35,sz:L-0.8,h:0},[[p.p.shoesOn?'Take shoes off':'Put shoes on',DO.shoes]],[en[0],en[1],0,2.05,L-0.08,L]);
   add('Cooktop',{x:KX-0.38,z:0.3,sx:KX-0.38,sz:0.95,h:R},[['Cook a meal',DO.cook]],[KX-0.68,KX-0.08,0.1,0.96,0.02,0.62]);
-  add('Fridge',{x:W+0.36,z:KZ-0.36,sx:W+0.36,sz:KZ-1.15,h:0},[['Grab a snack',DO.snack]],[W+0.01,W+0.71,0,1.75,KZ-0.72,KZ]);
+  add('Fridge',{x:W+0.36,z:KZ-0.36,sx:W+0.36,sz:KZ-1.32,h:0},[['Grab a snack',DO.snack]],[W+0.01,W+0.71,0,1.75,KZ-0.72,KZ]);
   add('Espresso machine',ST.design==='b'?front('cart',0.65):n?front('station',0.65):{x:KX-1.5,z:KZ-0.3,sx:KX-1.5,sz:1.9,h:0},[['Make a coffee',DO.coffee]],(ST.design==='b'||n)?null:[KX-1.72,KX-1.15,0.92,1.34,KZ-0.5,KZ-0.12]);
-  add('Television',firstPiece(['tvOld','kbench','benchB','benchA'],1.1),[[A.goal('tv')>0.5?'Turn it off':'Turn it on',DO.tvToggle],['Watch together',DO.tv]]);
+  add('Television',firstPiece(['tvOld','kbench','benchB','benchA'],1.1),[['Netflix',function(){DO.tv('netflix');}],['Football',function(){DO.tv('football');}]].concat(A.goal('tv')>0.5?[['Turn it off',DO.tvOff]]:[]));
+  add('Sink',{x:KX-1.05,z:KZ-0.32,sx:KX-1.05,sz:KZ-1.02,h:0},[[st.dishes?'Wash the dishes ('+st.dishes+')':'Sink is clean',DO.wash]],[KX-1.36,KX-0.74,0.86,1.0,KZ-0.56,KZ-0.08]);
+  const tacts=function(id){return SM.who==='angela'?[['Use the toilet',function(){DO.toilet(id,false);}]]:[['Pee standing up',function(){DO.toilet(id,true);}],['Sit down',function(){DO.toilet(id,false);}]];};
+  add('Guest toilet',{x:WCS.x1-0.45,z:mzW,sx:WCS.x1-1.07,sz:mzW,h:R/2},tacts('guest'),[WCS.x1-0.7,WCS.x1-0.2,0,0.7,mzW-0.2,mzW+0.2]);
+  add('Toilet',{x:BA.x1-0.28,z:tzB,sx:BA.x1-0.9,sz:tzB,h:R/2},tacts('bath'),[BA.x1-0.53,BA.x1-0.03,0,0.7,tzB-0.2,tzB+0.2]);
   add('Sofa',front('sofa',1.0),[['Flop down',DO.flop],['Give a massage',function(){DO.massage(true);}],['Ask for a massage',function(){DO.massage(false);}]]);
   add('Record player',front('music',0.7),[[st.music?'Stop the record':'Play a record',DO.record]]);
   add('Bookshelf',shelf(),[[st.carry==='book'?'Put the book back':'Take a book',DO.book],['Read on the sofa',DO.read]]);
@@ -208,7 +320,7 @@ function items(){
   add('Vacuum cleaner',{x:D.BLK-0.1,z:L-0.14,sx:D.BLK-0.45,sz:L-0.6,h:0.6},[['Vacuum the flat',DO.vacuum]],A.vacuumMesh);
   const dk=SM.seatBy('desk2')||SM.seatBy('desk1'); if(dk) add('Desk',{x:dk.x,z:dk.z,sx:dk.x,sz:dk.z,h:dk.h},[['Study',DO.study]],around(dk,0.7,0.7,1.2));
   const bd=SM.seatBy('bedR'); if(bd) add('Bed',{x:bd.x,z:bd.z,sx:bd.x,sz:bd.z,h:bd.h},[[st.asleep?'Wake up':'Go to sleep together',st.asleep?DO.wake:DO.sleep]],[bd.x-1.15,bd.x+0.85,0,0.62,bd.z-1.1,bd.z+0.4]);
-  add('Shower',{x:A.showerSpot.x,z:A.showerSpot.z,sx:A.showerSpot.ax,sz:A.showerSpot.az,h:0},[['Take a shower',function(){SM.ACT.shower(); mode='shower';}]],[BA.x1-0.9,BA.x1,0,2.0,BA.z0,BA.z0+0.95]);
+  add('Shower',{x:A.showerSpot.x,z:A.showerSpot.z,sx:A.showerSpot.ax,sz:A.showerSpot.az,h:0},[['Shower, clothes on the washer',function(){DO.shower('washer');}],['Shower, clothes on the toilet',function(){DO.shower('toilet');}]],[BA.x1-0.9,BA.x1,0,2.0,BA.z0,BA.z0+0.95]);
   return out;
 }
 const tp=new THREE.Vector3();
@@ -238,6 +350,7 @@ A.labelFns.push(function(){            // the action label floats on the outline
 function hud(){
   const bar=$('useBar'), p=me();
   if(!A.simsOn||!p){bar.hidden=true; hl.visible=false; return;}
+  if(!st.asleep&&(SM.getDoing()||p.path.length&&!pin)){bar.hidden=true; hl.visible=false; focus=null; return;}      // busy or walking: no prompt in the way
   let best=pin, bs=1e9; const f=SM.view(), fx=Math.sin(f), fz=Math.cos(f), list=items();
   if(pin){best=null; list.forEach(function(it){if(it.name===pin.name) best=it;}); if(A.t-pinT>7||!best) pin=best=null;}
   if(!best) list.forEach(function(it){
@@ -267,12 +380,13 @@ function renderNeeds(){
     '<span>Clean floor</span><i><b class="'+(dirt.length>18?'low':'')+'" style="width:'+Math.max(0,100-dirt.length*2.2).toFixed(0)+'%"></b></i>';
 }
 function renderGoals(){$('goals').innerHTML=GOALS.map(function(g){return '<li class="'+(st.done[g[0]]?'done':'')+'">'+(st.done[g[0]]?'✓ ':'○ ')+g[1]+'</li>';}).join('');}
-const PANEL=[['flop','Flop on the sofa'],['tv','Watch TV together'],['cook','Cook and eat'],['study','Study'],['record','Play a record'],['read','Read a book'],
+const PANEL=[['flop','Flop on the sofa'],['netflix','Watch Netflix'],['football','Watch football'],['cook','Cook and eat'],['snack','Snack from the fridge'],['wash','Wash the dishes'],['coffee','Make a coffee'],['shower','Take a shower'],['toilet','Guest toilet'],['study','Study'],['record','Play a record'],['read','Read a book'],
   ['wardrobe','Change clothes'],['vacuum','Vacuum the flat'],['mgive','Give a massage'],['mget','Ask for a massage'],['shoes','Shoes on / off'],['sleep','Go to sleep together']];
 $('lifeActs').innerHTML=PANEL.map(function(a){return '<button class="btn" data-a="'+a[0]+'">'+a[1]+'</button>';}).join('');
 $('lifeActs').onclick=function(e){const b=e.target.closest('button'); if(!b) return; const a=b.dataset.a;
   if(st.asleep&&a!=='sleep'){DO.wake(); return;}
-  if(a==='mgive') DO.massage(true); else if(a==='mget') DO.massage(false); else if(a==='sleep'&&st.asleep) DO.wake(); else if(DO[a]) DO[a]();};
+  if(a==='netflix'||a==='football') DO.tv(a); else if(a==='shower') DO.shower('washer'); else if(a==='toilet') DO.toilet('guest',SM.who==='yoav');
+  else if(a==='mgive') DO.massage(true); else if(a==='mget') DO.massage(false); else if(a==='sleep'&&st.asleep) DO.wake(); else if(DO[a]) DO[a]();};
 
 /* ---------- the partner: lives here, potters about, joins in ---------- */
 const LINES=['Coffee?','I like it here.','Did you water the plants?','Come sit with me.','Nice light today.','What shall we eat?'];
@@ -288,6 +402,13 @@ function roam(now){
   if(Math.random()<0.25||!ids.length){const c=SM.nearestXZ(W+1.2,1.5); if(c) partner.goTo(c[0],c[1],function(){partner.hT=R;}); return;}
   partner.sitOn(SM.seatBy(ids[Math.floor(Math.random()*ids.length)]));
 }
+
+A.frameFns.push(function(dt){          // doors, drawers and lids ease open and shut; runs in every mode
+  for(let i=0;i<movers.length;i++){const m=movers[i]; if(m.cur!==m.target){const d=m.target-m.cur, q=dt*2.6; m.cur=Math.abs(d)<=q?m.target:m.cur+Math.sign(d)*q;
+    const v=m.closed+(m.open-m.closed)*m.cur; if(m.axis==='ry') m.o.rotation.y=v; else if(m.axis==='rz') m.o.rotation.z=v; else m.o.position.z=v; A.touch(2);}}
+  KIT.fridge.fin.visible=KIT.fridge[0].cur>0.05; KIT.cab.fin.visible=KIT.cab[0].cur>0.05||KIT.cab[1].cur>0.05;
+  KIT.n.visible=ST.design==='n'; KIT.abcdef.visible=ST.design!=='n';
+});
 
 /* ---------- frame ---------- */
 let acc=0, lastRoom=null, lastDrop=[0,0], sayT=20;
