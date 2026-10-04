@@ -9,12 +9,12 @@ const pc=(D.painting[0]+D.painting[1])/2, DC=(D.door1[1]+D.door2[0])/2, EX=(D.en
 const $=function(id){return document.getElementById(id);};
 
 const P=A.pieces={};
-const SZ=3.55;                 // the sofa is centred here, between the top zone and the front door
+const SZ=3.65;                 // the sofa is centred here, between the top zone and the front door
 function piece(id,opt,build){const g=G(); P[id]=Object.assign({id:id,g:g,cur:[0,0,0,0],to:[0,0,0,0],h:1},opt||{}); build(g); return P[id];}
 /* stretch a unit bar (built 1 long on x) between two points in the xy plane */
 function barXY(m,x0,y0,x1,y1){m.position.x=(x0+x1)/2; m.position.y=(y0+y1)/2; m.rotation.z=Math.atan2(y1-y0,x1-x0); m.scale.x=Math.hypot(x1-x0,y1-y0);}
 function barYZ(m,y0,z0,y1,z1){m.position.y=(y0+y1)/2; m.position.z=(z0+z1)/2; m.rotation.x=Math.atan2(-(y1-y0),z1-z0); m.scale.z=Math.hypot(y1-y0,z1-z0);}
-const tableFns=[];        // called with the table's open amount 0..1
+const tableFns=[], liftFns=[];        // called with the dining table's / the lift-top's open amount 0..1
 
 A.inRoom('living',function(){
 /* ---------- what is there today ---------- */
@@ -93,7 +93,7 @@ piece('lift',{label:'Lift-top table',h:1.0,isNew:true,shop:['Lift-top coffee tab
   const arms=[-0.54,0.54].map(function(z){
     return [0.2,-0.1].map(function(bx){const m=box(1,0.02,0.02,0x8d9092,0,0,z,g); m.userData.bx=bx; return m;});
   });
-  tableFns.push(function(t){
+  liftFns.push(function(t){
     top.position.set(-0.2*t,0.36+0.34*t,0);
     arms.forEach(function(pair){pair.forEach(function(m){const bx=m.userData.bx; barXY(m,bx,0.325,bx-0.3-0.2*t,0.345+0.34*t);});});
   });
@@ -125,7 +125,7 @@ function sideChairs(prefix,n,frame,seatCol,shop){for(let i=1;i<=n;i++)
 sideChairs('fc',2,WHITE,SAGE,['Folding chair','TERJE folding chair','ikea','Folds flat and hangs on a hook when the table is up.']);
 
 /* ---------- option C: drop-leaf table. A 26 cm console against the wall, opens to 75 x 150 for four ---------- */
-piece('gate',{label:'Drop-leaf table',h:1.15,isNew:true,shop:['Gateleg table','NORDEN gateleg table','ikea','Closed it is a narrow console with drawers; both leaves up seats four.']},function(g){
+piece('gate',{label:'Drop-leaf dining table',h:1.15,isNew:true,shop:['Gateleg table','NORDEN gateleg table','ikea','Closed it is a narrow console with drawers; both leaves up seats four.']},function(g){
   box(0.75,0.03,0.26,OAK,0,0.745,0,g); box(0.62,0.5,0.2,WHITE,0,0.47,0,g);
   [-0.2,0.05].forEach(function(y){box(0.58,0.004,0.004,0xcfc8b8,0,0.47+y,0.101,g); box(0.58,0.004,0.004,0xcfc8b8,0,0.47+y,-0.101,g);});
   [[-.29,-.08],[.29,-.08],[-.29,.08],[.29,.08]].forEach(function(p){box(0.04,0.72,0.04,OAK,p[0],0.36,p[1],g);});
@@ -217,46 +217,51 @@ function mattress(id,label,col){
 }
 mattress('mat1','Mattress by the sofa',0xcfe3ec); mattress('mat2','Mattress by the bedroom doors',0xbfd8c6);
 
+/* ---------- what replaces the wardrobe at the entrance (built facing +x, back to the wall) ---------- */
+piece('hallBench',{label:'Entrance bench and hooks',h:1.9,isNew:true,shop:['Hall bench with shoe storage','TJUSIG bench with shoe storage','ikea','About 80 to 100 cm wide, with a hook rail above it.'],seats:[{id:'hall',label:'Entrance bench',lx:0.02,lz:0,y:0.5,type:'sit'}]},function(g){
+  box(0.34,0.05,0.9,OAK,0,0.46,0,g); [[-.14,-.41],[.14,-.41],[-.14,.41],[.14,.41]].forEach(function(p){box(0.035,0.44,0.035,WHITE,p[0],0.22,p[1],g);});
+  box(0.3,0.02,0.84,WHITE,0,0.16,0,g); box(0.26,0.2,0.34,RATTAN,0,0.27,-0.22,g); box(0.22,0.1,0.26,0xe9e6df,0,0.22,0.22,g);
+  box(0.02,0.08,0.9,OAK,-0.21,1.7,0,g); [-0.3,0,0.3].forEach(function(z){cyl(0.012,0.07,INK,-0.17,1.7,z,g,8).rotation.z=R/2;});
+  box(0.06,0.6,0.3,0x1f5a41,-0.15,1.38,-0.3,g); box(0.05,0.32,0.26,RATTAN,-0.16,1.5,0.3,g); K.cushion(g,BLUE,-0.06,0.6,0.25,0.8,0.1);
+});
+piece('shoeCab',{label:'Shoe cabinet',h:1.5,isNew:true,shop:['Slim shoe cabinet','HEMNES shoe cabinet','ikea','Only 22 to 30 cm deep, so the entrance stays open.']},function(g){
+  box(0.24,0.95,0.9,WHITE,0,0.5,0,g); box(0.26,0.025,0.92,OAK,0,0.99,0,g); [0.35,0.67].forEach(function(y){box(0.004,0.004,0.86,0xb9b3a4,0.121,y,0,g);});
+  [0.5,0.82].forEach(function(y){box(0.012,0.02,0.12,OAK,0.126,y,0,g);});
+  box(0.16,0.03,0.24,RATTAN,0,1.02,-0.25,g); K.bush(g,0,1.0,0.25,0.07,BLUE); K.tableLamp(g,0,1.0,0,'L:living',0.8);
+});
+
 /* ---------- fixed decoration for the proposals ---------- */
 const dn=G(null,'abc'), db=G(null,'b');
 K.stringLights(dn,0,2.42,SZ-1.7,SZ+1.7,24);
-K.pendant(dn,1.95,2.45,SZ,'L:living','rattan',null,1.6);
 box(0.5,0.025,0.05,A.lampMat('L:living',0xb08d4a,0xffe2b0,0.8),pc,2.34,0.07,dn); box(0.02,0.02,0.07,0xb08d4a,pc,2.34,0.035,dn);   // picture light
 A.pool('L:living',0xffd9a0,pc,1.8,0.03,0.9,dn,0.32,0);
-K.pendant(db,DC,1.8,0.5,'L:living','dome',SAGE,1.2);
 // entrance: round gold mirror on the side of the toilet block, doormat, basket on the wardrobe
 A.torus(0.26,0.022,0xd9aa12,D.BLK-0.03,1.6,5.68,dn).rotation.y=R/2; cyl(0.25,0.008,0xcfdadd,D.BLK-0.012,1.6,5.68,dn,40).rotation.z=R/2;
 box(0.75,0.014,0.5,0xa89878,EX,0.007,5.9,dn).castShadow=false;
-box(0.4,0.22,0.36,RATTAN,1.6,1.86,L-0.23,dn);
 });
 K.onlyAll(K.frame('left',SZ-0.93,1.78,0.62,0.82,0,0xc99a5b).concat(K.frame('left',SZ,1.78,0.62,0.82,1,0xc99a5b),K.frame('left',SZ+0.93,1.78,0.62,0.82,3,0xc99a5b)),'abc');
-K.onlyAll(K.frame('left',0.5,1.55,0.5,0.62,6,0xc99a5b).concat(K.frame('left',1.15,1.55,0.5,0.62,5,0xc99a5b)),'c');
-K.onlyAll(K.frame('left',0.62,1.62,0.48,0.6,2,0xc99a5b).concat(K.frame('left',1.25,1.62,0.48,0.6,7,0xc99a5b)),'b');
+K.onlyAll(K.frame('left',0.6,1.68,0.48,0.6,2,0xc99a5b).concat(K.frame('left',1.2,1.68,0.48,0.6,7,0xc99a5b)),'abc');      // above the record corner
 // things from today that can be bought again if needed
 [['sofa','Sofa (yours)',null],['station','Coffee station (yours)',null]].forEach(function(q){});
 
 /* ---------- layouts: x, z, rotation. A piece that is not listed is hidden. ---------- */
-const TVZ=3.52;
+const TVZ=3.55, HALL=[1.6,L-0.2,R/2], CAB=[1.6,L-0.13,R/2];
+const COMMON={sofa:[0.60,SZ,0], music:[0.22,0.9,0], gate:[DC,0.17,0]};          // every proposal keeps the record corner and the drop-leaf table
+function lay(o){for(const k in COMMON) o[k]=COMMON[k]; return o;}
 const LAY={
-  n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.235,3.48,R], station:[0.30,0.72,0],
+  n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.235,3.56,R], station:[0.30,0.72,0],
      dining:[pc,0.48,0], chairA:[pc-0.92,0.50,0], chairB:[pc+0.92,0.50,R], rack1:[1.2,1.62,0], rack2:[2.55,1.5,0]},
-  a:{sofa:[0.60,SZ,0], rugA:[1.75,SZ,0], lift:[1.95,SZ,0], ladder:[0.2,0.62,0], arc:[0.32,1.58,-0.88],
-     towerA:[W-0.195,2.44,R], benchA:[W-0.19,TVZ,R], armA:[DC+0.02,0.72,-R/2+0.2], flamp:[2.5,0.3,0], poufA1:[2.5,1.9,0], poufA2:[1.95,4.62,0]},
-  b:{sofa:[0.60,SZ,0], rugB:[1.75,SZ,0], nest:[1.95,SZ,0], music:[0.22,0.9,0], cart:[KX-0.24,1.8,R],
-     towerB:[W-0.195,2.44,R], benchB:[W-0.2,TVZ,R], fold:[DC,0,0], poufB1:[1.65,1.3,0], poufB2:[2.3,1.3,0]},
-  c:{sofa:[0.60,SZ+0.1,0], rugC:[1.75,SZ+0.1,0], nest:[1.95,SZ+0.1,0], bench:[0.23,0.9,0], gate:[DC,0.17,0],
-     towerA:[W-0.195,2.44,R], benchB:[W-0.2,TVZ,R], poufA1:[1.95,4.62,0]}
+  a:lay({rugA:[1.75,SZ,0], lift:[1.95,SZ,0], towerA:[W-0.195,2.44,R], benchA:[W-0.19,TVZ,R], poufA1:[1.95,SZ-1.03,0], poufA2:[1.95,SZ+1.03,0], shoeCab:CAB}),
+  b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.44,R], benchB:[W-0.2,TVZ,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
+  c:lay({rugC:[1.75,SZ,0], table:[1.85,SZ,0], towerA:[W-0.195,2.44,R], benchB:[W-0.2,TVZ,R], poufA1:[1.95,SZ+1.03,0], hallBench:HALL})
 };
-const ALT={   // with the table set for a meal
-  a:{poufA1:[1.95,2.62,0], poufA2:[1.95,4.48,0]},
-  b:{fc1:[DC-0.5,0.5,0], fc2:[DC+0.5,0.5,R]},
-  c:{gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]}
-};
+const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
+const ALT={a:OPEN,b:OPEN,c:OPEN};
 const PJ={    // pajama party: the coffee table is put away and two mattresses go down
   n:{mat1:[1.95,SZ,0], mat2:[1.9,1.85,R/2], table:null, rack1:null, rack2:null},
   a:{mat1:[1.95,SZ,0], mat2:[1.9,1.9,R/2], lift:null, poufA1:null, poufA2:null},
-  b:{mat1:[1.95,SZ,0], mat2:[1.9,1.9,R/2], nest:null, poufB1:null, poufB2:null},
-  c:{mat1:[1.95,SZ,0], mat2:[1.9,1.9,R/2], nest:null, poufA1:null}
+  b:{mat1:[1.95,SZ,0], mat2:[1.9,1.9,R/2], nest:null, poufB1:null},
+  c:{mat1:[1.95,SZ,0], mat2:[1.9,1.9,R/2], table:null, poufA1:null}
 };
 const FOCUS={n:[1.9,SZ],a:[1.9,SZ],b:[1.9,SZ],c:[1.9,SZ]};
 
@@ -264,40 +269,44 @@ const FOCUS={n:[1.9,SZ],a:[1.9,SZ],b:[1.9,SZ],c:[1.9,SZ]};
 const DESIGNS=A.DESIGNS={
   n:{name:'Current', title:'Current state', sub:'How the flat is today, modelled from your photos and the video.', table:null, pal:['#1F5A41','#34373c','#f0d21c','#C99A5B','#f3f3ef'],
      list:[
-      ['Living room','About 3.1 m wide at the sofa. The guest toilet juts in at the entrance, so the entrance wall is only 2.2 m: front door, wardrobe, vacuum.'],
+      ['Living room','About 3.1 m wide at the sofa. The TV wall is only 1.55 m long. The guest toilet juts in at the entrance, so the entrance wall is 2.3 m: front door, wardrobe, vacuum.'],
       ['Sofa and TV','Sofa on the long wall, white TV bench opposite, 55 cm from the coffee table.'],
       ['Top of the room','Coffee station in the corner, dining table under the bus painting, drying racks in between.'],
-      ['Bathroom','Door on the TV wall, right of the TV. Sink on the right, washing machine opposite it under the boiler, toilet, shower at the end.'],
+      ['Bathroom','Its door is in the small lobby right of the TV. Sink on the right, washing machine opposite it under the boiler, toilet on the far wall under the window, shower to its right.'],
       ['Guest toilet','Its own door, at a right angle to the bathroom door.'],
-      ['Bedroom 2','Dresser and wardrobe on the left, cube shelf between the wall and the column, bed behind them, TV on an arm, bike, desk under the big window.']]},
-  a:{name:'A', title:'A · Lift-top', sub:'Modern rustic: white, oak, sage and light blue. One table for coffee and for lunch.', table:['Raise the table for lunch','Lower to coffee height'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
+      ['Bedroom 2','Dresser and wardrobe in a niche on the left, cube shelf between the wall and the column, bed behind it 40 cm from the TV wall, bike, desk under the big window facing the wardrobe.']]},
+  a:{name:'A', title:'A · Lift-top', sub:'Modern rustic: white, oak, sage and light blue. The coffee table also rises to eating height.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
-      ['Table','A 120 × 60 lift-top table in oak and white. The top rises 34 cm and slides toward the sofa for lunch; two linen poufs pull up at its ends.'],
-      ['Coffee corner','Gone. A slim oak plant shelf takes the corner, with an arc lamp reaching over the sofa. The espresso machine moves to the kitchen counter.'],
-      ['TV wall','A white 2 × 4 cube shelf with woven baskets hides the side of the fridge. The TV hangs over a floating oak bench, 130 cm, ending before the bathroom door.'],
-      ['Seat','A light blue wing chair under the bus painting, between the bedroom doors, with a floor lamp.'],
-      ['Rug and light','Natural wool rug 160 × 230, rattan pendant, picture light, string lights, candles.'],
-      ['Kitchen','Deep muted sage fronts, counter and sink unchanged and cleared, bin gone, pendant, light strip, runner.'],
+      ['Dining','The drop-leaf table: a 26 cm console with drawers under the bus painting. Open, it moves out and seats four at 75 × 150, clear of both bedroom doors.'],
+      ['Coffee table','A 120 × 60 lift-top in oak and white, with a linen pouf at each end. Raised, it is a second eating or laptop spot at the sofa.'],
+      ['Record corner','Where the coffee station was: a low white and oak sideboard with the turntable, a speaker and a lamp. The espresso machine moves to the kitchen counter.'],
+      ['TV wall','The wall is only 1.55 m long. A white 2 × 4 cube shelf hides the side of the fridge, and the TV hangs over a floating oak bench, 130 cm.'],
+      ['Entrance','The wardrobe goes. A slim white shoe cabinet with an oak top takes its place, with the round mirror beside it.'],
+      ['Light','The flush round ceiling lights stay. Added: lamp at the record corner, picture light, string lights, candles.'],
+      ['Kitchen','Deep muted sage fronts, counter and sink unchanged and cleared, bin gone, light strip, runner.'],
       ['Bedrooms','Bedroom 1 becomes a study with two desks. In bedroom 2 the bed turns 90° to face the TV, the bike goes, and a reading nook replaces the desk.']]},
-  b:{name:'B', title:'B · Fold-away', sub:'The most open floor: the dining table folds into the wall.', table:['Fold the table down','Fold the table away'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
+  b:{name:'B', title:'B · Light and open', sub:'The same bones with the lightest furniture: nesting tables and a coffee cart.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
-      ['Table','A 74 × 72 leaf hinged to the wall under the bus painting. Folded, it is a sage panel 3 cm deep. Down, it seats two on folding chairs that hang away afterwards.'],
-      ['Coffee corner','Becomes a record corner: a low white and oak sideboard with the turntable, a speaker and a lamp. The coffee moves onto a cart in the kitchen, by the window.'],
+      ['Dining','The drop-leaf table, as in option A.'],
+      ['Coffee table','Two round nesting tables, easy to push aside, and one light blue pouf.'],
+      ['Record corner','As in option A. Here the coffee moves onto a cart in the kitchen, by the window.'],
       ['TV wall','An oak-effect 2 × 4 cube shelf hides the fridge. The TV hangs over a white panelled bench with an oak top.'],
-      ['Seats and rug','Two light blue poufs, two round nesting tables, a cream rug with light blue stripes.'],
+      ['Entrance','A bench with shoe baskets and a hook rail replaces the wardrobe.'],
+      ['Rug','Cream with light blue stripes, 160 × 230.'],
       ['Kitchen and bedrooms','Same as option A.']]},
-  c:{name:'C', title:'C · Drop-leaf', sub:'A slim console most of the time, a table for four when friends come.', table:['Open the table for four','Close it to a console'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
+  c:{name:'C', title:'C · Keep what works', sub:'The least to buy: your sofa and oak coffee table stay, everything around them gets calmer.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
-      ['Table','A drop-leaf table. Closed, it is a 26 cm console with drawers under the painting. Open, it moves out and seats four at 75 × 150, clear of both bedroom doors.'],
-      ['Coffee corner','A pine storage bench with sage cushions. The espresso machine moves to the kitchen counter.'],
+      ['Dining','The drop-leaf table replaces the white dining table, as in option A.'],
+      ['Coffee table','Your oak and black-steel table stays, on a jute rug, with a linen pouf.'],
+      ['Record corner','As in option A, with the espresso machine on the kitchen counter.'],
       ['TV wall','White cube shelf hiding the fridge, white panelled TV bench with an oak top.'],
-      ['Seats and rug','Jute rug 160 × 230, nesting tables, one linen pouf.'],
+      ['Entrance','A bench with shoe baskets and a hook rail replaces the wardrobe.'],
       ['Kitchen and bedrooms','Same as option A.']]}
 };
 
 /* ---------- state and layout animation ---------- */
-const S=A.state={design:'a',table:0,pj:false,labels:false,dims:false,edit:false};
-A.tableT=0; A.layoutFns=[];
+const S=A.state={design:'a',table:0,lift:0,pj:false,labels:false,dims:false,edit:false};
+A.tableT=0; A.liftT=0; A.layoutFns=[];
 let anim=null;
 const USER={};
 function ukey(){return S.design+(S.table?'1':'0')+(S.pj?'p':'');}
@@ -314,7 +323,7 @@ A.layout=function(instant){
     if(p.from[3]<0.02&&v){p.from[0]=v[0]; p.from[1]=v[1]; p.from[2]=v[2];}
   }
   for(let i=0;i<A.onlys.length;i++){const o=A.onlys[i]; o.visible=o.userData.only.indexOf(S.design)>=0;}
-  anim={t0:performance.now(),dur:(instant||A.reduce)?1:800,tf:A.tableT,tt:S.table?1:0};
+  anim={t0:performance.now(),dur:(instant||A.reduce)?1:800,tf:A.tableT,tt:S.table?1:0,lf:A.liftT,lt:(S.lift&&S.design==='a')?1:0};
   resolveSeats();
   if(instant) stepLayout();
 };
@@ -324,6 +333,7 @@ function stepLayout(){
     for(const id in P){const p=P[id]; for(let i=0;i<4;i++) p.cur[i]=p.from[i]+(p.to[i]-p.from[i])*e;}
     A.tableT=anim.tf+(anim.tt-anim.tf)*e;
     for(let i=0;i<tableFns.length;i++) tableFns[i](A.tableT);
+    A.liftT=anim.lf+(anim.lt-anim.lf)*e; for(let i=0;i<liftFns.length;i++) liftFns[i](A.liftT);
     for(const id in P){const p=P[id];
       p.g.position.set(p.cur[0],0,p.cur[1]); p.g.rotation.y=p.cur[2];
       const s=Math.max(0.0001,p.cur[3]); p.g.scale.set(s,s,s); p.g.visible=p.cur[3]>0.02;
@@ -349,20 +359,21 @@ function resolveSeats(){
 }
 A.liveSeats=function(){return live;};
 A.setDesign=function(k,instant){
-  S.design=k; S.table=0; S.pj=false; if(A.clearPick) A.clearPick();
+  S.design=k; S.table=0; S.lift=0; S.pj=false; if(A.clearPick) A.clearPick();
   A.layout(instant); renderPanel();
   if(A.onDesign) A.onDesign();
 };
 A.setTable=function(on){S.table=on?1:0; A.layout(); renderPanel();};
+A.setLift=function(on){S.lift=on?1:0; A.layout(); renderPanel();};
 
 /* ---------- labels and dimension lines ---------- */
 const fixedLabels=[
  {label:'Kitchen', pos:new THREE.Vector3(W+1.5,2.5,2.05)},
  {label:'Entrance', pos:new THREE.Vector3(EX,2.35,L)},
  {label:'Bedroom 1', alt:'Bedroom 1 · study', pos:new THREE.Vector3(1.2,1.5,-2.3)},
- {label:'Bedroom 2', alt:'Bedroom 2 · reading nook', pos:new THREE.Vector3(W+1.0,1.5,-1.4)},
- {label:'Bathroom and shower', pos:new THREE.Vector3(W+1.3,1.6,L-2.1)},
- {label:'Guest toilet', pos:new THREE.Vector3(3.0,1.6,L-0.5)},
+ {label:'Bedroom 2', alt:'Bedroom 2 · reading nook', pos:new THREE.Vector3(3.7,1.5,-1.4)},
+ {label:'Bathroom and shower', pos:new THREE.Vector3(4.7,1.6,L-2.1)},
+ {label:'Guest toilet', pos:new THREE.Vector3(3.2,1.6,L-0.5)},
  {label:'≈ '+L.toFixed(1)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
  {label:'≈ '+W.toFixed(1)+' m', pos:new THREE.Vector3(W/2,0.05,2.3), dim:true},
  {label:'ceiling ≈ '+H.toFixed(2)+' m', pos:new THREE.Vector3(0.05,H-0.2,L-1.2), dim:true},
@@ -397,6 +408,7 @@ function renderPanel(){
   $('dPal').innerHTML=d.pal.map(function(c){return '<i style="background:'+c+'"></i>';}).join('');
   $('list').innerHTML=d.list.map(function(r){return '<li><b>'+r[0]+'</b><span>'+r[1]+'</span></li>';}).join('');
   const bt=$('bTable'); bt.hidden=!d.table; if(d.table) bt.textContent=d.table[S.table?1:0];
+  $('bLift').hidden=S.design!=='a'; $('bLift').textContent=S.lift?'Lower the coffee table':'Raise the coffee table';
   fixedLabels.forEach(function(f){if(f.alt) f.el.textContent=S.design==='n'?f.label:f.alt;});
   $('editNote').textContent=S.edit?'Editing: drag a piece to move it. Tap it for the rotate button.':'Tap a piece of furniture to see where to get it.';
   if(A.onPanel) A.onPanel();
@@ -405,7 +417,7 @@ A.renderPanel=renderPanel;
 let lastNew='a';
 ['a','b','c'].forEach(function(k){$('d_'+k).onclick=function(){lastNew=k; A.setDesign(k);};});
 $('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){A.setDesign(lastNew);};
-$('bTable').onclick=function(){A.setTable(!S.table);};
+$('bTable').onclick=function(){A.setTable(!S.table);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
 function fitDist(){const a=A.stage.clientWidth/A.stage.clientHeight; return 19*Math.max(1,1.0/Math.max(a,0.5));}
 A.viewPos=function(v){
   const d=fitDist(), t=A.home;

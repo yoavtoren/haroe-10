@@ -116,8 +116,8 @@ const CS=0.1, GX0=-0.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.4)/CS), NZ=Math.ceil((L-A
 const free=new Uint8Array(NX*NZ);
 const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.5;      // centre of the front door; where people stand just inside it
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
-  [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.35,ZW+0.35],
-  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3]];
+  [W-0.3,D.LBX+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
+  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
   const i0=Math.max(0,Math.ceil((x0-GX0)/CS-0.5)), i1=Math.min(NX-1,Math.floor((x1-GX0)/CS-0.5));
@@ -352,12 +352,13 @@ const ACT={
     doing='setting the table';
     afterLayout(function(){
       if(tk!==token) return;
-      const s=firstFree(S.design==='a'?['sofaM','sofaL','sofaR']:S.design==='b'?['fc1','fc2']:S.design==='c'?['gc1','gc3','gc2','gc4']:['chairB','chairA']);
+      const s=firstFree(S.design==='n'?['chairB','chairA']:['gc1','gc3','gc2','gc4']);
       if(!s){doing=''; refresh(); return;}
       player.sitOn(s,function(){doing='having lunch at the table'; refresh();});
     });
   },
   table:function(){stopAction(); if(player.seat) player.release(); A.setTable(!S.table); refresh();},
+  lift:function(){A.setLift(!S.lift); refresh();},
   nook:function(){
     stopAction(); const s=firstFree(['nook','desk3']); if(!s) return;
     doing='walking to bedroom 2';
@@ -560,7 +561,7 @@ function openPJ(){
 }
 function startPJ(list){
   stopAction(); player.release();
-  pj.on=true; pj.asleep=false; S.pj=true; S.table=0; A.layout(); A.renderPanel();
+  pj.on=true; pj.asleep=false; S.pj=true; S.table=0; S.lift=0; A.layout(); A.renderPanel();
   setEvening(true);
   ['living','kitchen'].forEach(function(r){A.set('L:'+r,0);}); A.set('string',1); K.tvShow='movie'; A.set('tv',1);
   player.p.outfit(true); player.ver=-1;
@@ -618,7 +619,7 @@ function refresh(){
   h+=btn('shower','Take a shower')+btn('toilet','Guest toilet');
   h+=btn('coffee','Make a coffee')+btn('bed','Go to bed');
   h+=btn('nook',isNew?'Read in the nook':'Desk in bedroom 2')+btn('desk',isNew?'Work in the study':'Desk in bedroom 1');
-  if(d.table&&!pj.on) h+=btn('lunch','Have lunch at the table')+btn('table',d.table[S.table?1:0]);
+  if(d.table&&!pj.on) h+=btn('lunch','Have lunch at the table')+btn('table',S.table?'Close the dining table':'Open the dining table')+(S.design==='a'?btn('lift',S.lift?'Lower the coffee table':'Raise the coffee table','full'):'');
   else if(!pj.on) h+=btn('lunch','Sit at the dining table','full');
   $('acts').innerHTML=h;
   const hint=guests.length?'<p class="note" style="grid-column:1/-1;margin:0">Tap a friend to send them home.</p>':'';

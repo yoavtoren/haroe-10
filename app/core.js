@@ -19,20 +19,24 @@ const D=A.D={
   KX:5.7,   // kitchen window wall, i.e. W + 2.6                       (±0.2)
   KZ:2.8,   // kitchen sink wall; the TV wall starts here              (±0.2)
   ZW:5.15,  // front wall of the guest toilet, which juts into the room at the entrance
-  BLK:2.2,  // how far that block reaches: the entrance wall is only this wide
+  BLK:2.3,  // how far that block reaches: the entrance wall is only this wide
+  TVE:4.35, // the TV wall ends here; after it a small lobby steps back to the bathroom and toilet doors
+  LBX:3.6,  // back of that lobby
+  BX:4.9,   // bedroom 2 right-hand wall (window, TV, desk)
+  NX:2.05, NZ:-1.9,    // the wardrobe niche in bedroom 2: its back wall, and how far it runs from the door wall
   door1:[0.50,1.28],   // bedroom 1 opening on the far wall
   door2:[2.75,3.53],   // bedroom 2 opening on the far wall, toward the kitchen
   painting:[1.50,2.60,1.40,2.22], // x0,x1,y0,y1 of the bus canvas
   entrance:[0.20,1.05],// front door, right next to the sofa wall
-  bathDoor:[4.30,5.00],// bathroom door on the TV wall (z), right of the TV
-  wcDoor:[2.30,3.00],  // guest toilet door (x), at a right angle to the bathroom door
+  bathDoor:[4.40,5.00],// bathroom door at the back of the lobby (z), right of the TV
+  wcDoor:[2.75,3.45],  // guest toilet door (x), at a right angle to the bathroom door
   bedDepth:4.4,        // both bedrooms, door wall -> window wall (guess)
-  bedSplit:2.2         // wall between the two bedrooms (guess)
+  bedSplit:2.5         // wall between the two bedrooms, behind the niche (guess)
 };
 const W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ;
 const AZ=A.AZ=-D.bedDepth, SPLIT=A.SPLIT=D.bedSplit;
-const BA=A.BA={x0:W,x1:5.6,z0:L-3.1,z1:L-1.15};   // bathroom: shower, toilet, sink, washing machine
-const WC=A.WC={x0:D.BLK,x1:3.85,z0:D.ZW,z1:L};    // guest toilet
+const BA=A.BA={x0:D.LBX,x1:5.9,z0:L-3.1,z1:L-1.15};   // bathroom: shower, toilet, sink, washing machine
+const WC=A.WC={x0:D.BLK,x1:3.95,z0:D.ZW,z1:L};    // guest toilet
 
 const stage=A.stage=document.getElementById('stage'), labelsEl=A.labelsEl=document.getElementById('labels');
 const renderer=A.renderer=new THREE.WebGLRenderer({antialias:true});
@@ -57,10 +61,10 @@ Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:
    Every material belongs to a room and is multiplied by that room's tint,
    which is computed from daylight, shutters and the room's lamps. */
 const rooms=A.rooms={
-  living:{name:'Living room', rs:[[0,W,0,D.ZW],[0,D.BLK,D.ZW,L]], win:'kitchen', dl:1, node:'lk'},
+  living:{name:'Living room', rs:[[0,W,0,D.ZW],[0,D.BLK,D.ZW,L],[W,D.LBX,D.TVE,D.ZW]], win:'kitchen', dl:1, node:'lk'},
   kitchen:{name:'Kitchen',    rs:[[W,KX,0,KZ]],          win:'kitchen', dl:1, shutter:true, node:'lk'},
-  bed1:{name:'Bedroom 1',     rs:[[0,SPLIT-0.05,AZ,0]],  win:'bed1',    dl:1, shutter:true, node:'bed1'},
-  bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,KX,AZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
+  bed1:{name:'Bedroom 1',     rs:[[0,D.NX-0.05,D.NZ,0],[0,SPLIT-0.05,AZ,D.NZ]],  win:'bed1',    dl:1, shutter:true, node:'bed1'},
+  bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'}
 };
