@@ -34,6 +34,7 @@
 - `app/climate.js` — שמש לפי עונה ושעה, זרימת אוויר וטמפרטורה
 - `app/furniture.js` — הרהיטים הניידים, ארבעת הסידורים (`LAY`) והטקסטים של לשונית Design
 - `app/life.js` — החיים בדירה: בן/בת זוג, צרכים, חפצים שאפשר להפעיל, משימות היום
+- `app/fly.js` — "Float inside": מצלמה חופשית מגוף ראשון במצב Design
 - `app/sims.js` — מצב הסימס: דמויות, ניווט, פעולות, חברים, מסיבת פיג׳מות
 - `models/` — דמויות תלת-ממד עם שלד (GLB) ואנימציות הליכה ועמידה. להחלפת דמות: לשים קובץ GLB אחר באותו שם (`angela.glb`, `yoav.glb`)
 - `logo.svg`, `icon.svg`, `icon-512.png`, `apple-touch-icon.png`, `manifest.webmanifest` — לוגו ואייקונים

@@ -93,6 +93,8 @@ body.sticks #guestBar{bottom:140px}
 #shopClose{position:absolute; right:6px; top:4px; border:0; background:transparent; color:var(--muted); font-size:20px; cursor:pointer; padding:2px 6px}
 body.editing #stage{outline:3px solid var(--yellow); outline-offset:-3px}
 .btn[aria-pressed="true"]{background:var(--yellow); border-color:var(--yellow); color:#163F2E}
+#flyBtns{position:absolute; right:calc(140px + env(safe-area-inset-right,0px)); bottom:calc(30px + env(safe-area-inset-bottom,0px)); z-index:3; display:flex; flex-direction:column; gap:8px}
+#flyBtns .fab{width:44px; height:44px; font-size:16px; padding:0; touch-action:none}
 body.nomenu #panel{display:none}
 body.sticks #hint{display:none}
 body.sticks #pieceBar{bottom:140px}
@@ -193,6 +195,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   <div id="shopCard" hidden><button id="shopClose" aria-label="Close">×</button><b id="shopName"></b><span id="shopNote"></span><a id="shopLink" target="_blank" rel="noopener"></a></div>
   <div id="useBar" hidden><b id="useName"></b><span id="useBtns"></span></div>
   <div id="guestBar" hidden><b id="guestName"></b><button class="fab" id="bKick">Send home</button><button class="fab" id="bGuestKeep">Cancel</button></div>
+  <div id="flyBtns" hidden><button class="fab" id="flyUp" aria-label="Up">▲</button><button class="fab" id="flyDown" aria-label="Down">▼</button></div>
   <div class="stick" id="stickMove" hidden aria-label="Move"><i></i></div>
   <div class="stick" id="stickLook" hidden aria-label="Look"><i></i></div>
   <div id="hint">Drag to rotate, pinch or scroll to zoom</div>
@@ -258,6 +261,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
       <div class="seg" role="group" aria-label="View">
         <button id="b3d" aria-pressed="true">3D</button>
         <button id="bTop" aria-pressed="false">From above</button>
+        <button id="bFly" aria-pressed="false">Float inside</button>
       </div>
       <label class="check"><input type="checkbox" id="cLabels"> Labels</label>
       <label class="check"><input type="checkbox" id="cCut"> Cut walls low</label>
@@ -352,5 +356,6 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 <script src="app/climate.js"></script>
 <script src="app/sims.js"></script>
 <script src="app/life.js"></script>
+<script src="app/fly.js"></script>
 </body>
 </html>

@@ -59,7 +59,8 @@ function attachModel(p,spec,parts){
     p.nude=function(on){p.isNude=on; p.outfits.forEach(function(e){e.m.map=on?null:e.map; e.m.needsUpdate=true; e.b.copy(on?skinC:e.base||(e.base=new THREE.Color(1,1,1)));});};
     p.setClothes=function(t){p.outfits.forEach(function(e){if(/Top/.test(e.mesh.name)){e.base=new THREE.Color(1,1,1).lerp(new THREE.Color(t),0.55); e.b.copy(e.base);}});};
     p.outfit=function(pj){p.pjOn=pj; p.outfits.forEach(function(e){const c=pj?new THREE.Color(1,1,1).lerp(new THREE.Color(spec.pj),0.6):(e.base||new THREE.Color(1,1,1)); e.b.copy(c);});};
-    p.shoes=function(on){p.shoesOn=on; m.traverse(function(o){if(o.isMesh&&/Footwear/.test(o.name)) o.visible=on;});};
+    p.shoes=function(on){p.shoesOn=on; p.mats.forEach(function(e){if(e.mesh&&/Footwear/.test(e.mesh.name)){e.m.map=on?e.map:null; e.m.needsUpdate=true; e.b.copy(on?new THREE.Color(1,1,1):skinC);}}); p.ver=-1;};      // shoes off: the foot turns skin colour
+    p.shoes(p.shoesOn);
     if(spec.clips){p.mixer=new THREE.AnimationMixer(m); p.actions={};
       ['idle','walk'].forEach(function(n){loadClip(spec.clips[n],function(c){if(!c||p.dead) return; const a=p.mixer.clipAction(c); a.play(); a.setEffectiveWeight(n==='idle'?1:0); p.actions[n]=a;});});}
     p.ver=-1; if(p.onModel) p.onModel();
@@ -175,6 +176,7 @@ function makePerson(spec){
     const mo=put(new THREE.TorusGeometry(0.023,0.0055,8,14,Math.PI),hair,head,0,-0.042,0.104); mo.scale.y=0.5;
   }
   /* arms and legs: smooth, with joints the same width as the limb so nothing bulges */
+  const shoeBits=[];
   const limb=function(s){
     const sleeve=spec.sleeves?top:skin;
     const arm=new THREE.Group(); arm.position.set(s*(0.168*ws+0.026),0.478,0); arm.rotation.z=s*0.1; torso.add(arm);
@@ -196,9 +198,8 @@ function makePerson(spec){
     put(seg(0.058,0.043,0.4,0.003,0.3),pants,knee,0,0,0);
     put(sg(0.05),shoe,knee,0,-0.42,0.0).scale.set(0.86,0.66,1.0);                                    // heel
     put(sg(0.054),shoe,knee,0,-0.427,0.07).scale.set(0.84,0.5,1.4);                                  // toe
-    put(new THREE.BoxGeometry(0.09,0.018,0.24),sole,knee,0,-0.447,0.045);
     put(seg(0.047,0.047,0.03,0),trim2,knee,0,-0.365,0);                                               // trouser hem
-    [0.05,0.075,0.1].forEach(function(z){put(new THREE.BoxGeometry(0.05,0.004,0.008),sole,knee,0,-0.398+ (z-0.05)*-0.2,z);});   // laces
+    [0.05,0.075,0.1].forEach(function(z){shoeBits.push(put(new THREE.BoxGeometry(0.05,0.004,0.008),sole,knee,0,-0.398+ (z-0.05)*-0.2,z));});   // laces
     return {arm:arm,fore:fore,leg:leg,knee:knee};
   };
   const Lm=limb(-1), Rm=limb(1);
@@ -212,7 +213,7 @@ function makePerson(spec){
   };
   p.hand=Rm.fore;
   p.setClothes=function(t,q){baseTop.set(t); basePants.set(q); baseTrim.copy(baseTop).multiplyScalar(0.78); if(!p.pjOn) p.outfit(false);};
-  p.shoes=function(on){mats[5].b.copy(on?baseShoe:new THREE.Color(0xf1efe8)); p.shoesOn=on;};
+  p.shoes=function(on){mats[5].b.copy(on?baseShoe:mats[0].b); shoeBits.forEach(function(m){m.visible=on;}); p.shoesOn=on;};      // shoes off: bare feet in skin colour
   p.shoesOn=true;
   p.nude=function(on){p.isNude=on; if(on) [1,2,5,9,10,12].forEach(function(i){mats[i].b.copy(mats[0].b);}); else{p.outfit(p.pjOn); p.shoes(p.shoesOn); mats[9].b.set(0xe9e6df);}};
   p.tint=function(t){for(let i=0;i<mats.length;i++) mats[i].m.color.copy(mats[i].b).multiply(t);};
