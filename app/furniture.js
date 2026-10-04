@@ -138,8 +138,9 @@ piece('gate',{label:'Drop-leaf dining table',h:1.15,isNew:true,shop:['Gateleg ta
   const legs=[1,-1].map(function(s){return box(0.04,0.72,0.04,OAK,0,0.36,s*0.68,g);});
   const stuff=G(g); cyl(0.06,0.2,BLUE,0.18,0.86,0,stuff,14,0.035); sph(0.07,0x3f9160,0.18,1.0,0,stuff); K.bookStack(stuff,-0.18,0.76,0,3,3);
   tableFns.push(function(t){
-    leaves.forEach(function(l){l.g.rotation.x=l.s*(1-t)*R/2;});
-    legs.forEach(function(m){m.visible=t>0.05; m.scale.y=Math.max(0.01,t); m.position.y=0.73-0.36*t;});
+    const front=Math.max(t,A.halfT||0);                 // the leaf facing the room also opens on its own, for two
+    leaves.forEach(function(l){l.g.rotation.x=l.s*(1-(l.s>0?front:t))*R/2;});
+    legs.forEach(function(m,i){const q=i===0?front:t; m.visible=q>0.05; m.scale.y=Math.max(0.01,q); m.position.y=0.73-0.36*q;});
   });
 });
 sideChairs('gc',4,WHITE,BLUE,['Dining chair','INGOLF chair white','ikea']);
@@ -291,6 +292,7 @@ LAY.d=lay({rugC:[1.75,SZ,0], round:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[
 LAY.e=lay({rugB:[1.75,SZ,0], trunk:[1.95,SZ,0], kbench:[W-0.2,TVZ,R], poufB1:[1.95,SZ+1.05,0], hallBench:HALL});
 LAY.f=lay({rugA:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], poufA1:[1.95,SZ+1.05,0], shoeCab:CAB});
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
+const OPEN2={gc1:[DC-0.57,0.55,0], gc2:[DC,1.2,R/2]};      // one leaf up, table still against the wall: seats two
 const PJ={    // pajama party: the coffee table is put away and two mattresses go down
   n:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], table:null, rack1:null, rack2:null},
   a:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], lift:null, poufA1:null, poufA2:null},
@@ -313,7 +315,7 @@ const DESIGNS=A.DESIGNS={
       ['Bedroom 2','Dresser and wardrobe in a niche on the left, cube shelf between the wall and the column, bed behind it 40 cm from the TV wall, bike, desk under the big window facing the wardrobe.']]},
   a:{name:'A', title:'A · Lift-top', sub:'Modern rustic: white, oak, sage and light blue. The coffee table also rises to eating height.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
-      ['Dining','The drop-leaf table: a 26 cm console with drawers under the bus painting. Open, it moves out and seats four at 75 × 150, clear of both bedroom doors.'],
+      ['Dining','The drop-leaf table: a 26 cm console with drawers under the bus painting. With one leaf up it stays against the wall and seats two. With both up it moves out and seats four at 75 × 150, clear of both bedroom doors.'],
       ['Coffee table','A 120 × 60 lift-top in oak and white, with a linen pouf at each end. Raised, it is a second eating or laptop spot at the sofa.'],
       ['Record corner','Where the coffee station was: a low white and oak sideboard with the turntable, a speaker and a lamp. The espresso machine moves to the kitchen counter.'],
       ['TV wall','About 1 m of wall between the fridge and the bathroom door, so the TV stays on a stand. A white 4 × 2 cube shelf with woven baskets lies in front of the fridge side and hides its lower half; the TV on top covers most of the rest.'],
@@ -363,13 +365,13 @@ const DESIGNS=A.DESIGNS={
 
 /* ---------- state and layout animation ---------- */
 const S=A.state={design:'a',table:0,lift:0,pj:false,labels:false,dims:false,edit:false};
-A.tableT=0; A.liftT=0; A.layoutFns=[];
+A.tableT=0; A.halfT=0; A.liftT=0; A.layoutFns=[];
 let anim=null;
 const USER={};
-function ukey(){return S.design+(S.table?'1':'0')+(S.pj?'p':'');}
+function ukey(){return S.design+S.table+(S.pj?'p':'');}
 function targets(){
   const out={}, put=function(o){for(const k in o) out[k]=o[k];};
-  put(LAY[S.design]); if(S.table&&S.design!=='n') put(OPEN); if(S.pj) put(PJ[S.design]);
+  put(LAY[S.design]); if(S.table===1&&S.design!=='n') put(OPEN); if(S.table===2&&S.design!=='n') put(OPEN2); if(S.pj) put(PJ[S.design]);
   const u=USER[ukey()]; if(u) for(const k in u) if(out[k]) out[k]=u[k];          // furniture you moved yourself
   return out;
 }
@@ -381,7 +383,7 @@ A.layout=function(instant){
   }
   for(let i=0;i<A.onlys.length;i++){const o=A.onlys[i], sp=o.userData.only;          // D, E and F share everything marked for A
     o.visible=(sp.indexOf(S.design)>=0||sp.indexOf(DESIGNS[S.design].like||'-')>=0)&&!(o.userData.not&&o.userData.not.indexOf(S.design)>=0);}
-  anim={t0:performance.now(),dur:(instant||A.reduce)?1:800,tf:A.tableT,tt:S.table?1:0,lf:A.liftT,lt:(S.lift&&S.design==='a')?1:0};
+  anim={t0:performance.now(),dur:(instant||A.reduce)?1:800,tf:A.tableT,tt:S.table===1?1:0,hf:A.halfT,ht:S.table===2?1:0,lf:A.liftT,lt:(S.lift&&S.design==='a')?1:0};
   resolveSeats();
   if(instant) stepLayout();
 };
@@ -389,7 +391,7 @@ function stepLayout(){
   if(anim){
     const k=Math.min(1,(performance.now()-anim.t0)/anim.dur), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
     for(const id in P){const p=P[id]; for(let i=0;i<4;i++) p.cur[i]=p.from[i]+(p.to[i]-p.from[i])*e;}
-    A.tableT=anim.tf+(anim.tt-anim.tf)*e;
+    A.tableT=anim.tf+(anim.tt-anim.tf)*e; A.halfT=anim.hf+(anim.ht-anim.hf)*e;
     for(let i=0;i<tableFns.length;i++) tableFns[i](A.tableT);
     A.liftT=anim.lf+(anim.lt-anim.lf)*e; for(let i=0;i<liftFns.length;i++) liftFns[i](A.liftT);
     for(const id in P){const p=P[id];
@@ -421,7 +423,7 @@ A.setDesign=function(k,instant){
   A.layout(instant); renderPanel();
   if(A.onDesign) A.onDesign();
 };
-A.setTable=function(on){S.table=on?1:0; A.layout(); renderPanel();};
+A.setTable=function(on){S.table=on===2?2:on?1:0; A.layout(); renderPanel();};      // 0 closed, 1 for four, 2 for two
 A.setLift=function(on){S.lift=on?1:0; A.layout(); renderPanel();};
 
 /* ---------- labels and dimension lines ---------- */
@@ -469,7 +471,8 @@ function renderPanel(){
   $('dTitle').textContent=d.title; $('dSub').textContent=d.sub;
   $('dPal').innerHTML=d.pal.map(function(c){return '<i style="background:'+c+'"></i>';}).join('');
   $('list').innerHTML=d.list.map(function(r){return '<li><b>'+r[0]+'</b><span>'+r[1]+'</span></li>';}).join('');
-  const bt=$('bTable'); bt.hidden=!d.table; if(d.table) bt.textContent=d.table[S.table?1:0];
+  const bt=$('bTable'); bt.hidden=!d.table; bt.textContent=S.table===1?'Close the dining table':'Open the table for four';
+  $('bTable2').hidden=!d.table; $('bTable2').textContent=S.table===2?'Close the dining table':'Open the table for two';
   $('bLift').hidden=S.design!=='a'; $('bLift').textContent=S.lift?'Lower the coffee table':'Raise the coffee table';
   fixedLabels.forEach(function(f){if(f.alt) f.el.textContent=S.design==='n'?f.label:f.alt;});
   $('editNote').textContent=S.edit?'Editing: drag a piece to move it. Tap it for the rotate button.':'Tap a piece of furniture to see where to get it.';
@@ -480,7 +483,7 @@ let lastNew='a';
 const KEYS=['a','b','c','d','e','f'];
 KEYS.forEach(function(k){$('d_'+k).onclick=function(){lastNew=k; A.setDesign(k);};});
 $('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){A.setDesign(lastNew);};
-$('bTable').onclick=function(){A.setTable(!S.table);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
+$('bTable').onclick=function(){A.setTable(S.table===1?0:1);}; $('bTable2').onclick=function(){A.setTable(S.table===2?0:2);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
 function fitDist(){const a=A.stage.clientWidth/A.stage.clientHeight; return 19*Math.max(1,1.0/Math.max(a,0.5));}
 A.viewPos=function(v){
   const d=fitDist(), t=A.home;

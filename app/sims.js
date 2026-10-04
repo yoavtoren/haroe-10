@@ -374,16 +374,17 @@ const ACT={
   },
   lunch:function(){
     stopAction(); const tk=token;
-    if(!S.table&&A.DESIGNS[S.design].table) A.setTable(true);
+    if(!S.table&&A.DESIGNS[S.design].table) A.setTable(2);
     doing='setting the table';
     afterLayout(function(){
       if(tk!==token) return;
-      const s=firstFree(S.design==='n'?['chairB','chairA']:['gc1','gc3','gc2','gc4']);
+      const s=firstFree(S.design==='n'?['chairB','chairA']:['gc1','gc2','gc3','gc4']);
       if(!s){doing=''; refresh(); return;}
       player.sitOn(s,function(){doing='having lunch at the table'; refresh();});
     });
   },
-  table:function(){stopAction(); if(player.seat) player.release(); A.setTable(!S.table); refresh();},
+  table:function(){stopAction(); if(player.seat) player.release(); A.setTable(S.table===1?0:1); refresh();},
+  table2:function(){stopAction(); if(player.seat) player.release(); A.setTable(S.table===2?0:2); refresh();},
   lift:function(){A.setLift(!S.lift); refresh();},
   nook:function(){
     stopAction(); const s=firstFree(['nook','desk3']); if(!s) return;
@@ -645,7 +646,7 @@ function refresh(){
   h+=btn('shower','Take a shower')+btn('toilet','Guest toilet');
   h+=btn('coffee','Make a coffee')+btn('bed','Go to bed');
   h+=btn('nook',isNew?'Read in the nook':'Desk in bedroom 2')+btn('desk',isNew?'Work in the study':'Desk in bedroom 1');
-  if(d.table&&!pj.on) h+=btn('lunch','Have lunch at the table')+btn('table',S.table?'Close the dining table':'Open the dining table')+(S.design==='a'?btn('lift',S.lift?'Lower the coffee table':'Raise the coffee table','full'):'');
+  if(d.table&&!pj.on) h+=btn('lunch','Have lunch at the table')+btn('table2',S.table===2?'Close the dining table':'Open the table for two')+btn('table',S.table===1?'Close the dining table':'Open the table for four')+(S.design==='a'?btn('lift',S.lift?'Lower the coffee table':'Raise the coffee table','full'):'');
   else if(!pj.on) h+=btn('lunch','Sit at the dining table','full');
   $('acts').innerHTML=h;
   const hint=guests.length?'<p class="note" style="grid-column:1/-1;margin:0">Tap a friend to send them home.</p>':'';
