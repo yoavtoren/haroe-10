@@ -84,7 +84,7 @@ inRoom('hall',function(){
 
 /* ================= outside ================= */
 inRoom('out',function(){
-  const o=G(); o.userData.nc=true;
+  const o=G(); o.userData.nc=true; A.outside=o;
   function ground(x0,x1,z0,z1,y,c){const m=box(x1-x0,0.1,z1-z0,c,(x0+x1)/2,y-0.05,(z0+z1)/2,o); m.castShadow=false; return m;}
   ground(-30,45,-45,40,GY,0xd8c7a0);                                          // the yard is mostly sand
   ground(8.2,11.4,-9.5,-5.5,GY+0.015,0x8fae74); ground(-3,1.5,-11.6,-9,GY+0.015,0x8fae74);     // two worn patches of green
@@ -137,7 +137,7 @@ inRoom('out',function(){
   block(7,AZ-GAP-5.5,34,11,'z');                   // east side
   block(KX+GAP+5.5,-1,11,36,'x');                  // south side
   A.frameFns.push(function(){                      // a neighbour is hidden while the camera is behind or inside it, so it never blocks the view
-    const c=A.camera.position; blocks.forEach(function(b){b.g.visible=b.axis==='x'?c.x<b.face-1.5:c.z>b.face+1.5;});
+    const c=A.camera.position; blocks.forEach(function(b){b.g.visible=A.sunReal||(b.axis==='x'?c.x<b.face-1.5:c.z>b.face+1.5);});
   });
   // a tree and a bench by the entrance on the street side
   cyl(0.12,3.2,0x6b4a2f,-8.5,1.6,LZ+2.0,o,8); sph(1.3,0x3f7d4a,-8.5,3.9,LZ+2.0,o); sph(0.9,0x4f9160,-9.2,3.4,LZ+2.3,o);

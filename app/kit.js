@@ -1,7 +1,7 @@
 /* Haroe 10 — kit: reusable pieces (plants, lamps, art, shelving, seats, TV) */
 (function(){
 'use strict';
-const A=window.APP, box=A.box, cyl=A.cyl, sph=A.sph, torus=A.torus, M=A.M, canvasTex=A.canvasTex, rng=A.rng, H=A.D.H;
+const A=window.APP, rbox=A.rbox, box=A.box, cyl=A.cyl, sph=A.sph, torus=A.torus, M=A.M, canvasTex=A.canvasTex, rng=A.rng, H=A.D.H;
 const K=A.kit={};
 const GREENS=[0x2f7d4f,0x3f9160,0x246b43,0x4a9a66];
 const PAL=K.PAL={green:'#1F5A41',sage:'#8fbd9b',blue:'#9fc4d6',sky:'#cfe3ec',cream:'#F3EBDC',ink:'#3b4a44',oak:'#C99A5B',white:'#fbfaf6'};   // modern rustic: green, light blue, wood, white
@@ -183,9 +183,9 @@ K.kallax=function(p,rows,col,opt){
 
 /* ---------- seats ---------- */
 K.armchair=function(p,c,d){
-  box(0.78,0.36,0.8,c,0,0.24,0,p);
-  box(0.2,0.5,0.8,d,-0.3,0.62,0,p);
-  box(0.6,0.22,0.14,d,0.08,0.5,-0.33,p); box(0.6,0.22,0.14,d,0.08,0.5,0.33,p);
+  rbox(0.78,0.36,0.8,c,0,0.24,0,p);
+  rbox(0.2,0.5,0.8,d,-0.3,0.62,0,p);
+  rbox(0.6,0.22,0.14,d,0.08,0.5,-0.33,p); rbox(0.6,0.22,0.14,d,0.08,0.5,0.33,p);
   [[-.32,-.33],[.32,-.33],[-.32,.33],[.32,.33]].forEach(function(q){box(0.04,0.1,0.04,0x3a2c1a,q[0],0.05,q[1],p);});
 };
 K.pouf=function(p,c){cyl(0.25,0.36,c,0,0.2,0,p,22); cyl(0.235,0.04,c,0,0.4,0,p,22); torus(0.25,0.012,0x3a2c1a,0,0.2,0,p).rotation.x=Math.PI/2;};
@@ -198,7 +198,7 @@ K.officeChair=function(p,c){
   box(0.48,0.08,0.48,c,0,0.48,0,p); box(0.06,0.56,0.44,c,-0.24,0.83,0,p);
   cyl(0.03,0.4,0x8d9092,0,0.24,0,p,8); cyl(0.27,0.04,0x8d9092,0,0.04,0,p,20);
 };
-K.cushion=function(p,c,x,y,z,s,tilt){const m=box(0.14*s,0.34*s,0.34*s,c,x,y,z,p); m.rotation.z=tilt==null?0.3:tilt; return m;};
+K.cushion=function(p,c,x,y,z,s,tilt){const m=rbox(0.14*s,0.34*s,0.34*s,c,x,y,z,p,0.05*s); m.rotation.z=tilt==null?0.3:tilt; return m;};
 
 /* ---------- rugs ---------- */
 K.rugTex=function(kind){

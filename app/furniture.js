@@ -24,10 +24,10 @@ piece('sofa',{label:'Sofa',h:1.2,seats:[
   {id:'sofaR',label:'Sofa, right',lx:0.2,lz:0.9,y:0.45,type:'sit',recline:0.22},
   {id:'sofaLie',label:'Sofa',lx:0.16,lz:0,y:0.46,type:'lie',dh:-R/2}]},function(g){   // about 330 x 120 cm, three seats, big back cushions
   const c=0x1f5a41, d=0x194a36, len=3.3;
-  box(1.2,0.42,len,c,0,0.21,0,g);
-  box(0.3,0.44,len,d,-0.45,0.64,0,g);
-  box(0.9,0.2,0.3,d,0.15,0.52,-len/2+0.15,g); box(0.9,0.2,0.3,d,0.15,0.52,len/2-0.15,g);
-  [-0.9,0,0.9].forEach(function(z){box(0.88,0.03,0.88,0x226246,0.14,0.435,z,g); const p=box(0.22,0.44,0.84,0x246a4c,-0.22,0.68,z,g); p.rotation.z=0.22;});
+  A.rbox(1.2,0.42,len,c,0,0.21,0,g);
+  A.rbox(0.3,0.44,len,d,-0.45,0.64,0,g);
+  A.rbox(0.9,0.2,0.3,d,0.15,0.52,-len/2+0.15,g); A.rbox(0.9,0.2,0.3,d,0.15,0.52,len/2-0.15,g);
+  [-0.9,0,0.9].forEach(function(z){A.rbox(0.88,0.03,0.88,0x226246,0.14,0.435,z,g); const p=A.rbox(0.22,0.44,0.84,0x246a4c,-0.22,0.68,z,g); p.rotation.z=0.22;});
   [-1.25,-0.45].forEach(function(z){K.cushion(g,0xe6dccb,-0.3,0.95,z,0.9);});
   const n=G(g,'abc');                                   // redesign: more cushions and a throw
   K.cushion(n,BLUE,-0.12,0.66,1.22,1); K.cushion(n,0xfbfaf6,-0.14,0.64,0.42,0.9,0.4); K.cushion(n,SAGE,-0.12,0.66,-0.86,1);
@@ -190,7 +190,7 @@ piece('music',{label:'Record corner',h:1.2,isNew:true,shop:['Low sideboard','sid
 });
 piece('bench',{label:'Storage bench',h:0.9,isNew:true,shop:['Bench with storage','PERJOHAN bench with storage','ikea','Pine, about 100 cm. Two side by side fill the corner.'],seats:[{id:'benchA',label:'Bench, left',lx:0.02,lz:-0.35,y:0.5,type:'sit'},{id:'benchB',label:'Bench, right',lx:0.02,lz:0.35,y:0.5,type:'sit'}]},function(g){
   box(0.42,0.06,1.4,OAK,0,0.41,0,g); [[-.17,-.64],[.17,-.64],[-.17,.64],[.17,.64]].forEach(function(p){box(0.04,0.38,0.04,OAK,p[0],0.19,p[1],g);});
-  box(0.4,0.06,0.66,SAGE,0,0.47,-0.35,g); box(0.4,0.06,0.66,SAGE,0,0.47,0.35,g);
+  A.rbox(0.4,0.07,0.66,SAGE,0,0.47,-0.35,g); A.rbox(0.4,0.07,0.66,SAGE,0,0.47,0.35,g);
   box(0.32,0.24,0.4,RATTAN,0,0.13,-0.35,g); box(0.32,0.24,0.4,RATTAN,0,0.13,0.35,g);
   K.cushion(g,BLUE,-0.14,0.66,-0.5,0.9,0.2); K.cushion(g,WHITE,-0.14,0.66,0.52,0.9,0.2);
 });
@@ -212,7 +212,7 @@ piece('arc',{shop:['Arc floor lamp','arc floor lamp','ikea']},function(g){K.arcL
 function mattress(id,label,col){
   piece(id,{label:label,h:0.5,seats:[{id:id,label:label,lx:0,lz:0,y:0.17,type:'lie',dh:-R/2}]},function(g){
     g.userData.nc=true;
-    box(0.8,0.15,1.9,0xf3efe6,0,0.075,0,g); box(0.78,0.03,1.15,col,0,0.165,0.34,g); box(0.5,0.08,0.32,0xffffff,0,0.19,-0.72,g);
+    A.rbox(0.8,0.15,1.9,0xf3efe6,0,0.075,0,g); A.rbox(0.78,0.05,1.15,col,0,0.165,0.34,g); A.rbox(0.5,0.1,0.32,0xffffff,0,0.19,-0.72,g);
   });
 }
 mattress('mat1','Mattress by the sofa',0xcfe3ec); mattress('mat2','Mattress by the bedroom doors',0xbfd8c6);

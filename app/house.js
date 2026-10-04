@@ -164,7 +164,7 @@ inRoom('bed1',function(){
   box(0.6,2.3,1.5,0xe9dfcf,rn-0.3,1.15,-1.0);                           // built-in closet beside the door
   [-1.5,-1.0,-0.5].forEach(function(z){box(0.004,2.26,0.006,0xcfc4b2,rn-0.602,1.15,z);}); [-1.1,-0.9].forEach(function(z){box(0.02,0.2,0.014,0xa9a59c,rn-0.61,1.25,z);});
   // today: single bed on the right-hand wall
-  box(0.9,0.22,2.0,0xc9a66b,r-0.46,0.2,AZ+1.02,n); box(0.9,0.2,2.0,0xd9c7b0,r-0.46,0.41,AZ+1.02,n); box(0.6,0.1,0.38,0xe9e2d4,r-0.46,0.56,AZ+0.3,n);
+  box(0.9,0.22,2.0,0xc9a66b,r-0.46,0.2,AZ+1.02,n); A.rbox(0.9,0.2,2.0,0xd9c7b0,r-0.46,0.41,AZ+1.02,n); A.rbox(0.6,0.1,0.38,0xe9e2d4,r-0.46,0.56,AZ+0.3,n);
   seat({id:'bed1',label:'Bed (bedroom 1)',room:'bed1',x:r-0.46,z:AZ+1.1,y:0.51,h:0,type:'lie',only:'n'});
   // proposals: second desk where the bed was, shelves above it, two desk lamps, rug, plants
   const dz=AZ+1.4, dk=G(d);
@@ -208,7 +208,7 @@ inRoom('bed2',function(){
   box(0.06,0.06,0.3,0x25272b,BX-0.15,1.6,AZ+0.95);                      // TV arm
   // today: bed with its head on the far wall, bedside table in the 40 cm beside it, bike, pine desk under the window
   const bx=BX-0.4-0.75;
-  box(1.5,0.14,2.0,0xc9a66b,bx,0.1,AZ+1.02,n); box(1.5,0.22,2.0,0xf1efec,bx,0.3,AZ+1.02,n); box(1.3,0.1,0.4,0xfafafa,bx,0.46,AZ+0.3,n);
+  box(1.5,0.14,2.0,0xc9a66b,bx,0.1,AZ+1.02,n); A.rbox(1.5,0.22,2.0,0xf1efec,bx,0.3,AZ+1.02,n); A.rbox(1.3,0.1,0.4,0xfafafa,bx,0.46,AZ+0.3,n);
   seat({id:'bedL',label:'Bed, left side',room:'bed2',x:bx-0.36,z:AZ+1.12,y:0.41,h:0,type:'lie',only:'n'});
   seat({id:'bedR',label:'Bed, right side',room:'bed2',x:bx+0.36,z:AZ+1.12,y:0.41,h:0,type:'lie',only:'n'});
   box(0.38,0.4,0.36,0xc79a5c,BX-0.2,0.2,AZ+0.22,n);
@@ -224,9 +224,9 @@ inRoom('bed2',function(){
   seat({id:'desk3',label:'Desk (bedroom 2)',room:'bed2',x:BX-1.1,z:dkz,y:0.52,h:R/2,type:'sit',only:'n'});
   // proposals: the bed turns 90 degrees to face the TV, a reading nook replaces the desk, the bike goes
   const bz=AZ+0.8;
-  box(2.0,0.14,1.5,0xc9a66b,l+1.03,0.1,bz,d); box(2.0,0.22,1.5,0xfbfaf6,l+1.03,0.3,bz,d); box(0.4,0.1,1.3,0xffffff,l+0.33,0.46,bz,d);
+  box(2.0,0.14,1.5,0xc9a66b,l+1.03,0.1,bz,d); A.rbox(2.0,0.22,1.5,0xfbfaf6,l+1.03,0.3,bz,d); A.rbox(0.4,0.1,1.3,0xffffff,l+0.33,0.46,bz,d);
   box(0.05,0.6,1.5,0xc99a5b,l+0.03,0.72,bz,d);
-  box(0.7,0.05,1.52,SAGE,l+1.6,0.435,bz,d); box(0.3,0.14,0.36,BLUE,l+0.62,0.5,bz-0.3,d); box(0.3,0.14,0.36,0xcfe3ec,l+0.62,0.5,bz+0.3,d);
+  A.rbox(0.7,0.05,1.52,SAGE,l+1.6,0.435,bz,d); A.rbox(0.3,0.14,0.36,BLUE,l+0.62,0.5,bz-0.3,d); A.rbox(0.3,0.14,0.36,0xcfe3ec,l+0.62,0.5,bz+0.3,d);
   seat({id:'bedL',label:'Bed, window side',room:'bed2',x:l+1.15,z:bz-0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
   seat({id:'bedR',label:'Bed, room side',room:'bed2',x:l+1.15,z:bz+0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
   box(0.36,0.42,0.36,0xc99a5b,l+0.2,0.21,bz+0.96,d); K.tableLamp(d,l+0.2,0.42,bz+0.96,'L:bed2');

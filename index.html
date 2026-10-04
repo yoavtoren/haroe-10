@@ -215,7 +215,8 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   </header>
   <div class="seg wide" role="group" aria-label="Mode" style="margin-bottom:14px">
     <button id="tabDesign" aria-pressed="true">Design</button>
-    <button id="tabSims" aria-pressed="false">Sims mode</button>
+    <button id="tabSims" aria-pressed="false">Sims</button>
+    <button id="tabClimate" aria-pressed="false">Sun &amp; air</button>
   </div>
 
   <section id="pDesign">
@@ -279,6 +280,47 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
     <label class="check"><input type="checkbox" id="cAuto"> Switch lights as I enter and leave a room</label>
     <table class="rooms" id="roomsTbl"></table>
   </section>
+  <section id="pClimate" hidden>
+    <h3 style="margin-top:0">Sun</h3>
+    <div class="seg wide" role="group" aria-label="Season" id="segSeason">
+      <button data-s="winter" aria-pressed="false">Winter</button><button data-s="spring" aria-pressed="true">Spring</button><button data-s="summer" aria-pressed="false">Summer</button><button data-s="autumn" aria-pressed="false">Autumn</button>
+    </div>
+    <div class="row" style="margin-top:10px"><input type="range" id="sunHour" min="5" max="20" step="0.25" value="9" style="flex:1" aria-label="Time of day"><b id="sunClock" style="min-width:3.2em;text-align:right">09:00</b>
+      <button class="btn" id="sunPlay">Play the day</button></div>
+    <p class="status" id="sunInfo"></p>
+    <table class="rooms" id="sunTbl"></table>
+    <h3>Air</h3>
+    <div class="seg wide" role="group" aria-label="Air mode" id="segAir">
+      <button data-m="off" aria-pressed="true">Off</button><button data-m="win" aria-pressed="false">Windows</button><button data-m="ac" aria-pressed="false">Air conditioning</button>
+    </div>
+    <div id="airWin" hidden>
+      <p class="note" style="margin:10px 0 6px">Open:</p>
+      <div class="row" id="airOpen">
+        <label class="check"><input type="checkbox" data-o="kitchen" checked> Kitchen window</label>
+        <label class="check"><input type="checkbox" data-o="bed1" checked> Bedroom 1 window</label>
+        <label class="check"><input type="checkbox" data-o="bed2"> Bedroom 2 window</label>
+        <label class="check"><input type="checkbox" data-o="front"> Front door</label>
+      </div>
+      <div class="row"><span class="note" style="margin:0">Wind from</span>
+        <div class="seg" role="group" aria-label="Wind direction" id="segWind"><button data-w="W" aria-pressed="true">W</button><button data-w="N" aria-pressed="false">N</button><button data-w="E" aria-pressed="false">E</button><button data-w="S" aria-pressed="false">S</button></div>
+        <input type="range" id="windSpeed" min="0" max="8" step="0.5" value="3" aria-label="Wind speed" style="flex:1;min-width:80px"><b id="windLbl">3 m/s</b></div>
+    </div>
+    <div id="airAc" hidden>
+      <div class="row" style="margin-top:10px">
+        <label class="check"><input type="checkbox" data-ac="kitchen" checked> Kitchen unit</label>
+        <label class="check"><input type="checkbox" data-ac="bed1"> Bedroom 1 unit</label>
+      </div>
+      <div class="row"><span class="note" style="margin:0">Set to</span><input type="range" id="acTemp" min="16" max="30" step="1" value="23" aria-label="AC temperature" style="flex:1"><b id="acTempLbl">23°C</b></div>
+      <div class="row"><span class="note" style="margin:0">Fan</span><div class="seg" role="group" aria-label="Fan" id="segFan"><button data-f="1" aria-pressed="false">Low</button><button data-f="2" aria-pressed="true">Medium</button><button data-f="3" aria-pressed="false">High</button></div></div>
+    </div>
+    <div id="airCommon" hidden>
+      <label class="check"><input type="checkbox" id="airDoors" checked> Bedroom doors open</label>
+      <button class="btn" id="airReset" style="margin-left:8px">Reset temperatures</button>
+      <p class="status" id="airInfo" style="margin-top:10px"></p>
+      <table class="rooms" id="airTbl"></table>
+      <p class="note">A simplified 2D model of air at head height. It shows where air moves and which rooms cool first, not exact numbers. Temperatures change about ten times faster than in real life.</p>
+    </div>
+  </section>
 </aside>
 <div id="modal" hidden><div class="sheet" role="dialog" aria-modal="true" id="sheet"></div></div>
 
@@ -289,6 +331,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 <script src="app/house.js"></script>
 <script src="app/exterior.js"></script>
 <script src="app/furniture.js"></script>
+<script src="app/climate.js"></script>
 <script src="app/sims.js"></script>
 </body>
 </html>

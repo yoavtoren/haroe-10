@@ -50,7 +50,8 @@ controls.target.copy(home); controls.enableDamping=true; controls.dampingFactor=
 controls.maxPolarAngle=Math.PI/2-0.04; controls.minDistance=1.6; controls.maxDistance=50;
 
 scene.add(new THREE.HemisphereLight(0xffffff,0x8d958f,0.66));
-const sun=new THREE.DirectionalLight(0xffffff,0.4);
+const hemi=A.hemi=scene.children[scene.children.length-1];
+const sun=A.sun=new THREE.DirectionalLight(0xffffff,0.4);
 sun.position.set(6,9,-0.5); sun.target.position.copy(home); scene.add(sun,sun.target);
 sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:26}); sun.shadow.radius=4;
@@ -109,6 +110,16 @@ function put(geo,mat,x,y,z,parent){
   const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; (parent||scene).add(m); return m;
 }
 A.box=function(w,h,d,color,x,y,z,parent){return put(new THREE.BoxGeometry(w,h,d),toMat(color),x,y,z,parent);};
+/* box with rounded edges and corners, for upholstery: same arguments as A.box, radius picked from the size */
+A.rbox=function(w,h,d,color,x,y,z,parent,r){
+  r=Math.max(0.004,Math.min(r||0.06,w/2-0.004,h/2-0.004,d/2-0.004));
+  const a=w/2-r, b=d/2-r, c=Math.min(a,b,0.05)*0.9, s=new THREE.Shape();
+  s.moveTo(-a+c,-b); s.lineTo(a-c,-b); s.absarc(a-c,-b+c,c,-Math.PI/2,0,false); s.lineTo(a,b-c); s.absarc(a-c,b-c,c,0,Math.PI/2,false);
+  s.lineTo(-a+c,b); s.absarc(-a+c,b-c,c,Math.PI/2,Math.PI,false); s.lineTo(-a,-b+c); s.absarc(-a+c,-b+c,c,Math.PI,Math.PI*1.5,false);
+  const g=new THREE.ExtrudeGeometry(s,{depth:h-2*r,bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:3,curveSegments:4});
+  g.rotateX(-Math.PI/2); g.translate(0,-(h/2-r),0);
+  return put(g,toMat(color),x,y,z,parent);
+};
 A.cyl=function(r,h,color,x,y,z,parent,seg,rTop){return put(new THREE.CylinderGeometry(rTop==null?r:rTop,r,h,seg||24),toMat(color),x,y,z,parent);};
 A.sph=function(r,color,x,y,z,parent,sx,sy,sz){const m=put(new THREE.SphereGeometry(r,14,10),toMat(color),x,y,z,parent); if(sx) m.scale.set(sx,sy,sz); return m;};
 A.torus=function(R,t,color,x,y,z,parent,arc){return put(new THREE.TorusGeometry(R,t,8,28,arc||Math.PI*2),toMat(color),x,y,z,parent);};
@@ -147,7 +158,7 @@ A.sunPatch=function(winKey,x,z,w,len,rotY){
   const g=new THREE.Group(); g.position.set(x,0.021,z); g.rotation.y=rotY; scene.add(g);
   const geo=new THREE.PlaneGeometry(w,len); geo.rotateX(-Math.PI/2); geo.translate(0,0,len/2);
   const m=new THREE.Mesh(geo,glowMat(beamTex,0xfff3d6)); m.renderOrder=2; g.add(m);
-  glows.push({m:m,max:0.34,ch:[chan('day'),chan('S:'+winKey)]});
+  glows.push({m:m,max:0.34,ch:[chan('day'),chan('S:'+winKey),chan('fake',1)]});      // 'fake' goes to 0 when the real sun study is on
 };
 const glassMats=[];
 const cDark=new THREE.Color(0.56,0.66,0.96), cLamp=new THREE.Color(1,0.9,0.74), tmpC=new THREE.Color();
@@ -203,11 +214,12 @@ A.slab=function(x0,x1,z0,z1,room){return A.floorQuad(x0,x1,z0,z1,tileTex,D.T,roo
 A.ceil=function(room,x0,x1,z0,z1){
   const mat=reg(new THREE.MeshLambertMaterial({color:0xf7f7f4,emissive:0x2c2d2b,clippingPlanes:[cut]}),room);
   const m=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),mat);
-  m.rotation.x=Math.PI/2; m.position.set((x0+x1)/2,H,(z0+z1)/2); scene.add(m); return m;
+  m.rotation.x=Math.PI/2; m.position.set((x0+x1)/2,H,(z0+z1)/2); scene.add(m); A.shells.push(m); return m;
 };
 
 /* ---------- walls (single sided, so you can look in from outside), with door openings ---------- */
 const walls=A.walls={};
+A.shells=[];                 // walls and ceilings: they cast shadows only during the sun study
 function clipped(mat){mat.clippingPlanes=[cut]; return mat;}
 A.wall=function(k,a,b,n,room,opt){
   opt=opt||{};
@@ -224,7 +236,7 @@ A.wall=function(k,a,b,n,room,opt){
     pa.moveTo(x0,q[2]); pa.lineTo(x1,q[2]); pa.lineTo(x1,q[3]); pa.lineTo(x0,q[3]); pa.lineTo(x0,q[2]); sh.holes.push(pa);});
   sh.lineTo(he,0); sh.lineTo(he,hh); sh.lineTo(-he,hh); sh.lineTo(-he,0);
   const mat=reg(clipped(new THREE.MeshLambertMaterial({color:0xf5f6f3,emissive:0x3c3d3b,polygonOffset:true,polygonOffsetFactor:0,polygonOffsetUnits:-2})),room);
-  const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),mat); m.receiveShadow=true; g.add(m);
+  const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),mat); m.receiveShadow=true; g.add(m); A.shells.push(m); w.wins=opt.wins||[];
   walls[k]=w;
   A.spans(k).forEach(function(s){A.rect(k,s[0],s[1],0,0.08,0xe2e5e1,0.004);});   // skirting
   return w;
@@ -278,7 +290,7 @@ A.windowOn=function(k,u0,u1,y0,y1,panes,bars,winKey){
     const s=A.rect(k,u0+0.03,u1-0.03,y0+0.03,y1-0.03,A.MT(t,walls[k].room),0.016);
     s.geometry.translate(0,-hh/2,0); s.position.y=y1-0.03;
     A.rect(k,u0-0.02,u1+0.02,y1,y1+0.13,0xdfe2dd,0.012);            // shutter box
-    shutters.push({key:winKey,m:s,tex:t,h:hh});
+    s.castShadow=true; shutters.push({key:winKey,m:s,tex:t,h:hh});
   }
 };
 function applyShutters(){
