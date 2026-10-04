@@ -10,8 +10,8 @@ const actors=new THREE.Group(); actors.userData.nc=true; actors.visible=false; s
    People
    ===================================================================== */
 const LOOKS={
-  angela:{id:'angela',name:'Angela',h:1.64,skin:0xe6b592,hair:0x2e1c14,eyes:0x5a3a22,style:'curly',top:0xd6a21e,pants:0x3d5a80,shoes:0xf3ebdc,pj:0xe9b3a2,slim:true,sleeves:true},
-  yoav:{id:'yoav',name:'Yoav',h:1.8,skin:0xdfae88,hair:0x2a1e17,eyes:0x4a6a4a,style:'short',beard:'goatee',top:0x2f6f52,pants:0x2b2f38,shoes:0x3a2c20,pj:0x9db7dd}
+  angela:{id:'angela',name:'Angela',model:'models/angela.glb',h:1.64,skin:0xe6b592,hair:0x2e1c14,eyes:0x5a3a22,style:'curly',top:0xd6a21e,pants:0x3d5a80,shoes:0xf3ebdc,pj:0xe9b3a2,slim:true,sleeves:true},
+  yoav:{id:'yoav',name:'Yoav',model:'models/yoav.glb',clips:{idle:'models/idle.glb',walk:'models/walk.glb'},h:1.8,skin:0xdfae88,hair:0x2a1e17,eyes:0x4a6a4a,style:'short',beard:'goatee',top:0x2f6f52,pants:0x2b2f38,shoes:0x3a2c20,pj:0x9db7dd}
 };
 const FRIENDS=[
   {id:'maya',name:'Maya',h:1.62,skin:0xd9a47f,hair:0x2a1a12,style:'curly',top:0x9fc4d6,pants:0xf3ebdc,pj:0xf2d98a,slim:true},
@@ -22,6 +22,76 @@ const FRIENDS=[
   {id:'guy',name:'Guy',h:1.74,skin:0xcf9e78,hair:0x3a2a1c,style:'short',top:0xe8c91a,pants:0x3b3f3c,pj:0xb9d48a}
 ];
 const css=function(c){return '#'+('000000'+c.toString(16)).slice(-6);};
+
+/* ---------- rigged characters (GLB). The built-in figure stays underneath as a fallback and to drive the pose. ---------- */
+const gltfLoader=THREE.GLTFLoader?new THREE.GLTFLoader():null, clipCache={};
+function loadClip(url,cb){
+  if(clipCache[url]){cb(clipCache[url]); return;}
+  gltfLoader.load(url,function(gl){const c=gl.animations[0]; c.tracks=c.tracks.filter(function(t){return !/\.position$/.test(t.name)&&!/\.scale$/.test(t.name);}); clipCache[url]=c; cb(c);},undefined,function(){cb(null);});
+}
+const qP=new THREE.Quaternion(), qW=new THREE.Quaternion(), qR=new THREE.Quaternion(), vX=new THREE.Vector3(), vZ=new THREE.Vector3(), vT=new THREE.Vector3();
+function wrot(bone,axis,ang){              // turn a bone about an axis given in world space, whatever its own axes are
+  if(!bone||Math.abs(ang)<1e-4) return;
+  bone.parent.updateWorldMatrix(true,false); bone.parent.getWorldQuaternion(qP);
+  qW.copy(qP).multiply(bone.quaternion); qR.setFromAxisAngle(axis,ang);
+  bone.quaternion.copy(qP.invert()).multiply(qR).multiply(qW);
+}
+function attachModel(p,spec,parts){
+  if(!gltfLoader||!spec.model) return;
+  gltfLoader.load(spec.model,function(gl){
+    if(p.dead) return;
+    const m=gl.scene, bones={}, find=function(re){let f=null; m.traverse(function(o){if(!f&&o.isBone&&re.test(o.name)) f=o;}); return f;};
+    ['Hips','Spine','Spine2','Head','LeftArm','RightArm','LeftForeArm','RightForeArm','LeftUpLeg','RightUpLeg','LeftLeg','RightLeg','RightHand'].forEach(function(n){bones[n]=find(new RegExp('(^|:|rig)'+n+'$'));});
+    if(!bones.Hips||!bones.Head) return;
+    // size it from the skeleton: skinned meshes report their bind-pose box, which can be in other units
+    m.updateMatrixWorld(true); const topB=find(/HeadTop_End$/)||bones.Head, toeB=find(/LeftToe_?End$/)||find(/LeftToeBase$/)||find(/LeftFoot$/);
+    const yTop=topB.getWorldPosition(new THREE.Vector3()).y, yBot=toeB?toeB.getWorldPosition(new THREE.Vector3()).y:0, k=1.74/Math.max(0.2,yTop-yBot);
+    m.scale.multiplyScalar(k); m.position.y-=yBot*k-0.012;
+    const skinC=new THREE.Color(spec.skin);
+    m.traverse(function(o){if(!o.isMesh) return; o.frustumCulled=false; o.castShadow=true;
+      (Array.isArray(o.material)?o.material:[o.material]).forEach(function(mt){mt.metalness=0; mt.roughness=Math.max(0.6,mt.roughness||0.8); if(mt.map){mt.map.encoding=THREE.LinearEncoding; mt.map.needsUpdate=true;} mt.needsUpdate=true; p.mats.push({m:mt,b:mt.color.clone(),mesh:o,map:mt.map});});});
+    parts.hips.visible=false; parts.rig.add(m); p.model=m; p.bones=bones; p.rest={}; for(const n in bones) if(bones[n]) p.rest[n]=bones[n].quaternion.clone();
+    m.updateMatrixWorld(true); p.hipY=bones.Hips.getWorldPosition(vT).y/ p.g.scale.y; p.baseY=m.position.y;
+    p.holder=new THREE.Group(); p.g.add(p.holder); p.hand=p.holder;
+    p.head=bones.Head; p.eyeUp=0.1;
+    p.hideHead=function(on){bones.Head.scale.setScalar(on?0.0001:1);};
+    p.outfits=p.mats.filter(function(e){return e.mesh&&/Outfit/.test(e.mesh.name);});
+    p.nude=function(on){p.isNude=on; p.outfits.forEach(function(e){e.m.map=on?null:e.map; e.m.needsUpdate=true; e.b.copy(on?skinC:e.base||(e.base=new THREE.Color(1,1,1)));});};
+    p.setClothes=function(t){p.outfits.forEach(function(e){if(/Top/.test(e.mesh.name)){e.base=new THREE.Color(1,1,1).lerp(new THREE.Color(t),0.55); e.b.copy(e.base);}});};
+    p.outfit=function(pj){p.pjOn=pj; p.outfits.forEach(function(e){const c=pj?new THREE.Color(1,1,1).lerp(new THREE.Color(spec.pj),0.6):(e.base||new THREE.Color(1,1,1)); e.b.copy(c);});};
+    p.shoes=function(on){p.shoesOn=on; m.traverse(function(o){if(o.isMesh&&/Footwear/.test(o.name)) o.visible=on;});};
+    if(spec.clips){p.mixer=new THREE.AnimationMixer(m); p.actions={};
+      ['idle','walk'].forEach(function(n){loadClip(spec.clips[n],function(c){if(!c||p.dead) return; const a=p.mixer.clipAction(c); a.play(); a.setEffectiveWeight(n==='idle'?1:0); p.actions[n]=a;});});}
+    p.ver=-1; if(p.onModel) p.onModel();
+  },undefined,function(){});
+}
+function driveModel(p,dt,rig,P){              // P: the same pose numbers the built-in figure uses
+  const b=p.bones, m=p.model, clips=p.actions&&p.actions.idle&&p.actions.walk;
+  if(clips){p.actions.walk.setEffectiveWeight(P.walk); p.actions.idle.setEffectiveWeight(1-P.walk); p.actions.walk.timeScale=1.15; p.mixer.update(dt);}
+  else for(const n in p.rest) b[n].quaternion.copy(p.rest[n]);
+  rig.updateWorldMatrix(true,false); vX.setFromMatrixColumn(rig.matrixWorld,0).normalize(); vZ.setFromMatrixColumn(rig.matrixWorld,2).normalize();
+  const still=1-P.walk, s=P.sit;
+  if(!clips){                                   // no animation clips: bring the arms down from the T-pose and walk by hand
+    wrot(b.LeftArm,vZ,-1.32); wrot(b.RightArm,vZ,1.32);
+    wrot(b.LeftUpLeg,vX,P.sw*(1-s)); wrot(b.RightUpLeg,vX,-P.sw*(1-s));
+    wrot(b.LeftLeg,vX,Math.max(0,-Math.sin(P.phase))*0.75*P.walk); wrot(b.RightLeg,vX,Math.max(0,Math.sin(P.phase))*0.75*P.walk);
+    wrot(b.LeftArm,vX,-P.sw*0.8); wrot(b.RightArm,vX,P.sw*0.8);
+    wrot(b.LeftForeArm,vX,-0.3*P.walk-0.12*still); wrot(b.RightForeArm,vX,-0.3*P.walk-0.12*still);
+    wrot(b.Spine,vX,Math.sin(P.t*1.7)*0.012*still);
+  }
+  if(s>0.001){                                  // sitting: thighs forward, shins down, hands toward the lap
+    wrot(b.LeftUpLeg,vX,-s*1.5); wrot(b.RightUpLeg,vX,-s*1.5);
+    wrot(b.LeftLeg,vX,s*1.5*P.kn); wrot(b.RightLeg,vX,s*1.5*P.kn);
+    wrot(b.Spine,vX,-P.recline*s);
+    if(!P.act){wrot(b.LeftArm,vX,-0.25*s); wrot(b.RightArm,vX,-0.25*s); wrot(b.LeftForeArm,vX,-0.9*s*(1-P.lie)); wrot(b.RightForeArm,vX,-0.9*s*(1-P.lie));}
+  }
+  if(P.act){const o=Math.sin(P.t*7), a=P.act, L=function(u,f){wrot(b.LeftArm,vX,u); wrot(b.LeftForeArm,vX,f);}, Rr=function(u,f){wrot(b.RightArm,vX,u); wrot(b.RightForeArm,vX,f);};
+    if(a==='massage'){L(-1.2+o*0.14,-0.35); Rr(-1.2-o*0.14,-0.35);} else if(a==='cook'){Rr(-0.9+o*0.12,-0.6);} else if(a==='vacuum'){L(-0.55,-0.5); Rr(-0.55,-0.5);}
+    else if(a==='read'){L(-0.5,-1.45); Rr(-0.5,-1.45);} else if(a==='study'||a==='eat'){L(-0.45,-1.0+o*0.06); Rr(-0.45,-1.0-o*0.06);}
+  }
+  wrot(b.Head,vX,-0.0); m.position.y=p.baseY-(p.hipY-(p.seatY+0.1)/p.sc)*s;
+  if(b.RightHand){b.RightHand.getWorldPosition(vT); p.g.worldToLocal(vT); p.holder.position.set(vT.x,vT.y+0.3,vT.z-0.06);}
+}
 
 function makePerson(spec){
   const g=new THREE.Group(); actors.add(g);
@@ -146,6 +216,7 @@ function makePerson(spec){
   p.shoesOn=true;
   p.nude=function(on){p.isNude=on; if(on) [1,2,5,9,10,12].forEach(function(i){mats[i].b.copy(mats[0].b);}); else{p.outfit(p.pjOn); p.shoes(p.shoesOn); mats[9].b.set(0xe9e6df);}};
   p.tint=function(t){for(let i=0;i<mats.length;i++) mats[i].m.color.copy(mats[i].b).multiply(t);};
+  p.hideHead=function(on){head.visible=!on;}; p.eyeUp=0;
   p.update=function(dt){
     const k=Math.min(1,dt*9);
     p.sit+=(p.sitT-p.sit)*k; p.lie+=(p.lieT-p.lie)*k; p.walk+=((p.walking?1:0)-p.walk)*Math.min(1,dt*10);
@@ -169,7 +240,9 @@ function makePerson(spec){
     head.rotation.y=Math.sin(p.t*0.43)*0.22*still*(1-p.lie); head.rotation.x=Math.sin(p.t*0.31)*0.05*still-0.05*p.walk;
     if((p.blink-=dt)<0){p.blink=p.lie>0.5?0.1:2.5+Math.random()*3.5;} eyes.scale.y=(p.blink<0.12||p.lie>0.8&&p.asleep)?0.12:1;
     rig.rotation.x=-p.lie*R/2; rig.position.set(0,p.lie*(p.lieY+0.11)/sc,p.lie*0.9);
+    if(p.model) driveModel(p,dt,rig,{walk:p.walk,sit:p.sit,lie:p.lie,sw:sw,phase:p.phase,kn:kn,recline:p.recline,act:p.act,t:p.t});
   };
+  attachModel(p,spec,{rig:rig,hips:hips});
   return p;
 }
 
@@ -329,7 +402,7 @@ Actor.prototype.update=function(dt){
 };
 Actor.prototype.remove=function(){
   this.release(); this.gone=true; cancelTimers(this);
-  actors.remove(this.p.g); this.tag.remove(); if(this.bubble) this.bubble.remove();
+  this.p.dead=true; actors.remove(this.p.g); this.tag.remove(); if(this.bubble) this.bubble.remove();
 };
 const WHITE=new THREE.Color(1,1,1);
 const hv=new THREE.Vector3();
@@ -728,10 +801,10 @@ const eye=new THREE.Vector3(), tgt=new THREE.Vector3(), delta=new THREE.Vector3(
 function setCam(m){
   camMode=m; $('camFollow').setAttribute('aria-pressed',m==='follow'); $('camEye').setAttribute('aria-pressed',m==='eye');
   if(m==='eye'){
-    controls.enabled=false; wideFov(); camera.near=0.1; yaw=player.h; pitch=-0.05; freeLook=false; player.p.head.visible=false; A.stopFly();
+    controls.enabled=false; wideFov(); camera.near=0.1; yaw=player.h; pitch=-0.05; freeLook=false; player.p.hideHead(true); A.stopFly();
     $('hint').textContent='Drag to look around, tap the floor to walk'; $('hint').style.opacity=1;
   }else{
-    controls.enabled=true; camera.fov=40; camera.near=0.1; camera.updateProjectionMatrix(); if(player) player.p.head.visible=true; camera.rotation.order='XYZ';
+    controls.enabled=true; camera.fov=40; camera.near=0.1; camera.updateProjectionMatrix(); if(player) player.p.hideHead(false); camera.rotation.order='XYZ';
     if(A.simsOn){$('hint').textContent='Tap the floor to walk. Drag to rotate, pinch or scroll to zoom';}
     if(A.simsOn) flyToPlayer();
   }
@@ -883,7 +956,7 @@ A.frameFns.push(function(dt,t){
   if(camMode==='eye'){
     if(player.path.length||player.slide||player.manual){if(t-lastDrag>1.2) freeLook=false;}
     if(!freeLook) yaw=angLerp(yaw,player.h,Math.min(1,dt*5));
-    player.headPos(eye); eye.y+=0.04; eye.x+=Math.sin(player.h)*0.09; eye.z+=Math.cos(player.h)*0.09; player.p.head.visible=false;       // just in front of the face, so you see your own body
+    player.headPos(eye); eye.y+=0.04+player.p.eyeUp; eye.x+=Math.sin(player.h)*0.09; eye.z+=Math.cos(player.h)*0.09; player.p.hideHead(true);       // just in front of the face, so you see your own body
     if(camera.position.distanceTo(eye)>1) camera.position.copy(eye); else camera.position.lerp(eye,1-Math.exp(-dt*16));
     camera.rotation.order='YXZ'; camera.rotation.set(-pitch,yaw+R,0);
     if(!freeLook) yaw=angLerp(yaw,player.h,Math.min(1,dt*6));
@@ -898,7 +971,7 @@ A.labelFns.push(function(){
   const all=[player].concat(guests,extras);
   for(let i=0;i<all.length;i++){const a=all[i]; if(!a) continue;
     const show=A.simsOn&&S.labels&&!(a.me&&camMode==='eye');
-    a.headPos(tv3); tv3.y+=0.28; A.place(a.tag,tv3,show&&!a.zz&&!a.bubble);
+    a.headPos(tv3); tv3.y+=0.28+a.p.eyeUp; A.place(a.tag,tv3,show&&!a.zz&&!a.bubble);
     if(a.zz){tv3.y+=0.12; A.place(a.zz,tv3,A.simsOn);}
     if(a.bubble){A.place(a.bubble,tv3,A.simsOn);}
   }
