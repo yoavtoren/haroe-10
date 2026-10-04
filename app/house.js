@@ -98,15 +98,19 @@ inRoom('kitchen',function(){
   const c1=KX, c0=KX-1.8;
   const sage=function(){return A.reg(new THREE.MeshLambertMaterial({color:KGREEN,emissive:0x151810}));};   // lifted a little so it reads as pastel on the shaded fronts
   [[n,0x34373c,0xf0d21c],[d,sage(),sage()]].forEach(function(v){   // carcasses: charcoal + yellow today, pastel green in the redesign
-    box(1.8,0.76,0.58,v[1],(x0+x1)/2,0.5,KZ-0.29,v[0]);
+    box(0.47,0.76,0.58,v[1],x0+0.235,0.5,KZ-0.29,v[0]); box(0.77,0.76,0.58,v[1],x1-0.385,0.5,KZ-0.29,v[0]);          // either side of the sink
+    box(0.56,0.76,0.03,v[1],x1-1.05,0.5,KZ-0.565,v[0]); box(0.56,0.54,0.55,v[1],x1-1.05,0.39,KZ-0.275,v[0]);             // front panel and the cupboard under the basin
     box(1.8,0.76,0.58,v[1].isMaterial?sage():v[1],(c0+c1)/2,0.5,0.29,v[0]);
     box(1.15,0.58,0.35,v[2],x0+0.9,1.76,KZ-0.175,v[0]);
   });
   box(0.006,0.56,0.004,0x6c7a55,x0+0.9,1.76,zf+0.248,d);                     // wall cabinet door split
-  box(1.8,0.12,0.5,0x1d1f21,(x0+x1)/2,0.06,KZ-0.25); box(1.84,0.04,0.63,top,(x0+x1)/2,0.9,KZ-0.305);
+  box(1.8,0.12,0.5,0x1d1f21,(x0+x1)/2,0.06,KZ-0.25); const sx=x1-1.05, sz=KZ-0.32;        // counter with a cut-out, and the basin sunk into it
+  box(0.49,0.04,0.63,top,x0+0.225,0.9,KZ-0.305); box(0.79,0.04,0.63,top,x1-0.375,0.9,KZ-0.305); box(0.56,0.04,0.1,top,sx,0.9,KZ-0.57); box(0.56,0.04,0.12,top,sx,0.9,KZ-0.05);
+  box(0.56,0.015,0.4,0xd9d5c8,sx,0.7,sz); [[-0.275,0],[0.275,0]].forEach(function(q){box(0.012,0.22,0.4,0xcfcbbd,sx+q[0],0.81,sz);}); [[-0.195],[0.195]].forEach(function(q){box(0.56,0.22,0.012,0xcfcbbd,sx,0.81,sz+q[0]);});
+  cyl(0.025,0.004,0x8d9296,sx,0.71,sz,null,12);
   [x1-0.6,x1-0.9,x1-1.2].forEach(function(x){box(0.006,0.74,0.004,line,x,0.5,zf-0.002);});
   [x1-0.56,x1-0.87,x1-0.93,x1-1.24].forEach(function(x){box(0.012,0.13,0.02,line,x,0.78,zf-0.012);});
-  box(0.56,0.02,0.4,0xd9d5c8,x1-1.05,0.915,KZ-0.32);                  // sink
+  // (the basin is built with the counter above)
   box(0.03,0.3,0.03,0xb9bdc0,x1-1.05,1.07,KZ-0.1); box(0.03,0.03,0.16,0xb9bdc0,x1-1.05,1.21,KZ-0.17);
   // things on the counter and on top of the cabinet today; cleared in the redesign
   box(0.5,0.2,0.34,0x2a2c2e,x1-0.3,1.02,KZ-0.28,n);                   // dish rack
@@ -116,9 +120,21 @@ inRoom('kitchen',function(){
   box(0.3,0.18,0.1,0xe8c93a,x0+0.5,2.14,KZ-0.3,n); box(0.25,0.3,0.12,0xf4f2ee,x0+0.95,2.2,KZ-0.3,n); // boxes on top
   // fridge in the opening corner, side covered with photos
   const fx=W+0.36, fz=KZ-0.36;
-  box(0.7,1.75,0.72,0xf7f7f5,fx,0.875,fz);
-  box(0.66,0.012,0.004,0xb5b9b6,fx,1.22,fz-0.362); box(0.02,0.5,0.03,0xdedfdc,fx+0.28,0.95,fz-0.375); box(0.02,0.25,0.03,0xdedfdc,fx+0.28,1.42,fz-0.375);
-  box(0.1,0.14,0.005,0xfdfdfb,fx-0.05,1.48,fz-0.363); box(0.06,0.1,0.005,0x4fb6d6,fx-0.2,1.42,fz-0.363);
+  // a hollow cabinet: liner, glass shelves, a freezer compartment, food. The door is hung in life.js.
+  const wh=0xf7f7f5, ln=0xfbfcfb, fy=1.24;
+  box(0.03,1.75,0.72,wh,fx-0.335,0.875,fz); box(0.03,1.75,0.72,wh,fx+0.335,0.875,fz); box(0.7,0.03,0.72,wh,fx,1.735,fz); box(0.7,0.1,0.72,wh,fx,0.05,fz); box(0.7,1.75,0.03,wh,fx,0.875,fz+0.345);
+  box(0.64,0.03,0.66,ln,fx,fy,fz-0.015);                                                    // freezer floor
+  [0.38,0.66,0.94].forEach(function(y){box(0.62,0.012,0.5,A.reg(new THREE.MeshLambertMaterial({color:0xdfeef0,transparent:true,opacity:0.6})),fx,y,fz+0.05);});
+  box(0.6,0.16,0.44,A.reg(new THREE.MeshLambertMaterial({color:0xe8f1f2,transparent:true,opacity:0.55})),fx,0.19,fz+0.02);      // vegetable drawer
+  box(0.5,0.02,0.02,A.lampMat('L:kitchen',0xfffbe6,0xfff2c2,0.4),fx,1.2,fz+0.3);
+  [[-0.2,0.39,0x5b8f4a,0.12],[0.0,0.39,0xd9463e,0.1],[0.2,0.39,0xf0d21c,0.14]].forEach(function(q){box(0.13,q[3],0.16,q[2],fx+q[0],q[1]+q[3]/2,fz+0.1);});
+  [[-0.2,0xfbfaf6],[-0.08,0x9fc4d6],[0.18,0x5b8f4a]].forEach(function(q){cyl(0.035,0.22,q[1],fx+q[0],0.776,fz+0.14,null,12); cyl(0.014,0.05,q[1],fx+q[0],0.91,fz+0.14,null,8);});
+  box(0.2,0.08,0.2,0xd9863e,fx+0.12,0.986,fz+0.08); cyl(0.07,0.07,0xfbfaf6,fx-0.14,0.981,fz+0.1,null,16); cyl(0.05,0.1,0xc4673f,fx-0.02,0.716,fz-0.08,null,12);
+  [[-0.14,0x8fbd9b],[0.1,0xd9463e]].forEach(function(q){sph(0.045,q[1],fx+q[0],0.3,fz+0.02);});
+  box(0.24,0.1,0.3,0xcfe3ec,fx-0.14,fy+0.07,fz+0.05); box(0.2,0.14,0.26,0xe9eef0,fx+0.14,fy+0.09,fz+0.06);     // frozen things
+  const ff=A.fridgeFront=G();
+  box(0.66,0.012,0.004,0xb5b9b6,fx,1.22,fz-0.362,ff); box(0.02,0.5,0.03,0xdedfdc,fx+0.28,0.95,fz-0.375,ff); box(0.02,0.25,0.03,0xdedfdc,fx+0.28,1.42,fz-0.375,ff);
+  box(0.1,0.14,0.005,0xfdfdfb,fx-0.05,1.48,fz-0.363,ff); box(0.06,0.1,0.005,0x4fb6d6,fx-0.2,1.42,fz-0.363,ff);
   const photos=canvasTex(128,256,function(g){g.fillStyle='#f7f7f5'; g.fillRect(0,0,128,256);
     const cs=['#5b4a42','#8a6f5e','#3c4a55','#a58b76','#6d7f6a','#2f3438','#b49c8c'];
     for(let r=0;r<14;r++)for(let c=0;c<5;c++){g.fillStyle=cs[(r*3+c*5+r*c)%cs.length]; g.fillRect(6+c*24,6+r*17.6,20,14);}});

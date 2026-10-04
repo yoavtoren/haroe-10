@@ -43,11 +43,12 @@ function openK(k,v){KIT[k].forEach(function(m){m.target=v?1:0;});}
 A.inRoom('kitchen',function(){
   const x0=KX-1.8;
   // fridge: a door on a hinge, shelves and food behind it
-  const fd=A.G(); fd.position.set(W+0.71,0,KZ-0.725); A.box(0.68,1.72,0.03,0xf7f7f5,-0.34,0.875,-0.015,fd); A.box(0.02,0.5,0.03,0xdedfdc,-0.62,0.95,-0.04,fd);
-  KIT.fridge.push(mover(fd,'ry',0,-1.75));
-  const fin=A.G(); A.box(0.6,1.6,0.006,0xfff6d8,W+0.36,0.86,KZ-0.722,fin); [0.45,0.85,1.25].forEach(function(y){A.box(0.6,0.012,0.02,0xcfd6d8,W+0.36,y,KZ-0.728,fin);});
-  [[0.2,0.52,0x5b8f4a],[0.4,0.52,0xd9463e],[0.52,0.93,0xf0d21c],[0.24,0.93,0xfbfaf6],[0.38,1.33,0x9fc4d6],[0.2,1.33,0xd9863e]].forEach(function(q){A.box(0.1,0.12,0.02,q[2],W+q[0],q[1],KZ-0.732,fin);});
-  KIT.fridge.fin=fin; fin.visible=false;
+  // fridge door: the same front it always had, now on a hinge, with bins on the inside
+  const fd=A.G(); fd.position.set(W+0.71,0,KZ-0.72); A.box(0.7,1.75,0.03,0xf7f7f5,-0.35,0.875,-0.015,fd);
+  A.fridgeFront.position.set(-(W+0.71),0,-(KZ-0.72)-0.032); fd.add(A.fridgeFront);
+  [0.35,0.75,1.1].forEach(function(y,i){A.box(0.56,0.1,0.09,0xeef3f3,-0.35,y,0.05,fd); A.cyl(0.03,0.2,[0xfbfaf6,0x8fbd9b,0xd9863e][i],-0.2,y+0.1,0.05,fd,10); A.box(0.07,0.14,0.06,[0xd9463e,0xf0d21c,0x9fc4d6][i],-0.45,y+0.08,0.05,fd);});
+  KIT.fridge.push(mover(fd,'ry',0,-1.9));
+  KIT.fridge.fin=new THREE.Group();
   [['n',0x34373c,0xf0d21c],['abcdef',0x7b8a60,0x7b8a60]].forEach(function(v){
     const g=A.G(); g.userData.only2=v[0];
     const cd=A.G(g); cd.position.set(x0+0.325,0,KZ-0.362); A.box(0.56,0.56,0.02,v[2],0.28,1.76,0,cd); A.box(0.012,0.1,0.02,0x17181a,0.52,1.56,-0.016,cd);     // wall cabinet door
@@ -61,7 +62,7 @@ A.inRoom('kitchen',function(){
 });
 const pan=new THREE.Group(); props.add(pan); pan.visible=false;
 (function(){let m=mesh(new THREE.CylinderGeometry(0.13,0.11,0.05,20),lam(0x2a2c2e),pan); m=mesh(new THREE.BoxGeometry(0.2,0.02,0.03),lam(0x2a2c2e),pan); m.position.set(0.22,0.01,0);})();
-const sinkPile=new THREE.Group(); props.add(sinkPile); sinkPile.position.set(KX-1.05,0.93,KZ-0.32);
+const sinkPile=new THREE.Group(); props.add(sinkPile); sinkPile.position.set(KX-1.05,0.71,KZ-0.32);
 const dishMesh=[0,1,2,3,4,5,6,7].map(function(i){const m=i%4===3?mesh(new THREE.CylinderGeometry(0.11,0.1,0.045,16),lam(0x2a2c2e),sinkPile):i%4===2?mesh(new THREE.CylinderGeometry(0.035,0.03,0.09,12),lam(0x9fc4d6),sinkPile):mesh(new THREE.CylinderGeometry(0.1,0.08,0.014,16),lam(0xfbfaf6),sinkPile);
   m.position.set((i%3-1)*0.13,0.02+Math.floor(i/3)*0.03,(i%2?0.06:-0.06)); m.rotation.z=(i%2?0.25:-0.15); m.visible=false; return m;});
 function dishes(n){st.dishes=Math.max(0,Math.min(8,n)); dishMesh.forEach(function(m,i){m.visible=i<st.dishes;});}
@@ -328,7 +329,7 @@ let focus=null;
 /* A thin yellow line round the thing you are looking at: each of its parts is redrawn slightly larger,
    back faces only, so just a rim shows round the silhouette. */
 const hl=new THREE.Group(); hl.visible=false; hl.userData.nc=true; A.scene.add(hl);
-const hlMat=new THREE.MeshBasicMaterial({color:0xF2CF1D,side:THREE.BackSide}), RIM=0.011;
+const hlMat=new THREE.MeshBasicMaterial({color:0xF4D53A,side:THREE.BackSide}), RIM=0.0045;
 const bx=new THREE.Box3(), tb=new THREE.Box3(), labelAt=new THREE.Vector3(), cv=new THREE.Vector3(), sv=new THREE.Vector3(), mA=new THREE.Matrix4(), mB=new THREE.Matrix4();
 let hlKey=null, hlSrc=[];
 function solidMesh(o){if(!o.isMesh||!o.geometry||o.userData.floor) return false; const m=Array.isArray(o.material)?o.material[0]:o.material; return !(m.transparent&&!m.depthWrite)&&m.side!==THREE.BackSide;}
@@ -369,14 +370,14 @@ A.labelFns.push(function(){            // the action label floats on the outline
 function hud(){
   const bar=$('useBar'), p=me();
   if(!A.simsOn||!p){bar.hidden=true; hl.visible=false; return;}
-  if(!st.asleep&&(SM.getDoing()||p.path.length&&!pin)){bar.hidden=true; hl.visible=false; focus=null; return;}      // busy or walking: no prompt in the way
+  if(!st.asleep&&SM.getDoing()){bar.hidden=true; hl.visible=false; focus=null; return;}      // busy or walking: no prompt in the way
   let best=pin, bs=1e9; const f=SM.view(), fx=Math.sin(f), fz=Math.cos(f), list=items();
   if(pin){best=null; list.forEach(function(it){if(it.name===pin.name) best=it;}); if(A.t-pinT>7||!best) pin=best=null;}
-  if(!best) list.forEach(function(it){
-    const keep=focus&&focus.name===it.name;                   // hold on to the current thing a little, so it does not flicker
-    const dx=it.x-p.x, dz=it.z-p.z, d=Math.hypot(dx,dz); if(d>(keep?2.3:1.9)) return;
-    const c=d<0.05?1:(dx*fx+dz*fz)/d; if(d>1.0&&c<(keep?0:0.35)) return;
-    const s=d-0.9*c-(keep?0.5:0); if(s<bs){bs=s; best=it;}
+  if(!best) list.forEach(function(it){                         // the usable thing nearest the centre of the character's view
+    const keep=focus&&focus.name===it.name;
+    const dx=it.x-p.x, dz=it.z-p.z, d=Math.hypot(dx,dz); if(d>(keep?3.6:3.2)) return;
+    const c=d<0.4?1:(dx*fx+dz*fz)/d; if(c<(keep?0.72:0.82)) return;                   // within about 35 degrees of straight ahead
+    const s=(1-c)*4+d*0.12-(keep?0.12:0); if(s<bs){bs=s; best=it;}
   });
   if(st.asleep){const b0=SM.seatBy('bedR'); best={name:'Asleep',acts:[['Wake up',DO.wake]],box:b0?[b0.x-1.15,b0.x+0.85,0,0.62,b0.z-1.1,b0.z+0.4]:null};}
   focus=best;
