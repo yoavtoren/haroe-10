@@ -1,7 +1,7 @@
 /* Haroe 10 — the apartment itself: walls, doors, windows, kitchen, bedrooms, bathroom, toilet */
 (function(){
 'use strict';
-const A=window.APP, D=A.D, K=A.kit, W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ, ZW=D.ZW, BLK=D.BLK, TVE=D.TVE, LBX=D.LBX, BX=D.BX, NX=D.NX, NZ=D.NZ, AZ=A.AZ, SPLIT=A.SPLIT, BA=A.BA, WC=A.WC;
+const A=window.APP, D=A.D, K=A.kit, W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ, ZW=D.ZW, BLK=D.BLK, FZ=D.FZ, FX=D.FX, BX=D.BX, NX=D.NX, NZ=D.NZ, AZ=A.AZ, SPLIT=A.SPLIT, BA=A.BA, WC=A.WC;
 const box=A.box, cyl=A.cyl, sph=A.sph, M=A.M, inRoom=A.inRoom, wall=A.wall, rect=A.rect, G=A.G, scene=A.scene, canvasTex=A.canvasTex;
 const R=Math.PI, SAGE=A.SAGE=0x8fbd9b, BLUE=A.BLUE=0x9fc4d6, KGREEN=0x7b8a60;      // kitchen fronts: a muted, yellowish, fairly deep sage
 A.seats=[];            // places a person can sit or lie: {id,label,room,x,z,y,h,type,only}
@@ -13,7 +13,7 @@ A.shop=function(o,name,q,site,note){o.userData.shop={name:name,q:q,site:site||'i
 
 /* ---------- floors and ceilings ---------- */
 const bl=SPLIT+0.05, r2=SPLIT-0.05, rn=NX-0.05;       // bedroom 2 left wall; bedroom 1 right wall at the back; and beside the niche
-[['living',0,W,0,ZW],['living',0,BLK,ZW,L],['living',W,LBX,TVE,ZW],['kitchen',W,KX,0,KZ],['bed1',0,rn,NZ,0],['bed1',0,r2,AZ,NZ],
+[['living',0,W,0,ZW],['living',0,BLK,ZW,L],['kitchen',W,KX,0,KZ],['kitchen',W,FX,KZ,FZ],['bed1',0,rn,NZ,0],['bed1',0,r2,AZ,NZ],
  ['bed2',bl,BX,AZ,0],['bed2',NX,bl,NZ,0],['wc',WC.x0,WC.x1,WC.z0,WC.z1]].forEach(function(q){A.slab(q[1],q[2],q[3],q[4],q[0]); A.ceil(q[0],q[1],q[2],q[3],q[4]);});
 (function(){   // bathroom floor: patterned 20 cm tiles
   const t=canvasTex(128,128,function(g){g.fillStyle='#e9e6de'; g.fillRect(0,0,128,128); g.strokeStyle='#6f6a62'; g.lineWidth=7;
@@ -29,12 +29,11 @@ const d1=D.door1, d2=D.door2, en=D.entrance, bd=D.bathDoor, wd=D.wcDoor;
 wall('far',  [0,0],  [KX,0], [0,1], 'living',{holes:[[d1[0],d1[1]],[d2[0],d2[1]]]});   // bedroom doors, then the cooktop
 wall('left', [0,0],  [0,L],  [1,0], 'living');                                          // sofa wall
 wall('end',  [0,L],  [BLK,L],[0,-1],'living',{holes:[[en[0],en[1]]]});                  // entrance wall
-wall('tv',   [W,KZ], [W,TVE],[-1,0],'living');                                          // TV wall: short, from the fridge to the lobby
-wall('lob_n',[W,TVE],[LBX,TVE],[0,1],'living');                                         // lobby: the step back after the TV wall
-wall('lob_e',[LBX,TVE],[LBX,ZW],[-1,0],'living',{holes:[[bd[0]-TVE,bd[1]-TVE]]});       // bathroom door
-wall('blk_n',[BLK,ZW],[LBX,ZW],[0,-1],'living',{holes:[[wd[0]-BLK,wd[1]-BLK]]});        // guest toilet door
+wall('tv',   [W,FZ], [W,ZW], [-1,0],'living',{holes:[[bd[0]-FZ,bd[1]-FZ]]});            // TV wall: 0.8 m from the fridge side to the bathroom door
+wall('blk_n',[BLK,ZW],[W,ZW],[0,-1],'living',{holes:[[wd[0]-BLK,wd[1]-BLK]]});          // guest toilet door, at a right angle to it
 wall('blk_w',[BLK,ZW],[BLK,L],[-1,0],'living');                                         // side of the toilet block, by the entrance
-wall('kback',[W,KZ], [KX,KZ],[0,-1],'kitchen');                                         // kitchen sink wall
+wall('kback',[FX,KZ],[KX,KZ],[0,-1],'kitchen');                                         // kitchen sink wall
+wall('kn_e',[FX,KZ],[FX,FZ],[-1,0],'kitchen'); wall('kn_s',[W,FZ],[FX,FZ],[0,-1],'kitchen');   // fridge niche
 wall('win',  [KX,0], [KX,KZ],[-1,0],'kitchen');                                         // kitchen window wall
 wall('a_door',[0,0],[rn,0],[0,-1],'bed1',{holes:[[d1[0],d1[1]]]});
 wall('a_l',[0,0],[0,AZ],[1,0],'bed1'); wall('a_far',[0,AZ],[r2,AZ],[0,1],'bed1');
@@ -49,12 +48,12 @@ wall('ba_n',[BA.x0,BA.z0],[BA.x1,BA.z0],[0,1],'bath'); wall('ba_e',[BA.x1,BA.z0]
 
 /* ---------- doors: frames on both sides, a hinged leaf in between ---------- */
 A.doorFrame('far',d1[0],d1[1]); A.doorFrame('far',d2[0],d2[1]); A.doorFrame('a_door',d1[0],d1[1]); A.doorFrame('b_door',d2[0]-NX,d2[1]-NX);
-A.doorFrame('end',en[0],en[1]); A.doorFrame('lob_e',bd[0]-TVE,bd[1]-TVE); A.doorFrame('ba_w',bd[0]-BA.z0,bd[1]-BA.z0);
+A.doorFrame('end',en[0],en[1]); A.doorFrame('tv',bd[0]-FZ,bd[1]-FZ); A.doorFrame('ba_w',bd[0]-BA.z0,bd[1]-BA.z0);
 A.doorFrame('blk_n',wd[0]-BLK,wd[1]-BLK); A.doorFrame('wc_n',wd[0]-WC.x0,wd[1]-WC.x0);
 A.doorLeaf('bed1',d1[1],0,R,R/2,'living',0.78);
 A.doorLeaf('bed2',d2[1],0,R,R/2,'living',0.78);
-A.doorLeaf('bath',LBX,bd[0],-R/2,0,'living',0.6);          // hinged on the left as you walk in, swings into the bathroom
-A.doorLeaf('wc',wd[1],ZW,R,R/2,'living',0.7);              // swings out into the lobby
+A.doorLeaf('bath',W,bd[0],-R/2,0,'living',0.6);          // hinged on the left as you walk in, swings into the bathroom
+A.doorLeaf('wc',wd[1],ZW,R,R/2,'living',0.65);             // swings out into the living room
 A.doorLeaf('entrance',en[0],L,0,R/2,'living',0.85);
 
 /* ---------- living room: fixed things on the walls ---------- */
@@ -67,7 +66,7 @@ A.doorLeaf('entrance',en[0],L,0,R/2,'living',0.85);
 })();
 rect('left',L-0.55,L-0.25,1.55,1.95,0xe6e9e5,0.008); rect('left',L-0.53,L-0.27,1.57,1.93,0xf2f4f1,0.009); // electrical panel by the front door
 rect('blk_w',0.2,0.3,1.35,1.5,0xd9dcd8,0.008);                              // intercom
-rect('lob_n',0.15,0.23,1.25,1.37,0xdfe2de,0.008);                           // light switch
+rect('tv',0.35,0.43,1.25,1.37,0xdfe2de,0.008);                           // light switch
 inRoom('living',function(){
   const n=G(null,'n');
   K.ceilDisc(null,W/2,3.3,'L:living'); K.ceilDisc(null,W/2+0.3,1.2,'L:living');   // flush ceiling lights, kept in every option
@@ -82,7 +81,7 @@ inRoom('living',function(){
 const brick=function(rows,cols){const t=canvasTex(256,256,function(g){g.fillStyle='#f3f1ea'; g.fillRect(0,0,256,256); g.strokeStyle='#d5d2c8'; g.lineWidth=2;
   for(let r=0;r<rows;r++){const y=r*256/rows; g.beginPath(); g.moveTo(0,y); g.lineTo(256,y); g.stroke();
     for(let c=0;c<=cols;c++){const x=(c+(r%2?0.5:0))*256/cols; g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+256/rows); g.stroke();}}}); return A.MT(t,'kitchen');};
-rect('kback',0.75,2.6,0.92,1.47,brick(4,8),0.006);                          // sink backsplash
+rect('kback',0.05,KX-FX,0.92,1.47,brick(4,8),0.006);                          // sink backsplash
 rect('far',KX-1.85,KX,0.92,1.55,brick(5,7),0.006);                          // cooktop backsplash
 rect('far',KX-0.6,KX-0.42,1.85,2.1,0x9aa3ad,0.008); rect('far',KX-0.32,KX-0.14,1.85,2.1,0x9fc4d6,0.008); // posters
 A.windowOn('win',0.55,2.05,0.05,2.3,2,0,'kitchen');                          // kitchen window
@@ -93,7 +92,7 @@ inRoom('kitchen',function(){
   const n=G(null,'n'), d=G(null,'abc');              // today / redesigned
   const top=0xebe7dc, line=0x17181a;
   box(0.22,0.28,0.85,0xf6f7f5,KX-0.11,2.55,1.3);                             // air conditioner above the window
-  box(KX-W,H-2.35,0.6,A.reg(new THREE.MeshLambertMaterial({color:0xf5f6f3,transparent:true,opacity:0.3})),(W+KX)/2,(H+2.35)/2,KZ-0.3).castShadow=false; // bulkhead (translucent)
+  box(KX-FX,H-2.35,0.6,A.reg(new THREE.MeshLambertMaterial({color:0xf5f6f3,transparent:true,opacity:0.3})),(FX+KX)/2,(H+2.35)/2,KZ-0.3).castShadow=false; // bulkhead (translucent)
   // sink side (z = KZ): 60 | 30 | 30 | 60 doors, counted from the window wall
   const x1=KX, x0=KX-1.8, zf=KZ-0.6;
   // cooktop side (z = 0)
@@ -117,7 +116,7 @@ inRoom('kitchen',function(){
   cyl(0.04,0.3,0x7fb39a,x0+0.55,1.07,KZ-0.2,n);                        // bottle
   box(0.3,0.18,0.1,0xe8c93a,x0+0.5,2.14,KZ-0.3,n); box(0.25,0.3,0.12,0xf4f2ee,x0+0.95,2.2,KZ-0.3,n); // boxes on top
   // fridge in the opening corner, side covered with photos
-  const fx=W+0.36, fz=KZ-0.36;
+  const fx=W+0.36, fz=KZ+0.36;                          // in its niche, side flush with the TV wall
   box(0.7,1.75,0.72,0xf7f7f5,fx,0.875,fz);
   box(0.66,0.012,0.004,0xb5b9b6,fx,1.22,fz-0.362); box(0.02,0.5,0.03,0xdedfdc,fx+0.28,0.95,fz-0.375); box(0.02,0.25,0.03,0xdedfdc,fx+0.28,1.42,fz-0.375);
   box(0.1,0.14,0.005,0xfdfdfb,fx-0.05,1.48,fz-0.363); box(0.06,0.1,0.005,0x4fb6d6,fx-0.2,1.42,fz-0.363);
@@ -245,7 +244,7 @@ inRoom('bed2',function(){
 });
 K.onlyAll(K.frame('b_door',BX-0.6-NX,1.55,0.5,0.6,7,0xc99a5b),'abc');
 
-/* ---------- guest toilet: its door faces the lobby, at a right angle to the bathroom door ---------- */
+/* ---------- guest toilet: its door faces the living room, at a right angle to the bathroom door ---------- */
 const tileWhite=canvasTex(128,128,function(g){g.fillStyle='#f6f6f3'; g.fillRect(0,0,128,128); g.strokeStyle='#d9dad6'; g.lineWidth=2; g.strokeRect(0,0,128,128);});
 tileWhite.wrapS=tileWhite.wrapT=THREE.RepeatWrapping;
 function tiled(k,y1){
@@ -288,7 +287,7 @@ inRoom('bath',function(){
   box(0.03,2.0,0.03,0xb9bdc0,sx0,1.0,sz1);
   box(0.3,0.02,0.3,0xb9bdc0,BA.x1-0.45,2.15,BA.z0+0.4); box(0.02,0.02,0.4,0xb9bdc0,BA.x1-0.45,2.17,BA.z0+0.2);
   cyl(0.06,0.02,0xb9bdc0,BA.x1-0.6,1.1,BA.z0+0.02).rotation.x=R/2; box(0.02,0.5,0.02,0xb9bdc0,BA.x1-0.3,1.25,BA.z0+0.03);
-  box(0.6,0.02,0.45,0x7fb59a,BA.x1-1.3,0.011,BA.z0+0.6).castShadow=false;
+  box(0.6,0.02,0.45,0x7fb59a,BA.x1-1.3,0.011,BA.z0+0.95).castShadow=false;
 });
-A.showerSpot={x:BA.x1-0.45,z:BA.z0+0.45,ax:BA.x1-1.3,az:BA.z0+1.1};
+A.showerSpot={x:BA.x1-0.45,z:BA.z0+0.45,ax:BA.x1-1.25,az:BA.z0+0.95};
 })();

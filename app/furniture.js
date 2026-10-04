@@ -163,7 +163,7 @@ function tvBench(id,body,top,floating,shop){
     box(0.38,0.3,1.3,body,0,y0+0.15,0,g); box(0.4,0.025,1.32,top,0,y0+0.31,0,g);
     [-0.22,0.22].forEach(function(z){box(0.004,0.26,0.004,0xb9b3a4,0.191,y0+0.15,z,g);});
     if(!floating) [[-.16,-.6],[.16,-.6],[-.16,.6],[.16,.6]].forEach(function(p){box(0.035,0.12,0.035,OAK,p[0],0.06,p[1],g);});
-    K.tv(g,-0.16,1.2,0);
+    K.tv(g,-0.05,y0+0.76,0); box(0.2,0.03,0.5,0x101214,-0.05,y0+0.34,0,g); box(0.04,0.1,0.06,0x101214,-0.05,y0+0.38,0,g);   // on its stand
     K.bookStack(g,0.02,y0+0.325,-0.5,3,7); cyl(0.05,0.2,BLUE,0.02,y0+0.425,0.52,g,14,0.03); K.bush(g,0.02,y0+0.325,0.3,0.06);
     if(floating) A.pool('L:living',0xffc47a,0.25,0.03,0,0.8,g,0.3);
   });
@@ -217,6 +217,18 @@ function mattress(id,label,col){
 }
 mattress('mat1','Mattress by the sofa',0xcfe3ec); mattress('mat2','Mattress by the bedroom doors',0xbfd8c6);
 
+/* ---------- TV wall for the proposals: only 0.8 m of wall, so the TV stays on a stand.
+   An oak slat panel stands behind it and covers the side of the fridge. ---------- */
+piece('panel',{label:'Oak slat panel hides the fridge',h:2.05,isNew:true,shop:['Wood slat wall panel','פאנל למלות עץ אלון לקיר','web','About 145 cm wide and 190 cm high: two or three standard 60 cm acoustic slat panels.']},function(g){
+  box(0.025,1.92,1.46,0x3b4a44,-0.012,0.96,0,g);
+  for(let i=0;i<24;i++) box(0.022,1.92,0.036,OAK,0.011,0.96,-0.7+i*0.061,g);
+});
+piece('kbench',{label:'Cube shelf as a TV bench',h:1.7,isNew:true,shop:['Cube shelf 4 × 2, lying down','KALLAX 147x77','ikea','White, with woven inserts. The TV stands on top.']},function(g){
+  const k=K.kallax(g,['bxpb','ybsx'],WHITE,{box:RATTAN,box2:SAGE});
+  box(0.24,0.03,0.5,0x101214,0.02,k.h+0.015,0,g); box(0.04,0.08,0.06,0x101214,0.0,k.h+0.06,0,g); K.tv(g,0.0,k.h+0.44,0);
+  K.bush(g,0.04,k.h,-0.6,0.06,BLUE);
+});
+
 /* ---------- what replaces the wardrobe at the entrance (built facing +x, back to the wall) ---------- */
 piece('hallBench',{label:'Entrance bench and hooks',h:1.9,isNew:true,shop:['Hall bench with shoe storage','TJUSIG bench with shoe storage','ikea','About 80 to 100 cm wide, with a hook rail above it.'],seats:[{id:'hall',label:'Entrance bench',lx:0.02,lz:0,y:0.5,type:'sit'}]},function(g){
   box(0.34,0.05,0.9,OAK,0,0.46,0,g); [[-.14,-.41],[.14,-.41],[-.14,.41],[.14,.41]].forEach(function(p){box(0.035,0.44,0.035,WHITE,p[0],0.22,p[1],g);});
@@ -245,15 +257,15 @@ K.onlyAll(K.frame('left',0.6,1.68,0.48,0.6,2,0xc99a5b).concat(K.frame('left',1.2
 [['sofa','Sofa (yours)',null],['station','Coffee station (yours)',null]].forEach(function(q){});
 
 /* ---------- layouts: x, z, rotation. A piece that is not listed is hidden. ---------- */
-const TVZ=3.55, HALL=[1.6,L-0.2,R/2], CAB=[1.6,L-0.13,R/2];
+const TVZ=3.57, HALL=[1.6,L-0.2,R/2], CAB=[1.6,L-0.13,R/2];
 const COMMON={sofa:[0.60,SZ,0], music:[0.22,0.9,0], gate:[DC,0.17,0]};          // every proposal keeps the record corner and the drop-leaf table
 function lay(o){for(const k in COMMON) o[k]=COMMON[k]; return o;}
 const LAY={
-  n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.235,3.56,R], station:[0.30,0.72,0],
+  n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.235,TVZ,R], station:[0.30,0.72,0],
      dining:[pc,0.48,0], chairA:[pc-0.92,0.50,0], chairB:[pc+0.92,0.50,R], rack1:[1.2,1.62,0], rack2:[2.55,1.5,0]},
-  a:lay({rugA:[1.75,SZ,0], lift:[1.95,SZ,0], towerA:[W-0.195,2.44,R], benchA:[W-0.19,TVZ,R], poufA1:[1.95,SZ-1.03,0], poufA2:[1.95,SZ+1.03,0], shoeCab:CAB}),
-  b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.44,R], benchB:[W-0.2,TVZ,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
-  c:lay({rugC:[1.75,SZ,0], table:[1.85,SZ,0], towerA:[W-0.195,2.44,R], benchB:[W-0.2,TVZ,R], poufA1:[1.95,SZ+1.03,0], hallBench:HALL})
+  a:lay({rugA:[1.75,SZ,0], lift:[1.95,SZ,0], panel:[W-0.03,TVZ,R], kbench:[W-0.24,TVZ,R], poufA1:[1.95,SZ-1.03,0], poufA2:[1.95,SZ+1.03,0], shoeCab:CAB}),
+  b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], panel:[W-0.03,TVZ,R], benchB:[W-0.25,TVZ,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
+  c:lay({rugC:[1.75,SZ,0], table:[1.8,SZ,0], panel:[W-0.03,TVZ,R], tvOld:[W-0.27,TVZ,R], poufA1:[1.95,SZ+1.03,0], hallBench:HALL})
 };
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
 const ALT={a:OPEN,b:OPEN,c:OPEN};
@@ -269,10 +281,10 @@ const FOCUS={n:[1.9,SZ],a:[1.9,SZ],b:[1.9,SZ],c:[1.9,SZ]};
 const DESIGNS=A.DESIGNS={
   n:{name:'Current', title:'Current state', sub:'How the flat is today, modelled from your photos and the video.', table:null, pal:['#1F5A41','#34373c','#f0d21c','#C99A5B','#f3f3ef'],
      list:[
-      ['Living room','About 3.1 m wide at the sofa. The TV wall is only 1.55 m long. The guest toilet juts in at the entrance, so the entrance wall is 2.3 m: front door, wardrobe, vacuum.'],
+      ['Living room','About 3.1 m wide at the sofa. Between the fridge and the bathroom door there is only 0.8 m of wall, so the TV bench stands in front of the fridge side. The guest toilet juts in at the entrance, so the entrance wall is 2.3 m: front door, wardrobe, vacuum.'],
       ['Sofa and TV','Sofa on the long wall, white TV bench opposite, 55 cm from the coffee table.'],
       ['Top of the room','Coffee station in the corner, dining table under the bus painting, drying racks in between.'],
-      ['Bathroom','Its door is in the small lobby right of the TV. Sink on the right, washing machine opposite it under the boiler, toilet on the far wall under the window, shower to its right.'],
+      ['Bathroom','Its door is in the same wall as the TV, right next to it. Sink on the right, washing machine opposite it under the boiler, toilet on the far wall under the window, shower to its right.'],
       ['Guest toilet','Its own door, at a right angle to the bathroom door.'],
       ['Bedroom 2','Dresser and wardrobe in a niche on the left, cube shelf between the wall and the column, bed behind it 40 cm from the TV wall, bike, desk under the big window facing the wardrobe.']]},
   a:{name:'A', title:'A · Lift-top', sub:'Modern rustic: white, oak, sage and light blue. The coffee table also rises to eating height.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
@@ -280,7 +292,7 @@ const DESIGNS=A.DESIGNS={
       ['Dining','The drop-leaf table: a 26 cm console with drawers under the bus painting. Open, it moves out and seats four at 75 × 150, clear of both bedroom doors.'],
       ['Coffee table','A 120 × 60 lift-top in oak and white, with a linen pouf at each end. Raised, it is a second eating or laptop spot at the sofa.'],
       ['Record corner','Where the coffee station was: a low white and oak sideboard with the turntable, a speaker and a lamp. The espresso machine moves to the kitchen counter.'],
-      ['TV wall','The wall is only 1.55 m long. A white 2 × 4 cube shelf hides the side of the fridge, and the TV hangs over a floating oak bench, 130 cm.'],
+      ['TV wall','Only 0.8 m of wall between the fridge and the bathroom door, so the TV stays on a stand. A white 4 × 2 cube shelf lies under it, and an oak slat panel behind it covers the side of the fridge.'],
       ['Entrance','The wardrobe goes. A slim white shoe cabinet with an oak top takes its place, with the round mirror beside it.'],
       ['Light','The flush round ceiling lights stay. Added: lamp at the record corner, picture light, string lights, candles.'],
       ['Kitchen','Deep muted sage fronts, counter and sink unchanged and cleared, bin gone, light strip, runner.'],
@@ -290,7 +302,7 @@ const DESIGNS=A.DESIGNS={
       ['Dining','The drop-leaf table, as in option A.'],
       ['Coffee table','Two round nesting tables, easy to push aside, and one light blue pouf.'],
       ['Record corner','As in option A. Here the coffee moves onto a cart in the kitchen, by the window.'],
-      ['TV wall','An oak-effect 2 × 4 cube shelf hides the fridge. The TV hangs over a white panelled bench with an oak top.'],
+      ['TV wall','The oak slat panel covers the side of the fridge. The TV stands on a white panelled bench with an oak top, 130 cm.'],
       ['Entrance','A bench with shoe baskets and a hook rail replaces the wardrobe.'],
       ['Rug','Cream with light blue stripes, 160 × 230.'],
       ['Kitchen and bedrooms','Same as option A.']]},
@@ -299,7 +311,7 @@ const DESIGNS=A.DESIGNS={
       ['Dining','The drop-leaf table replaces the white dining table, as in option A.'],
       ['Coffee table','Your oak and black-steel table stays, on a jute rug, with a linen pouf.'],
       ['Record corner','As in option A, with the espresso machine on the kitchen counter.'],
-      ['TV wall','White cube shelf hiding the fridge, white panelled TV bench with an oak top.'],
+      ['TV wall','Your white TV bench stays. Only the oak slat panel is added behind it, to cover the side of the fridge.'],
       ['Entrance','A bench with shoe baskets and a hook rail replaces the wardrobe.'],
       ['Kitchen and bedrooms','Same as option A.']]}
 };

@@ -116,7 +116,7 @@ const CS=0.1, GX0=-0.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.4)/CS), NZ=Math.ceil((L-A
 const free=new Uint8Array(NX*NZ);
 const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.5;      // centre of the front door; where people stand just inside it
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
-  [W-0.3,D.LBX+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
+  [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
   [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
