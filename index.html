@@ -315,14 +315,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
       <button data-m="off" aria-pressed="true">Off</button><button data-m="win" aria-pressed="false">Windows</button><button data-m="ac" aria-pressed="false">Air conditioning</button>
     </div>
     <div id="airWin" hidden>
-      <p class="note" style="margin:10px 0 6px">Open:</p>
-      <div class="row" id="airOpen">
-        <label class="check"><input type="checkbox" data-o="kitchen" checked> Kitchen window</label>
-        <label class="check"><input type="checkbox" data-o="bed1" checked> Bedroom 1 window</label>
-        <label class="check"><input type="checkbox" data-o="bed2"> Bedroom 2 window</label>
-        <label class="check"><input type="checkbox" data-o="front"> Front door</label>
-      </div>
-      <div class="row"><span class="note" style="margin:0">Wind from</span>
+      <div class="row" style="margin-top:10px"><span class="note" style="margin:0">Wind from</span>
         <div class="seg" role="group" aria-label="Wind direction" id="segWind"><button data-w="W" aria-pressed="true">W</button><button data-w="N" aria-pressed="false">N</button><button data-w="E" aria-pressed="false">E</button><button data-w="S" aria-pressed="false">S</button></div>
         <input type="range" id="windSpeed" min="0" max="8" step="0.5" value="3" aria-label="Wind speed" style="flex:1;min-width:80px"><b id="windLbl">3 m/s</b></div>
     </div>
@@ -335,8 +328,11 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
       <div class="row"><span class="note" style="margin:0">Fan</span><div class="seg" role="group" aria-label="Fan" id="segFan"><button data-f="1" aria-pressed="false">Low</button><button data-f="2" aria-pressed="true">Medium</button><button data-f="3" aria-pressed="false">High</button></div></div>
     </div>
     <div id="airCommon" hidden>
-      <label class="check"><input type="checkbox" id="airDoors" checked> Bedroom doors open</label>
-      <button class="btn" id="airReset" style="margin-left:8px">Reset temperatures</button>
+      <h3>Windows</h3>
+      <div class="chips" id="airWins"></div>
+      <h3>Doors</h3>
+      <div class="chips" id="airDrs"></div>
+      <button class="btn" id="airReset" style="margin-top:12px">Reset temperatures</button>
       <p class="status" id="airInfo" style="margin-top:10px"></p>
       <table class="rooms" id="airTbl"></table>
       <p class="note">A simplified 2D model of air at head height. It shows where air moves and which rooms cool first, not exact numbers. Temperatures change about ten times faster than in real life.</p>

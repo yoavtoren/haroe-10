@@ -43,7 +43,7 @@ wall('b_l',[bl,NZ],[bl,AZ],[1,0],'bed2'); wall('b_far',[bl,AZ],[BX,AZ],[0,1],'be
 wall('wc_n',[WC.x0,WC.z0],[WC.x1,WC.z0],[0,1],'wc',{holes:[[wd[0]-WC.x0,wd[1]-WC.x0]]});
 wall('wc_w',[WC.x0,WC.z0],[WC.x0,WC.z1],[1,0],'wc'); wall('wc_e',[WC.x1,WC.z0],[WC.x1,WC.z1],[-1,0],'wc'); wall('wc_s',[WC.x0,WC.z1],[WC.x1,WC.z1],[0,-1],'wc');
 wall('ba_w',[BA.x0,BA.z0],[BA.x0,BA.z1],[1,0],'bath',{holes:[[bd[0]-BA.z0,bd[1]-BA.z0]]});
-wall('ba_n',[BA.x0,BA.z0],[BA.x1,BA.z0],[0,1],'bath'); wall('ba_e',[BA.x1,BA.z0],[BA.x1,BA.z1],[-1,0],'bath'); wall('ba_s',[BA.x0,BA.z1],[BA.x1,BA.z1],[0,-1],'bath');
+wall('ba_n',[BA.x0,BA.z0],[BA.x1,BA.z0],[0,1],'bath'); wall('ba_e',[BA.x1,BA.z0],[BA.x1,BA.z1],[-1,0],'bath',{wins:[[(bd[0]+bd[1])/2-BA.z0-0.25,(bd[0]+bd[1])/2-BA.z0+0.25,1.65,2.15],[0.3,0.7,1.8,2.2]]}); wall('ba_s',[BA.x0,BA.z1],[BA.x1,BA.z1],[0,-1],'bath');
 
 /* ---------- doors: frames on both sides, a hinged leaf in between ---------- */
 A.doorFrame('far',d1[0],d1[1]); A.doorFrame('far',d2[0],d2[1]); A.doorFrame('a_door',d1[0],d1[1]); A.doorFrame('b_door',d2[0]-NX,d2[1]-NX);

@@ -315,7 +315,8 @@ slatTex.wrapS=slatTex.wrapT=THREE.RepeatWrapping;
 const shutters=A.shutters=[];
 A.windowOn=function(k,u0,u1,y0,y1,panes,bars,winKey){
   const gm=new THREE.MeshBasicMaterial({color:0xa9cdd6,transparent:true,opacity:0.3,depthWrite:false}); glassMats.push(gm);
-  A.rect(k,u0,u1,y0,y1,0xe9ece8,0.006); A.rect(k,u0+0.05,u1-0.05,y0+0.05,y1-0.05,gm,0.008);
+  A.rect(k,u0,u1,y0,y1,0xe9ece8,0.006); const pane=A.rect(k,u0+0.05,u1-0.05,y0+0.05,y1-0.05,gm,0.008);
+  (A.panes=A.panes||[]).push({wall:k,m:pane,x:pane.position.x,w:u1-u0-0.1,cur:0});            // so a window can slide open
   for(let i=1;i<(panes||1);i++){const u=u0+i*(u1-u0)/panes; A.rect(k,u-0.025,u+0.025,y0,y1,0xe9ece8,0.010);}
   if(bars){for(let i=1;i<bars;i++){const u=u0+0.05+i*(u1-u0-0.1)/bars; A.rect(k,u-0.006,u+0.006,y0+0.05,y1-0.05,0xf4f5f3,0.009);}}
   if(winKey){

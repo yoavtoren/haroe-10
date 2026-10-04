@@ -92,11 +92,12 @@ const h=0.15, X0=-0.3, Z0=AZ-0.3, NX=Math.ceil((KX+0.6-X0)/h), NZ=Math.ceil((L+0
 const u=new Float32Array(N), v=new Float32Array(N), u2=new Float32Array(N), v2=new Float32Array(N), T=new Float32Array(N), T2=new Float32Array(N);
 const p=new Float32Array(N), dv=new Float32Array(N), solid=new Uint8Array(N), pfix=new Float32Array(N), isOpen=new Uint8Array(N), roomOf=new Int8Array(N);
 const ROOMS=['living','kitchen','bed1','bed2','bath','wc'];
-const air={mode:'off',open:{kitchen:true,bed1:true,bed2:false,front:false},wind:'W',speed:3,ac:{kitchen:true,bed1:false},set:23,fan:2,doors:true};
+const air={mode:'off',open:{kitchen:true,bed1:true,bed2:false,bath:false},door:{bed1:true,bed2:true,bath:false,wc:false,entrance:false},wind:'W',speed:3,ac:{kitchen:true,bed1:false},set:23,fan:2};
+const WIN_NAMES=[['kitchen','Kitchen'],['bed1','Bedroom 1'],['bed2','Bedroom 2'],['bath','Bathroom']], DOOR_NAMES=[['bed1','Bedroom 1'],['bed2','Bedroom 2'],['bath','Bathroom'],['wc','Guest toilet'],['entrance','Front door']];
 const WIND={W:[0,-1],E:[0,1],N:[1,0],S:[-1,0]};          // direction the air travels, in (x,z): west wind blows toward the east (-z)
 const AC=[{id:'kitchen',x:KX-0.45,z:1.3,dx:-1,dz:0},{id:'bed1',x:1.3,z:AZ+0.45,dx:0,dz:1}];
-const WALLKIND={far:'int',a_door:'int',b_door:'int',end:'front',tv:'wet',ba_w:'wet',blk_n:'wet',wc_n:'wet'};
-const WINKEY={win:'kitchen',a_far:'bed1',b_r:'bed2',b_far:'bed2'};
+const DOORS={far:['bed1','bed2'],a_door:['bed1'],b_door:['bed2'],end:['entrance'],tv:['bath'],ba_w:['bath'],blk_n:['wc'],wc_n:['wc']};      // which door each opening in a wall is
+const WINKEY={win:'kitchen',a_far:'bed1',b_r:'bed2',b_far:'bed2',ba_e:'bath'};
 const ix=function(x){return Math.floor((x-X0)/h);}, iz=function(z){return Math.floor((z-Z0)/h);};
 const bb=new THREE.Box3();
 function tall(o){             // furniture tall enough to block air at head height
@@ -115,14 +116,15 @@ function buildMask(){
     for(let j=0;j<NZ;j++) for(let i=0;i<NX;i++){const x=X0+(i+0.5)*h, z=Z0+(j+0.5)*h; if(x>r[0]&&x<r[1]&&z>r[2]&&z<r[3]){solid[j*NX+i]=0; roomOf[j*NX+i]=ri;}}
   });});
   scene.updateMatrixWorld(true); tall(scene);
-  const wd=WIND[air.wind], P=0.5*air.speed*air.speed;
+  const wd=WIND[air.wind], P=air.mode==='win'?0.5*air.speed*air.speed:0;
   for(const k in A.walls){const w=A.walls[k]; if(ROOMS.indexOf(w.room)<0) continue;
     const n=Math.ceil(w.len/(h*0.5));
     for(let s=0;s<=n;s++){
       const t=s/n*w.len, x=w.a[0]+w.d[0]*t, z=w.a[1]+w.d[1]*t, c=iz(z)*NX+ix(x); if(c<0||c>=N) continue;
       let state='wall';
-      w.holes.forEach(function(q){if(t>q[0]+0.05&&t<q[1]-0.05){const kind=WALLKIND[k]; state=(kind==='int'&&air.doors)?'gap':(kind==='front'&&air.mode==='win'&&air.open.front)?'open':'wall';}});
-      w.wins.forEach(function(q){if(t>q[0]&&t<q[1]&&air.mode==='win'&&air.open[WINKEY[k]]) state='open';});
+      const hs=w.holes.slice().sort(function(p,q){return p[0]-q[0];});
+      hs.forEach(function(q,hi){if(t>q[0]+0.05&&t<q[1]-0.05){const id=(DOORS[k]||[])[hi]; state=!air.door[id]?'wall':id==='entrance'?'open':'gap';}});
+      w.wins.forEach(function(q){if(t>q[0]&&t<q[1]&&air.open[WINKEY[k]]) state='open';});
       if(state==='wall'){solid[c]=1; isOpen[c]=0;}
       else if(state==='gap'){if(!isOpen[c]) solid[c]=0;}
       else{solid[c]=0; isOpen[c]=1; const dt_=wd[0]*w.n[0]+wd[1]*w.n[1]; pfix[c]=P*(0.8*Math.max(0,dt_)-0.3*(1-Math.abs(dt_))-0.5*Math.max(0,-dt_))*0.012;}        // wind pushing in through this opening is positive
@@ -167,6 +169,11 @@ const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Buffer
 const dot=A.canvasTex(32,32,function(g){const r=g.createRadialGradient(16,16,0,16,16,16); r.addColorStop(0,'rgba(255,255,255,1)'); r.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=r; g.fillRect(0,0,32,32);});
 const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:0.11,map:dot,vertexColors:true,transparent:true,depthWrite:false,opacity:0.95}));
 pts.frustumCulled=false; pts.visible=false; pts.userData.nc=true; pts.renderOrder=4; scene.add(pts);
+// the faster the air, the longer the streak behind each speck
+const lpos=new Float32Array(NP*6), lcol=new Float32Array(NP*6), lg=new THREE.BufferGeometry();
+lg.setAttribute('position',new THREE.BufferAttribute(lpos,3)); lg.setAttribute('color',new THREE.BufferAttribute(lcol,3));
+const streaks=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.9,depthWrite:false}));
+streaks.frustumCulled=false; streaks.visible=false; streaks.userData.nc=true; streaks.renderOrder=4; scene.add(streaks);
 const hd=new Uint8Array(N*4), htex=new THREE.DataTexture(hd,NX,NZ,THREE.RGBAFormat); htex.magFilter=THREE.LinearFilter; htex.minFilter=THREE.LinearFilter;
 const hgeo=new THREE.PlaneGeometry(NX*h,NZ*h); hgeo.rotateX(-Math.PI/2);
 const heat=new THREE.Mesh(hgeo,new THREE.MeshBasicMaterial({map:htex,transparent:true,depthWrite:false}));
@@ -184,10 +191,14 @@ function draw(dt){
     if(c<0||c>=N||solid[c]||(page[i]-=dt)<0){spawn(i); continue;}
     const a=sample(u,x,z), b=sample(v,x,z), sp=Math.hypot(a,b);
     ppos[i*3]=x+a*dt*2.2; ppos[i*3+2]=z+b*dt*2.2;
-    tcol(sample(T,x,z)); const br=0.35+Math.min(1,sp*2.2)*0.65; pcol[i*3]=col.r*br; pcol[i*3+1]=col.g*br; pcol[i*3+2]=col.b*br;
+    tcol(sample(T,x,z)); const f=Math.min(1,sp*2.6), br=0.9-0.75*f;                  // slow air: a dot. fast air: the dot fades and a line takes over
+    pcol[i*3]=col.r*br; pcol[i*3+1]=col.g*br; pcol[i*3+2]=col.b*br;
+    const len=Math.min(0.9,sp*1.6), k=sp>1e-4?len/sp:0, o=i*6, y=ppos[i*3+1];
+    lpos[o]=ppos[i*3]; lpos[o+1]=y; lpos[o+2]=ppos[i*3+2]; lpos[o+3]=ppos[i*3]-a*k; lpos[o+4]=y; lpos[o+5]=ppos[i*3+2]-b*k;
+    lcol[o]=col.r; lcol[o+1]=col.g; lcol[o+2]=col.b; lcol[o+3]=col.r*0.15; lcol[o+4]=col.g*0.15; lcol[o+5]=col.b*0.15;
     if(sp<0.02) page[i]-=dt*3;
   }
-  pg.attributes.position.needsUpdate=true; pg.attributes.color.needsUpdate=true;
+  pg.attributes.position.needsUpdate=true; pg.attributes.color.needsUpdate=true; lg.attributes.position.needsUpdate=true; lg.attributes.color.needsUpdate=true;
   if(frameNo++%4===0){
     for(let j=0;j<NZ;j++) for(let i=0;i<NX;i++){const c=j*NX+i, o=((NZ-1-j)*NX+i)*4;
       if(solid[c]){hd[o+3]=0; continue;} tcol(T[c]); hd[o]=col.r*255; hd[o+1]=Math.min(255,col.g*255); hd[o+2]=col.b*255; hd[o+3]=120;}
@@ -203,30 +214,40 @@ function airInfo(){
     t+='<tr><td>'+A.rooms[k].name+'</td><td class="sw">'+(sum[i]/cnt[i]).toFixed(1)+'°C</td><td class="sw">'+(s<0.03?'still':s<0.12?'light':s<0.3?'moving':'breezy')+'</td></tr>';});
   $('airTbl').innerHTML=t;
   let msg='Outside: '+outdoorT().toFixed(0)+'°C. ';
-  if(air.mode==='win'){const n=['kitchen','bed1','bed2','front'].filter(function(k){return air.open[k];}).length;
+  if(air.mode==='win'){const n=['kitchen','bed1','bed2','bath'].filter(function(k){return air.open[k];}).length+(air.door.entrance?1:0);
     msg+=n<2?'Only one opening: air barely moves. Open a second one on another side for a cross-breeze.':air.speed<0.5?'No wind, so no cross-breeze.':'';}
   $('airInfo').textContent=msg;
 }
 function setAir(m){
   air.mode=m; $('segAir').querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.m===m);});
   $('airWin').hidden=m!=='win'; $('airAc').hidden=m!=='ac'; $('airCommon').hidden=m==='off';
-  const show=m!=='off'&&on; pts.visible=show; heat.visible=show;
+  const show=m!=='off'&&on; pts.visible=show; heat.visible=show; streaks.visible=show; renderOpen();
   if(m!=='off'){buildMask(); resetT(); for(let i=0;i<NP;i++) spawn(i); airInfo();}
 }
 $('segAir').onclick=function(e){const b=e.target.closest('button'); if(b) setAir(b.dataset.m);};
-$('airOpen').onchange=function(e){const k=e.target.dataset.o; if(k){air.open[k]=e.target.checked; buildMask();}};
+function renderOpen(){             // toggle buttons, and the real windows and doors follow them
+  const pill=function(a,k,name,on){return '<button class="chip" data-'+a+'="'+k+'" aria-pressed="'+on+'">'+name+(on?' · open':' · closed')+'</button>';};
+  $('airWins').innerHTML=WIN_NAMES.map(function(q){return pill('o',q[0],q[1],air.open[q[0]]);}).join('');
+  $('airDrs').innerHTML=DOOR_NAMES.map(function(q){return pill('d',q[0],q[1],air.door[q[0]]);}).join('');
+  const act=on&&air.mode!=='off';
+  DOOR_NAMES.forEach(function(q){const d=A.door(q[0]); if(d) d.force=act?(air.door[q[0]]?1:0):null;});
+}
+$('airWins').onclick=function(e){const b=e.target.closest('button'); if(!b) return; air.open[b.dataset.o]=!air.open[b.dataset.o]; renderOpen(); buildMask();};
+$('airDrs').onclick=function(e){const b=e.target.closest('button'); if(!b) return; air.door[b.dataset.d]=!air.door[b.dataset.d]; renderOpen(); buildMask();};
 $('segWind').onclick=function(e){const b=e.target.closest('button'); if(!b) return; air.wind=b.dataset.w; $('segWind').querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b);}); buildMask();};
 $('windSpeed').oninput=function(e){air.speed=+e.target.value; $('windLbl').textContent=air.speed+' m/s'; buildMask();};
 $('airAc').onchange=function(e){const k=e.target.dataset.ac; if(k) air.ac[k]=e.target.checked;};
 $('acTemp').oninput=function(e){air.set=+e.target.value; $('acTempLbl').textContent=air.set+'°C';};
 $('segFan').onclick=function(e){const b=e.target.closest('button'); if(!b) return; air.fan=+b.dataset.f; $('segFan').querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});};
-$('airDoors').onchange=function(e){air.doors=e.target.checked; buildMask();};
 $('airReset').onclick=function(){resetT(); airInfo();};
 A.layoutFns.push(function(){if(on&&air.mode!=='off') buildMask();});
 
 A.frameFns.push(function(dt,t){
   if(!on) return;
   if(playing){sunS.hour+=dt*1.5; if(sunS.hour>=20){sunS.hour=20; playing=false; $('sunPlay').textContent='Play the day';} $('sunHour').value=sunS.hour; applySun();}
+  (A.panes||[]).forEach(function(p){                    // sliding panes: an open window pushes one half over the other
+    const tg=(air.mode!=='off'&&air.open[WINKEY[p.wall]])?1:0; if(p.cur===tg) return;
+    const d=tg-p.cur, q=dt*2; p.cur=Math.abs(d)<=q?tg:p.cur+Math.sign(d)*q; p.m.scale.x=1-0.5*p.cur; p.m.position.x=p.x+p.w*0.25*p.cur; A.touch(2);});
   if(air.mode!=='off'){step(0.04); step(0.04); step(0.04); draw(dt); if(t-infoT>0.7){infoT=t; airInfo();}}
 });
 
@@ -242,7 +263,8 @@ function setClimate(v){
     A.fly(new THREE.Vector3(10.5,11,-9.5),new THREE.Vector3(2.9,0.3,0.6),800);
   }else{
     on=false; playing=false; $('sunPlay').textContent='Play the day'; $('pClimate').hidden=true; $('tabClimate').setAttribute('aria-pressed',false);
-    pts.visible=false; heat.visible=false; realSun(false);
+    pts.visible=false; heat.visible=false; streaks.visible=false; realSun(false); renderOpen();
+    (A.panes||[]).forEach(function(q){q.cur=0; q.m.scale.x=1; q.m.position.x=q.x;});
   }
 }
 A.setClimate=setClimate; A.climate={sun:sunS,air:air,sunAt:sunAt,setSeason:setSeason,setAir:setAir,T:T,u:u,v:v,applySun:applySun,roomTemps:function(){airInfo(); return $('airTbl').textContent;}};
