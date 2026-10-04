@@ -114,10 +114,10 @@ function makePerson(spec){
    ===================================================================== */
 const CS=0.1, GX0=-9.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.6-GX0)/CS), NZ=Math.ceil((L+11.7-GZ0)/CS), RAD=0.13;
 const free=new Uint8Array(NX*NZ);
-const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+0.85, LOBBY=[-0.6,L+11.2];      // centre of the front door; where people stand just inside it
+const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+0.85, LOBBY=[-0.6,L+7.4];      // centre of the front door; where people stand just inside it
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
   [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
-  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[-1.4,0.2,L+6.2,L+6.8],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
+  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[-1.1,-0.1,L+6.2,L+6.8],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
   const i0=Math.max(0,Math.ceil((x0-GX0)/CS-0.5)), i1=Math.min(NX-1,Math.floor((x1-GX0)/CS-0.5));
@@ -300,7 +300,7 @@ function afterLayout(fn){if(A.layoutBusy()) layoutWait=fn; else fn();}
 A.layoutFns.push(function(){buildNav(); const f=layoutWait; layoutWait=null; if(f) f();});
 
 function coffeeSpot(){          // where the espresso machine lives in this design: [stand x, stand z, facing]
-  if(S.design==='a'||S.design==='c') return [KX-1.5,1.9,0];
+  if(S.design!=='b'&&S.design!=='n') return [KX-1.5,1.9,0];
   const p=A.pieces[S.design==='b'?'cart':'station'], f=p.to[2], fx=Math.cos(f), fz=-Math.sin(f);
   return [p.to[0]+fx*0.65,p.to[1]+fz*0.65,Math.atan2(-fx,-fz)];
 }
@@ -452,7 +452,7 @@ function arrive(list,each){
       a.cb=function(){a.say(['Hi!','Hey!','Shalom!','We are here!'][i%4]); each(a,it);};
     },a);
   });
-  later(0.7+list.length*1.0+10,function(){if(DOOR.entrance.force===1) DOOR.entrance.force=null; refresh();},guests);
+  later(0.7+list.length*1.0+8,function(){if(DOOR.entrance.force===1) DOOR.entrance.force=null; refresh();},guests);
   refresh();
 }
 function goodbye(){

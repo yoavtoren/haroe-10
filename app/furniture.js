@@ -217,6 +217,18 @@ function mattress(id,label,col){
 }
 mattress('mat1','Mattress by the sofa',0xcfe3ec); mattress('mat2','Mattress by the bedroom doors',0xbfd8c6);
 
+/* ---------- two more coffee tables ---------- */
+piece('round',{label:'Round oak table',h:0.8,isNew:true,shop:['Round coffee table','round coffee table oak 80','ikea','About 80 cm across, solid or veneered oak.']},function(g){
+  cyl(0.4,0.04,OAK,0,0.42,0,g,40); cyl(0.07,0.36,OAK,0,0.22,0,g,16,0.05); cyl(0.26,0.04,OAK,0,0.02,0,g,30);
+  box(0.26,0.015,0.26,LINEN,0.05,0.447,-0.08,g); K.candle(g,0.0,0.455,-0.12,0.1); K.candle(g,0.1,0.455,-0.04,0.14); K.bush(g,-0.15,0.44,0.14,0.05,BLUE);
+});
+piece('trunk',{label:'Storage chest table',h:0.8,isNew:true,shop:['Wooden storage chest','wooden storage trunk coffee table','web','A pine or oak chest about 100 × 50 × 42 cm. Blankets and games go inside.']},function(g){
+  box(0.5,0.38,1.0,OAK,0,0.23,0,g); box(0.52,0.04,1.02,0xb98a4e,0,0.44,0,g);
+  [-0.42,0.42].forEach(function(z){box(0.53,0.03,0.04,0x3b4a44,0,0.445,z,g); box(0.004,0.38,0.04,0x3b4a44,0.252,0.23,z,g);});
+  [[-.2,-.44],[.2,-.44],[-.2,.44],[.2,.44]].forEach(function(p){box(0.05,0.04,0.05,0x3b4a44,p[0],0.02,p[1],g);});
+  box(0.3,0.02,0.4,RATTAN,0,0.47,-0.15,g); K.candle(g,-0.04,0.48,-0.22,0.1); K.bookStack(g,0.02,0.46,0.25,3,9);
+});
+
 /* ---------- TV benches for the proposals. There is only 0.8 m of wall, so the TV stays on a stand in front of the fridge side. ---------- */
 piece('kbench',{label:'Cube shelf as a TV bench',h:1.7,isNew:true,shop:['Cube shelf 4 × 2, lying down','KALLAX 147x77','ikea','White, with woven inserts. The TV stands on top.']},function(g){
   const k=K.kallax(g,['bxpb','ybsx'],WHITE,{box:RATTAN,box2:SAGE});
@@ -247,9 +259,17 @@ A.torus(0.26,0.022,0xd9aa12,D.BLK-0.03,1.6,5.68,dn).rotation.y=R/2; cyl(0.25,0.0
 box(0.75,0.014,0.5,0xa89878,EX,0.007,5.9,dn).castShadow=false;
 });
 K.onlyAll(K.frame('left',SZ-0.93,1.78,0.62,0.82,0,0xc99a5b).concat(K.frame('left',SZ,1.78,0.62,0.82,1,0xc99a5b),K.frame('left',SZ+0.93,1.78,0.62,0.82,3,0xc99a5b)),'abc');
-K.onlyAll(K.frame('left',0.6,1.68,0.48,0.6,2,0xc99a5b).concat(K.frame('left',1.2,1.68,0.48,0.6,7,0xc99a5b)),'abc');      // above the record corner
-// things from today that can be bought again if needed
-[['sofa','Sofa (yours)',null],['station','Coffee station (yours)',null]].forEach(function(q){});
+K.onlyAll(K.frame('left',0.6,1.68,0.48,0.6,2,0xc99a5b).concat(K.frame('left',1.2,1.68,0.48,0.6,7,0xc99a5b)),'abc').forEach(function(m){m.userData.not='f';});      // above the record corner
+/* ---------- wall treatments for options D, E and F (the sofa wall: u runs from the bedroom end to the front door) ---------- */
+A.only(A.rect('left',1.55,L,0.08,H,0xa9c4ad,0.003),'d');                                  // D: the whole sofa wall in sage
+const bead=canvasTex(64,64,function(g){g.fillStyle='#fbfaf6'; g.fillRect(0,0,64,64); g.fillStyle='#dedbd2'; g.fillRect(0,0,3,64); g.fillStyle='#ffffff'; g.fillRect(3,0,2,64);});
+bead.wrapS=bead.wrapT=THREE.RepeatWrapping; bead.repeat.set(L/0.09,1);
+K.onlyAll([A.rect('left',0,L,0.08,1.1,A.MT(bead,'living'),0.004),A.rect('left',0,L,1.1,1.15,0xfbfaf6,0.006),A.rect('left',0,L,1.15,H,0xcfe0e8,0.003)],'e');   // E: white panelling, light blue above
+A.only(A.rect('left',0.1,1.75,0.08,H,0xa9c4ad,0.003),'f');                                // F: sage behind the record corner, with shelves of records
+A.inRoom('living',function(){
+  const g=G(null,'f');
+  [1.2,1.58,1.96].forEach(function(y,i){box(0.24,0.03,1.3,OAK,0.12,y,0.9,g); K.books(g,0.13,y+0.015,0.9-0.25+i*0.2,0.7,0.31,0.2,120+i); if(i===1) K.bush(g,0.13,y+0.015,1.4,0.06,BLUE);});
+});
 
 /* ---------- layouts: x, z, rotation. A piece that is not listed is hidden. ---------- */
 const TVZ=2.9, HALL=[1.68,L-0.19,R/2], CAB=[1.6,L-0.13,R/2];
@@ -262,15 +282,19 @@ const LAY={
   b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
   c:lay({rugC:[1.75,SZ,0], table:[1.8,SZ,0], tvOld:[W-0.235,TVZ,R], poufA1:[1.95,SZ+1.03,0], hallBench:HALL})
 };
+LAY.d=lay({rugC:[1.75,SZ,0], round:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], poufA1:[1.95,SZ-1.0,0], poufA2:[1.95,SZ+1.0,0], shoeCab:CAB});
+LAY.e=lay({rugB:[1.75,SZ,0], trunk:[1.95,SZ,0], kbench:[W-0.2,TVZ,R], poufB1:[1.95,SZ+1.05,0], hallBench:HALL});
+LAY.f=lay({rugA:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], poufA1:[1.95,SZ+1.05,0], shoeCab:CAB});
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
-const ALT={a:OPEN,b:OPEN,c:OPEN};
 const PJ={    // pajama party: the coffee table is put away and two mattresses go down
   n:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], table:null, rack1:null, rack2:null},
   a:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], lift:null, poufA1:null, poufA2:null},
   b:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], nest:null, poufB1:null},
-  c:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], table:null, poufA1:null}
+  c:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], table:null, poufA1:null},
+  d:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], round:null, poufA1:null, poufA2:null},
+  e:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], trunk:null, poufB1:null},
+  f:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], nest:null, poufA1:null}
 };
-const FOCUS={n:[1.9,SZ],a:[1.9,SZ],b:[1.9,SZ],c:[1.9,SZ]};
 
 /* ---------- copy ---------- */
 const DESIGNS=A.DESIGNS={
@@ -308,7 +332,28 @@ const DESIGNS=A.DESIGNS={
       ['Record corner','As in option A, with the espresso machine on the kitchen counter.'],
       ['TV wall','Your white TV bench and the TV stay exactly as they are.'],
       ['Entrance','A bench with shoe baskets and a hook rail replaces the wardrobe.'],
-      ['Kitchen and bedrooms','Same as option A.']]}
+      ['Kitchen and bedrooms','Same as option A.']]},
+  d:{name:'D', like:'a', title:'D · Sage wall', sub:'One painted wall changes the room: the sofa wall in soft sage, everything else white and oak.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#a9c4ad','#C99A5B','#fbfaf6','#9fc4d6'],
+     list:[
+      ['Walls','The sofa wall is painted soft sage from the record corner to the front door. The oak frames and the dark green sofa sit on it tone on tone.'],
+      ['Coffee table','A round oak pedestal table, 80 cm, with a linen pouf on each side. Round is easier to walk past in a 3.1 m room.'],
+      ['TV wall','White 1 × 4 cube tower against the fridge side, white TV bench with an oak top.'],
+      ['Rug and entrance','Jute rug 160 × 230. Slim shoe cabinet instead of the wardrobe.'],
+      ['Everything else','Record corner, drop-leaf dining table, kitchen and bedrooms as in option A.']]},
+  e:{name:'E', like:'a', title:'E · Panelled', sub:'The most country of the six: white panelling to waist height, light blue above it.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#cfe0e8','#fbfaf6','#C99A5B','#8fbd9b'],
+     list:[
+      ['Walls','White tongue-and-groove panelling up to 1.1 m along the sofa wall, with a cap rail, and light blue paint above it.'],
+      ['Coffee table','A wooden storage chest, 100 × 50. Blankets and board games go inside.'],
+      ['TV wall','The white 4 × 2 cube shelf lying down, TV on top, in front of the fridge side.'],
+      ['Rug and entrance','Cream rug with light blue stripes. Bench with baskets and a hook rail instead of the wardrobe.'],
+      ['Everything else','Record corner, drop-leaf dining table, kitchen and bedrooms as in option A.']]},
+  f:{name:'F', like:'a', title:'F · Record wall', sub:'The record corner becomes the feature: a sage panel of wall with three oak shelves of records above the console.', table:['Open the dining table for four','Close it to a console'], pal:['#1F5A41','#a9c4ad','#C99A5B','#fbfaf6','#9fc4d6'],
+     list:[
+      ['Record corner','The wall behind it is painted sage, floor to ceiling, 1.65 m wide. Three oak shelves above the console hold the records, facing out.'],
+      ['Coffee table','Two round nesting tables and one linen pouf.'],
+      ['TV wall','White 1 × 4 cube tower against the fridge side, white TV bench with an oak top.'],
+      ['Rug and entrance','Natural wool rug 160 × 230. Slim shoe cabinet instead of the wardrobe.'],
+      ['Everything else','Drop-leaf dining table, kitchen and bedrooms as in option A.']]}
 };
 
 /* ---------- state and layout animation ---------- */
@@ -319,7 +364,7 @@ const USER={};
 function ukey(){return S.design+(S.table?'1':'0')+(S.pj?'p':'');}
 function targets(){
   const out={}, put=function(o){for(const k in o) out[k]=o[k];};
-  put(LAY[S.design]); if(S.table&&ALT[S.design]) put(ALT[S.design]); if(S.pj) put(PJ[S.design]);
+  put(LAY[S.design]); if(S.table&&S.design!=='n') put(OPEN); if(S.pj) put(PJ[S.design]);
   const u=USER[ukey()]; if(u) for(const k in u) if(out[k]) out[k]=u[k];          // furniture you moved yourself
   return out;
 }
@@ -329,7 +374,8 @@ A.layout=function(instant){
     p.from=p.cur.slice(); p.to=v?[v[0],v[1],v[2],1]:[p.cur[0],p.cur[1],p.cur[2],0];
     if(p.from[3]<0.02&&v){p.from[0]=v[0]; p.from[1]=v[1]; p.from[2]=v[2];}
   }
-  for(let i=0;i<A.onlys.length;i++){const o=A.onlys[i]; o.visible=o.userData.only.indexOf(S.design)>=0;}
+  for(let i=0;i<A.onlys.length;i++){const o=A.onlys[i], sp=o.userData.only;          // D, E and F share everything marked for A
+    o.visible=(sp.indexOf(S.design)>=0||sp.indexOf(DESIGNS[S.design].like||'-')>=0)&&!(o.userData.not&&o.userData.not.indexOf(S.design)>=0);}
   anim={t0:performance.now(),dur:(instant||A.reduce)?1:800,tf:A.tableT,tt:S.table?1:0,lf:A.liftT,lt:(S.lift&&S.design==='a')?1:0};
   resolveSeats();
   if(instant) stepLayout();
@@ -354,12 +400,12 @@ A.layoutBusy=function(){return !!anim;};
 let live=[];
 function resolveSeats(){
   live=[];
-  A.seats.forEach(function(s){if(!s.only||s.only.indexOf(S.design)>=0) live.push(s);});
+  A.seats.forEach(function(s){if(!s.only||s.only.indexOf(S.design)>=0||s.only.indexOf(DESIGNS[S.design].like||'-')>=0) live.push(s);});
   for(const id in P){const p=P[id]; if(!p.seats||p.to[3]<1) continue;
     const x=p.to[0], z=p.to[1], f=p.to[2], c=Math.cos(f), sn=Math.sin(f);
     p.seats.forEach(function(s){
       s.x=x+s.lx*c+s.lz*sn; s.z=z-s.lx*sn+s.lz*c; s.room='living';
-      s.h=s.face?Math.atan2(FOCUS[S.design][0]-s.x,FOCUS[S.design][1]-s.z):f+R/2+(s.dh||0);
+      s.h=s.face?Math.atan2(1.9-s.x,SZ-s.z):f+R/2+(s.dh||0);
       live.push(s);
     });
   }
@@ -383,7 +429,7 @@ const fixedLabels=[
  {label:'Guest toilet', pos:new THREE.Vector3(3.2,1.6,L-0.5)},
  {label:'Stairs', pos:new THREE.Vector3(6.6,1.9,L+1.6)},
  {label:'Lobby', pos:new THREE.Vector3(-3.2,1.6,L+3.8)},
- {label:'Bridge to the street', pos:new THREE.Vector3(-0.6,1.3,L+9)},
+ {label:'Bridge to the street', pos:new THREE.Vector3(-0.6,1.5,L+6.8)},
  {label:'Yard, one floor down', pos:new THREE.Vector3(9,-1.6,-1)},
  {label:'≈ '+L.toFixed(1)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
  {label:'≈ '+W.toFixed(1)+' m', pos:new THREE.Vector3(W/2,0.05,2.3), dim:true},
@@ -414,7 +460,7 @@ A.labelFns.push(function(){
 function renderPanel(){
   const d=DESIGNS[S.design], now=S.design==='n';
   $('d_now').setAttribute('aria-pressed',now); $('d_new').setAttribute('aria-pressed',!now); $('segABC').hidden=now;
-  ['a','b','c'].forEach(function(k){$('d_'+k).setAttribute('aria-pressed',k===S.design);});
+  KEYS.forEach(function(k){$('d_'+k).setAttribute('aria-pressed',k===S.design);});
   $('dTitle').textContent=d.title; $('dSub').textContent=d.sub;
   $('dPal').innerHTML=d.pal.map(function(c){return '<i style="background:'+c+'"></i>';}).join('');
   $('list').innerHTML=d.list.map(function(r){return '<li><b>'+r[0]+'</b><span>'+r[1]+'</span></li>';}).join('');
@@ -426,7 +472,8 @@ function renderPanel(){
 }
 A.renderPanel=renderPanel;
 let lastNew='a';
-['a','b','c'].forEach(function(k){$('d_'+k).onclick=function(){lastNew=k; A.setDesign(k);};});
+const KEYS=['a','b','c','d','e','f'];
+KEYS.forEach(function(k){$('d_'+k).onclick=function(){lastNew=k; A.setDesign(k);};});
 $('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){A.setDesign(lastNew);};
 $('bTable').onclick=function(){A.setTable(!S.table);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
 function fitDist(){const a=A.stage.clientWidth/A.stage.clientHeight; return 19*Math.max(1,1.0/Math.max(a,0.5));}

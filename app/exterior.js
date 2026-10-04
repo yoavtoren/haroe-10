@@ -4,7 +4,7 @@
 'use strict';
 const A=window.APP, D=A.D, K=A.kit, W=D.W, L=D.L, H=D.H, KX=D.KX, AZ=A.AZ;
 const box=A.box, cyl=A.cyl, sph=A.sph, M=A.M, inRoom=A.inRoom, wall=A.wall, rect=A.rect, G=A.G, scene=A.scene, canvasTex=A.canvasTex;
-const R=Math.PI, CZ=L+6.5, LZ=L+11.5, GY=-2.9;          // lobby street-side wall, street edge beyond the bridge, garden level
+const R=Math.PI, CZ=L+6.5, LZ=L+7.0, GY=-2.9;          // lobby street-side wall, street edge beyond the bridge, garden level
 
 /* ================= the ground-floor lobby =================
    One wide, mostly empty hall. The six flats sit round it in a horseshoe, and you reach it from the street over a
@@ -15,24 +15,13 @@ const terrazzo=canvasTex(256,256,function(g){
   g.strokeStyle='#a89f8c'; g.lineWidth=2; g.strokeRect(0,0,256,256);
 });
 terrazzo.wrapS=terrazzo.wrapT=THREE.RepeatWrapping;
-const peel=canvasTex(256,256,function(g){            // white paint peeling off the plaster
-  g.fillStyle='#f1efe8'; g.fillRect(0,0,256,256); const r=A.rng(5);
-  for(let i=0;i<26;i++){
-    const x=r()*256, y=r()*256, n=5+Math.floor(r()*5), s=10+r()*26;
-    g.fillStyle=['#cfc6b2','#bfb7a4','#d9d2c2'][i%3]; g.beginPath();
-    for(let k=0;k<n;k++){const a=k/n*6.283, q=s*(0.55+r()*0.6); g.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q*0.75);} g.fill();
-    g.strokeStyle='rgba(255,255,255,.9)'; g.lineWidth=2; g.stroke(); g.strokeStyle='rgba(120,110,95,.35)'; g.lineWidth=1; g.stroke();
-  }
-  for(let i=0;i<12;i++){g.strokeStyle='rgba(120,110,95,.3)'; g.lineWidth=1; g.beginPath(); const x=r()*256,y=r()*256; g.moveTo(x,y); g.lineTo(x+(r()-0.5)*50,y+r()*60); g.stroke();}
-});
-peel.wrapS=peel.wrapT=THREE.RepeatWrapping;
-const HX0=-6.5, HX1=5.3, HZ=L+6.5, BRX=-0.6, BRZ=L+11.5, SA=L+0.3, SB=L+3.0, SX=7.9;      // hall, bridge, stair alcove
+const HX0=-6.5, HX1=5.3, HZ=L+6.5, BRX=-0.6, BRZ=L+7.0, BRW=1.3, SA=L+0.3, SB=L+3.0, SX=7.9;      // hall, bridge, stair alcove
 A.floorQuad(HX0,HX1,L,HZ,terrazzo,1.0,'hall'); A.floorQuad(HX1,SX,(SA+SB)/2,SB,terrazzo,1.0,'hall');
 A.ceil('hall',HX0,HX1,L,HZ); A.ceil('hall',HX1,SX,SA,SB);
 const en=D.entrance;
 wall('h_s',[HX0,L],[HX1,L],[0,1],'hall',{holes:[[en[0]-HX0,en[1]-HX0]]});      // our side: flats 1, 2 and ours
 wall('h_w',[HX0,L],[HX0,HZ],[1,0],'hall');                                     // far leg of the horseshoe
-wall('h_n',[HX0,HZ],[HX1,HZ],[0,-1],'hall',{holes:[[BRX-1.1-HX0,BRX+1.1-HX0,2.5]]});   // street side, open to the bridge
+wall('h_n',[HX0,HZ],[HX1,HZ],[0,-1],'hall',{holes:[[BRX-BRW/2-HX0,BRX+BRW/2-HX0,2.5]]});   // street side, open to the bridge
 wall('h_e1',[HX1,L],[HX1,SA],[-1,0],'hall'); wall('h_e2',[HX1,SB],[HX1,HZ],[-1,0],'hall');
 wall('st_s',[HX1,SA],[SX,SA],[0,1],'hall'); wall('st_e',[SX,SA],[SX,SB],[-1,0],'hall'); wall('st_n',[HX1,SB],[SX,SB],[0,-1],'hall');
 A.doorFrame('h_s',en[0]-HX0,en[1]-HX0);
@@ -40,16 +29,15 @@ const HW=['h_s','h_w','h_n','h_e1','h_e2','st_s','st_e','st_n'];
 HW.forEach(function(k){A.spans(k).forEach(function(s){
   const t=terrazzo.clone(); t.needsUpdate=true; t.repeat.set(s[1]-s[0],1.35);          // same terrazzo as the floor, up to half height
   rect(k,s[0],s[1],0,1.35,A.MT(t,'hall'),0.005); rect(k,s[0],s[1],1.35,1.39,0xa89f8c,0.006);
-  const q=peel.clone(); q.needsUpdate=true; q.offset.set(s[0]*0.37,0); q.repeat.set((s[1]-s[0])/2.2,(H-1.39)/2.2);
-  rect(k,s[0],s[1],1.39,H,A.MT(q,'hall'),0.004);});});
-/* the other five flats: wooden doors with a number and a bell */
+  rect(k,s[0],s[1],1.39,H,0xf7f6f1,0.004);});});                            // plain white above the cladding
+/* the other five flats: grey doors with a number and a bell */
 function flatDoor(k,u,no){
   const tex=canvasTex(128,256,function(g){
-    g.fillStyle='#8a6a48'; g.fillRect(0,0,128,256); g.strokeStyle='#6d5136'; g.lineWidth=5; g.strokeRect(14,16,100,100); g.strokeRect(14,132,100,108);
-    g.fillStyle='#d9c07a'; g.beginPath(); g.arc(64,70,13,0,7); g.fill(); g.fillStyle='#3a2c1a'; g.font='bold 18px sans-serif'; g.textAlign='center'; g.fillText(no,64,77);
-    g.fillStyle='#c9b27a'; g.fillRect(100,122,12,22);
+    g.fillStyle='#9a9fa1'; g.fillRect(0,0,128,256); g.strokeStyle='#7d8284'; g.lineWidth=5; g.strokeRect(14,16,100,100); g.strokeRect(14,132,100,108);
+    g.fillStyle='#d9dcdc'; g.beginPath(); g.arc(64,70,13,0,7); g.fill(); g.fillStyle='#2f3335'; g.font='bold 18px sans-serif'; g.textAlign='center'; g.fillText(no,64,77);
+    g.fillStyle='#c9cdcf'; g.fillRect(100,122,12,22);
   });
-  rect(k,u-0.5,u+0.5,0,2.15,0xe6e2d6,0.008); rect(k,u-0.42,u+0.42,0,2.06,A.MT(tex,'hall'),0.01);
+  rect(k,u-0.5,u+0.5,0,2.15,0x8a8f91,0.008); rect(k,u-0.42,u+0.42,0,2.06,A.MT(tex,'hall'),0.01);
   rect(k,u+0.6,u+0.68,1.2,1.3,0x3b3f3c,0.009);
 }
 flatDoor('h_s',-1.1-HX0,'2'); flatDoor('h_s',-4.6-HX0,'1'); flatDoor('h_w',1.6,'6'); flatDoor('h_w',4.9,'5'); flatDoor('h_e2',2.2,'4');
@@ -57,6 +45,7 @@ rect('h_s',en[1]-HX0+0.16,en[1]-HX0+0.24,1.2,1.3,0x3b3f3c,0.009);              /
 inRoom('hall',function(){
   [[-3.6,L+1.6],[2.2,L+1.6],[-3.6,L+4.8],[2.2,L+4.8]].forEach(function(q){K.ceilDisc(null,q[0],q[1],'L:hall');});
   box(0.6,0.014,0.4,0x7a6a4a,(en[0]+en[1])/2,0.007,L+0.3).castShadow=false;    // doormat outside our door
+  const ed=A.door('entrance'); box(0.83,2.03,0.004,0x9a9fa1,0.425,1.02,0.023,ed.p); box(0.12,0.025,0.05,0x5f6466,0.72,1.05,0.05,ed.p);   // our door is grey on the lobby side too
   /* the wide column opposite our door, clad in terrazzo to half height like the walls */
   const cx=(en[0]+en[1])/2, cz=L+2.5, ct=terrazzo.clone(); ct.needsUpdate=true; ct.repeat.set(0.9,1.35);
   box(0.9,H,0.5,0xf1efe8,cx,H/2,cz); box(0.92,1.37,0.52,A.MT(ct,null,true),cx,0.685,cz);
@@ -85,11 +74,11 @@ inRoom('hall',function(){
   [[BRX+1.95,1.82,0xfbfaf6],[BRX+2.3,1.68,0xf0d21c],[BRX+2.45,1.86,0x9fc4d6]].forEach(function(q){box(0.2,0.16,0.004,q[2],q[0],q[1],HZ-0.046);});
   K.fiddle(null,HX0+0.5,HZ-0.5,1.9,3);
   box(1.4,0.05,0.36,0x8a6a48,HX0+0.3,0.44,L+3.3).rotation.y=R/2; [[HX0+0.3,L+2.75],[HX0+0.3,L+3.85]].forEach(function(q){box(0.3,0.44,0.05,0x2b2f2c,q[0],0.22,q[1]);});
-  /* the bridge from the street: a concrete slab over the garden-level gap, iron railings, no door */
-  box(2.2,0.22,BRZ-HZ,0xc9c4b8,BRX,-0.11,(HZ+BRZ)/2);
-  [-1.07,1.07].forEach(function(dx){
+  /* the bridge from the street: a short, narrow concrete slab over the gap, iron railings, no door */
+  box(BRW,0.22,BRZ-HZ+0.1,0xc9c4b8,BRX,-0.11,(HZ+BRZ)/2);
+  [-BRW/2+0.03,BRW/2-0.03].forEach(function(dx){
     box(0.05,0.05,BRZ-HZ,0x2b2f2c,BRX+dx,1.0,(HZ+BRZ)/2); box(0.05,0.05,BRZ-HZ,0x2b2f2c,BRX+dx,0.12,(HZ+BRZ)/2);
-    for(let z=HZ+0.15;z<BRZ;z+=0.16) box(0.02,0.86,0.02,0x2b2f2c,BRX+dx,0.56,z);
+    for(let z=HZ+0.08;z<BRZ;z+=0.12) box(0.02,0.86,0.02,0x2b2f2c,BRX+dx,0.56,z);
   });
 });
 
@@ -152,6 +141,6 @@ inRoom('out',function(){
   });
   // a tree and a bench by the entrance on the street side
   cyl(0.12,3.2,0x6b4a2f,-8.5,1.6,LZ+2.0,o,8); sph(1.3,0x3f7d4a,-8.5,3.9,LZ+2.0,o); sph(0.9,0x4f9160,-9.2,3.4,LZ+2.3,o);
-  tree(-4.5,L+9,3.0,0.9); tree(4,L+9.2,3.4,1);
+
 });
 })();

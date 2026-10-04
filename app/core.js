@@ -65,7 +65,7 @@ const rooms=A.rooms={
   bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
-  hall:{name:'Lobby', rs:[[-6.5,5.3,L,L+6.5],[-1.7,0.5,L+6.5,L+11.5]], win:null, dl:0.75, node:'hall', on:true},
+  hall:{name:'Lobby', rs:[[-6.5,5.3,L,L+6.5],[-1.25,0.05,L+6.5,L+7.6]], win:null, dl:0.75, node:'hall', on:true},
   out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true}       // garden, street and the neighbouring building
 };
 const chans=A.chans={};
