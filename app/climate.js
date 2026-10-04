@@ -92,10 +92,10 @@ const h=0.15, X0=-0.3, Z0=AZ-0.3, NX=Math.ceil((KX+0.6-X0)/h), NZ=Math.ceil((L+0
 const u=new Float32Array(N), v=new Float32Array(N), u2=new Float32Array(N), v2=new Float32Array(N), T=new Float32Array(N), T2=new Float32Array(N);
 const p=new Float32Array(N), dv=new Float32Array(N), solid=new Uint8Array(N), pfix=new Float32Array(N), isOpen=new Uint8Array(N), roomOf=new Int8Array(N);
 const ROOMS=['living','kitchen','bed1','bed2','bath','wc'];
-const air={mode:'off',open:{kitchen:true,bed1:true,bed2:false,bath:false},door:{bed1:true,bed2:true,bath:false,wc:false,entrance:false},wind:'W',speed:3,ac:{kitchen:true,bed1:false},set:23,fan:2};
+const air={mode:'off',open:{kitchen:true,bed1:true,bed2:false,bath:false},door:{bed1:true,bed2:true,bath:false,wc:false,entrance:false},wind:'W',speed:3,ac:{kitchen:true,bed1:false,bed2:false},set:23,fan:2};
 const WIN_NAMES=[['kitchen','Kitchen'],['bed1','Bedroom 1'],['bed2','Bedroom 2'],['bath','Bathroom']], DOOR_NAMES=[['bed1','Bedroom 1'],['bed2','Bedroom 2'],['bath','Bathroom'],['wc','Guest toilet'],['entrance','Front door']];
 const WIND={W:[0,-1],E:[0,1],N:[1,0],S:[-1,0]};          // direction the air travels, in (x,z): west wind blows toward the east (-z)
-const AC=[{id:'kitchen',x:KX-0.45,z:1.3,dx:-1,dz:0},{id:'bed1',x:1.3,z:AZ+0.45,dx:0,dz:1}];
+const AC=[{id:'kitchen',x:KX-0.45,z:1.3,dx:-1,dz:0},{id:'bed1',x:1.3,z:AZ+0.45,dx:0,dz:1},{id:'bed2',x:D.BX-0.45,z:-1.25,dx:-1,dz:0}];
 const DOORS={far:['bed1','bed2'],a_door:['bed1'],b_door:['bed2'],end:['entrance'],tv:['bath'],ba_w:['bath'],blk_n:['wc'],wc_n:['wc']};      // which door each opening in a wall is
 const WINKEY={win:'kitchen',a_far:'bed1',b_r:'bed2',b_far:'bed2',ba_e:'bath'};
 const ix=function(x){return Math.floor((x-X0)/h);}, iz=function(z){return Math.floor((z-Z0)/h);};

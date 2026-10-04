@@ -212,6 +212,7 @@ A.sunPatch('bed2',BX-0.05,-1.25,1.6,2.2,-R/2);
 inRoom('bed2',function(){
   const n=G(null,'n'), d=G(null,'abc'), l=bl, kz=-2.1, dkz=-1.25;
   K.ceilDisc(null,(l+BX)/2,-1.9,'L:bed2');
+  box(0.22,0.28,0.85,0xf6f7f5,BX-0.11,2.5,dkz);                         // air conditioner above the big window
   box(0.5,1.9,1.17,0xf8f8f6,NX+0.25,0.95,-1.27); [-1.66,-1.27,-0.88].forEach(function(z){box(0.006,1.82,0.37,0xfdfdfb,NX+0.503,0.97,z);}); box(0.004,1.4,0.12,0xb9c6cc,NX+0.508,1.05,-1.27);
   box(0.36,0.3,0.5,0x202a44,NX+0.25,2.05,-1.45,n); box(0.36,0.3,0.4,0x3b3d40,NX+0.25,2.05,-0.95,n);
   box(0.45,1.0,0.56,0xc7a878,NX+0.225,0.5,-0.36); [0.34,0.67].forEach(function(y){box(0.006,0.012,0.54,0x7d674a,NX+0.452,y,-0.36);});
