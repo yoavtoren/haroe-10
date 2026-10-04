@@ -446,7 +446,10 @@ const fixedLabels=[
  {label:'Guest toilet', pos:new THREE.Vector3(3.2,1.6,L-0.5)},
  {label:'Stairs', pos:new THREE.Vector3(6.6,1.9,L+1.6)},
  {label:'Lobby', pos:new THREE.Vector3(-3.2,1.6,L+3.8)},
- {label:'Bridge to the street', pos:new THREE.Vector3(-0.6,1.5,L+6.8)},
+ {label:'Bridge to the street', pos:new THREE.Vector3(-0.6,1.5,L+7.3)},
+ {label:'Second bridge', pos:new THREE.Vector3(3.6,1.5,L+7.3)},
+ {label:'Square and café', pos:new THREE.Vector3(-3.5,1.6,L+19)},
+ {label:'Haroe St', pos:new THREE.Vector3(5,-0.6,L+28.5)},
  {label:'Yard, one floor down', pos:new THREE.Vector3(9,-1.6,-1)},
  {label:'≈ '+L.toFixed(1)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
  {label:'≈ '+W.toFixed(1)+' m', pos:new THREE.Vector3(W/2,0.05,2.3), dim:true},
@@ -501,10 +504,10 @@ A.viewPos=function(v){
   return new THREE.Vector3(t.x+d*0.5,d*0.62,t.z+d*0.6);
 };
 A.setView=function(v,instant){
-  $('b3d').setAttribute('aria-pressed',v==='3d'); $('bTop').setAttribute('aria-pressed',v==='top');
-  A.fly(A.viewPos(v),A.home,700,instant);
+  $('b3d').setAttribute('aria-pressed',v==='3d'); $('bTop').setAttribute('aria-pressed',v==='top'); $('bStreet').setAttribute('aria-pressed',v==='street');
+  if(v==='street') A.fly(A.streetView[0],A.streetView[1],900,instant); else A.fly(A.viewPos(v),A.home,700,instant);
 };
-$('b3d').onclick=function(){A.setView('3d');}; $('bTop').onclick=function(){A.setView('top');};
+$('b3d').onclick=function(){A.setView('3d');}; $('bTop').onclick=function(){A.setView('top');}; $('bStreet').onclick=function(){A.setView('street');};
 A.setLabels=function(on){S.labels=on; $('cLabels').checked=on; $('bLabels').setAttribute('aria-pressed',on); $('bLabels').textContent=on?'Hide labels':'Show labels';};
 $('cLabels').onchange=function(e){A.setLabels(e.target.checked);}; $('bLabels').onclick=function(){A.setLabels(!S.labels);};
 $('bMenu').onclick=function(){const off=document.body.classList.toggle('nomenu'); $('bMenu').textContent=off?'Show menu':'Hide menu'; $('bMenu').setAttribute('aria-pressed',!off);};
