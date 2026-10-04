@@ -100,9 +100,11 @@ inRoom('kitchen',function(){
   const sage=function(){return A.reg(new THREE.MeshLambertMaterial({color:KGREEN,emissive:0x151810}));};   // lifted a little so it reads as pastel on the shaded fronts
   [[n,0x34373c,0xf0d21c],[d,sage(),sage()]].forEach(function(v){   // carcasses: charcoal + yellow today, pastel green in the redesign
     box(0.47,0.76,0.58,v[1],x0+0.235,0.5,KZ-0.29,v[0]); box(0.77,0.76,0.58,v[1],x1-0.385,0.5,KZ-0.29,v[0]);          // either side of the sink
-    box(0.56,0.76,0.03,v[1],x1-1.05,0.5,KZ-0.565,v[0]); box(0.56,0.54,0.55,v[1],x1-1.05,0.39,KZ-0.275,v[0]);             // front panel and the cupboard under the basin
+    [x1-1.265,x1-0.835].forEach(function(x){box(0.13,0.76,0.03,v[1],x,0.5,KZ-0.565,v[0]);});                              // fixed strips either side of the pull-out bin (built in life.js)
     box(1.8,0.76,0.57,v[1].isMaterial?sage():v[1],(c0+c1)/2,0.5,0.295,v[0]);                                             // backs stop 1 cm short of the wall plane, or they flicker through it into bedroom 2
-    box(1.15,0.58,0.35,v[2],x0+0.9,1.76,KZ-0.175,v[0]);
+    box(0.58,0.58,0.35,v[2],x0+1.185,1.76,KZ-0.175,v[0]);                                                                 // wall cabinet: the right half is closed,
+    box(0.57,0.02,0.35,v[2],x0+0.61,2.04,KZ-0.175,v[0]); box(0.57,0.02,0.35,v[2],x0+0.61,1.48,KZ-0.175,v[0]);              // the left half is a real cupboard with a shelf
+    box(0.02,0.54,0.35,v[2],x0+0.335,1.76,KZ-0.175,v[0]); box(0.55,0.54,0.02,0xf4f1ea,x0+0.61,1.76,KZ-0.012,v[0]); box(0.53,0.015,0.3,0xf4f1ea,x0+0.61,1.765,KZ-0.17,v[0]);
   });
   box(0.006,0.56,0.004,0x6c7a55,x0+0.9,1.76,zf+0.248,d);                     // wall cabinet door split
   box(1.8,0.12,0.5,0x1d1f21,(x0+x1)/2,0.06,KZ-0.25); const sx=x1-1.05, sz=KZ-0.32;        // counter with a cut-out, and the basin sunk into it
@@ -110,14 +112,21 @@ inRoom('kitchen',function(){
   box(0.56,0.015,0.4,0xd9d5c8,sx,0.7,sz); [[-0.275,0],[0.275,0]].forEach(function(q){box(0.012,0.22,0.4,0xcfcbbd,sx+q[0],0.81,sz);}); [[-0.195],[0.195]].forEach(function(q){box(0.56,0.22,0.012,0xcfcbbd,sx,0.81,sz+q[0]);});
   cyl(0.025,0.004,0x8d9296,sx,0.71,sz,null,12);
   [x1-0.6,x1-0.9,x1-1.2].forEach(function(x){box(0.006,0.74,0.004,line,x,0.5,zf-0.002);});
-  [x1-0.56,x1-0.87,x1-0.93,x1-1.24].forEach(function(x){box(0.012,0.13,0.02,line,x,0.78,zf-0.012);});
+  [x1-0.56,x1-0.87,x1-1.24].forEach(function(x){box(0.012,0.13,0.02,line,x,0.78,zf-0.012);});
   // (the basin is built with the counter above)
-  box(0.03,0.3,0.03,0xb9bdc0,x1-1.05,1.07,KZ-0.1); box(0.03,0.03,0.16,0xb9bdc0,x1-1.05,1.21,KZ-0.17);
+  // gooseneck tap: riser, an arc, a short nozzle over the middle of the basin, and a lever
+  cyl(0.022,0.03,0xc9cdd0,sx,0.935,KZ-0.09,null,14); cyl(0.013,0.26,0xc9cdd0,sx,1.07,KZ-0.09,null,10);
+  const arc=A.torus(0.085,0.013,0xc9cdd0,sx,1.2,KZ-0.175,null,R); arc.rotation.y=R/2;
+  cyl(0.013,0.05,0xc9cdd0,sx,1.175,KZ-0.26,null,10); box(0.012,0.012,0.07,0xc9cdd0,sx+0.04,0.97,KZ-0.11);
+  A.sink={x:sx,z:KZ-0.26,y1:1.15,y0:0.715};
+  box(0.3,0.02,0.5,0x2a2c2e,sx,0.135,KZ-0.3);                                 // floor of the bin compartment
   // things on the counter and on top of the cabinet today; cleared in the redesign
-  box(0.5,0.2,0.34,0x2a2c2e,x1-0.3,1.02,KZ-0.28,n);                   // dish rack
+  box(0.46,0.02,0.32,0x2a2c2e,x1-0.3,0.93,KZ-0.28,n); [-0.22,0.22].forEach(function(o){box(0.012,0.14,0.32,0x2a2c2e,x1-0.3+o,1.0,KZ-0.28,n);});   // dish rack with a few plates and a mug drying
+  for(let i=0;i<5;i++){const pl=cyl(0.1,0.012,0xfbfaf6,x1-0.44+i*0.055,1.04,KZ-0.28,n,20); pl.rotation.z=R/2-0.18;} cyl(0.035,0.09,0x9dc2d5,x1-0.14,0.985,KZ-0.22,n,14);
   box(0.3,0.42,0.005,0xc8b790,x1-0.08,1.13,KZ-0.33,n);                // cutting board
-  box(0.2,0.3,0.24,0xe8e2c4,x0+0.25,1.07,KZ-0.3,n);                   // kettle
-  cyl(0.04,0.3,0x7fb39a,x0+0.55,1.07,KZ-0.2,n);                        // bottle
+  cyl(0.085,0.2,0xe8e2c4,x0+0.2,1.02,KZ-0.3,n,20,0.07); cyl(0.07,0.02,0x2a2c2e,x0+0.2,1.13,KZ-0.3,n,18,0.05); sph(0.014,0x2a2c2e,x0+0.2,1.15,KZ-0.3,n);      // kettle: body, lid, spout, handle
+  box(0.07,0.03,0.03,0xe8e2c4,x0+0.29,1.08,KZ-0.3,n).rotation.z=0.5; A.torus(0.06,0.01,0x2a2c2e,x0+0.11,1.04,KZ-0.3,n,R).rotation.z=R/2;
+  cyl(0.04,0.3,0x7fb39a,x0+0.4,1.07,KZ-0.14,n);                        // bottle
   box(0.3,0.18,0.1,0xe8c93a,x0+0.5,2.14,KZ-0.3,n); box(0.25,0.3,0.12,0xf4f2ee,x0+0.95,2.2,KZ-0.3,n); // boxes on top
   // fridge in the opening corner, side covered with photos
   const fx=W+0.36, fz=KZ-0.36;
@@ -143,18 +152,18 @@ inRoom('kitchen',function(){
   box(0.48,0.28,0.36,0xe9e9e6,fx+0.02,1.89,fz,n); box(0.3,0.2,0.005,0x2b2d2f,fx-0.03,1.89,fz-0.182,n); // microwave
   cyl(0.11,0.24,0x1f2a52,fx-0.18,2.15,fz-0.1,n); box(0.18,0.3,0.2,0x1c2a4a,fx+0.25,1.9,fz,n);           // whey jar, bug zapper
   // cooktop side: 8 cm filler | oven + hob 60 | door | drawers, counted from the window wall.
-  // The hob is 45 cm wide and sits close to the window end.
+  // The hob is a two-ring domino: the rings sit one behind the other, toward the left of the oven housing.
   box(1.8,0.12,0.49,0x1d1f21,(c0+c1)/2,0.06,0.255); box(1.84,0.04,0.61,0xf4f3ee,(c0+c1)/2,0.9,0.315);
   const hx=c1-0.38;
   [c1-0.08,c1-0.68,c1-1.2].forEach(function(x){box(0.006,0.74,0.004,line,x,0.5,0.602);});
   box(0.56,0.56,0.006,0x0f1011,hx,0.56,0.603); box(0.44,0.02,0.03,0x8d9296,hx,0.78,0.615);            // oven
-  box(0.45,0.012,0.4,0x101112,hx,0.926,0.3);                                                          // hob
-  [[-0.1,-0.09],[0.1,-0.09],[-0.1,0.09],[0.1,0.09]].forEach(function(q){cyl(0.06,0.004,0x2a2c2e,hx+q[0],0.934,0.3+q[1],null,18);});
+  A.rbox(0.3,0.012,0.5,0x101112,hx-0.1,0.926,0.31,null,0.004);                                        // hob
+  [[0.19,0.062],[0.42,0.08]].forEach(function(q){cyl(q[1],0.004,0x2a2c2e,hx-0.1,0.934,q[0],null,28); A.torus(q[1]*0.6,0.0025,0x55595c,hx-0.1,0.9365,q[0]).rotation.x=R/2;});
+  [-0.03,0.03].forEach(function(o){cyl(0.008,0.002,0x8d9296,hx-0.1+o,0.933,0.535,null,10);});                 // touch controls at the front edge
   box(0.012,0.13,0.02,line,c1-0.74,0.78,0.612);
-  [0.34,0.62].forEach(function(y){box(0.58,0.006,0.004,line,c0+0.3,y,0.602);}); [0.26,0.52,0.78].forEach(function(y){box(0.26,0.014,0.02,line,c0+0.3,y,0.612);});
+  [0.34,0.62].forEach(function(y){box(0.58,0.006,0.004,line,c0+0.3,y,0.602);}); [0.26,0.78].forEach(function(y){box(0.26,0.014,0.02,line,c0+0.3,y,0.612);});
   box(0.5,0.03,0.11,0x9a6b3f,c0+0.3,1.6,0.065);                                                     // spice shelf
   [0,1,2,3,4].forEach(function(i){cyl(0.028,0.11,[0xc63d2f,0xd9b23a,0x5b8f4a,0xb9772e,0xe5e0d2][i],c0+0.12+i*0.09,1.67,0.06);});
-  cyl(0.175,0.62,0x2f8f95,KX-0.42,0.31,1.65,n); cyl(0.165,0.08,0x202325,KX-0.42,0.66,1.65,n);       // bin (gone in the redesign)
   K.ceilDisc(null,W+1.3,1.4,'L:kitchen');
   // redesign: pendant, light strip under the wall cabinet, runner, hanging plant
   box(1.1,0.012,0.02,A.lampMat('L:kitchen',0xf4f1e6,0xffe9c4,1),x0+0.9,1.462,KZ-0.33,d);
@@ -175,7 +184,8 @@ inRoom('bed1',function(){
   box(1.2,0.03,0.6,0xd9bf8c,0.65,0.74,AZ+0.32);                         // desk under the window
   [[0.08,AZ+0.05],[1.22,AZ+0.05],[0.08,AZ+0.59],[1.22,AZ+0.59]].forEach(function(p){box(0.03,0.73,0.03,0xf2f2f0,p[0],0.365,p[1]);});
   box(0.56,0.33,0.03,0x111315,0.7,1.08,AZ+0.16); box(0.2,0.14,0.12,0x111315,0.7,0.83,AZ+0.16); // monitor
-  box(0.5,0.08,0.5,0xd8d8d2,0.65,0.48,AZ+0.95); box(0.46,0.6,0.06,0xd8d8d2,0.65,0.85,AZ+1.2); cyl(0.03,0.4,0x8d9092,0.65,0.24,AZ+0.95); cyl(0.28,0.04,0x8d9092,0.65,0.04,AZ+0.95); // chair
+  const c1=G(); c1.position.set(0.65,0,AZ+0.95); c1.rotation.y=R/2; K.officeChair(c1,0xd8d8d2);                    // chair (faces the desk)
+  A.desks={desk1:{chair:c1,dir:[0,-1],screen:K.screen(null,0.5,0.28,0.7,1.08,AZ+0.177,0)}};
   seat({id:'desk1',label:'Desk by the window',room:'bed1',x:0.65,z:AZ+0.95,y:0.52,h:R,type:'sit'});
   box(0.38,1.75,0.38,0xeef0f1,0.25,0.875,-0.25); [0.35,0.7,1.05,1.4].forEach(function(y){box(0.385,0.012,0.385,0xd5d8da,0.25,y,-0.25);});   // plastic cube tower by the door
   box(0.6,2.3,1.5,0xe9dfcf,rn-0.3,1.15,-1.0);                           // built-in closet beside the door
@@ -191,6 +201,7 @@ inRoom('bed1',function(){
   box(0.03,0.36,0.62,0x111315,r-0.16,1.1,dz-0.1,d); box(0.1,0.16,0.18,0x111315,r-0.16,0.84,dz-0.1,d);
   box(0.14,0.012,0.4,0xe9e9e6,r-0.42,0.765,dz-0.1,d); box(0.24,0.012,0.32,0xb9bdc0,r-0.35,0.765,dz+0.42,d);
   const ch=G(d); ch.position.set(r-1.05,0,dz); K.officeChair(ch,0x8fbd9b); A.shop(ch,'Desk chair','office chair','ikea');
+  A.desks.desk2={chair:ch,dir:[1,0],screen:K.screen(d,0.56,0.3,r-0.177,1.1,dz-0.1,-R/2)};
   seat({id:'desk2',label:'New desk',room:'bed1',x:r-1.05,z:dz,y:0.52,h:R/2,type:'sit',only:'abc'});
   [1.32,1.68].forEach(function(y,i){box(0.22,0.03,1.2,0xc99a5b,r-0.11,y,dz,d); K.books(d,r-0.12,y+0.015,dz-0.25+i*0.5,0.5,0.22,0.16,71+i);});
   K.bush(d,r-0.12,1.335,dz+0.45,0.07); cyl(0.05,0.18,BLUE,r-0.12,1.785,dz-0.4,d,12,0.03);
@@ -226,9 +237,12 @@ inRoom('bed2',function(){
   box(0.06,0.06,0.3,0x25272b,BX-0.15,1.6,AZ+0.95);                      // TV arm
   // today: bed with its head on the far wall, bedside table in the 40 cm beside it, bike, pine desk under the window
   const bx=BX-0.4-0.75;
-  box(1.5,0.14,2.0,0xc9a66b,bx,0.1,AZ+1.02,n); A.rbox(1.5,0.22,2.0,0xf1efec,bx,0.3,AZ+1.02,n); A.rbox(1.3,0.1,0.4,0xfafafa,bx,0.46,AZ+0.3,n);
-  seat({id:'bedL',label:'Bed, left side',room:'bed2',x:bx-0.36,z:AZ+1.12,y:0.41,h:0,type:'lie',only:'n'});
-  seat({id:'bedR',label:'Bed, right side',room:'bed2',x:bx+0.36,z:AZ+1.12,y:0.41,h:0,type:'lie',only:'n'});
+  box(1.5,0.14,2.0,0xc9a66b,bx,0.1,AZ+1.02,n); A.rbox(1.5,0.22,2.0,0xf1efec,bx,0.3,AZ+1.02,n,0.06); [-0.37,0.37].forEach(function(dx){A.rbox(0.62,0.09,0.4,0xfafafa,bx+dx,0.453,AZ+0.3,n,0.042);});
+  const fn=G(n); A.rbox(1.5,0.07,1.25,0xe9e2d4,bx,0.44,AZ+1.4,fn,0.03);                                      // today's blanket, folded flat
+  const cn=G(n); cn.position.set(bx,0,AZ+2.03); A.rbox(1.52,0.31,1.32,0xe9e2d4,0,0.565,-0.66,cn,0.12); cn.visible=false;
+  A.beds={n:{flat:fn,cover:cn,axis:'z'}};
+  seat({id:'bedL',label:'Bed, left side',room:'bed2',x:bx-0.36,z:AZ+1.04,y:0.41,h:0,type:'lie',only:'n'});
+  seat({id:'bedR',label:'Bed, right side',room:'bed2',x:bx+0.36,z:AZ+1.04,y:0.41,h:0,type:'lie',only:'n'});
   box(0.38,0.4,0.36,0xc79a5c,BX-0.2,0.2,AZ+0.22,n);
   box(0.04,0.58,1.0,0x25272b,BX-0.4,1.6,AZ+0.95,n).rotation.y=-0.75;
   (function(){const g=G(n); g.position.set(BX-0.45,0,AZ+2.3); g.rotation.y=R/2+0.15; g.userData.nc=true;      // mountain bike, between the bed and the desk
@@ -238,26 +252,30 @@ inRoom('bed2',function(){
   box(0.7,0.05,1.5,0xd2b07a,BX-0.36,0.74,dkz,n);
   [dkz-0.7,dkz+0.7].forEach(function(z){box(0.08,0.72,0.08,0xd2b07a,BX-0.66,0.36,z,n); box(0.08,0.72,0.08,0xd2b07a,BX-0.08,0.36,z,n);});
   box(0.04,0.36,0.62,0x111315,BX-0.2,1.1,dkz-0.1,n); box(0.14,0.14,0.2,0x111315,BX-0.2,0.84,dkz-0.1,n); box(0.16,0.02,0.45,0x1b1c1e,BX-0.42,0.775,dkz-0.1,n);
-  box(0.5,0.08,0.5,0x2a2d31,BX-1.1,0.48,dkz,n); box(0.06,0.6,0.46,0x2a2d31,BX-1.36,0.85,dkz,n); cyl(0.03,0.4,0x2a2d31,BX-1.1,0.24,dkz,n); cyl(0.3,0.04,0x2a2d31,BX-1.1,0.04,dkz,n);
+  const c3=G(n); c3.position.set(BX-1.1,0,dkz); K.officeChair(c3,0x2a2d31);
+  A.desks.desk3={chair:c3,dir:[1,0],screen:K.screen(n,0.56,0.3,BX-0.222,1.1,dkz-0.1,-R/2)};
   seat({id:'desk3',label:'Desk (bedroom 2)',room:'bed2',x:BX-1.1,z:dkz,y:0.52,h:R/2,type:'sit',only:'n'});
   // proposals: the bed turns 90 degrees to face the TV, a reading nook replaces the desk, the bike goes
   const bz=AZ+0.8;
   A.rbox(2.04,0.12,1.54,0xc99a5b,l+1.03,0.16,bz,d,0.02); [[0.1,-0.68],[1.96,-0.68],[0.1,0.68],[1.96,0.68]].forEach(function(q){cyl(0.03,0.1,0xc99a5b,l+q[0],0.05,bz+q[1],d,10);});   // oak frame on short legs
   A.rbox(2.0,0.2,1.5,0xfbfaf6,l+1.03,0.31,bz,d,0.07);                    // mattress
-  A.rbox(1.32,0.09,1.56,0xf3efe6,l+1.36,0.42,bz,d,0.04); A.rbox(0.16,0.1,1.56,0xffffff,l+0.74,0.425,bz,d,0.045);     // duvet with its turned-back edge
-  [-0.36,0.36].forEach(function(dz){A.rbox(0.42,0.13,0.64,0xffffff,l+0.33,0.47,bz+dz,d,0.06); const p2=A.rbox(0.36,0.12,0.58,0xe9eef0,l+0.26,0.56,bz+dz,d,0.055); p2.rotation.z=0.5;});
+  const fp=G(d); A.rbox(1.32,0.09,1.56,0xf3efe6,l+1.36,0.42,bz,fp,0.04); A.rbox(0.16,0.1,1.56,0xffffff,l+0.74,0.425,bz,fp,0.045);     // duvet with its turned-back edge
+  [-0.36,0.36].forEach(function(dz){A.rbox(0.42,0.09,0.64,0xffffff,l+0.33,0.453,bz+dz,d,0.042); const p2=A.rbox(0.36,0.12,0.58,0xe9eef0,l+0.26,0.56,bz+dz,fp,0.055); p2.rotation.z=0.5;});      // sleeping pillows; the propped ones go with the made bed
   A.rbox(0.07,0.7,1.56,0xc99a5b,l+0.04,0.72,bz,d,0.025); [-0.5,0,0.5].forEach(function(dz){box(0.006,0.6,0.01,0xa9825a,l+0.078,0.72,bz+dz,d);});
-  A.rbox(0.62,0.05,1.6,SAGE,l+1.68,0.475,bz,d,0.022); K.cushion(d,BLUE,l+0.62,0.6,bz-0.12,0.85,0.9); K.cushion(d,SAGE,l+0.66,0.58,bz+0.22,0.75,1.0);
-  seat({id:'bedL',label:'Bed, window side',room:'bed2',x:l+1.15,z:bz-0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
-  seat({id:'bedR',label:'Bed, room side',room:'bed2',x:l+1.15,z:bz+0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
+  A.rbox(0.62,0.05,1.6,SAGE,l+1.68,0.475,bz,fp,0.022); K.cushion(fp,BLUE,l+0.62,0.6,bz-0.12,0.85,0.9); K.cushion(fp,SAGE,l+0.66,0.58,bz+0.22,0.75,1.0);
+  const cp=G(d); cp.position.set(l+2.03,0,bz); A.rbox(1.3,0.31,1.58,0xf3efe6,-0.65,0.565,0,cp,0.12); A.rbox(0.14,0.33,1.58,0xffffff,-1.3,0.565,0,cp,0.07); A.rbox(0.5,0.32,1.6,SAGE,-0.3,0.57,0,cp,0.12); cp.visible=false;
+  A.beds.p={flat:fp,cover:cp,axis:'x'};
+  seat({id:'bedL',label:'Bed, window side',room:'bed2',x:l+1.07,z:bz-0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
+  seat({id:'bedR',label:'Bed, room side',room:'bed2',x:l+1.07,z:bz+0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
   box(0.36,0.42,0.36,0xc99a5b,l+0.2,0.21,bz+0.96,d); K.tableLamp(d,l+0.2,0.42,bz+0.96,'L:bed2');
   box(0.04,0.58,1.0,0x25272b,BX-0.06,1.4,bz,d);                         // TV flat on the wall, straight ahead of the bed
-  const nk=G(d); nk.position.set(BX-0.72,0,dkz); nk.rotation.y=R-0.35; K.armchair(nk,BLUE,0x86adc0); K.cushion(nk,0xfbfaf6,-0.12,0.62,0.05,0.9,0.35);
+  const nk=G(d); nk.position.set(BX-0.62,0,dkz+0.4); nk.rotation.y=R-0.35;      // toward the door wall, so there is room to walk past the column to the bed
+  K.armchair(nk,BLUE,0x86adc0); K.cushion(nk,0xfbfaf6,-0.12,0.62,0.05,0.9,0.35);
   A.shop(nk,'Reading armchair','STRANDMON','ikea','A wing chair. Pick a light blue or beige cover.');
-  seat({id:'nook',label:'Reading nook',room:'bed2',x:BX-0.72,z:dkz,y:0.43,h:R-0.35+R/2,type:'sit',only:'abc',recline:0.2});
-  const fl=G(d); fl.position.set(BX-0.26,0,dkz-0.78); K.floorLamp(fl,'L:bed2'); A.shop(fl,'Reading lamp','floor lamp reading','ikea');
-  K.roundRug(d,BX-0.95,dkz,0.8,0xd8ccb2,0xefe7d6);
-  const st=G(d); cyl(0.18,0.03,0xc99a5b,BX-0.3,0.5,dkz+0.75,st,24); cyl(0.02,0.5,0xfbfaf6,BX-0.3,0.25,dkz+0.75,st,8); K.bookStack(st,BX-0.3,0.515,dkz+0.75,3,5);
+  seat({id:'nook',label:'Reading nook',room:'bed2',x:BX-0.62,z:dkz+0.4,y:0.43,h:R-0.35+R/2,type:'sit',only:'abc',recline:0.2});
+  const fl=G(d); fl.position.set(BX-0.26,0,dkz+0.95); K.floorLamp(fl,'L:bed2'); A.shop(fl,'Reading lamp','floor lamp reading','ikea');
+  K.roundRug(d,BX-0.9,dkz+0.3,0.8,0xd8ccb2,0xefe7d6);
+  const st=G(d); cyl(0.18,0.03,0xc99a5b,BX-0.3,0.5,dkz-0.25,st,24); cyl(0.02,0.5,0xfbfaf6,BX-0.3,0.25,dkz-0.25,st,8); K.bookStack(st,BX-0.3,0.515,dkz-0.25,3,5);
   A.shop(st,'Side table','GLADOM tray table','ikea');
   K.curtain(d,BX-0.07,AZ+2.2,0.2,false,0.2,2.35); K.curtain(d,BX-0.07,AZ+4.1,0.2,false,0.2,2.35);
   K.pothos(d,kx-0.15,1.47,kz,0.5,17); K.bush(d,kx+0.2,1.47,kz,0.07);
@@ -295,7 +313,14 @@ inRoom('bath',function(){
   box(0.6,0.8,0.02,0xb9c9cf,vx,1.6,BA.z1-0.015); box(0.5,0.03,0.12,0xb98a4e,vx,1.15,BA.z1-0.07);
   const wx=BA.x0+0.5, wz=BA.z0+0.33;                                     // washing machine, basket and bucket on top, boiler cabinet above
   box(0.6,0.85,0.6,0xfbfbfa,wx,0.425,wz);
-  A.torus(0.17,0.03,0xd7d9da,wx,0.42,wz+0.3); cyl(0.15,0.01,0x1a1c1f,wx,0.42,wz+0.302).rotation.x=R/2;
+  A.torus(0.17,0.03,0xd7d9da,wx,0.42,wz+0.3);
+  const drum=new THREE.Mesh(new THREE.CircleGeometry(0.15,24),A.MT(canvasTex(128,128,function(g){g.fillStyle='#1a1c1f'; g.fillRect(0,0,128,128);
+    [['#8fbd9b',40,50,30],['#d6a21e',80,44,24],['#3d5a80',64,84,30],['#f3ebdc',36,86,18]].forEach(function(q){g.fillStyle=q[0]; g.beginPath(); g.ellipse(q[1],q[2],q[3],q[3]*0.6,q[1]/20,0,7); g.fill();});})));
+  drum.position.set(wx,0.42,wz+0.303); scene.add(drum);
+  box(0.56,0.1,0.01,0xe9ebe9,wx,0.78,wz+0.302); cyl(0.03,0.02,0xd7d9da,wx-0.2,0.78,wz+0.31).rotation.x=R/2;
+  const wcv=document.createElement('canvas'); wcv.width=128; wcv.height=48; const wtex=new THREE.CanvasTexture(wcv);
+  const disp=new THREE.Mesh(new THREE.PlaneGeometry(0.17,0.06),new THREE.MeshBasicMaterial({map:wtex})); disp.position.set(wx+0.1,0.78,wz+0.309); scene.add(disp);
+  A.washer={x:wx,z:wz,drum:drum,canvas:wcv,tex:wtex};
   box(0.36,0.22,0.3,0xf2f0ea,wx-0.1,0.96,wz); cyl(0.13,0.3,0x17181a,wx+0.2,1.0,wz-0.05,null,16,0.15);
   box(0.64,0.75,0.62,0xfbfbfa,wx,2.2,wz); cyl(0.012,0.5,0x2b2d30,wx+0.22,1.58,wz-0.2,null,6);
   box(0.5,0.34,0.36,0xfbfbfa,BA.x1-0.28,0.42,tz); box(0.02,0.4,0.36,0xfbfbfa,BA.x1-0.03,0.72,tz);   // wall-hung toilet, facing the door
@@ -305,9 +330,16 @@ inRoom('bath',function(){
   box(0.02,2.0,0.95,glass,sx0,1.0,BA.z0+0.475).castShadow=false;
   box(0.9,2.0,0.02,glass,BA.x1-0.45,1.0,sz1).castShadow=false;
   box(0.03,2.01,0.03,0xb9bdc0,sx0,1.005,sz1);
-  box(0.3,0.02,0.3,0xb9bdc0,BA.x1-0.45,2.15,BA.z0+0.4); box(0.02,0.02,0.4,0xb9bdc0,BA.x1-0.45,2.17,BA.z0+0.2);
-  cyl(0.06,0.02,0xb9bdc0,BA.x1-0.6,1.1,BA.z0+0.02).rotation.x=R/2; box(0.02,0.5,0.02,0xb9bdc0,BA.x1-0.3,1.25,BA.z0+0.03);
+  // rain shower: riser pipe up the wall, an arm, a wide round head with a dotted face; mixer and a hand shower on a rail
+  const hx2=BA.x1-0.45, hz2=BA.z0+0.45, chrome=0xc9cdd0;
+  cyl(0.012,1.15,chrome,hx2,1.6,BA.z0+0.03,null,10); const sa=cyl(0.012,0.43,chrome,hx2,2.17,BA.z0+0.24,null,10); sa.rotation.x=R/2;
+  cyl(0.014,0.06,chrome,hx2,2.14,hz2,null,10); cyl(0.14,0.022,chrome,hx2,2.1,hz2,null,28,0.12);
+  cyl(0.128,0.004,A.MT(canvasTex(64,64,function(g){g.fillStyle='#8d9296'; g.fillRect(0,0,64,64); g.fillStyle='#2f3336'; for(let y=4;y<64;y+=7) for(let x=4;x<64;x+=7){g.beginPath(); g.arc(x,y,1.3,0,7); g.fill();}})),hx2,2.088,hz2,null,28);
+  cyl(0.055,0.03,chrome,hx2,1.08,BA.z0+0.02,null,18).rotation.x=R/2; box(0.02,0.02,0.09,chrome,hx2+0.03,1.08,BA.z0+0.07);
+  cyl(0.008,0.6,chrome,BA.x1-0.22,1.35,BA.z0+0.04,null,8); const hs=cyl(0.03,0.09,chrome,BA.x1-0.22,1.6,BA.z0+0.08,null,12,0.018); hs.rotation.x=0.9;
+  box(0.2,0.012,0.12,0xfbfbfa,BA.x1-0.72,1.15,BA.z0+0.07); cyl(0.03,0.14,0x8fbd9b,BA.x1-0.76,1.23,BA.z0+0.07,null,10); cyl(0.028,0.11,0xf3ebdc,BA.x1-0.68,1.215,BA.z0+0.07,null,10);   // shelf with bottles
+  A.showerGlass=glass;
   box(0.6,0.02,0.45,0x7fb59a,BA.x1-1.3,0.011,BA.z0+0.95).castShadow=false;
 });
-A.showerSpot={x:BA.x1-0.45,z:BA.z0+0.45,ax:BA.x1-1.25,az:BA.z0+0.95};
+A.showerSpot={x:BA.x1-0.45,z:BA.z0+0.45,ax:BA.x1-1.25,az:BA.z0+0.95,headY:2.085};
 })();

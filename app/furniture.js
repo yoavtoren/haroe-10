@@ -57,8 +57,7 @@ piece('tvOld',{label:'TV',h:1.6},function(g){            // white TV bench 148 x
 piece('station',{label:'Coffee station',h:2.25},function(g){   // 120 x 60 with pegboard above; back to the wall at -x
   box(0.6,0.04,1.2,OAK,0,0.9,0,g);
   [[-.26,-.56],[.26,-.56],[-.26,.56],[.26,.56]].forEach(function(p){box(0.04,0.88,0.04,0x1b1b1b,p[0],0.44,p[1],g);});
-  box(0.3,0.36,0.26,0xc9ccd0,-0.08,1.1,0.05,g);                 // espresso machine
-  box(0.16,0.4,0.14,0x2b2b2b,-0.1,1.12,-0.2,g);                 // grinder
+  K.espresso(g,-0.08,0.92,0.05,0); K.grinder(g,-0.1,0.92,-0.22,0);
   box(0.22,0.14,0.3,0xb98a4e,-0.1,0.99,0.42,g);                 // riser with jars
   cyl(0.05,0.1,0xe9e4d6,-0.08,1.11,0.36,g); cyl(0.045,0.08,0x3a4a5e,-0.08,1.1,0.49,g);
   box(0.012,0.56,0.76,0xf8f8f5,-0.29,1.75,-0.12,g);             // pegboard
@@ -75,9 +74,12 @@ piece('chairA',{seats:chairSeat('chairA','Dining chair, left')},function(g){K.ch
 piece('chairB',{seats:chairSeat('chairB','Dining chair, right')},function(g){K.chair(g,0xf4f4f1,0x8fb59c);});
 function rack(g){
   g.userData.nc=true;                       // light folding racks: people squeeze past them
-  const s=0xb9bec2; box(1.5,0.02,0.55,s,0,0.9,0,g);
-  const l1=box(0.02,1.0,0.02,s,-0.3,0.45,0,g); l1.rotation.z=0.5; const l2=box(0.02,1.0,0.02,s,0.3,0.45,0,g); l2.rotation.z=-0.5;
-  box(0.5,0.4,0.5,0x2c3a55,0.3,0.72,0,g); box(0.4,0.5,0.5,0xf2f2f2,-0.4,0.67,0,g);
+  const s=0xb9bec2;
+  [-0.27,0.27].forEach(function(z){box(1.5,0.016,0.016,s,0,0.9,z,g);}); [-0.742,0.742].forEach(function(x){box(0.016,0.016,0.556,s,x,0.9,0,g);});     // frame
+  for(let i=-3;i<=3;i++) box(1.48,0.006,0.006,s,0,0.9,i*0.068,g).castShadow=false;                                                               // wires
+  [-0.5,0.5].forEach(function(x){[-1,1].forEach(function(d){box(0.016,1.0,0.016,s,x,0.45,0,g).rotation.x=d*0.5;}); box(0.016,0.016,0.5,s,x,0.02,0,g);});   // crossed legs
+  const drape=function(x,w,c,front,back){A.rbox(w,0.014,0.2,c,x,0.912,0,g,0.006); box(w,front,0.012,c,x,0.912-front/2,-0.1,g); box(w,back,0.012,c,x,0.912-back/2,0.1,g);};
+  drape(0.34,0.44,0x2c3a55,0.42,0.3); drape(-0.36,0.36,0xf2f2f2,0.3,0.36);                                                                      // a towel and a shirt already drying
 }
 piece('rack1',{label:'Drying racks',h:1.3},rack); piece('rack2',{},rack);
 
@@ -189,7 +191,15 @@ piece('ladder',{label:'Plant shelf',h:2.0,isNew:true,shop:['Open shelf unit','JO
 piece('music',{label:'Record corner',h:1.2,isNew:true,shop:['Low sideboard','sideboard oak 120','ikea','About 120 × 40 × 60, for the turntable and speaker.']},function(g){              // B: music instead of coffee
   box(0.42,0.38,1.2,WHITE,0,0.45,0,g); box(0.44,0.025,1.22,OAK,0,0.652,0,g); [-0.2,0.2].forEach(function(z){box(0.004,0.34,0.004,0xb9b3a4,0.211,0.45,z,g);});
   [[-.17,-.55],[.17,-.55],[-.17,.55],[.17,.55]].forEach(function(p){cyl(0.016,0.26,OAK,p[0],0.13,p[1],g,8);});
-  box(0.34,0.06,0.42,OAK,0,0.695,-0.34,g); cyl(0.15,0.012,0x111214,0,0.731,-0.34,g,28); cyl(0.045,0.014,BLUE,0,0.733,-0.34,g,16);
+  A.rbox(0.36,0.06,0.44,OAK,0,0.695,-0.34,g,0.012);                                    // turntable: plinth, platter with a record, tonearm
+  cyl(0.155,0.01,0xb9bdc0,0.01,0.729,-0.36,g,32);
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(0.148,0.148,0.006,40),[M(0x111214),A.MT(canvasTex(128,128,function(c){
+    c.fillStyle='#101113'; c.fillRect(0,0,128,128); for(let q=22;q<62;q+=2){c.strokeStyle='rgba(255,255,255,'+(q%6?0.05:0.13)+')'; c.lineWidth=0.7; c.beginPath(); c.arc(64,64,q,0,7); c.stroke();}
+    const gr=c.createLinearGradient(0,0,128,128); gr.addColorStop(0.4,'rgba(255,255,255,0)'); gr.addColorStop(0.5,'rgba(255,255,255,0.22)'); gr.addColorStop(0.6,'rgba(255,255,255,0)'); c.fillStyle=gr; c.beginPath(); c.arc(64,64,62,0,7); c.fill();
+    c.fillStyle='#9fc4d6'; c.beginPath(); c.arc(64,64,19,0,7); c.fill(); c.fillStyle='#1F5A41'; c.fillRect(52,58,24,4); c.fillStyle='#fbfaf6'; c.beginPath(); c.arc(74,52,3,0,7); c.fill(); c.fillStyle='#101113'; c.beginPath(); c.arc(64,64,2,0,7); c.fill();}),null,true),M(0x111214)]);
+  disc.position.set(0.01,0.738,-0.36); disc.castShadow=true; g.add(disc);
+  const arm=G(g); arm.position.set(-0.13,0.75,-0.17); cyl(0.018,0.03,0xb9bdc0,0,-0.005,0,arm,12); box(0.008,0.008,0.21,0xd9dcdc,0,0.012,-0.1,arm); box(0.022,0.014,0.035,0x2b2b2b,0,0.006,-0.2,arm); arm.rotation.y=0.12;
+  g.userData.disc=disc; g.userData.arm=arm;
   K.books(g,0.0,0.665,0.02,0.2,0.31,0.3,55);
   box(0.2,0.3,0.2,0xe9e6df,-0.06,0.815,0.45,g); cyl(0.06,0.004,0x9aa39e,0.042,0.825,0.45,g,14).rotation.z=R/2;
   K.tableLamp(g,-0.04,0.665,0.23,'L:living',0.9);
@@ -204,11 +214,11 @@ A.inRoom('kitchen',function(){
   piece('cart',{label:'Coffee cart',h:1.4,isNew:true,shop:['Kitchen trolley','RÅSKOG trolley','ikea','Or a wood-topped trolley such as BEKVÄM.']},function(g){                // B: the coffee rolls into the kitchen
     [0.34,0.85].forEach(function(y){box(0.38,0.02,0.6,OAK,0,y,0,g);});
     [[-.17,-.28],[.17,-.28],[-.17,.28],[.17,.28]].forEach(function(p){box(0.02,0.83,0.02,WHITE,p[0],0.455,p[1],g); cyl(0.025,0.02,INK,p[0],0.025,p[1],g,10).rotation.x=R/2;});
-    box(0.28,0.34,0.24,0xc9ccd0,-0.02,1.03,0.14,g); box(0.14,0.36,0.13,0x2b2b2b,-0.04,1.04,-0.16,g);
+    K.espresso(g,-0.03,0.86,0.13,0); K.grinder(g,-0.05,0.86,-0.17,0);
     [-0.15,0,0.15].forEach(function(z){cyl(0.035,0.08,WHITE,0,0.39,z,g,12);});
   });
   const ka=G(null,'ac'), cx=KX-1.8;                                               // A and C: the coffee sits on the kitchen counter, by the fridge
-  box(0.26,0.36,0.3,0xc9ccd0,cx+0.24,1.1,KZ-0.3,ka); box(0.14,0.4,0.16,0x2b2b2b,cx+0.5,1.12,KZ-0.3,ka);
+  K.espresso(ka,cx+0.31,0.92,KZ-0.3,R/2); K.grinder(ka,cx+0.09,0.92,KZ-0.28,R/2);
 });
 
 /* ---------- lamp that moves between options ---------- */

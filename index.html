@@ -78,10 +78,6 @@ body{
 #useBar{position:absolute; left:50%; top:40%; transform:translate(-50%,-100%); z-index:3; display:flex; flex-direction:column; align-items:center; gap:5px; max-width:280px; background:var(--label-bg); border:1px solid var(--yellow); border-radius:12px; padding:5px 7px; font-size:13px; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,.18)}
 #useBtns{display:flex; gap:5px; flex-wrap:wrap; justify-content:center}
 #useBtns .fab{background:var(--green); color:var(--on); border-color:var(--green)}
-.needs{display:grid; grid-template-columns:auto 1fr; gap:4px 10px; align-items:center; font-size:12px; font-weight:600; color:var(--muted); margin:8px 0}
-.needs i{display:block; height:7px; border-radius:99px; background:var(--chip); border:1px solid var(--line); overflow:hidden}
-.needs i b{display:block; height:100%; background:var(--green)}
-.needs i b.low{background:#d9463e}
 .goals{margin:0; padding:0; list-style:none; font-size:13px}
 .goals li{display:block; border:0; padding:2px 0; color:var(--muted)}
 .goals li.done{color:var(--green); text-decoration:line-through}
@@ -288,7 +284,6 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
     </div>
     <p class="status" id="status"></p>
     <p class="note" style="margin-top:0">Tap the floor to walk there.</p>
-    <div class="needs" id="needs"></div>
     <h3>Live</h3>
     <div class="acts" id="lifeActs"></div>
     <h3>Today</h3>
@@ -344,13 +339,14 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 
 <script src="vendor/three.min.js"></script>
 <script src="vendor/OrbitControls.js"></script>
-<script src="vendor/GLTFLoader.js"></script>
 <script src="app/core.js"></script>
 <script src="app/kit.js"></script>
 <script src="app/house.js"></script>
 <script src="app/exterior.js"></script>
 <script src="app/furniture.js"></script>
 <script src="app/climate.js"></script>
+<script src="app/people.js"></script>
+<script src="app/audio.js"></script>
 <script src="app/sims.js"></script>
 <script src="app/life.js"></script>
 <script src="app/fly.js"></script>

@@ -105,7 +105,13 @@ function reg(mat,room){
   rooms[room||curRoom].mats.push(e); return mat;
 }
 A.reg=reg;
-const M=A.M=function(c,room){return reg(new THREE.MeshLambertMaterial({color:c}),room);};
+/* surface textures, picked by colour: any part made in one of these colours gets the matching weave or grain */
+A.texFor={};
+const M=A.M=function(c,room){
+  const m=new THREE.MeshLambertMaterial({color:c}), t=typeof c==='number'?A.texFor[c]:null;
+  if(t){m.map=t; m.userData.world=true;}
+  return reg(m,room);
+};
 const MB=A.MB=function(c,room){return reg(new THREE.MeshBasicMaterial({color:c}),room);};
 A.MT=function(tex,room,lambert){return reg(new (lambert?THREE.MeshLambertMaterial:THREE.MeshBasicMaterial)({map:tex}),room);};
 const toMat=function(c){return c&&c.isMaterial?c:M(c);};
@@ -113,7 +119,15 @@ const toMat=function(c){return c&&c.isMaterial?c:M(c);};
 function put(geo,mat,x,y,z,parent){
   const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; (parent||scene).add(m); return m;
 }
-A.box=function(w,h,d,color,x,y,z,parent){return put(new THREE.BoxGeometry(w,h,d),toMat(color),x,y,z,parent);};
+function worldUV(geo,w,h,d){            // box UVs in metres, with the texture's grain along the longer side of each face
+  const uv=geo.attributes.uv, dims=[[d,h],[d,h],[w,d],[w,d],[w,h],[w,h]];
+  for(let f=0;f<6;f++){const du=dims[f][0], dv=dims[f][1];
+    for(let k=0;k<4;k++){const i=f*4+k, u=uv.getX(i), v=uv.getY(i); if(du>=dv) uv.setXY(i,u*du,v*dv); else uv.setXY(i,v*dv,u*du);}}
+}
+A.box=function(w,h,d,color,x,y,z,parent){
+  const geo=new THREE.BoxGeometry(w,h,d), mat=toMat(color); if(mat.userData&&mat.userData.world) worldUV(geo,w,h,d);
+  return put(geo,mat,x,y,z,parent);
+};
 /* box with rounded edges and corners, for upholstery: same arguments as A.box, radius picked from the size.
    cr caps how round the corners are seen from above (5 cm unless given; pass a few mm for square corners) */
 A.rbox=function(w,h,d,color,x,y,z,parent,r,cr){
@@ -135,6 +149,39 @@ A.sph=function(r,color,x,y,z,parent,sx,sy,sz){const m=put(new THREE.SphereGeomet
 A.torus=function(R,t,color,x,y,z,parent,arc){return put(new THREE.TorusGeometry(R,t,8,28,arc||Math.PI*2),toMat(color),x,y,z,parent);};
 A.canvasTex=function(w,h,draw){const c=document.createElement('canvas'); c.width=w; c.height=h; draw(c.getContext('2d'),w,h); const t=new THREE.CanvasTexture(c); t.anisotropy=8; return t;};
 A.rng=function(seed){let a=seed>>>0; return function(){a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296;};};
+
+(function(){                          // the textures themselves: light, so they only modulate the colour they sit on
+  const wrap=function(t,tile){t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/tile,1/tile); return t;};
+  const skin=function(hexes,t){hexes.forEach(function(h){A.texFor[h]=t;});};
+  const wood=wrap(A.canvasTex(256,256,function(g){
+    const r=A.rng(31); g.fillStyle='#f3ede2'; g.fillRect(0,0,256,256);
+    for(let i=0;i<120;i++){const y=r()*256, a=1+r()*3, ph=r()*6.3; g.strokeStyle='rgba('+(110+r()*40|0)+','+(78+r()*26|0)+',44,'+(0.05+r()*0.13)+')'; g.lineWidth=0.5+r()*2;
+      g.beginPath(); for(let x=0;x<=256;x+=8){const yy=y+Math.sin(x/256*6.283*(1+(i%3))+ph)*a; if(x) g.lineTo(x,yy); else g.moveTo(x,yy);} g.stroke();}
+    for(let k=0;k<2;k++){const x=40+r()*170, y=40+r()*170; for(let q=1;q<5;q++){g.strokeStyle='rgba(100,70,40,'+(0.16-q*0.03)+')'; g.lineWidth=1; g.beginPath(); g.ellipse(x,y,q*5,q*2.2,0,0,6.3); g.stroke();}}
+  }),0.7);
+  const weave=wrap(A.canvasTex(64,64,function(g){
+    const r=A.rng(5); g.fillStyle='#f1f1f1'; g.fillRect(0,0,64,64);
+    for(let y=0;y<64;y+=4) for(let x=0;x<64;x+=4){const o=((x+y)/4)%2; g.fillStyle=o?'rgba(0,0,0,'+(0.05+r()*0.06)+')':'rgba(255,255,255,'+(0.25+r()*0.3)+')'; g.fillRect(x,y,4,4); g.fillStyle='rgba(0,0,0,0.05)'; g.fillRect(x,y+3,4,1);}
+  }),0.09);
+  const rattan=wrap(A.canvasTex(64,64,function(g){
+    g.fillStyle='#f4f0e8'; g.fillRect(0,0,64,64);
+    for(let y=0;y<64;y+=8) for(let x=0;x<64;x+=16){const o=(y/8)%2?8:0; g.fillStyle='rgba(120,90,50,0.22)'; g.fillRect(x+o,y,8,7); g.fillStyle='rgba(255,255,255,0.5)'; g.fillRect(x+o+8,y+1,8,2); g.fillStyle='rgba(90,60,30,0.2)'; g.fillRect(x+o,y+7,16,1);}
+  }),0.1);
+  const stone=wrap(A.canvasTex(128,128,function(g){
+    const r=A.rng(9); g.fillStyle='#f6f4ef'; g.fillRect(0,0,128,128);
+    for(let i=0;i<700;i++){g.fillStyle=r()>0.5?'rgba(90,85,75,'+(0.05+r()*0.14)+')':'rgba(255,255,255,0.7)'; g.fillRect(r()*128,r()*128,1+r()*2.2,1+r()*1.6);}
+  }),0.35);
+  const clay=wrap(A.canvasTex(64,64,function(g){
+    const r=A.rng(12); g.fillStyle='#f3f0ea'; g.fillRect(0,0,64,64); for(let i=0;i<260;i++){g.fillStyle='rgba(80,60,40,'+(0.04+r()*0.08)+')'; g.fillRect(r()*64,r()*64,1+r()*3,1);}
+    g.fillStyle='rgba(0,0,0,0.07)'; g.fillRect(0,0,64,5);
+  }),0.5);
+  skin([0xc99a5b,0xd9bf8c,0xc9a66b,0xd2b07a,0xc7a878,0x8a6a3c,0x8a6a48,0xb98a4e,0xc79a5c,0x9a6b3f,0xb08d4a,0x6b4a2f],wood);
+  skin([0x1f5a41,0x194a36,0x246a4c,0x226246,0x153d2d,0x9fc4d6,0x86adc0,0x8fbd9b,0xefe7d6,0xe6dccb,0xcfe3ec,0xf3efe6,0xd9c7b0,0xf1efec,0xe9e2d4,0xbfd8c6,0x2f7d4f,0x24623f],weave);
+  skin([0xd9c9a8],rattan);
+  skin([0xebe7dc,0xf4f3ee],stone);
+  skin([0xe6ddcd,0x3b3f3c,0xf3ebdc],clay);
+  A.surfaces={wood:wood,weave:weave,rattan:rattan,stone:stone,clay:clay};
+})();
 
 /* design-specific visibility: spec is a string of design keys, e.g. 'n', 'abc', 'bc' */
 A.onlys=[];
@@ -376,7 +423,11 @@ function frame(now){
     camera.position.lerpVectors(camAnim.from,camAnim.to,e); controls.target.lerpVectors(camAnim.tf,camAnim.tt,e);
     if(k>=1) camAnim=null;
   }
-  if(controls.enabled) controls.update();
+  if(controls.enabled){
+    controls.update();
+    const nr=Math.min(0.6,Math.max(0.1,camera.position.distanceTo(controls.target)*0.03));        // a farther near plane when zoomed out keeps distant surfaces from shimmering
+    if(Math.abs(nr-camera.near)>0.02){camera.near=nr; camera.updateProjectionMatrix();}
+  }
   if(A.shadowFrames>0){A.shadowFrames--; renderer.shadowMap.needsUpdate=true;}
   renderer.render(scene,camera);
   for(let i=0;i<A.labelFns.length;i++) A.labelFns[i]();
