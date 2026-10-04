@@ -310,4 +310,33 @@ K.tv=function(p,x,y,z){
   A.pool('tv',0x9fc4ff,x-0.022,y,z,1.05,p,0.4,Math.PI/2);
   A.pool('tv',0x9fc4ff,x+1.0,0.034,z,1.3,p,0.2);
 };
+
+/* ---------- cordless stick vacuum ----------
+   Built at the origin with the floor head pointing to +z. The stick pivots at the neck of the head: it stands upright
+   on its dock, and K.vacuumHold leans it back into a hand. mat(colour, options) makes the materials. */
+const VAC={py:0.05,gy:1.0,gz:-0.092};        // height of the pivot; the grip, measured from the pivot along the stick and behind it
+K.vacuum=function(p,mat){
+  mat=mat||function(c,o){return A.reg(new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})));};
+  const g=A.G(p), dk=mat(0x2c2f33), ac=mat(0x8fbd9b), st=mat(0xb9bdc0), red=mat(0xd9463e), Q=Math.PI/2;
+  rbox(0.25,0.034,0.09,dk,0,0.023,0.03,g,0.012);                                                  // floor head, with a soft roller across the front
+  cyl(0.017,0.236,ac,0,0.019,0.075,g,14).rotation.z=Q; [-0.122,0.122].forEach(function(x){cyl(0.019,0.008,dk,x,0.019,0.075,g,14).rotation.z=Q;});
+  [-0.085,0.085].forEach(function(x){cyl(0.013,0.014,st,x,0.013,-0.022,g,12).rotation.z=Q;});      // wheels
+  cyl(0.021,0.06,dk,0,VAC.py,0,g,14).rotation.z=Q;                                                // swivel neck
+  const s=g.userData.stick=A.G(g); s.position.y=VAC.py;
+  cyl(0.019,0.07,dk,0,0.045,0,s,14); cyl(0.0145,0.7,ac,0,0.42,0,s,14);                            // socket and wand
+  cyl(0.02,0.045,dk,0,0.79,0,s,14); box(0.012,0.02,0.01,red,0,0.79,0.021,s);                      // collar with its release catch
+  cyl(0.047,0.16,mat(0xdfe9ea,{transparent:true,opacity:0.4}),0,0.895,0,s,22).castShadow=false;   // clear bin round a steel shroud, a little dust in it
+  cyl(0.027,0.14,st,0,0.895,0,s,16); cyl(0.043,0.028,mat(0x9a948a),0,0.832,0,s,18);
+  cyl(0.05,0.022,ac,0,0.986,0,s,22); cyl(0.046,0.075,dk,0,1.035,0,s,22,0.04); cyl(0.034,0.02,ac,0,1.083,0,s,18,0.028);     // cyclone ring, motor, filter cap
+  rbox(0.05,0.07,0.075,dk,0,0.9,-0.085,s,0.012); cyl(0.015,0.13,dk,0,0.995,VAC.gz,s,12);          // battery, grip
+  box(0.03,0.028,0.075,dk,0,1.062,-0.06,s); box(0.01,0.03,0.012,red,0,1.02,-0.073,s);             // bridge to the motor, trigger
+  return g;
+};
+const vacP=new THREE.Vector3();
+K.vacuumHold=function(g,fore){        // g hangs in the person's group: stand the head on the floor ahead of that forearm's hand and lean the grip into the palm
+  if(!g.parent) return;
+  fore.updateWorldMatrix(true,false); g.parent.worldToLocal(fore.localToWorld(vacP.set(0,-0.295,0.005)));
+  const len=Math.hypot(VAC.gy,VAC.gz), a=Math.acos(Math.max(-1,Math.min(1,(vacP.y-VAC.py)/len)));       // how far the line from pivot to grip leans back
+  g.position.set(vacP.x,0,vacP.z+len*Math.sin(a)); g.userData.stick.rotation.x=Math.atan2(-VAC.gz,VAC.gy)-a;
+};
 })();

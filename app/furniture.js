@@ -33,10 +33,10 @@ piece('sofa',{label:'Sofa',h:1.2,seats:[
     const p=rb(0.24,0.5,0.86,0x246a4c,-0.2,0.72,z,g,0.11); p.rotation.z=0.2;    // back cushion
     [-0.2,0.2].forEach(function(dz){const b=sph(0.014,s,-0.075,0.76,z+dz,g,0.5,1,1); b.castShadow=false;});       // tufting buttons
   });
-  [-1.25,-0.45].forEach(function(z){K.cushion(g,0xe6dccb,-0.3,0.95,z,0.9);});
+  [-1.25,-0.45].forEach(function(z){K.cushion(g,0xe6dccb,-0.5,1.0,z,0.9,0.2);});      // on the ledge of the back, leaning on the wall behind the back cushions
   const n=G(g,'abc');                                   // redesign: more cushions and a throw
-  K.cushion(n,BLUE,-0.12,0.66,1.22,1); K.cushion(n,0xfbfaf6,-0.14,0.64,0.42,0.9,0.4); K.cushion(n,SAGE,-0.12,0.66,-0.86,1);
-  box(0.95,0.03,0.5,CREAM,0.15,0.635,1.5,n); box(0.03,0.36,0.5,CREAM,0.615,0.47,1.5,n);
+  K.cushion(n,BLUE,0.02,0.68,1.15,1,0.35); K.cushion(n,0xfbfaf6,0.015,0.66,0.45,0.9,0.4); K.cushion(n,SAGE,0.02,0.68,-0.86,1,0.35);   // standing on the seat, their tops resting on the back cushions
+  rb(0.352,0.5,0.324,LINEN,0.26,0.506,1.5,n,0.006,0.12).rotation.z=R/2;              // a throw folded over the arm: a band a little larger than the arm, lying along it
 });
 piece('table',{},function(g){                           // oak top on a black sled frame, 120 x 55
   box(0.55,0.05,1.2,OAK,0,0.45,0,g);
@@ -131,10 +131,10 @@ sideChairs('fc',2,WHITE,SAGE,['Folding chair','TERJE folding chair','ikea','Fold
 
 /* ---------- option C: drop-leaf table. A 26 cm console against the wall, opens to 75 x 150 for four ---------- */
 piece('gate',{label:'Drop-leaf dining table',h:1.15,isNew:true,shop:['Gateleg table','NORDEN gateleg table','ikea','Closed it is a narrow console with drawers; both leaves up seats four.']},function(g){
-  A.rbox(0.75,0.03,0.26,OAK,0,0.745,0,g,0.01); box(0.62,0.5,0.2,WHITE,0,0.47,0,g);
-  [-0.2,0.05].forEach(function(y){box(0.58,0.004,0.004,0xcfc8b8,0,0.47+y,0.101,g); box(0.58,0.004,0.004,0xcfc8b8,0,0.47+y,-0.101,g);});
+  A.rbox(0.75,0.03,0.26,OAK,0,0.745,0,g,0.01,0.004); box(0.6,0.51,0.18,WHITE,0,0.475,0,g);       // top and leaves have square corners, so they meet along the hinges; the body sits 1 cm inside the legs
+  [-0.2,0.05].forEach(function(y){box(0.52,0.004,0.004,0xcfc8b8,0,0.47+y,0.091,g); box(0.52,0.004,0.004,0xcfc8b8,0,0.47+y,-0.091,g);});
   [[-.29,-.08],[.29,-.08],[-.29,.08],[.29,.08]].forEach(function(p){box(0.04,0.72,0.04,OAK,p[0],0.36,p[1],g);});
-  const leaves=[1,-1].map(function(s){const lg=G(g); lg.position.set(0,0.745,s*0.13); A.rbox(0.75,0.026,0.62,OAK,0,0,s*0.31,lg,0.01); return {g:lg,s:s};});
+  const leaves=[1,-1].map(function(s){const lg=G(g); lg.position.set(0,0.745,s*0.13); A.rbox(0.75,0.026,0.62,OAK,0,0,s*0.31,lg,0.01,0.004); return {g:lg,s:s};});
   const legs=[1,-1].map(function(s){return box(0.04,0.72,0.04,OAK,0,0.36,s*0.68,g);});
   const stuff=G(g); cyl(0.06,0.2,BLUE,0.18,0.86,0,stuff,14,0.035); sph(0.07,0x3f9160,0.18,1.0,0,stuff); K.bookStack(stuff,-0.18,0.76,0,3,3);
   tableFns.push(function(t){
@@ -230,7 +230,7 @@ piece('round',{label:'Round oak table',h:0.8,isNew:true,shop:['Round coffee tabl
 });
 piece('trunk',{label:'Storage chest table',h:0.8,isNew:true,shop:['Wooden storage chest','wooden storage trunk coffee table','web','A pine or oak chest about 100 × 50 × 42 cm. Blankets and games go inside.']},function(g){
   box(0.5,0.38,1.0,OAK,0,0.23,0,g); box(0.52,0.04,1.02,0xb98a4e,0,0.44,0,g);
-  [-0.42,0.42].forEach(function(z){box(0.53,0.03,0.04,0x3b4a44,0,0.445,z,g); box(0.004,0.38,0.04,0x3b4a44,0.252,0.23,z,g);});
+  [-0.42,0.42].forEach(function(z){box(0.53,0.034,0.04,0x3b4a44,0,0.445,z,g); box(0.004,0.38,0.04,0x3b4a44,0.252,0.23,z,g);});
   [[-.2,-.44],[.2,-.44],[-.2,.44],[.2,.44]].forEach(function(p){box(0.05,0.04,0.05,0x3b4a44,p[0],0.02,p[1],g);});
   box(0.3,0.02,0.4,RATTAN,0,0.47,-0.15,g); K.candle(g,-0.04,0.48,-0.22,0.1); K.bookStack(g,0.02,0.46,0.25,3,9);
 });
@@ -258,11 +258,11 @@ piece('shoeCab',{label:'Shoe cabinet',h:1.5,isNew:true,shop:['Slim shoe cabinet'
 /* ---------- fixed decoration for the proposals ---------- */
 const dn=G(null,'abc'), db=G(null,'b');
 K.stringLights(dn,0,2.42,SZ-1.7,SZ+1.7,24);
-box(0.5,0.025,0.05,A.lampMat('L:living',0xb08d4a,0xffe2b0,0.8),pc,2.34,0.07,dn); box(0.02,0.02,0.07,0xb08d4a,pc,2.34,0.035,dn);   // picture light
+box(0.5,0.025,0.05,A.lampMat('L:living',0xb08d4a,0xffe2b0,0.8),pc,2.34,0.07,dn); box(0.02,0.02,0.06,0xb08d4a,pc,2.34,0.04,dn);   // picture light
 A.pool('L:living',0xffd9a0,pc,1.8,0.03,0.9,dn,0.32,0);
 // entrance: round gold mirror on the side of the toilet block, doormat, basket on the wardrobe
 A.torus(0.26,0.022,0xd9aa12,D.BLK-0.03,1.6,5.68,dn).rotation.y=R/2; cyl(0.25,0.008,0xcfdadd,D.BLK-0.012,1.6,5.68,dn,40).rotation.z=R/2;
-box(0.75,0.014,0.5,0xa89878,EX,0.007,5.9,dn).castShadow=false;
+box(0.75,0.014,0.5,0xa89878,EX,0.007,L-0.3,dn).castShadow=false;      // wholly inside, clear of the door and of the mat in the lobby
 });
 K.onlyAll(K.frame('left',SZ-0.93,1.78,0.62,0.82,0,0xc99a5b).concat(K.frame('left',SZ,1.78,0.62,0.82,1,0xc99a5b),K.frame('left',SZ+0.93,1.78,0.62,0.82,3,0xc99a5b)),'abc');
 K.onlyAll(K.frame('left',0.6,1.68,0.48,0.6,2,0xc99a5b).concat(K.frame('left',1.2,1.68,0.48,0.6,7,0xc99a5b)),'abc').forEach(function(m){m.userData.not='f';});      // above the record corner
@@ -278,19 +278,19 @@ A.inRoom('living',function(){
 });
 
 /* ---------- layouts: x, z, rotation. A piece that is not listed is hidden. ---------- */
-const TVZ=2.9, HALL=[1.68,L-0.19,R/2], CAB=[1.6,L-0.13,R/2];
+const TVZ=2.9, HALL=[1.6,L-0.225,R/2], CAB=[1.6,L-0.135,R/2];      // a few mm clear of the entrance wall, which is also the lobby's wall
 const COMMON={sofa:[0.60,SZ,0], music:[0.22,0.9,0], gate:[DC,0.17,0], rack1:[0.45,-2.0,R/2]};          // the drying rack lives in the study          // every proposal keeps the record corner and the drop-leaf table
 function lay(o){for(const k in COMMON) o[k]=COMMON[k]; return o;}
 const LAY={
-  n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.235,TVZ,R], station:[0.30,0.72,0],
+  n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.24,TVZ,R], station:[0.30,0.72,0],
      dining:[pc,0.48,0], chairA:[pc-0.92,0.50,0], chairB:[pc+0.92,0.50,R], rack1:[1.2,1.38,0], rack2:[2.55,1.5,0]},
   a:lay({rugA:[1.75,SZ,0], lift:[1.95,SZ,0], kbench:[W-0.2,TVZ,R], poufA1:[1.95,SZ-1.03,0], poufA2:[1.95,SZ+1.03,0], shoeCab:CAB}),
-  b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
-  c:lay({rugC:[1.75,SZ,0], table:[1.8,SZ,0], tvOld:[W-0.235,TVZ,R], poufA1:[1.95,SZ+1.03,0], hallBench:HALL})
+  b:lay({rugB:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.205,3.18,R], cart:[KX-0.24,1.8,R], poufB1:[1.95,SZ+1.0,0], hallBench:HALL}),
+  c:lay({rugC:[1.75,SZ,0], table:[1.8,SZ,0], tvOld:[W-0.24,TVZ,R], poufA1:[1.95,SZ+1.03,0], hallBench:HALL})
 };
-LAY.d=lay({rugC:[1.75,SZ,0], round:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], poufA1:[1.95,SZ-1.0,0], poufA2:[1.95,SZ+1.0,0], shoeCab:CAB});
+LAY.d=lay({rugC:[1.75,SZ,0], round:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.205,3.18,R], poufA1:[1.95,SZ-1.0,0], poufA2:[1.95,SZ+1.0,0], shoeCab:CAB});
 LAY.e=lay({rugB:[1.75,SZ,0], trunk:[1.95,SZ,0], kbench:[W-0.2,TVZ,R], poufB1:[1.95,SZ+1.05,0], hallBench:HALL});
-LAY.f=lay({rugA:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.2,3.18,R], poufA1:[1.95,SZ+1.05,0], shoeCab:CAB});
+LAY.f=lay({rugA:[1.75,SZ,0], nest:[1.95,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.205,3.18,R], poufA1:[1.95,SZ+1.05,0], shoeCab:CAB});
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
 const OPEN2={gc1:[DC-0.57,0.55,0], gc2:[DC,1.2,R/2]};      // one leaf up, table still against the wall: seats two
 const PJ={    // pajama party: the coffee table is put away and two mattresses go down

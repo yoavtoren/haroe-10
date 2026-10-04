@@ -28,7 +28,7 @@ A.doorFrame('h_s',en[0]-HX0,en[1]-HX0);
 const HW=['h_s','h_w','h_n','h_e1','h_e2','st_s','st_e','st_n'];
 HW.forEach(function(k){A.spans(k).forEach(function(s){
   const t=terrazzo.clone(); t.needsUpdate=true; t.repeat.set(s[1]-s[0],1.35);          // same terrazzo as the floor, up to half height
-  rect(k,s[0],s[1],0,1.35,A.MT(t,'hall'),0.005); rect(k,s[0],s[1],1.35,1.39,0xa89f8c,0.006);
+  rect(k,s[0],s[1],0,1.35,A.MT(t,'hall'),0.005); rect(k,s[0],s[1],1.35,1.39,0xa89f8c,0.0055);
   rect(k,s[0],s[1],1.39,H,0xf7f6f1,0.004);});});                            // plain white above the cladding
 /* the other five flats: grey doors with a number and a bell */
 function flatDoor(k,u,no){
@@ -45,7 +45,7 @@ rect('h_s',en[1]-HX0+0.16,en[1]-HX0+0.24,1.2,1.3,0x3b3f3c,0.009);              /
 inRoom('hall',function(){
   [[-3.6,L+1.6],[2.2,L+1.6],[-3.6,L+4.8],[2.2,L+4.8]].forEach(function(q){K.ceilDisc(null,q[0],q[1],'L:hall');});
   box(0.6,0.014,0.4,0x7a6a4a,(en[0]+en[1])/2,0.007,L+0.3).castShadow=false;    // doormat outside our door
-  const ed=A.door('entrance'); box(0.83,2.03,0.004,0x9a9fa1,0.425,1.02,0.023,ed.p); box(0.12,0.025,0.05,0x5f6466,0.72,1.05,0.05,ed.p);   // our door is grey on the lobby side too
+  const ed=A.door('entrance'); box(0.83,2.03,0.004,0x9a9fa1,0.425,1.02,0.023,ed.p); box(0.124,0.029,0.05,0x5f6466,0.72,1.05,0.05,ed.p);   // our door is grey on the lobby side too
   /* the wide column opposite our door, clad in terrazzo to half height like the walls */
   const cx=(en[0]+en[1])/2, cz=L+2.5, ct=terrazzo.clone(); ct.needsUpdate=true; ct.repeat.set(0.9,1.35);
   box(0.9,H,0.5,0xf1efe8,cx,H/2,cz); box(0.92,1.37,0.52,A.MT(ct,null,true),cx,0.685,cz);
@@ -75,7 +75,7 @@ inRoom('hall',function(){
   K.fiddle(null,HX0+0.5,HZ-0.5,1.9,3);
   box(1.4,0.05,0.36,0x8a6a48,HX0+0.3,0.44,L+3.3).rotation.y=R/2; [[HX0+0.3,L+2.75],[HX0+0.3,L+3.85]].forEach(function(q){box(0.3,0.44,0.05,0x2b2f2c,q[0],0.22,q[1]);});
   /* the bridge from the street: a short, narrow concrete slab over the gap, iron railings, no door */
-  box(BRW,0.22,BRZ-HZ+0.1,0xc9c4b8,BRX,-0.11,(HZ+BRZ)/2);
+  box(BRW,0.22,BRZ-HZ+0.1,0xc9c4b8,BRX,-0.107,(HZ+BRZ)/2);
   [-BRW/2+0.03,BRW/2-0.03].forEach(function(dx){
     box(0.05,0.05,BRZ-HZ,0x2b2f2c,BRX+dx,1.0,(HZ+BRZ)/2); box(0.05,0.05,BRZ-HZ,0x2b2f2c,BRX+dx,0.12,(HZ+BRZ)/2);
     for(let z=HZ+0.08;z<BRZ;z+=0.12) box(0.02,0.86,0.02,0x2b2f2c,BRX+dx,0.56,z);

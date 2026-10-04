@@ -114,13 +114,19 @@ function put(geo,mat,x,y,z,parent){
   const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; (parent||scene).add(m); return m;
 }
 A.box=function(w,h,d,color,x,y,z,parent){return put(new THREE.BoxGeometry(w,h,d),toMat(color),x,y,z,parent);};
-/* box with rounded edges and corners, for upholstery: same arguments as A.box, radius picked from the size */
-A.rbox=function(w,h,d,color,x,y,z,parent,r){
+/* box with rounded edges and corners, for upholstery: same arguments as A.box, radius picked from the size.
+   cr caps how round the corners are seen from above (5 cm unless given; pass a few mm for square corners) */
+A.rbox=function(w,h,d,color,x,y,z,parent,r,cr){
   r=Math.max(0.004,Math.min(r||0.06,w/2-0.004,h/2-0.004,d/2-0.004));
-  const a=w/2-r, b=d/2-r, c=Math.min(a,b,0.05)*0.9, s=new THREE.Shape();
+  const a=w/2-r, b=d/2-r, c=Math.min(a,b,cr||0.05)*0.9, s=new THREE.Shape();
   s.moveTo(-a+c,-b); s.lineTo(a-c,-b); s.absarc(a-c,-b+c,c,-Math.PI/2,0,false); s.lineTo(a,b-c); s.absarc(a-c,b-c,c,0,Math.PI/2,false);
   s.lineTo(-a+c,b); s.absarc(-a+c,b-c,c,Math.PI/2,Math.PI,false); s.lineTo(-a,-b+c); s.absarc(-a+c,-b+c,c,Math.PI,Math.PI*1.5,false);
   const g=new THREE.ExtrudeGeometry(s,{depth:h-2*r,bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:3,curveSegments:4});
+  const P=g.attributes.position, N=g.attributes.normal, v=new THREE.Vector3();      // smooth shading: each normal points away from the nearest point of the unbevelled core, so the rounding does not show its facets
+  for(let i=0;i<P.count;i++){
+    const px=P.getX(i), py=P.getY(i), pz=P.getZ(i), dx=px-Math.max(c-a,Math.min(a-c,px)), dy=py-Math.max(c-b,Math.min(b-c,py)), dl=Math.hypot(dx,dy), k=dl>c?1-c/dl:0;
+    v.set(dx*k,dy*k,pz-Math.max(0,Math.min(h-2*r,pz))); if(v.lengthSq()>1e-12){v.normalize(); N.setXYZ(i,v.x,v.y,v.z);}
+  }
   g.rotateX(-Math.PI/2); g.translate(0,-(h/2-r),0);
   return put(g,toMat(color),x,y,z,parent);
 };
@@ -299,9 +305,9 @@ A.thicken=function(){
     bx(w.len+(tw?0:0.2),0.03,t,core,0,H+0.016,zc);                                            // the cut top
     w.holes.forEach(function(q){const p=w.s*(q[0]-hl), r=w.s*(q[1]-hl), x0=Math.min(p,r), x1=Math.max(p,r), top=q[2]||2.05;
       bx(0.025,top,t,trim,x0+0.0125,top/2,zc); bx(0.025,top,t,trim,x1-0.0125,top/2,zc); bx(x1-x0,0.025,t,trim,(x0+x1)/2,top-0.0125,zc);});
-    w.wins.forEach(function(q){const p=w.s*(q[0]-hl), r=w.s*(q[1]-hl), x0=Math.min(p,r), x1=Math.max(p,r);
-      bx(0.03,q[3]-q[2],t,trim,x0-0.015,(q[2]+q[3])/2,zc); bx(0.03,q[3]-q[2],t,trim,x1+0.015,(q[2]+q[3])/2,zc);
-      bx(x1-x0+0.06,0.03,t,trim,(x0+x1)/2,q[3]+0.015,zc); bx(x1-x0+0.1,0.04,t+0.05,trim,(x0+x1)/2,q[2]-0.02,zc+0.025);});      // sill
+    w.wins.forEach(function(q){const p=w.s*(q[0]-hl), r=w.s*(q[1]-hl), x0=Math.min(p,r), x1=Math.max(p,r), zr=tw?zc:zc-0.002;      // in an outside wall the reveals stop just short of the wall's face
+      bx(0.03,q[3]-q[2],t,trim,x0-0.015,(q[2]+q[3])/2,zr); bx(0.03,q[3]-q[2],t,trim,x1+0.015,(q[2]+q[3])/2,zr);
+      bx(x1-x0+0.06,0.03,t,trim,(x0+x1)/2,q[3]+0.015,zr); bx(x1-x0+0.1,0.04,t+0.05,trim,(x0+x1)/2,q[2]-0.02,zc+0.025);});      // sill
     if(!tw) caps.push({w:w,g:g});
   });
   A.frameFns.push(function(){      // an outside wall's thickness is drawn only while the wall itself is facing the camera

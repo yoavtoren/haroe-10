@@ -51,7 +51,7 @@ A.doorFrame('end',en[0],en[1]); A.doorFrame('tv',bd[0]-KZ,bd[1]-KZ); A.doorFrame
 A.doorFrame('blk_n',wd[0]-BLK,wd[1]-BLK); A.doorFrame('wc_n',wd[0]-WC.x0,wd[1]-WC.x0);
 A.doorLeaf('bed1',d1[1],0,R,R/2,'living',0.78);
 A.doorLeaf('bed2',d2[1],0,R,R/2,'living',0.78);
-A.doorLeaf('bath',W,bd[0],-R/2,0,'living',0.6);          // hinged on the left as you walk in, swings into the bathroom
+A.doorLeaf('bath',W,bd[0],-R/2,0,'living',bd[1]-bd[0]);  // hinged on the left as you walk in, swings into the bathroom
 A.doorLeaf('wc',wd[1],ZW,R,R/2,'living',0.65);             // swings out into the living room
 A.doorLeaf('entrance',en[0],L,0,R/2,'living',0.85);
 
@@ -70,10 +70,11 @@ inRoom('living',function(){
   const n=G(null,'n');
   K.ceilDisc(null,W/2,3.2,'L:living'); K.ceilDisc(null,W/2+0.3,1.2,'L:living');   // flush ceiling lights, kept in every option
   // today: wardrobe on the entrance wall. The vacuum stays in every option.
-  box(0.86,1.75,0.45,0xf8f8f6,1.6,0.875,L-0.225,n); box(0.006,1.7,0.004,0xc5c9c5,1.6,0.875,L-0.452,n);
+  box(0.86,1.75,0.44,0xf8f8f6,1.6,0.875,L-0.23,n); box(0.006,1.7,0.004,0xc5c9c5,1.6,0.875,L-0.452,n);
   [1.56,1.64].forEach(function(x){box(0.012,0.12,0.02,0xc9cdc9,x,0.95,L-0.46,n);});
   box(0.42,0.3,0.36,0x2b2f38,1.42,1.9,L-0.23,n); box(0.3,0.24,0.3,0xc23a4a,1.82,1.87,L-0.22,n);
-  const vg=A.vacuumMesh=G(); box(0.1,1.05,0.14,0x2c2f33,BLK-0.1,0.55,L-0.14,vg); box(0.14,0.08,0.26,0x2c2f33,BLK-0.1,0.04,L-0.18,vg);
+  const vg=A.vacuumMesh=G(); vg.position.set(BLK-0.15,0,L-0.16); vg.rotation.y=-R/2; K.vacuum(vg);           // stick vacuum on its dock, by the front door
+  box(0.02,0.22,0.08,0xf4f4f1,BLK-0.012,1.0,L-0.16); box(0.006,0.012,0.012,0x8fbd9b,BLK-0.025,1.08,L-0.16);
 });
 
 /* ---------- kitchen ---------- */
@@ -100,7 +101,7 @@ inRoom('kitchen',function(){
   [[n,0x34373c,0xf0d21c],[d,sage(),sage()]].forEach(function(v){   // carcasses: charcoal + yellow today, pastel green in the redesign
     box(0.47,0.76,0.58,v[1],x0+0.235,0.5,KZ-0.29,v[0]); box(0.77,0.76,0.58,v[1],x1-0.385,0.5,KZ-0.29,v[0]);          // either side of the sink
     box(0.56,0.76,0.03,v[1],x1-1.05,0.5,KZ-0.565,v[0]); box(0.56,0.54,0.55,v[1],x1-1.05,0.39,KZ-0.275,v[0]);             // front panel and the cupboard under the basin
-    box(1.8,0.76,0.58,v[1].isMaterial?sage():v[1],(c0+c1)/2,0.5,0.29,v[0]);
+    box(1.8,0.76,0.57,v[1].isMaterial?sage():v[1],(c0+c1)/2,0.5,0.295,v[0]);                                             // backs stop 1 cm short of the wall plane, or they flicker through it into bedroom 2
     box(1.15,0.58,0.35,v[2],x0+0.9,1.76,KZ-0.175,v[0]);
   });
   box(0.006,0.56,0.004,0x6c7a55,x0+0.9,1.76,zf+0.248,d);                     // wall cabinet door split
@@ -143,7 +144,7 @@ inRoom('kitchen',function(){
   cyl(0.11,0.24,0x1f2a52,fx-0.18,2.15,fz-0.1,n); box(0.18,0.3,0.2,0x1c2a4a,fx+0.25,1.9,fz,n);           // whey jar, bug zapper
   // cooktop side: 8 cm filler | oven + hob 60 | door | drawers, counted from the window wall.
   // The hob is 45 cm wide and sits close to the window end.
-  box(1.8,0.12,0.5,0x1d1f21,(c0+c1)/2,0.06,0.25); box(1.84,0.04,0.63,0xf4f3ee,(c0+c1)/2,0.9,0.305);
+  box(1.8,0.12,0.49,0x1d1f21,(c0+c1)/2,0.06,0.255); box(1.84,0.04,0.61,0xf4f3ee,(c0+c1)/2,0.9,0.315);
   const hx=c1-0.38;
   [c1-0.08,c1-0.68,c1-1.2].forEach(function(x){box(0.006,0.74,0.004,line,x,0.5,0.602);});
   box(0.56,0.56,0.006,0x0f1011,hx,0.56,0.603); box(0.44,0.02,0.03,0x8d9296,hx,0.78,0.615);            // oven
@@ -151,7 +152,7 @@ inRoom('kitchen',function(){
   [[-0.1,-0.09],[0.1,-0.09],[-0.1,0.09],[0.1,0.09]].forEach(function(q){cyl(0.06,0.004,0x2a2c2e,hx+q[0],0.934,0.3+q[1],null,18);});
   box(0.012,0.13,0.02,line,c1-0.74,0.78,0.612);
   [0.34,0.62].forEach(function(y){box(0.58,0.006,0.004,line,c0+0.3,y,0.602);}); [0.26,0.52,0.78].forEach(function(y){box(0.26,0.014,0.02,line,c0+0.3,y,0.612);});
-  box(0.5,0.03,0.12,0x9a6b3f,c0+0.3,1.6,0.06);                                                      // spice shelf
+  box(0.5,0.03,0.11,0x9a6b3f,c0+0.3,1.6,0.065);                                                     // spice shelf
   [0,1,2,3,4].forEach(function(i){cyl(0.028,0.11,[0xc63d2f,0xd9b23a,0x5b8f4a,0xb9772e,0xe5e0d2][i],c0+0.12+i*0.09,1.67,0.06);});
   cyl(0.175,0.62,0x2f8f95,KX-0.42,0.31,1.65,n); cyl(0.165,0.08,0x202325,KX-0.42,0.66,1.65,n);       // bin (gone in the redesign)
   K.ceilDisc(null,W+1.3,1.4,'L:kitchen');
@@ -211,7 +212,7 @@ A.windowOn('b_r',2.3,4.0,0.95,2.2,2,6,'bed2');                         // big wi
 A.sunPatch('bed2',BX-0.05,-1.25,1.6,2.2,-R/2);
 inRoom('bed2',function(){
   const n=G(null,'n'), d=G(null,'abc'), l=bl, kz=-2.1, dkz=-1.25;
-  K.ceilDisc(null,(l+BX)/2,-1.9,'L:bed2');
+  K.ceilDisc(null,(l+BX)/2+0.225,-1.9,'L:bed2');      // clear of the column
   box(0.22,0.28,0.85,0xf6f7f5,BX-0.11,2.5,dkz);                         // air conditioner above the big window
   box(0.5,1.9,1.17,0xf8f8f6,NX+0.25,0.95,-1.27); [-1.66,-1.27,-0.88].forEach(function(z){box(0.006,1.82,0.37,0xfdfdfb,NX+0.503,0.97,z);}); box(0.004,1.4,0.12,0xb9c6cc,NX+0.508,1.05,-1.27);
   box(0.36,0.3,0.5,0x202a44,NX+0.25,2.05,-1.45,n); box(0.36,0.3,0.4,0x3b3d40,NX+0.25,2.05,-0.95,n);
@@ -274,7 +275,7 @@ function tiled(k,y1){
 inRoom('wc',function(){
   ['wc_n','wc_w','wc_e','wc_s'].forEach(function(k){tiled(k,1.2);});
   const mz=(WC.z0+WC.z1)/2, bx=(wd[0]+wd[1])/2;
-  box(0.2,1.15,WC.z1-WC.z0,0xf6f6f3,WC.x1-0.1,0.575,mz);                 // cistern box with ledge
+  box(0.2,1.15,WC.z1-WC.z0-0.02,0xf6f6f3,WC.x1-0.1,0.575,mz);                 // cistern box with ledge
   box(0.5,0.34,0.36,0xfbfbfa,WC.x1-0.45,0.42,mz);
   box(0.01,0.16,0.2,0x3c4043,WC.x1-0.205,0.95,mz);
   box(0.4,0.12,0.24,0xfbfbfa,bx-0.2,0.82,WC.z1-0.13); box(0.36,0.6,0.02,0xb9c9cf,bx-0.2,1.5,WC.z1-0.012);   // basin and mirror, opposite the door
@@ -303,7 +304,7 @@ inRoom('bath',function(){
   const sx0=BA.x1-0.9, sz1=BA.z0+0.95;
   box(0.02,2.0,0.95,glass,sx0,1.0,BA.z0+0.475).castShadow=false;
   box(0.9,2.0,0.02,glass,BA.x1-0.45,1.0,sz1).castShadow=false;
-  box(0.03,2.0,0.03,0xb9bdc0,sx0,1.0,sz1);
+  box(0.03,2.01,0.03,0xb9bdc0,sx0,1.005,sz1);
   box(0.3,0.02,0.3,0xb9bdc0,BA.x1-0.45,2.15,BA.z0+0.4); box(0.02,0.02,0.4,0xb9bdc0,BA.x1-0.45,2.17,BA.z0+0.2);
   cyl(0.06,0.02,0xb9bdc0,BA.x1-0.6,1.1,BA.z0+0.02).rotation.x=R/2; box(0.02,0.5,0.02,0xb9bdc0,BA.x1-0.3,1.25,BA.z0+0.03);
   box(0.6,0.02,0.45,0x7fb59a,BA.x1-1.3,0.011,BA.z0+0.95).castShadow=false;
