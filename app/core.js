@@ -13,29 +13,27 @@ const A=window.APP={};
    ===================================================================== */
 const D=A.D={
   W:3.1,    // living room width at the sofa, sofa wall -> TV wall   (±0.2, not measured)
-  L:6.2,    // living room length, bedroom wall -> entrance wall     (±0.4)
+  L:5.75,   // living room length, bedroom wall -> entrance wall     (±0.3)
   H:2.93,   // ceiling                                                (±0.08)
   T:0.6,    // floor tile                                              (assumed 60 x 60)
   KX:5.7,   // kitchen window wall, i.e. W + 2.6                       (±0.2)
   KZ:2.8,   // kitchen sink wall; the TV wall starts here              (±0.2)
-  ZW:5.15,  // front wall of the guest toilet, which juts into the room at the entrance
+  ZW:4.55,  // front wall of the guest toilet, which juts into the room at the entrance
   BLK:2.3,  // how far that block reaches: the entrance wall is only this wide
-  FZ:3.5,   // the fridge stands in a niche past the sink wall; its side ends here and the TV wall begins
-  FX:3.8,   // width of that niche
   BX:4.9,   // bedroom 2 right-hand wall (window, TV, desk)
   NX:2.05, NZ:-1.9,    // the wardrobe niche in bedroom 2: its back wall, and how far it runs from the door wall
   door1:[0.50,1.28],   // bedroom 1 opening on the far wall
   door2:[2.75,3.53],   // bedroom 2 opening on the far wall, toward the kitchen
   painting:[1.50,2.60,1.40,2.22], // x0,x1,y0,y1 of the bus canvas
   entrance:[0.20,1.05],// front door, right next to the sofa wall
-  bathDoor:[4.40,5.00],// bathroom door, in the same plane as the TV wall, right of the TV. Only 0.8 m of wall before it.
+  bathDoor:[3.72,4.42],// bathroom door, in the same plane as the TV wall, right of the TV. Only 0.8 m of wall before it.
   wcDoor:[2.42,3.07],  // guest toilet door (x), at a right angle to the bathroom door
   bedDepth:4.4,        // both bedrooms, door wall -> window wall (guess)
   bedSplit:2.5         // wall between the two bedrooms, behind the niche (guess)
 };
 const W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ;
 const AZ=A.AZ=-D.bedDepth, SPLIT=A.SPLIT=D.bedSplit;
-const BA=A.BA={x0:W,x1:5.9,z0:D.FZ+0.05,z1:L-1.15};   // bathroom: shower, toilet, sink, washing machine
+const BA=A.BA={x0:W,x1:5.9,z0:KZ+0.1,z1:D.ZW-0.1};   // bathroom: shower, toilet, sink, washing machine
 const WC=A.WC={x0:D.BLK,x1:3.95,z0:D.ZW,z1:L};    // guest toilet
 
 const stage=A.stage=document.getElementById('stage'), labelsEl=A.labelsEl=document.getElementById('labels');
@@ -62,11 +60,13 @@ Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:
    which is computed from daylight, shutters and the room's lamps. */
 const rooms=A.rooms={
   living:{name:'Living room', rs:[[0,W,0,D.ZW],[0,D.BLK,D.ZW,L]], win:'kitchen', dl:1, node:'lk'},
-  kitchen:{name:'Kitchen',    rs:[[W,KX,0,KZ],[W,D.FX,KZ,D.FZ]],          win:'kitchen', dl:1, shutter:true, node:'lk'},
+  kitchen:{name:'Kitchen',    rs:[[W,KX,0,KZ]],          win:'kitchen', dl:1, shutter:true, node:'lk'},
   bed1:{name:'Bedroom 1',     rs:[[0,D.NX-0.05,D.NZ,0],[0,SPLIT-0.05,AZ,D.NZ]],  win:'bed1',    dl:1, shutter:true, node:'bed1'},
   bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
-  wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'}
+  wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
+  hall:{name:'Corridor and lobby', rs:[[-9,5.3,L,L+1.7],[-9,-5.5,L+1.7,L+4.7]], win:null, dl:0.75, node:'hall', on:true},
+  out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true}       // garden, street and the neighbouring building
 };
 const chans=A.chans={};
 function chan(n,v,rate){return chans[n]||(chans[n]={cur:v||0,target:v||0,rate:rate||5});}
@@ -219,6 +219,9 @@ A.wall=function(k,a,b,n,room,opt){
   const hs=w.holes.map(function(h){const p=w.s*(h[0]-hl), q=w.s*(h[1]-hl); return [Math.min(p,q),Math.max(p,q),h[2]||2.05];}).sort(function(p,q){return p[0]-q[0];});
   sh.moveTo(-he,0);
   hs.forEach(function(h){sh.lineTo(h[0],0); sh.lineTo(h[0],h[2]); sh.lineTo(h[1],h[2]); sh.lineTo(h[1],0);});
+  (opt.wins||[]).forEach(function(q){          // window openings: u0,u1,y0,y1
+    const p=w.s*(q[0]-hl), r=w.s*(q[1]-hl), x0=Math.min(p,r), x1=Math.max(p,r), pa=new THREE.Path();
+    pa.moveTo(x0,q[2]); pa.lineTo(x1,q[2]); pa.lineTo(x1,q[3]); pa.lineTo(x0,q[3]); pa.lineTo(x0,q[2]); sh.holes.push(pa);});
   sh.lineTo(he,0); sh.lineTo(he,hh); sh.lineTo(-he,hh); sh.lineTo(-he,0);
   const mat=reg(clipped(new THREE.MeshLambertMaterial({color:0xf5f6f3,emissive:0x3c3d3b,polygonOffset:true,polygonOffsetFactor:0,polygonOffsetUnits:-2})),room);
   const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),mat); m.receiveShadow=true; g.add(m);
@@ -266,7 +269,7 @@ const slatTex=A.canvasTex(32,32,function(g){g.fillStyle='#dfe2dd'; g.fillRect(0,
 slatTex.wrapS=slatTex.wrapT=THREE.RepeatWrapping;
 const shutters=A.shutters=[];
 A.windowOn=function(k,u0,u1,y0,y1,panes,bars,winKey){
-  const gm=new THREE.MeshBasicMaterial({color:0xa9cdd6}); glassMats.push(gm);
+  const gm=new THREE.MeshBasicMaterial({color:0xa9cdd6,transparent:true,opacity:0.3,depthWrite:false}); glassMats.push(gm);
   A.rect(k,u0,u1,y0,y1,0xe9ece8,0.006); A.rect(k,u0+0.05,u1-0.05,y0+0.05,y1-0.05,gm,0.008);
   for(let i=1;i<(panes||1);i++){const u=u0+i*(u1-u0)/panes; A.rect(k,u-0.025,u+0.025,y0,y1,0xe9ece8,0.010);}
   if(bars){for(let i=1;i<bars;i++){const u=u0+0.05+i*(u1-u0-0.1)/bars; A.rect(k,u-0.006,u+0.006,y0+0.05,y1-0.05,0xf4f5f3,0.009);}}

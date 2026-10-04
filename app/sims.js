@@ -112,12 +112,12 @@ function makePerson(spec){
 /* =====================================================================
    Walking: a 10 cm grid over the flat, A* and string pulling
    ===================================================================== */
-const CS=0.1, GX0=-0.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.4)/CS), NZ=Math.ceil((L-AZ+0.4)/CS), RAD=0.13;
+const CS=0.1, GX0=-9.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.6-GX0)/CS), NZ=Math.ceil((L+4.9-GZ0)/CS), RAD=0.13;
 const free=new Uint8Array(NX*NZ);
-const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.5;      // centre of the front door; where people stand just inside it
+const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+0.85, LOBBY=[-7.25,L+4.2];      // centre of the front door; where people stand just inside it
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
   [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
-  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
+  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[-8.8,-5.7,L+1.4,L+2.0],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
   const i0=Math.max(0,Math.ceil((x0-GX0)/CS-0.5)), i1=Math.min(NX-1,Math.floor((x1-GX0)/CS-0.5));
@@ -149,7 +149,7 @@ function cell(x,z){const i=Math.floor((x-GX0)/CS), j=Math.floor((z-GZ0)/CS); ret
 function isFree(x,z){const c=cell(x,z); return c>=0&&free[c]===1;}
 function cx(c){return GX0+((c%NX)+0.5)*CS;} function cz(c){return GZ0+(Math.floor(c/NX)+0.5)*CS;}
 function nearest(x,z){
-  const c0=cell(Math.min(KX+0.1,Math.max(-0.1,x)),Math.min(L+0.1,Math.max(AZ-0.1,z))); if(c0>=0&&free[c0]) return c0;
+  const c0=cell(Math.min(KX+0.1,Math.max(GX0+0.1,x)),Math.min(L+4.8,Math.max(AZ-0.1,z))); if(c0>=0&&free[c0]) return c0;
   const i0=Math.floor((x-GX0)/CS), j0=Math.floor((z-GZ0)/CS); let best=-1, bd=1e9;
   for(let r=1;r<40;r++){
     for(let j=j0-r;j<=j0+r;j++) for(let i=i0-r;i<=i0+r;i++){
@@ -260,7 +260,7 @@ Actor.prototype.update=function(dt){
   this.h=angLerp(this.h,this.hT,Math.min(1,dt*11));
   p.g.position.set(this.x,0,this.z); p.g.rotation.y=this.h; p.update(dt);
   const rm=A.roomAt(this.x,this.z);
-  if(rm!==this.room||this.ver!==A.lightVer){this.room=rm; this.ver=A.lightVer; p.tint(this.z>L+0.05?WHITE:A.rooms[rm].tint);}
+  if(rm!==this.room||this.ver!==A.lightVer){this.room=rm; this.ver=A.lightVer; p.tint(A.rooms[rm].tint);}
 };
 Actor.prototype.remove=function(){
   this.release(); this.gone=true; cancelTimers(this);
@@ -406,7 +406,7 @@ const shower=(function(){
 let evening=false, auto=false;
 function focusRooms(){          // the room you are in stays bright, the rest of the flat fades back
   const node=A.simsOn&&player?A.rooms[player.room||'living'].node:null;
-  for(const k in A.rooms) A.set('F:'+k,(!node||A.rooms[k].node===node)?1:0);
+  for(const k in A.rooms) A.set('F:'+k,(!node||A.rooms[k].ext||A.rooms[k].node===node)?1:0);
 }
 function setLight(room,on){A.set('L:'+room,on?1:0); renderRooms();}
 function setShutter(win,open){A.set('S:'+win,open?1:0); renderRooms();}
@@ -417,7 +417,7 @@ function setEvening(v){
 }
 function renderRooms(){
   let h='';
-  for(const k in A.rooms){const r=A.rooms[k], on=A.goal('L:'+k)>0.5;
+  for(const k in A.rooms){const r=A.rooms[k], on=A.goal('L:'+k)>0.5; if(r.ext) continue;
     h+='<tr class="'+(player&&player.room===k&&A.simsOn?'here':'')+'"><td>'+r.name+'</td>'+
        '<td class="sw"><button class="pill" data-l="'+k+'" aria-pressed="'+on+'">'+(on?'Light on':'Light off')+'</button></td><td class="sw">'+
        (r.shutter?'<button class="pill" data-s="'+r.win+'" aria-pressed="'+(A.goal('S:'+r.win)>0.5)+'">'+(A.goal('S:'+r.win)>0.5?'Shutters open':'Shutters closed')+'</button>':'')+'</td></tr>';
@@ -444,15 +444,15 @@ function freeSeats(){return A.liveSeats().filter(function(s){return s.type==='si
 function arrive(list,each){
   DOOR.entrance.force=1; player.say('Come in!');
   list.forEach(function(it,i){
-    const a=new Actor(it.spec); a.x=EX; a.z=L+0.9+i*0.6; a.h=a.hT=R; guests.push(a);
+    const a=new Actor(it.spec); a.x=LOBBY[0]; a.z=LOBBY[1]; a.h=a.hT=R; a.p.g.visible=false; guests.push(a);
     if(pj.on) a.p.outfit(true);
     if(it.seat) {it.seat.occ=a; a.held=it.seat;}
     later(0.7+i*1.0,function(){
-      a.path=[[EX,SPAWN]];
+      a.p.g.visible=true; a.path=[[LOBBY[0],HALLZ],[EX,HALLZ],[EX,SPAWN]];
       a.cb=function(){a.say(['Hi!','Hey!','Shalom!','We are here!'][i%4]); each(a,it);};
     },a);
   });
-  later(0.7+list.length*1.0+1.6,function(){if(DOOR.entrance.force===1) DOOR.entrance.force=null; refresh();},guests);
+  later(0.7+list.length*1.0+8,function(){if(DOOR.entrance.force===1) DOOR.entrance.force=null; refresh();},guests);
   refresh();
 }
 function goodbye(){
@@ -463,7 +463,7 @@ function goodbye(){
     a.leaving=true;
     later(i*0.7,function(){
       a.say('Bye!'); a.goTo(EX,SPAWN,function(){
-        a.path=[[EX,L+1.8]]; a.cb=function(){
+        a.path=[[EX,HALLZ],[LOBBY[0],HALLZ],LOBBY]; a.cb=function(){
           a.remove(); const k=guests.indexOf(a); if(k>=0) guests.splice(k,1);
           if(!guests.length){DOOR.entrance.force=null;} refresh();
         };
@@ -478,7 +478,7 @@ function kick(a){
   if(!a||a.gone||a.leaving) return;
   a.leaving=true; a.sleep(false); a.say('OK, bye!'); DOOR.entrance.force=1;
   a.goTo(EX,SPAWN,function(){
-    a.path=[[EX,L+1.8]]; a.cb=function(){
+    a.path=[[EX,HALLZ],[LOBBY[0],HALLZ],LOBBY]; a.cb=function(){
       a.remove(); const k=guests.indexOf(a); if(k>=0) guests.splice(k,1);
       if(!guests.some(function(g){return g.leaving;})) DOOR.entrance.force=null;
       if(!guests.length&&pj.on) endPJ(true);
@@ -578,7 +578,7 @@ function startPJ(list){
 }
 function lightsOut(){
   stopAction(); pj.asleep=true;
-  A.set('tv',0); A.set('string',0); for(const k in A.rooms) A.set('L:'+k,0);
+  A.set('tv',0); A.set('string',0); for(const k in A.rooms) A.set('L:'+k,k==='hall'?1:0);
   guests.forEach(function(a){
     const s=seatBy(a.spot?a.spot.id:'sofaLie'); if(!s) return;
     a.release(); a.sitOn(s,function(){a.sleep(true);});
@@ -601,7 +601,7 @@ function endPJ(silent){
 function morning(){
   stopAction(); player.release();
   setEvening(false); ['kitchen','bed1','bed2'].forEach(function(w){A.set('S:'+w,1);});
-  for(const k in A.rooms) A.set('L:'+k,0);
+  for(const k in A.rooms) A.set('L:'+k,k==='hall'?1:0);
   guests.forEach(function(a){a.say('Good morning!');});
   endPJ(false); doing=''; toast('Good morning. Shutters open.'); renderRooms(); refresh();
 }
@@ -695,8 +695,8 @@ function wallsVisible(){
 
 /* In eye view, only draw rooms you could actually see: your own, plus any reached through an open door.
    Besides saving work, this keeps things standing right behind a wall from flickering through it on phones. */
-const NODE={living:'lk',kitchen:'lk',bed1:'bed1',bed2:'bed2',wc:'wc',bath:'bath'};
-const LINKS=[['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['lk','bath','bath']];
+const NODE={living:'lk',kitchen:'lk',bed1:'bed1',bed2:'bed2',wc:'wc',bath:'bath',hall:'hall'};
+const LINKS=[['lk','hall','entrance'],['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['lk','bath','bath']];
 let cullKey='all';
 function cullRooms(){
   let vis=null;
@@ -707,7 +707,7 @@ function cullRooms(){
         const o=l[0]===n?l[1]:l[1]===n?l[0]:null; if(o&&!vis[o]){vis[o]=1; q.push(o);}}}
   }
   const key=vis?Object.keys(vis).sort().join():'all'; if(key===cullKey) return; cullKey=key;
-  for(const k in A.rooms){const on=!vis||!!vis[NODE[k]], ms=A.rooms[k].mats; for(let i=0;i<ms.length;i++) ms[i].m.visible=on||!!ms[i].keep;}
+  for(const k in A.rooms){const on=!vis||A.rooms[k].ext||!!vis[NODE[k]], ms=A.rooms[k].mats; for(let i=0;i<ms.length;i++) ms[i].m.visible=on||!!ms[i].keep;}
 }
 
 /* ---------- pointer: tap the floor to walk, drag to look in eye view ---------- */
@@ -731,7 +731,7 @@ window.addEventListener('pointerup',function(e){
   walkTo(hit.x,hit.z);
 });
 function walkTo(x,z){
-  if(x<-0.3||x>KX+0.3||z<AZ-0.3||z>L+0.3) return;
+  if(x<-9.3||x>KX+0.3||z<AZ-0.3||z>L+4.9) return;
   if(pj.asleep) return;
   stopAction(); const c=nearest(x,z); if(c<0) return;
   marker.position.set(cx(c),0.03,cz(c)); marker.material.opacity=0.9;
@@ -796,7 +796,7 @@ A.frameFns.push(function(dt,t){
   }
   status();
   // doors swing open for anyone walking up to them
-  for(let i=0;i<A.doors.length;i++){const d=A.doors[i]; if(d.id==='entrance'){d.target=0; continue;}
+  for(let i=0;i<A.doors.length;i++){const d=A.doors[i];
     let near=Math.hypot(player.x-d.cx,player.z-d.cz)<1.0&&!player.seat;
     for(let j=0;j<guests.length&&!near;j++) near=Math.hypot(guests[j].x-d.cx,guests[j].z-d.cz)<1.0&&!guests[j].seat;
     d.target=near?1:0;}
@@ -845,7 +845,7 @@ function setMode(sims){
     showSticks(false);
     if(camMode==='eye') setCam('follow');
     const wasPJ=pj.on; resetSims(); if(wasPJ){A.layout(); A.renderPanel();}
-    setEvening(false); for(const k in A.rooms) A.set('L:'+k,0); ['kitchen','bed1','bed2'].forEach(function(w){A.set('S:'+w,1);}); A.set('tv',0);
+    setEvening(false); for(const k in A.rooms) A.set('L:'+k,k==='hall'?1:0); ['kitchen','bed1','bed2'].forEach(function(w){A.set('S:'+w,1);}); A.set('tv',0);
     for(const k in A.walls) A.walls[k].g.visible=true; cullRooms(); focusRooms(); kickBar(null);
     for(let i=0;i<A.doors.length;i++) A.doors[i].target=0;
     $('hint').textContent='Drag to rotate, pinch or scroll to zoom';
