@@ -276,6 +276,32 @@ A.doorLeaf=function(id,hx,hz,closed,open,room,w){
 };
 A.door=function(id){for(let i=0;i<doors.length;i++) if(doors[i].id===id) return doors[i]; return null;};
 
+/* Real wall thickness. The wall faces stay where they are (so you can still look in from outside); each wall
+   gets a cut top and proper reveals in its door and window openings: 10 cm for partitions, 20 cm for outside walls. */
+A.thicken=function(){
+  const keys=Object.keys(walls), caps=[];
+  const twin=function(w){            // is there a wall back to back with this one?
+    return keys.some(function(k){const o=walls[k]; if(o===w||o.n[0]*w.n[0]+o.n[1]*w.n[1]>-0.99) return false;
+      const mx=(w.a[0]+w.b[0])/2, mz=(w.a[1]+w.b[1])/2, dx=mx-o.a[0], dz=mz-o.a[1], along=dx*o.d[0]+dz*o.d[1], off=Math.abs(dx*o.n[0]+dz*o.n[1]);
+      return off<0.12&&along>-0.05&&along<o.len+0.05;});
+  };
+  keys.forEach(function(k){
+    const w=walls[k], tw=twin(w), t=tw?0.1:0.2, zc=tw?0:-0.1, hl=w.len/2, g=new THREE.Group(); w.g.add(g);
+    const core=M(0x7f8682,w.room), trim=M(0xe9ebe7,w.room);
+    const bx=function(sx,sy,sz,mat,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat); m.position.set(x,y,z); m.receiveShadow=true; g.add(m); return m;};
+    bx(w.len+(tw?0:0.2),0.03,t,core,0,H+0.016,zc);                                            // the cut top
+    w.holes.forEach(function(q){const p=w.s*(q[0]-hl), r=w.s*(q[1]-hl), x0=Math.min(p,r), x1=Math.max(p,r), top=q[2]||2.05;
+      bx(0.025,top,t,trim,x0+0.0125,top/2,zc); bx(0.025,top,t,trim,x1-0.0125,top/2,zc); bx(x1-x0,0.025,t,trim,(x0+x1)/2,top-0.0125,zc);});
+    w.wins.forEach(function(q){const p=w.s*(q[0]-hl), r=w.s*(q[1]-hl), x0=Math.min(p,r), x1=Math.max(p,r);
+      bx(0.03,q[3]-q[2],t,trim,x0-0.015,(q[2]+q[3])/2,zc); bx(0.03,q[3]-q[2],t,trim,x1+0.015,(q[2]+q[3])/2,zc);
+      bx(x1-x0+0.06,0.03,t,trim,(x0+x1)/2,q[3]+0.015,zc); bx(x1-x0+0.1,0.04,t+0.05,trim,(x0+x1)/2,q[2]-0.02,zc+0.025);});      // sill
+    if(!tw) caps.push({w:w,g:g});
+  });
+  A.frameFns.push(function(){      // an outside wall's thickness is drawn only while the wall itself is facing the camera
+    const c=camera.position; for(let i=0;i<caps.length;i++){const w=caps[i].w; caps[i].g.visible=(c.x-w.a[0])*w.n[0]+(c.z-w.a[1])*w.n[1]>0;}
+  });
+};
+
 /* ---------- windows with roller shutters ---------- */
 const slatTex=A.canvasTex(32,32,function(g){g.fillStyle='#dfe2dd'; g.fillRect(0,0,32,32); g.fillStyle='#c3c7c1'; g.fillRect(0,26,32,6); g.fillStyle='#eef0ec'; g.fillRect(0,0,32,5);});
 slatTex.wrapS=slatTex.wrapT=THREE.RepeatWrapping;
@@ -340,5 +366,5 @@ function frame(now){
   renderer.render(scene,camera);
   for(let i=0;i<A.labelFns.length;i++) A.labelFns[i]();
 }
-A.start=function(){syncBg(); resize(); applyShutters(); relight(); last=performance.now(); requestAnimationFrame(frame);};
+A.start=function(){A.thicken(); syncBg(); resize(); applyShutters(); relight(); last=performance.now(); requestAnimationFrame(frame);};
 })();

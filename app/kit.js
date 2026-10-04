@@ -182,23 +182,36 @@ K.kallax=function(p,rows,col,opt){
 };
 
 /* ---------- seats ---------- */
-K.armchair=function(p,c,d){
-  rbox(0.78,0.36,0.8,c,0,0.24,0,p);
-  rbox(0.2,0.5,0.8,d,-0.3,0.62,0,p);
-  rbox(0.6,0.22,0.14,d,0.08,0.5,-0.33,p); rbox(0.6,0.22,0.14,d,0.08,0.5,0.33,p);
-  [[-.32,-.33],[.32,-.33],[-.32,.33],[.32,.33]].forEach(function(q){box(0.04,0.1,0.04,0x3a2c1a,q[0],0.05,q[1],p);});
+/* stitched seam: a thin darker band round a cushion, at height y */
+function seam(p,w,d,y,x,z,c){const m=box(w+0.004,0.006,d+0.004,c,x,y,z,p); m.castShadow=false; return m;}
+function shade(c,f){const q=new THREE.Color(c); q.multiplyScalar(f); return q.getHex();}
+K.armchair=function(p,c,d){                    // faces +x. Wooden legs, loose seat cushion, rolled arms, a slightly raked back
+  [[-.3,-.31],[.3,-.31],[-.3,.31],[.3,.31]].forEach(function(q){const l=cyl(0.016,0.17,0x8a6a3c,q[0],0.085,q[1],p,10,0.026); l.rotation.set(q[1]*0.25,0,-q[0]*0.25);});
+  rbox(0.76,0.2,0.78,d,0,0.27,0,p,0.06);                                   // frame
+  rbox(0.6,0.13,0.54,c,0.07,0.415,0,p,0.055); seam(p,0.56,0.5,0.415,0.07,0,shade(c,0.82));   // seat cushion
+  const b=rbox(0.2,0.66,0.76,d,-0.3,0.66,0,p,0.08); b.rotation.z=0.1;      // back
+  const bc=rbox(0.14,0.46,0.5,c,-0.19,0.68,0,p,0.06); bc.rotation.z=0.14;  // back cushion
+  [-0.33,0.33].forEach(function(z){rbox(0.62,0.26,0.15,d,0.05,0.47,z,p,0.07); const r=cyl(0.075,0.62,d,0.05,0.6,z,p,14); r.rotation.z=Math.PI/2;});   // arms with a rolled top
 };
-K.pouf=function(p,c){cyl(0.25,0.36,c,0,0.2,0,p,22); cyl(0.235,0.04,c,0,0.4,0,p,22); torus(0.25,0.012,0x3a2c1a,0,0.2,0,p).rotation.x=Math.PI/2;};
-K.chair=function(p,frame,seat){
-  box(0.4,0.04,0.4,frame,0,0.45,0,p); box(0.36,0.035,0.36,seat,0,0.485,0,p);
-  box(0.035,0.42,0.4,frame,-0.19,0.72,0,p);
-  [[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]].forEach(function(q){box(0.035,0.45,0.035,frame,q[0],0.225,q[1],p);});
+K.pouf=function(p,c){                          // a stuffed drum: soft top, bulging sides, a seam round the middle
+  cyl(0.235,0.3,c,0,0.2,0,p,26); sph(0.25,c,0,0.2,0,p,1,0.72,1);
+  sph(0.235,c,0,0.34,0,p,1,0.32,1); torus(0.248,0.006,shade(c,0.75),0,0.2,0,p).rotation.x=Math.PI/2;
+  cyl(0.03,0.012,shade(c,0.75),0,0.418,0,p,10);
+};
+K.chair=function(p,frame,seat){                // faces +x. Padded seat, curved top rail, tapered legs
+  rbox(0.41,0.035,0.41,frame,0,0.45,0,p,0.012); rbox(0.37,0.045,0.37,seat,0.005,0.487,0,p,0.02);
+  [[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]].forEach(function(q){cyl(0.013,0.44,frame,q[0],0.22,q[1],p,8,0.02);});
+  [-0.17,0.17].forEach(function(z){const s=cyl(0.016,0.5,frame,-0.2,0.7,z,p,8); s.rotation.z=0.07;});
+  const r1=rbox(0.03,0.11,0.4,frame,-0.215,0.9,0,p,0.012); r1.rotation.z=0.07; const r2=rbox(0.024,0.06,0.36,frame,-0.203,0.72,0,p,0.01); r2.rotation.z=0.07;
 };
 K.officeChair=function(p,c){
-  box(0.48,0.08,0.48,c,0,0.48,0,p); box(0.06,0.56,0.44,c,-0.24,0.83,0,p);
-  cyl(0.03,0.4,0x8d9092,0,0.24,0,p,8); cyl(0.27,0.04,0x8d9092,0,0.04,0,p,20);
+  rbox(0.48,0.09,0.48,c,0,0.48,0,p,0.04); const ob=rbox(0.07,0.56,0.44,c,-0.24,0.84,0,p,0.035); ob.rotation.z=0.08;
+  [0,1,2,3,4].forEach(function(i){const a=i/5*Math.PI*2, l=box(0.26,0.025,0.035,0x8d9092,Math.cos(a)*0.13,0.05,Math.sin(a)*0.13,p); l.rotation.y=-a; cyl(0.025,0.03,0x2b2b2b,Math.cos(a)*0.26,0.025,Math.sin(a)*0.26,p,8);});
+  cyl(0.03,0.4,0x8d9092,0,0.24,0,p,8);
 };
-K.cushion=function(p,c,x,y,z,s,tilt){const m=rbox(0.14*s,0.34*s,0.34*s,c,x,y,z,p,0.05*s); m.rotation.z=tilt==null?0.3:tilt; return m;};
+K.cushion=function(p,c,x,y,z,s,tilt){       // a plump scatter cushion
+  const g=A.G(p); g.position.set(x,y,z); g.rotation.z=tilt==null?0.3:tilt;
+  rbox(0.13*s,0.35*s,0.35*s,c,0,0,0,g,0.045*s); sph(0.19*s,c,0,0,0,g,0.42,0.86,0.86); return g;};
 
 /* ---------- rugs ---------- */
 K.rugTex=function(kind){

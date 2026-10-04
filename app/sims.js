@@ -10,8 +10,8 @@ const actors=new THREE.Group(); actors.userData.nc=true; actors.visible=false; s
    People
    ===================================================================== */
 const LOOKS={
-  angela:{id:'angela',name:'Angela',h:1.64,skin:0xe2b28f,hair:0x2e1c14,style:'curly',top:0xd6a21e,pants:0x3d5a80,shoes:0xf3ebdc,pj:0xe9b3a2,slim:true},
-  yoav:{id:'yoav',name:'Yoav',h:1.8,skin:0xdcab85,hair:0x2a1e17,style:'short',beard:'goatee',top:0x1f5a41,pants:0x2b2f38,shoes:0x3a2c20,pj:0x9db7dd}
+  angela:{id:'angela',name:'Angela',h:1.64,skin:0xe2b28f,hair:0x2e1c14,style:'curly',top:0xd6a21e,pants:0x3d5a80,shoes:0xf3ebdc,pj:0xe9b3a2,slim:true,sleeves:true},
+  yoav:{id:'yoav',name:'Yoav',h:1.8,skin:0xdcab85,hair:0x2a1e17,style:'short',beard:'goatee',top:0x2f6f52,pants:0x2b2f38,shoes:0x3a2c20,pj:0x9db7dd}
 };
 const FRIENDS=[
   {id:'maya',name:'Maya',h:1.62,skin:0xd9a47f,hair:0x2a1a12,style:'curly',top:0x9fc4d6,pants:0xf3ebdc,pj:0xf2d98a,slim:true},
@@ -27,83 +27,108 @@ function makePerson(spec){
   const g=new THREE.Group(); actors.add(g);
   const mats=[];
   const mk=function(c){const m=new THREE.MeshLambertMaterial({color:c}); mats.push({m:m,b:new THREE.Color(c)}); return m;};
+  // the first eight keep this order: outfit() and tint() rely on it
   const skin=mk(spec.skin), top=mk(spec.top), pants=mk(spec.pants), hair=mk(spec.hair), hair2=mk(spec.hair), shoe=mk(spec.shoes||0x2b2b2b), dark=mk(0x1c1a19), lip=mk(0x9a5046);
   hair2.color.offsetHSL(0,0,0.05); mats[4].b.copy(hair2.color);
+  const white=mk(0xf6f4ef), sole=mk(0xe9e6df), trim=mk(new THREE.Color(spec.top).multiplyScalar(0.78).getHex()), gold=mk(0xd9aa12);
   const put=function(geo,mat,p,x,y,z){const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=true; p.add(m); return m;};
-  const cg=function(rt,rb,h){return new THREE.CylinderGeometry(rt,rb,h,12);}, sg=function(r){return new THREE.SphereGeometry(r,14,10);};
-  const sc=spec.h/1.72, ws=spec.slim?0.9:1;
+  const cg=function(rt,rb,h){return new THREE.CylinderGeometry(rt,rb,h,14);}, sg=function(r){return new THREE.SphereGeometry(r,16,12);};
+  const lathe=function(pts){return new THREE.LatheGeometry(pts.map(function(q){return new THREE.Vector2(q[0],q[1]);}),18);};
+  const sc=spec.h/1.72, ws=spec.slim?0.9:1, fem=!!spec.slim;
   g.scale.setScalar(sc);
   const rig=new THREE.Group(); g.add(rig);
   const hips=new THREE.Group(); rig.add(hips); hips.position.y=0.88;
-  put(cg(0.165*ws,0.15*ws,0.17),pants,hips,0,0,0).scale.z=0.66;
+  put(sg(0.15*ws),pants,hips,0,0.015,0).scale.set(1.05,0.5,0.66);                                     // pelvis
+  put(cg(0.152*ws,0.156*ws,0.03),dark,hips,0,0.075,0).scale.z=0.66;                                 // belt
   const torso=new THREE.Group(); hips.add(torso);
-  put(cg(0.185*ws,0.15*ws,0.46),top,torso,0,0.3,0).scale.z=0.62;
-  [-1,1].forEach(function(s){put(sg(0.085),top,torso,s*0.165*ws,0.5,0);});
-  put(cg(0.045,0.05,0.1),skin,torso,0,0.585,0);
-  const head=new THREE.Group(); head.position.set(0,0.71,0); torso.add(head);
-  put(sg(0.115),skin,head,0,0,0).scale.set(0.95,1.08,1);
-  [-1,1].forEach(function(s){put(sg(0.014),dark,head,s*0.04,0.018,0.103);});
-  put(sg(0.016),skin,head,0,-0.012,0.115);
-  put(new THREE.BoxGeometry(0.04,0.009,0.01),lip,head,0,-0.052,0.104);
+  // one turned shape for the chest and waist, flattened front to back
+  put(lathe([[0.001,0.08],[0.148*ws,0.08],[fem?0.132*ws:0.15*ws,0.2],[0.168*ws,0.36],[0.186*ws,0.46],[0.17*ws,0.52],[0.09,0.565],[0.055,0.58],[0.001,0.58]]),top,torso,0,0,0).scale.z=0.62;
+  put(new THREE.TorusGeometry(0.058,0.012,8,16),trim,torso,0,0.575,0).rotation.x=Math.PI/2;        // collar
+  put(cg(0.046,0.052,0.09),skin,torso,0,0.615,0);                                                   // neck
+  const head=new THREE.Group(); head.position.set(0,0.73,0); torso.add(head);
+  put(sg(0.115),skin,head,0,0,0).scale.set(0.93,1.1,1);
+  put(sg(0.06),skin,head,0,-0.07,0.035).scale.set(1.25,0.8,1.1);                                   // jaw and chin
+  [-1,1].forEach(function(s){put(sg(0.024),skin,head,s*0.106,-0.005,0.0).scale.set(0.5,1,0.75);});  // ears
+  const eyes=new THREE.Group(); head.add(eyes);
+  [-1,1].forEach(function(s){
+    put(sg(0.02),white,eyes,s*0.041,0.016,0.094).scale.set(1.1,0.8,0.6);
+    put(sg(0.0105),dark,eyes,s*0.041,0.015,0.106).scale.z=0.6;
+    const br=put(new THREE.BoxGeometry(0.036,0.007,0.008),hair,head,s*0.042,0.047,0.103); br.rotation.z=-s*0.12;   // eyebrow
+  });
+  put(sg(0.017),skin,head,0,-0.014,0.114).scale.set(0.85,1.15,1);                                  // nose
+  const smile=put(new THREE.TorusGeometry(0.022,0.0045,6,12,Math.PI),lip,head,0,-0.05,0.1); smile.rotation.z=Math.PI; smile.scale.y=0.55;
+  if(fem){[-1,1].forEach(function(s){put(sg(0.009),gold,head,s*0.108,-0.035,0.0);});}             // earrings
   /* hair */
-  const cap=function(){const m=put(new THREE.SphereGeometry(0.124,14,10,0,Math.PI*2,0,Math.PI*0.54),hair,head,0,0.012,-0.008); m.rotation.x=-0.38; return m;};
-  if(spec.style==='short') cap();
-  else if(spec.style==='long'){cap(); put(sg(0.12),hair,head,0,-0.1,-0.075).scale.set(1.02,1.55,0.6);}
-  else if(spec.style==='bun'){cap(); put(sg(0.058),hair,head,0,0.135,-0.05);}
+  const cap=function(){const m=put(new THREE.SphereGeometry(0.124,16,12,0,Math.PI*2,0,Math.PI*0.54),hair,head,0,0.014,-0.008); m.rotation.x=-0.38; m.scale.set(0.97,1.06,1.02); return m;};
+  if(spec.style==='short'){cap(); put(sg(0.05),hair,head,0.02,0.105,0.06).scale.set(1.5,0.5,0.9);}                 // a bit of fringe
+  else if(spec.style==='long'){cap(); put(sg(0.125),hair,head,0,-0.1,-0.07).scale.set(1.0,1.6,0.6);
+    [-1,1].forEach(function(s){put(sg(0.05),hair2,head,s*0.105,-0.1,0.005).scale.set(0.6,2.3,0.9);});}
+  else if(spec.style==='bun'){cap(); put(sg(0.06),hair,head,0,0.14,-0.05); put(new THREE.TorusGeometry(0.036,0.008,6,12),hair2,head,0,0.105,-0.045).rotation.x=1.3;}
   else if(spec.style==='curly'){                       // a full head of curls, down to the shoulders
     const r=A.rng(42);
-    for(let i=0;i<64;i++){
+    for(let i=0;i<70;i++){
       const y=r()*1.35-0.35, a=r()*Math.PI*2, q=Math.sqrt(Math.max(0,1-y*y)), dx=q*Math.cos(a), dz=q*Math.sin(a);
       if(dz>0.3&&y<0.5) continue;
-      put(sg(0.036+r()*0.022),i%3?hair:hair2,head,dx*0.128,y*0.135+0.012,dz*0.132-0.006);
+      put(sg(0.036+r()*0.022),i%3?hair:hair2,head,dx*0.128,y*0.14+0.014,dz*0.132-0.006);
     }
-    for(let i=0;i<34;i++){
-      const a=Math.PI*(1.02+r()*0.96), y=-0.03-r()*0.2, rad=0.125+r()*0.035;
+    for(let i=0;i<38;i++){
+      const a=Math.PI*(1.02+r()*0.96), y=-0.03-r()*0.22, rad=0.125+r()*0.035;
       put(sg(0.036+r()*0.02),i%3?hair:hair2,head,Math.cos(a)*rad,y,Math.sin(a)*rad*0.95+0.01);
     }
-    [-1,1].forEach(function(s){for(let i=0;i<5;i++) put(sg(0.035+r()*0.015),hair,head,s*(0.118+r()*0.02),-0.02-i*0.042,0.025-r()*0.03);});
+    [-1,1].forEach(function(s){for(let i=0;i<6;i++) put(sg(0.034+r()*0.016),i%2?hair:hair2,head,s*(0.118+r()*0.02),-0.02-i*0.04,0.025-r()*0.03);});
   }
   /* beard */
   if(spec.beard==='goatee'){                           // short French beard: moustache joined to a trimmed chin
-    put(new THREE.BoxGeometry(0.074,0.015,0.016),hair,head,0,-0.034,0.106);
-    put(sg(0.034),hair,head,0,-0.094,0.083).scale.set(1.2,0.72,0.7);
-    [-1,1].forEach(function(s){put(new THREE.BoxGeometry(0.013,0.056,0.014),hair,head,s*0.039,-0.06,0.099);});
+    put(new THREE.BoxGeometry(0.076,0.014,0.014),hair,head,0,-0.034,0.108);
+    put(sg(0.036),hair,head,0,-0.1,0.078).scale.set(1.25,0.7,0.75);
+    [-1,1].forEach(function(s){const c=put(new THREE.BoxGeometry(0.012,0.06,0.012),hair,head,s*0.04,-0.064,0.098); c.rotation.z=s*0.12;});
   }else if(spec.beard==='full'){
-    put(new THREE.SphereGeometry(0.119,14,10,0,Math.PI*2,Math.PI*0.56,Math.PI*0.44),hair,head,0,0.0,0.004).scale.set(0.97,1.1,1.03);
-    put(new THREE.BoxGeometry(0.074,0.015,0.016),hair,head,0,-0.034,0.108);
+    put(new THREE.SphereGeometry(0.119,16,12,0,Math.PI*2,Math.PI*0.56,Math.PI*0.44),hair,head,0,-0.004,0.006).scale.set(0.97,1.16,1.05);
+    put(new THREE.BoxGeometry(0.076,0.014,0.014),hair,head,0,-0.034,0.108);
   }
-  /* arms and legs */
+  /* arms and legs, with round joints so they do not break at the bend */
   const limb=function(s){
-    const arm=new THREE.Group(); arm.position.set(s*(0.2*ws+0.035),0.5,0); arm.rotation.z=s*0.07; torso.add(arm);
-    put(cg(0.046,0.04,0.28),top,arm,0,-0.14,0);
+    const arm=new THREE.Group(); arm.position.set(s*(0.19*ws+0.03),0.5,0); arm.rotation.z=s*0.07; torso.add(arm);
+    put(sg(0.058),top,arm,0,0,0);                                                                    // shoulder
+    put(cg(0.05,0.042,0.27),top,arm,0,-0.14,0);
     const fore=new THREE.Group(); fore.position.y=-0.28; arm.add(fore);
-    put(cg(0.037,0.033,0.25),skin,fore,0,-0.125,0); put(sg(0.042),skin,fore,0,-0.27,0);
+    put(sg(0.041),spec.sleeves?top:skin,fore,0,0,0);                                                 // elbow
+    put(cg(0.038,0.03,0.24),spec.sleeves?top:skin,fore,0,-0.125,0);
+    put(sg(0.036),skin,fore,0,-0.275,0.005).scale.set(0.75,1.2,1);                                   // hand
+    put(sg(0.014),skin,fore,s*-0.024,-0.262,0.022).scale.set(0.8,1.6,0.8);                           // thumb
     const leg=new THREE.Group(); leg.position.set(s*0.085,-0.02,0); hips.add(leg);
-    put(cg(0.075,0.06,0.42),pants,leg,0,-0.21,0);
+    put(cg(0.078,0.058,0.42),pants,leg,0,-0.21,0);
     const knee=new THREE.Group(); knee.position.y=-0.42; leg.add(knee);
-    put(cg(0.058,0.045,0.4),pants,knee,0,-0.2,0); put(new THREE.BoxGeometry(0.09,0.06,0.22),shoe,knee,0,-0.415,0.045);
+    put(sg(0.058),pants,knee,0,0,0);                                                                 // knee
+    put(cg(0.055,0.043,0.38),pants,knee,0,-0.19,0);
+    put(sg(0.062),shoe,knee,0,-0.4,0.045).scale.set(0.82,0.6,1.85);                                  // shoe
+    put(new THREE.BoxGeometry(0.094,0.018,0.225),sole,knee,0,-0.428,0.045);
     return {arm:arm,fore:fore,leg:leg,knee:knee};
   };
   const Lm=limb(-1), Rm=limb(1);
-  const p={g:g,head:head,mats:mats,sc:sc,sit:0,lie:0,walk:0,sitT:0,lieT:0,walking:false,phase:0,seatY:0.45,lieY:0.45,knee:1,recline:0,pjOn:false};
-  const baseTop=new THREE.Color(spec.top), basePants=new THREE.Color(spec.pants), baseShoe=new THREE.Color(spec.shoes||0x2b2b2b);
+  const p={g:g,head:head,mats:mats,sc:sc,sit:0,lie:0,walk:0,sitT:0,lieT:0,walking:false,phase:0,seatY:0.45,lieY:0.45,knee:1,recline:0,pjOn:false,t:Math.random()*10,blink:2+Math.random()*3};
+  const baseTop=new THREE.Color(spec.top), basePants=new THREE.Color(spec.pants), baseShoe=new THREE.Color(spec.shoes||0x2b2b2b), baseTrim=mats[10].b.clone();
   p.outfit=function(pj){
     p.pjOn=pj;
-    if(pj){mats[1].b.set(spec.pj); mats[2].b.set(spec.pj).multiplyScalar(0.86); mats[5].b.set(0xf3ebdc);}
-    else{mats[1].b.copy(baseTop); mats[2].b.copy(basePants); mats[5].b.copy(baseShoe);}
+    if(pj){mats[1].b.set(spec.pj); mats[2].b.set(spec.pj).multiplyScalar(0.86); mats[5].b.set(0xf3ebdc); mats[10].b.set(0xffffff);}
+    else{mats[1].b.copy(baseTop); mats[2].b.copy(basePants); mats[5].b.copy(baseShoe); mats[10].b.copy(baseTrim);}
   };
   p.tint=function(t){for(let i=0;i<mats.length;i++) mats[i].m.color.copy(mats[i].b).multiply(t);};
   p.update=function(dt){
     const k=Math.min(1,dt*9);
     p.sit+=(p.sitT-p.sit)*k; p.lie+=(p.lieT-p.lie)*k; p.walk+=((p.walking?1:0)-p.walk)*Math.min(1,dt*10);
     if(p.walking) p.phase+=dt*9.5;
+    p.t+=dt; const still=1-p.walk, br=Math.sin(p.t*1.7);
     const sw=Math.sin(p.phase)*0.62*p.walk, s=p.sit, kn=p.knee;
     hips.position.y=0.88+(((p.seatY+0.085)/sc)-0.88)*s+Math.abs(Math.cos(p.phase))*0.018*p.walk;
+    hips.rotation.y=Math.sin(p.phase)*0.09*p.walk; torso.rotation.y=-Math.sin(p.phase)*0.16*p.walk;      // hips and shoulders counter-rotate
     Lm.leg.rotation.x=-s*R/2*0.97+sw; Rm.leg.rotation.x=-s*R/2*0.97-sw;
     Lm.knee.rotation.x=s*R/2*kn+Math.max(0,-Math.sin(p.phase))*0.75*p.walk; Rm.knee.rotation.x=s*R/2*kn+Math.max(0,Math.sin(p.phase))*0.75*p.walk;
-    Lm.arm.rotation.x=-sw*0.8-0.2*s; Rm.arm.rotation.x=sw*0.8-0.2*s;
-    Lm.fore.rotation.x=Rm.fore.rotation.x=-0.25*p.walk-1.05*s*(1-p.lie);
-    torso.rotation.x=-p.recline*s;
+    Lm.arm.rotation.x=-sw*0.8-0.2*s+br*0.015*still; Rm.arm.rotation.x=sw*0.8-0.2*s-br*0.015*still;
+    Lm.fore.rotation.x=Rm.fore.rotation.x=-0.25*p.walk-1.05*s*(1-p.lie)-0.08*still;
+    torso.rotation.x=-p.recline*s+0.05*p.walk; torso.scale.set(1,1+br*0.008*still,1+br*0.02*still);       // breathing
+    head.rotation.y=Math.sin(p.t*0.43)*0.22*still*(1-p.lie); head.rotation.x=Math.sin(p.t*0.31)*0.05*still-0.05*p.walk;
+    if((p.blink-=dt)<0){p.blink=p.lie>0.5?0.1:2.5+Math.random()*3.5;} eyes.scale.y=(p.blink<0.12||p.lie>0.8&&p.asleep)?0.12:1;
     rig.rotation.x=-p.lie*R/2; rig.position.set(0,p.lie*(p.lieY+0.11)/sc,p.lie*0.86);
   };
   return p;
@@ -239,6 +264,7 @@ Actor.prototype.say=function(text,sec){
   later(sec||2.4,function(){b.remove(); if(self.bubble===b) self.bubble=null;},this);
 };
 Actor.prototype.sleep=function(on){
+  this.p.asleep=on;
   if(on&&!this.zz) this.zz=A.tag('z z z','zzz');
   if(!on&&this.zz){this.zz.remove(); this.zz=null;}
 };

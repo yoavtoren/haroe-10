@@ -224,9 +224,12 @@ inRoom('bed2',function(){
   seat({id:'desk3',label:'Desk (bedroom 2)',room:'bed2',x:BX-1.1,z:dkz,y:0.52,h:R/2,type:'sit',only:'n'});
   // proposals: the bed turns 90 degrees to face the TV, a reading nook replaces the desk, the bike goes
   const bz=AZ+0.8;
-  box(2.0,0.14,1.5,0xc9a66b,l+1.03,0.1,bz,d); A.rbox(2.0,0.22,1.5,0xfbfaf6,l+1.03,0.3,bz,d); A.rbox(0.4,0.1,1.3,0xffffff,l+0.33,0.46,bz,d);
-  box(0.05,0.6,1.5,0xc99a5b,l+0.03,0.72,bz,d);
-  A.rbox(0.7,0.05,1.52,SAGE,l+1.6,0.435,bz,d); A.rbox(0.3,0.14,0.36,BLUE,l+0.62,0.5,bz-0.3,d); A.rbox(0.3,0.14,0.36,0xcfe3ec,l+0.62,0.5,bz+0.3,d);
+  A.rbox(2.04,0.12,1.54,0xc99a5b,l+1.03,0.16,bz,d,0.02); [[0.1,-0.68],[1.96,-0.68],[0.1,0.68],[1.96,0.68]].forEach(function(q){cyl(0.03,0.1,0xc99a5b,l+q[0],0.05,bz+q[1],d,10);});   // oak frame on short legs
+  A.rbox(2.0,0.2,1.5,0xfbfaf6,l+1.03,0.31,bz,d,0.07);                    // mattress
+  A.rbox(1.32,0.09,1.56,0xf3efe6,l+1.36,0.42,bz,d,0.04); A.rbox(0.16,0.1,1.56,0xffffff,l+0.74,0.425,bz,d,0.045);     // duvet with its turned-back edge
+  [-0.36,0.36].forEach(function(dz){A.rbox(0.42,0.13,0.64,0xffffff,l+0.33,0.47,bz+dz,d,0.06); const p2=A.rbox(0.36,0.12,0.58,0xe9eef0,l+0.26,0.56,bz+dz,d,0.055); p2.rotation.z=0.5;});
+  A.rbox(0.07,0.7,1.56,0xc99a5b,l+0.04,0.72,bz,d,0.025); [-0.5,0,0.5].forEach(function(dz){box(0.006,0.6,0.01,0xa9825a,l+0.078,0.72,bz+dz,d);});
+  A.rbox(0.62,0.05,1.6,SAGE,l+1.68,0.475,bz,d,0.022); K.cushion(d,BLUE,l+0.62,0.6,bz-0.12,0.85,0.9); K.cushion(d,SAGE,l+0.66,0.58,bz+0.22,0.75,1.0);
   seat({id:'bedL',label:'Bed, window side',room:'bed2',x:l+1.15,z:bz-0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
   seat({id:'bedR',label:'Bed, room side',room:'bed2',x:l+1.15,z:bz+0.35,y:0.41,h:R/2,type:'lie',only:'abc'});
   box(0.36,0.42,0.36,0xc99a5b,l+0.2,0.21,bz+0.96,d); K.tableLamp(d,l+0.2,0.42,bz+0.96,'L:bed2');

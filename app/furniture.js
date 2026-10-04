@@ -23,11 +23,16 @@ piece('sofa',{label:'Sofa',h:1.2,seats:[
   {id:'sofaM',label:'Sofa, middle',lx:0.2,lz:0,y:0.45,type:'sit',recline:0.22},
   {id:'sofaR',label:'Sofa, right',lx:0.2,lz:0.9,y:0.45,type:'sit',recline:0.22},
   {id:'sofaLie',label:'Sofa',lx:0.16,lz:0,y:0.46,type:'lie',dh:-R/2}]},function(g){   // about 330 x 120 cm, three seats, big back cushions
-  const c=0x1f5a41, d=0x194a36, len=3.3;
-  A.rbox(1.2,0.42,len,c,0,0.21,0,g);
-  A.rbox(0.3,0.44,len,d,-0.45,0.64,0,g);
-  A.rbox(0.9,0.2,0.3,d,0.15,0.52,-len/2+0.15,g); A.rbox(0.9,0.2,0.3,d,0.15,0.52,len/2-0.15,g);
-  [-0.9,0,0.9].forEach(function(z){A.rbox(0.88,0.03,0.88,0x226246,0.14,0.435,z,g); const p=A.rbox(0.22,0.44,0.84,0x246a4c,-0.22,0.68,z,g); p.rotation.z=0.22;});
+  const c=0x1f5a41, d=0x194a36, s=0x153d2d, len=3.3, rb=A.rbox;
+  [[-0.5,-1.5],[0.5,-1.5],[-0.5,0],[0.5,0],[-0.5,1.5],[0.5,1.5]].forEach(function(q){cyl(0.03,0.07,0x2a2622,q[0],0.035,q[1],g,10);});   // feet
+  rb(1.2,0.3,len,d,0,0.215,0,g,0.07);                                           // base
+  rb(0.3,0.5,len,d,-0.45,0.6,0,g,0.1);                                          // back
+  [-1,1].forEach(function(e){rb(0.94,0.34,0.3,d,0.13,0.5,e*(len/2-0.15),g,0.11);});   // arms
+  [-0.9,0,0.9].forEach(function(z){
+    rb(0.86,0.17,0.89,c,0.15,0.435,z,g,0.075); const sm=box(0.82,0.006,0.85,s,0.15,0.435,z,g); sm.castShadow=false;      // seat cushion with a seam
+    const p=rb(0.24,0.5,0.86,0x246a4c,-0.2,0.72,z,g,0.11); p.rotation.z=0.2;    // back cushion
+    [-0.2,0.2].forEach(function(dz){const b=sph(0.014,s,-0.075,0.76,z+dz,g,0.5,1,1); b.castShadow=false;});       // tufting buttons
+  });
   [-1.25,-0.45].forEach(function(z){K.cushion(g,0xe6dccb,-0.3,0.95,z,0.9);});
   const n=G(g,'abc');                                   // redesign: more cushions and a throw
   K.cushion(n,BLUE,-0.12,0.66,1.22,1); K.cushion(n,0xfbfaf6,-0.14,0.64,0.42,0.9,0.4); K.cushion(n,SAGE,-0.12,0.66,-0.86,1);
@@ -87,7 +92,7 @@ piece('lift',{label:'Lift-top table',h:1.0,isNew:true,shop:['Lift-top coffee tab
   box(0.56,0.2,1.12,0xfbfaf6,0,0.22,0,g); box(0.52,0.012,1.08,0x8a6a3c,0,0.325,0,g);            // storage body
   [[-.24,-.52],[.24,-.52],[-.24,.52],[.24,.52]].forEach(function(p){box(0.04,0.12,0.04,OAK,p[0],0.06,p[1],g);});
   const top=G(g); top.position.set(0,0.36,0);
-  box(0.6,0.04,1.2,OAK,0,0,0,top);
+  A.rbox(0.6,0.04,1.2,OAK,0,0,0,top,0.012);
   box(0.3,0.015,0.4,INK,0.05,0.028,-0.3,top); K.candle(top,0.0,0.035,-0.4,0.09); K.candle(top,0.1,0.035,-0.28,0.13); K.candle(top,-0.02,0.035,-0.2,0.06);
   K.bookStack(top,0.05,0.02,0.35,3,12); K.bush(top,-0.12,0.02,0.05,0.05,BLUE);
   const arms=[-0.54,0.54].map(function(z){
@@ -126,10 +131,10 @@ sideChairs('fc',2,WHITE,SAGE,['Folding chair','TERJE folding chair','ikea','Fold
 
 /* ---------- option C: drop-leaf table. A 26 cm console against the wall, opens to 75 x 150 for four ---------- */
 piece('gate',{label:'Drop-leaf dining table',h:1.15,isNew:true,shop:['Gateleg table','NORDEN gateleg table','ikea','Closed it is a narrow console with drawers; both leaves up seats four.']},function(g){
-  box(0.75,0.03,0.26,OAK,0,0.745,0,g); box(0.62,0.5,0.2,WHITE,0,0.47,0,g);
+  A.rbox(0.75,0.03,0.26,OAK,0,0.745,0,g,0.01); box(0.62,0.5,0.2,WHITE,0,0.47,0,g);
   [-0.2,0.05].forEach(function(y){box(0.58,0.004,0.004,0xcfc8b8,0,0.47+y,0.101,g); box(0.58,0.004,0.004,0xcfc8b8,0,0.47+y,-0.101,g);});
   [[-.29,-.08],[.29,-.08],[-.29,.08],[.29,.08]].forEach(function(p){box(0.04,0.72,0.04,OAK,p[0],0.36,p[1],g);});
-  const leaves=[1,-1].map(function(s){const lg=G(g); lg.position.set(0,0.745,s*0.13); box(0.75,0.026,0.62,OAK,0,0,s*0.31,lg); return {g:lg,s:s};});
+  const leaves=[1,-1].map(function(s){const lg=G(g); lg.position.set(0,0.745,s*0.13); A.rbox(0.75,0.026,0.62,OAK,0,0,s*0.31,lg,0.01); return {g:lg,s:s};});
   const legs=[1,-1].map(function(s){return box(0.04,0.72,0.04,OAK,0,0.36,s*0.68,g);});
   const stuff=G(g); cyl(0.06,0.2,BLUE,0.18,0.86,0,stuff,14,0.035); sph(0.07,0x3f9160,0.18,1.0,0,stuff); K.bookStack(stuff,-0.18,0.76,0,3,3);
   tableFns.push(function(t){
@@ -190,7 +195,7 @@ piece('music',{label:'Record corner',h:1.2,isNew:true,shop:['Low sideboard','sid
 });
 piece('bench',{label:'Storage bench',h:0.9,isNew:true,shop:['Bench with storage','PERJOHAN bench with storage','ikea','Pine, about 100 cm. Two side by side fill the corner.'],seats:[{id:'benchA',label:'Bench, left',lx:0.02,lz:-0.35,y:0.5,type:'sit'},{id:'benchB',label:'Bench, right',lx:0.02,lz:0.35,y:0.5,type:'sit'}]},function(g){
   box(0.42,0.06,1.4,OAK,0,0.41,0,g); [[-.17,-.64],[.17,-.64],[-.17,.64],[.17,.64]].forEach(function(p){box(0.04,0.38,0.04,OAK,p[0],0.19,p[1],g);});
-  A.rbox(0.4,0.07,0.66,SAGE,0,0.47,-0.35,g); A.rbox(0.4,0.07,0.66,SAGE,0,0.47,0.35,g);
+  A.rbox(0.4,0.08,0.66,SAGE,0,0.475,-0.35,g,0.035); A.rbox(0.4,0.08,0.66,SAGE,0,0.475,0.35,g,0.035);
   box(0.32,0.24,0.4,RATTAN,0,0.13,-0.35,g); box(0.32,0.24,0.4,RATTAN,0,0.13,0.35,g);
   K.cushion(g,BLUE,-0.14,0.66,-0.5,0.9,0.2); K.cushion(g,WHITE,-0.14,0.66,0.52,0.9,0.2);
 });
@@ -219,7 +224,7 @@ mattress('mat1','Mattress by the sofa',0xcfe3ec); mattress('mat2','Mattress by t
 
 /* ---------- two more coffee tables ---------- */
 piece('round',{label:'Round oak table',h:0.8,isNew:true,shop:['Round coffee table','round coffee table oak 80','ikea','About 80 cm across, solid or veneered oak.']},function(g){
-  cyl(0.4,0.04,OAK,0,0.42,0,g,40); cyl(0.07,0.36,OAK,0,0.22,0,g,16,0.05); cyl(0.26,0.04,OAK,0,0.02,0,g,30);
+  cyl(0.4,0.04,OAK,0,0.42,0,g,48); A.torus(0.4,0.02,OAK,0,0.42,0,g).rotation.x=R/2; cyl(0.07,0.36,OAK,0,0.22,0,g,16,0.05); cyl(0.26,0.04,OAK,0,0.02,0,g,30);
   box(0.26,0.015,0.26,LINEN,0.05,0.447,-0.08,g); K.candle(g,0.0,0.455,-0.12,0.1); K.candle(g,0.1,0.455,-0.04,0.14); K.bush(g,-0.15,0.44,0.14,0.05,BLUE);
 });
 piece('trunk',{label:'Storage chest table',h:0.8,isNew:true,shop:['Wooden storage chest','wooden storage trunk coffee table','web','A pine or oak chest about 100 × 50 × 42 cm. Blankets and games go inside.']},function(g){
