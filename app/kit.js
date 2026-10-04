@@ -311,6 +311,19 @@ K.grinder=function(p,x,y,z,rotY){
   return g;
 };
 
+/* ---------- desk things: a keyboard with printed keys, and a mouse. The keyboard is long along z. ---------- */
+const kbTex=canvasTex(256,80,function(g){
+  g.fillStyle='#dfe0dc'; g.fillRect(0,0,256,80);
+  for(let r=0;r<5;r++) for(let c=0;c<15;c++){const w=(r===4&&c>3&&c<10)?0:14; if(r===4&&c===4){g.fillStyle='#fbfbf9'; g.fillRect(8+c*16.2,8+r*13.6,95,11);} if(!w) continue; g.fillStyle='#fbfbf9'; g.fillRect(8+c*16.2,8+r*13.6,w,11); g.fillStyle='rgba(60,70,66,.35)'; g.fillRect(12+c*16.2,12+r*13.6,4,2);}
+});
+K.keyboard=function(p,x,y,z,rotY,dark){
+  const g=A.G(p); g.position.set(x,y,z); g.rotation.y=rotY||0;
+  rbox(0.13,0.012,0.4,dark?0x1b1c1e:0xe2e3e0,0,0.006,0,g,0.004);
+  const m=A.MT(kbTex); if(dark) m.color.set(0x55585c);
+  const t=new THREE.Mesh(new THREE.PlaneGeometry(0.385,0.118),m); t.rotation.set(-Math.PI/2,0,Math.PI/2); t.position.y=0.0125; g.add(t); return g;
+};
+K.mouse=function(p,x,y,z,dark){return sph(0.03,dark?0x1b1c1e:0xe6e7e4,x,y+0.011,z,p,0.72,0.42,1.12);};
+
 /* ---------- rugs ---------- */
 K.rugTex=function(kind){
   return canvasTex(256,384,function(g,w,h){

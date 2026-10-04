@@ -156,7 +156,9 @@ inRoom('kitchen',function(){
   box(1.8,0.12,0.49,0x1d1f21,(c0+c1)/2,0.06,0.255); box(1.84,0.04,0.61,0xf4f3ee,(c0+c1)/2,0.9,0.315);
   const hx=c1-0.38;
   [c1-0.08,c1-0.68,c1-1.2].forEach(function(x){box(0.006,0.74,0.004,line,x,0.5,0.602);});
-  box(0.56,0.56,0.006,0x0f1011,hx,0.56,0.603); box(0.44,0.02,0.03,0x8d9296,hx,0.78,0.615);            // oven
+  box(0.56,0.56,0.006,0x0f1011,hx,0.56,0.603); box(0.4,0.26,0.004,0x1b2126,hx,0.48,0.607);              // oven: door with a window,
+  box(0.44,0.018,0.026,0x8d9296,hx,0.7,0.622); [-0.2,0.2].forEach(function(o){box(0.016,0.016,0.02,0x8d9296,hx+o,0.7,0.61);});      // a bar handle on stand-offs,
+  [-0.21,-0.13,0.13,0.21].forEach(function(o){cyl(0.016,0.014,0x8d9296,hx+o,0.795,0.611,null,14).rotation.x=R/2;}); box(0.1,0.03,0.004,0x24423a,hx,0.795,0.607);   // knobs and a clock
   A.rbox(0.3,0.012,0.5,0x101112,hx-0.1,0.926,0.31,null,0.004);                                        // hob
   [[0.19,0.062],[0.42,0.08]].forEach(function(q){cyl(q[1],0.004,0x2a2c2e,hx-0.1,0.934,q[0],null,28); A.torus(q[1]*0.6,0.0025,0x55595c,hx-0.1,0.9365,q[0]).rotation.x=R/2;});
   [-0.03,0.03].forEach(function(o){cyl(0.008,0.002,0x8d9296,hx-0.1+o,0.933,0.535,null,10);});                 // touch controls at the front edge
@@ -184,6 +186,7 @@ inRoom('bed1',function(){
   box(1.2,0.03,0.6,0xd9bf8c,0.65,0.74,AZ+0.32);                         // desk under the window
   [[0.08,AZ+0.05],[1.22,AZ+0.05],[0.08,AZ+0.59],[1.22,AZ+0.59]].forEach(function(p){box(0.03,0.73,0.03,0xf2f2f0,p[0],0.365,p[1]);});
   box(0.56,0.33,0.03,0x111315,0.7,1.08,AZ+0.16); box(0.2,0.14,0.12,0x111315,0.7,0.83,AZ+0.16); // monitor
+  K.keyboard(null,0.7,0.756,AZ+0.42,R/2); K.mouse(null,1.0,0.756,AZ+0.42);
   const c1=G(); c1.position.set(0.65,0,AZ+0.95); c1.rotation.y=R/2; K.officeChair(c1,0xd8d8d2);                    // chair (faces the desk)
   A.desks={desk1:{chair:c1,dir:[0,-1],screen:K.screen(null,0.5,0.28,0.7,1.08,AZ+0.177,0)}};
   seat({id:'desk1',label:'Desk by the window',room:'bed1',x:0.65,z:AZ+0.95,y:0.52,h:R,type:'sit'});
@@ -199,7 +202,7 @@ inRoom('bed1',function(){
   [[r-0.62,dz-0.61],[r-0.05,dz-0.61],[r-0.62,dz+0.61],[r-0.05,dz+0.61]].forEach(function(p){box(0.035,0.72,0.035,0xfbfaf6,p[0],0.36,p[1],dk);});
   A.shop(dk,'Second desk','LAGKAPTEN ADILS desk','ikea','Or any 120 to 140 cm desk with an oak top and white legs.');
   box(0.03,0.36,0.62,0x111315,r-0.16,1.1,dz-0.1,d); box(0.1,0.16,0.18,0x111315,r-0.16,0.84,dz-0.1,d);
-  box(0.14,0.012,0.4,0xe9e9e6,r-0.42,0.765,dz-0.1,d); box(0.24,0.012,0.32,0xb9bdc0,r-0.35,0.765,dz+0.42,d);
+  K.keyboard(d,r-0.42,0.758,dz-0.1,0); K.mouse(d,r-0.42,0.758,dz+0.2); A.rbox(0.24,0.014,0.32,0xb9bdc0,r-0.35,0.765,dz+0.47,d,0.005);      // keyboard, mouse, a closed laptop
   const ch=G(d); ch.position.set(r-1.05,0,dz); K.officeChair(ch,0x8fbd9b); A.shop(ch,'Desk chair','office chair','ikea');
   A.desks.desk2={chair:ch,dir:[1,0],screen:K.screen(d,0.56,0.3,r-0.177,1.1,dz-0.1,-R/2)};
   seat({id:'desk2',label:'New desk',room:'bed1',x:r-1.05,z:dz,y:0.52,h:R/2,type:'sit',only:'abc'});
@@ -226,11 +229,13 @@ inRoom('bed2',function(){
   K.ceilDisc(null,(l+BX)/2+0.225,-1.9,'L:bed2');      // clear of the column
   box(0.22,0.28,0.85,0xf6f7f5,BX-0.11,2.5,dkz);                         // air conditioner above the big window
   box(0.5,1.9,1.17,0xf8f8f6,NX+0.25,0.95,-1.27); [-1.66,-1.27,-0.88].forEach(function(z){box(0.006,1.82,0.37,0xfdfdfb,NX+0.503,0.97,z);}); box(0.004,1.4,0.12,0xb9c6cc,NX+0.508,1.05,-1.27);
+  [-1.5,-1.11,-1.04].forEach(function(z){box(0.012,0.2,0.012,0xb9bdc0,NX+0.514,1.02,z);});                       // door handles
   box(0.36,0.3,0.5,0x202a44,NX+0.25,2.05,-1.45,n); box(0.36,0.3,0.4,0x3b3d40,NX+0.25,2.05,-0.95,n);
   box(0.45,1.0,0.56,0xc7a878,NX+0.225,0.5,-0.36); [0.34,0.67].forEach(function(y){box(0.006,0.012,0.54,0x7d674a,NX+0.452,y,-0.36);});
+  box(0.47,0.02,0.58,0xb98a4e,NX+0.23,1.01,-0.36);                                                                    // dresser: top, three drawer fronts and their knobs
+  [0.18,0.505,0.835].forEach(function(y){box(0.012,0.3,0.52,0xc7a878,NX+0.456,y,-0.36); [-0.14,0.14].forEach(function(o){sph(0.014,0x7d674a,NX+0.47,y,-0.36+o);});});
   const kx=l+0.385;                                                     // 2 x 4 cube shelf between the wall and the column
-  box(0.77,1.47,0.39,0xfafaf8,kx,0.735,kz);
-  [0.37,0.735,1.1].forEach(function(y){box(0.73,0.02,0.006,0xcfd2ce,kx,y,kz+0.197);}); box(0.02,1.43,0.006,0xcfd2ce,kx,0.735,kz+0.197);
+  const ks=G(); ks.position.set(kx,0,kz); ks.rotation.y=-R/2; K.kallax(ks,['bx','sb','yb','xb'],0xfafaf8,{box:0xd9c9a8,box2:SAGE,seed:5});        // open cubes facing the door: books and baskets
   [[-0.2,0xf0d21c],[-0.02,0xd9463e],[0.16,0x9fb4c8]].forEach(function(q){box(0.14,0.05,0.07,q[1],kx+q[0],1.5,kz,n);});
   box(0.4,H,0.4,M(0xf5f6f3),l+0.97,H/2,kz);                             // column
   const sk=box(0.22,0.8,0.06,0x3b8f8a,l+0.2,0.42,kz+0.26,n); sk.rotation.x=-0.2;
@@ -251,7 +256,7 @@ inRoom('bed2',function(){
     box(0.7,0.04,0.04,0x1b1c1e,0.02,0.83,0,g); box(0.04,0.04,0.56,0xd98a2b,0.42,0.98,0,g); box(0.2,0.05,0.1,0x1b1c1e,-0.3,0.92,0,g);})();
   box(0.7,0.05,1.5,0xd2b07a,BX-0.36,0.74,dkz,n);
   [dkz-0.7,dkz+0.7].forEach(function(z){box(0.08,0.72,0.08,0xd2b07a,BX-0.66,0.36,z,n); box(0.08,0.72,0.08,0xd2b07a,BX-0.08,0.36,z,n);});
-  box(0.04,0.36,0.62,0x111315,BX-0.2,1.1,dkz-0.1,n); box(0.14,0.14,0.2,0x111315,BX-0.2,0.84,dkz-0.1,n); box(0.16,0.02,0.45,0x1b1c1e,BX-0.42,0.775,dkz-0.1,n);
+  box(0.04,0.36,0.62,0x111315,BX-0.2,1.1,dkz-0.1,n); box(0.14,0.14,0.2,0x111315,BX-0.2,0.84,dkz-0.1,n); K.keyboard(n,BX-0.42,0.766,dkz-0.1,0,true); K.mouse(n,BX-0.42,0.766,dkz+0.2,true);
   const c3=G(n); c3.position.set(BX-1.1,0,dkz); K.officeChair(c3,0x2a2d31);
   A.desks.desk3={chair:c3,dir:[1,0],screen:K.screen(n,0.56,0.3,BX-0.222,1.1,dkz-0.1,-R/2)};
   seat({id:'desk3',label:'Desk (bedroom 2)',room:'bed2',x:BX-1.1,z:dkz,y:0.52,h:R/2,type:'sit',only:'n'});
