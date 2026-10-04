@@ -172,7 +172,7 @@ pts.frustumCulled=false; pts.visible=false; pts.userData.nc=true; pts.renderOrde
 // the faster the air, the longer the streak behind each speck
 const lpos=new Float32Array(NP*6), lcol=new Float32Array(NP*6), lg=new THREE.BufferGeometry();
 lg.setAttribute('position',new THREE.BufferAttribute(lpos,3)); lg.setAttribute('color',new THREE.BufferAttribute(lcol,3));
-const streaks=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.9,depthWrite:false}));
+const streaks=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.45,depthWrite:false}));
 streaks.frustumCulled=false; streaks.visible=false; streaks.userData.nc=true; streaks.renderOrder=4; scene.add(streaks);
 const hd=new Uint8Array(N*4), htex=new THREE.DataTexture(hd,NX,NZ,THREE.RGBAFormat); htex.magFilter=THREE.LinearFilter; htex.minFilter=THREE.LinearFilter;
 const hgeo=new THREE.PlaneGeometry(NX*h,NZ*h); hgeo.rotateX(-Math.PI/2);
@@ -191,11 +191,11 @@ function draw(dt){
     if(c<0||c>=N||solid[c]||(page[i]-=dt)<0){spawn(i); continue;}
     const a=sample(u,x,z), b=sample(v,x,z), sp=Math.hypot(a,b);
     ppos[i*3]=x+a*dt*2.2; ppos[i*3+2]=z+b*dt*2.2;
-    tcol(sample(T,x,z)); const f=Math.min(1,sp*2.6), br=0.9-0.75*f;                  // slow air: a dot. fast air: the dot fades and a line takes over
+    tcol(sample(T,x,z)); const f=Math.min(1,sp*2.6), br=0.9-0.45*f;                  // slow air: a dot. fast air: the dot fades and a line takes over
     pcol[i*3]=col.r*br; pcol[i*3+1]=col.g*br; pcol[i*3+2]=col.b*br;
-    const len=Math.min(0.9,sp*1.6), k=sp>1e-4?len/sp:0, o=i*6, y=ppos[i*3+1];
+    const len=Math.min(0.32,sp*0.6), k=sp>1e-4?len/sp:0, o=i*6, y=ppos[i*3+1];
     lpos[o]=ppos[i*3]; lpos[o+1]=y; lpos[o+2]=ppos[i*3+2]; lpos[o+3]=ppos[i*3]-a*k; lpos[o+4]=y; lpos[o+5]=ppos[i*3+2]-b*k;
-    lcol[o]=col.r; lcol[o+1]=col.g; lcol[o+2]=col.b; lcol[o+3]=col.r*0.15; lcol[o+4]=col.g*0.15; lcol[o+5]=col.b*0.15;
+    lcol[o]=col.r; lcol[o+1]=col.g; lcol[o+2]=col.b; lcol[o+3]=col.r; lcol[o+4]=col.g; lcol[o+5]=col.b;
     if(sp<0.02) page[i]-=dt*3;
   }
   pg.attributes.position.needsUpdate=true; pg.attributes.color.needsUpdate=true; lg.attributes.position.needsUpdate=true; lg.attributes.color.needsUpdate=true;
