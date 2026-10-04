@@ -75,10 +75,9 @@ body{
 #stickMove{left:calc(18px + env(safe-area-inset-left,0px))} #stickLook{right:calc(18px + env(safe-area-inset-right,0px))}
 .stick::after{position:absolute; left:0; right:0; top:-20px; text-align:center; font-size:11px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6)}
 #stickMove::after{content:"WALK"} #stickLook::after{content:"LOOK"}
-#useBar{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center; max-width:92%; background:var(--label-bg); border:1px solid var(--line); border-radius:16px; padding:5px 6px 5px 12px; font-size:13px}
-#useBtns{display:flex; gap:5px; flex-wrap:wrap}
+#useBar{position:absolute; left:50%; top:40%; transform:translate(-50%,-100%); z-index:3; display:flex; flex-direction:column; align-items:center; gap:5px; max-width:280px; background:var(--label-bg); border:2px solid var(--yellow); border-radius:14px; padding:6px 8px; font-size:13px; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#useBtns{display:flex; gap:5px; flex-wrap:wrap; justify-content:center}
 #useBtns .fab{background:var(--green); color:var(--on); border-color:var(--green)}
-body.sticks #useBar{bottom:138px}
 .needs{display:grid; grid-template-columns:auto 1fr; gap:4px 10px; align-items:center; font-size:12px; font-weight:600; color:var(--muted); margin:8px 0}
 .needs i{display:block; height:7px; border-radius:99px; background:var(--chip); border:1px solid var(--line); overflow:hidden}
 .needs i b{display:block; height:100%; background:var(--green)}

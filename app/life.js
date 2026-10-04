@@ -57,7 +57,7 @@ function goal(k){if(st.done[k]) return; st.done[k]=1; renderGoals(); SM.toast('D
 function add(k,v){st.need[k]=Math.max(0,Math.min(100,st.need[k]+v));}
 function walk(x,z,h,cb){const t=tok, p=me(); p.goTo(x,z,function(){if(t!==tok) return; if(h!=null) p.hT=h; if(cb) cb();});}
 function front(id,dist){const p=A.pieces[id]; if(!p||p.to[3]<1) return null; const f=p.to[2], c=Math.cos(f), s=Math.sin(f);
-  return {x:p.to[0],z:p.to[1],sx:p.to[0]+c*dist,sz:p.to[1]-s*dist,h:Math.atan2(-c,s)};}
+  return {x:p.to[0],z:p.to[1],sx:p.to[0]+c*dist,sz:p.to[1]-s*dist,h:Math.atan2(-c,s),obj:p.g};}
 function firstPiece(ids,dist){for(let i=0;i<ids.length;i++){const q=front(ids[i],dist); if(q) return q;} return null;}
 function cancel(){              // whatever was going on stops here
   SM.cancel(tok); tok={}; mode='';
@@ -170,7 +170,7 @@ const DO={
     });
   }
 };
-function shelf(){return firstPiece(['kbench','towerB','towerA','benchB','tvOld'],0.75)||(ST.design!=='n'?{sx:D.BX-0.8,sz:-0.75,h:R/2}:null);}
+function shelf(){return firstPiece(['kbench','towerB','towerA','benchB','tvOld'],0.75)||(ST.design!=='n'?{sx:D.BX-0.8,sz:-0.75,h:R/2,obj:[D.BX-0.31,D.BX-0.01,0,0.82,-1.25,-0.25]}:null);}
 function sitRead(){const s=SM.firstFree(['sofaM','sofaR','sofaL','nook']); if(!s) return; SM.setDoing('finding a seat');
   me().sitOn(s,function(){me().p.act='read'; SM.setDoing('reading'); later(9,function(){goal('read');});});}
 function eat(){
@@ -191,45 +191,70 @@ function eat(){
 /* ---------- things in the flat you can walk up to and use ---------- */
 function items(){
   const out=[], n=ST.design==='n', p=me();
-  const add=function(name,q,acts){if(q) out.push({name:name,x:q.x==null?q.sx:q.x,z:q.z==null?q.sz:q.z,sx:q.sx,sz:q.sz,h:q.h,acts:acts});};
-  add('Front door and shoes',{x:SM.EX+0.4,z:L-0.3,sx:SM.EX+0.35,sz:L-0.8,h:0},[[p.p.shoesOn?'Take shoes off':'Put shoes on',DO.shoes]]);
-  add('Cooktop',{x:KX-0.38,z:0.3,sx:KX-0.38,sz:0.95,h:R},[['Cook a meal',DO.cook]]);
-  add('Fridge',{x:W+0.36,z:KZ-0.36,sx:W+0.36,sz:KZ-1.15,h:0},[['Grab a snack',DO.snack]]);
-  add('Espresso machine',ST.design==='b'?front('cart',0.65):n?front('station',0.65):{x:KX-1.5,z:KZ-0.3,sx:KX-1.5,sz:1.9,h:0},[['Make a coffee',DO.coffee]]);
+  const add=function(name,q,acts,box){if(q) out.push({name:name,x:q.x==null?q.sx:q.x,z:q.z==null?q.sz:q.z,sx:q.sx,sz:q.sz,h:q.h,acts:acts,box:box||q.obj||null});};
+  const around=function(s,rx,rz,y1){return [s.x-rx,s.x+rx,0,y1,s.z-rz,s.z+rz];}, en=D.entrance;
+  add('Front door and shoes',{x:SM.EX+0.4,z:L-0.3,sx:SM.EX+0.35,sz:L-0.8,h:0},[[p.p.shoesOn?'Take shoes off':'Put shoes on',DO.shoes]],[en[0],en[1],0,2.05,L-0.08,L]);
+  add('Cooktop',{x:KX-0.38,z:0.3,sx:KX-0.38,sz:0.95,h:R},[['Cook a meal',DO.cook]],[KX-0.68,KX-0.08,0.1,0.96,0.02,0.62]);
+  add('Fridge',{x:W+0.36,z:KZ-0.36,sx:W+0.36,sz:KZ-1.15,h:0},[['Grab a snack',DO.snack]],[W+0.01,W+0.71,0,1.75,KZ-0.72,KZ]);
+  add('Espresso machine',ST.design==='b'?front('cart',0.65):n?front('station',0.65):{x:KX-1.5,z:KZ-0.3,sx:KX-1.5,sz:1.9,h:0},[['Make a coffee',DO.coffee]],(ST.design==='b'||n)?null:[KX-1.72,KX-1.15,0.92,1.34,KZ-0.5,KZ-0.12]);
   add('Television',firstPiece(['tvOld','kbench','benchB','benchA'],1.1),[[A.goal('tv')>0.5?'Turn it off':'Turn it on',DO.tvToggle],['Watch together',DO.tv]]);
   add('Sofa',front('sofa',1.0),[['Flop down',DO.flop],['Give a massage',function(){DO.massage(true);}],['Ask for a massage',function(){DO.massage(false);}]]);
   add('Record player',front('music',0.7),[[st.music?'Stop the record':'Play a record',DO.record]]);
   add('Bookshelf',shelf(),[[st.carry==='book'?'Put the book back':'Take a book',DO.book],['Read on the sofa',DO.read]]);
-  add('Wardrobe',{x:D.NX+0.25,z:-1.27,sx:D.NX+1.0,sz:-1.27,h:-R/2},[['Change clothes',DO.wardrobe]]);
+  add('Wardrobe',{x:D.NX+0.25,z:-1.27,sx:D.NX+1.0,sz:-1.27,h:-R/2},[['Change clothes',DO.wardrobe]],[D.NX,D.NX+0.51,0,1.9,-1.86,-0.68]);
   const ch=SM.seatBy('nook')||SM.seatBy('armA')||SM.seatBy('desk3');
-  if(ch&&(st.carry==='clothes'||st.pile)) add(st.pile?'Clothes on the chair':'Armchair',{x:ch.x,z:ch.z,sx:ch.x+Math.sin(ch.h)*0.65,sz:ch.z+Math.cos(ch.h)*0.65,h:ch.h+R},st.pile?[['Take them to the wash',DO.laundry]]:[['Drop the clothes here',DO.drop]]);
-  add('Washing machine',{x:BA.x0+0.5,z:BA.z0+0.33,sx:BA.x0+0.55,sz:BA.z0+1.0,h:R},[['Do the laundry',DO.laundry]]);
-  add('Vacuum cleaner',{x:D.BLK-0.1,z:L-0.14,sx:D.BLK-0.45,sz:L-0.6,h:0.6},[['Vacuum the flat',DO.vacuum]]);
-  const dk=SM.seatBy('desk2')||SM.seatBy('desk1'); if(dk) add('Desk',{x:dk.x,z:dk.z,sx:dk.x,sz:dk.z,h:dk.h},[['Study',DO.study]]);
-  const bd=SM.seatBy('bedR'); if(bd) add('Bed',{x:bd.x,z:bd.z,sx:bd.x,sz:bd.z,h:bd.h},[[st.asleep?'Wake up':'Go to sleep together',st.asleep?DO.wake:DO.sleep]]);
-  add('Shower',{x:A.showerSpot.x,z:A.showerSpot.z,sx:A.showerSpot.ax,sz:A.showerSpot.az,h:0},[['Take a shower',function(){SM.ACT.shower(); mode='shower';}]]);
+  if(ch&&(st.carry==='clothes'||st.pile)) add(st.pile?'Clothes on the chair':'Armchair',{x:ch.x,z:ch.z,sx:ch.x+Math.sin(ch.h)*0.65,sz:ch.z+Math.cos(ch.h)*0.65,h:ch.h+R},st.pile?[['Take them to the wash',DO.laundry]]:[['Drop the clothes here',DO.drop]],around(ch,0.45,0.45,1.0));
+  add('Washing machine',{x:BA.x0+0.5,z:BA.z0+0.33,sx:BA.x0+0.55,sz:BA.z0+1.0,h:R},[['Do the laundry',DO.laundry]],[BA.x0+0.2,BA.x0+0.8,0,0.86,BA.z0+0.03,BA.z0+0.63]);
+  add('Vacuum cleaner',{x:D.BLK-0.1,z:L-0.14,sx:D.BLK-0.45,sz:L-0.6,h:0.6},[['Vacuum the flat',DO.vacuum]],A.vacuumMesh);
+  const dk=SM.seatBy('desk2')||SM.seatBy('desk1'); if(dk) add('Desk',{x:dk.x,z:dk.z,sx:dk.x,sz:dk.z,h:dk.h},[['Study',DO.study]],around(dk,0.7,0.7,1.2));
+  const bd=SM.seatBy('bedR'); if(bd) add('Bed',{x:bd.x,z:bd.z,sx:bd.x,sz:bd.z,h:bd.h},[[st.asleep?'Wake up':'Go to sleep together',st.asleep?DO.wake:DO.sleep]],[bd.x-1.15,bd.x+0.85,0,0.62,bd.z-1.1,bd.z+0.4]);
+  add('Shower',{x:A.showerSpot.x,z:A.showerSpot.z,sx:A.showerSpot.ax,sz:A.showerSpot.az,h:0},[['Take a shower',function(){SM.ACT.shower(); mode='shower';}]],[BA.x1-0.9,BA.x1,0,2.0,BA.z0,BA.z0+0.95]);
   return out;
 }
+const tp=new THREE.Vector3();
 let focus=null;
+/* yellow outline round whatever you are looking at: twelve bars along the edges of its bounding box */
+const hl=new THREE.Group(); hl.visible=false; hl.userData.nc=true; A.scene.add(hl);
+const hlMat=new THREE.MeshBasicMaterial({color:0xE8C91A,depthTest:false,transparent:true,opacity:0.95}), bars=[];
+for(let i=0;i<12;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),hlMat); m.renderOrder=9; hl.add(m); bars.push(m);}
+const bx=new THREE.Box3(), tb=new THREE.Box3(), labelAt=new THREE.Vector3();
+function grow(o){if(!o.visible||o.userData.nc) return; if(o.isMesh&&o.geometry){if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); bx.union(tb);} for(let i=0;i<o.children.length;i++) grow(o.children[i]);}
+function outline(b){
+  if(!b){hl.visible=false; return false;}
+  if(b.isObject3D){bx.makeEmpty(); b.updateMatrixWorld(true); grow(b); if(bx.isEmpty()){hl.visible=false; return false;}}
+  else bx.set(new THREE.Vector3(b[0],b[2],b[4]),new THREE.Vector3(b[1],b[3],b[5]));
+  bx.expandByScalar(0.03); const a=bx.min, c=bx.max, t=0.022, sx=c.x-a.x, sy=c.y-a.y, sz=c.z-a.z, mx=(a.x+c.x)/2, my=(a.y+c.y)/2, mz=(a.z+c.z)/2; let i=0;
+  [a.y,c.y].forEach(function(y){[a.z,c.z].forEach(function(z){bars[i].position.set(mx,y,z); bars[i++].scale.set(sx+t,t,t);});});
+  [a.x,c.x].forEach(function(x){[a.z,c.z].forEach(function(z){bars[i].position.set(x,my,z); bars[i++].scale.set(t,sy+t,t);});});
+  [a.x,c.x].forEach(function(x){[a.y,c.y].forEach(function(y){bars[i].position.set(x,y,mz); bars[i++].scale.set(t,t,sz+t);});});
+  labelAt.set(mx,c.y+0.12,mz); hl.visible=true; return true;
+}
+A.labelFns.push(function(){            // the action label floats on the outlined thing
+  const bar=$('useBar'); if(bar.hidden) return;
+  tp.copy(labelAt).project(A.camera); const w=A.stage.clientWidth, h=A.stage.clientHeight;
+  let x=(tp.x+1)/2*w, y=(1-tp.y)/2*h; if(tp.z>1){x=w/2; y=h*0.3;}
+  bar.style.left=Math.max(90,Math.min(w-90,x))+'px'; bar.style.top=Math.max(70,Math.min(h-20,y))+'px';
+});
 function hud(){
   const bar=$('useBar'), p=me();
-  if(!A.simsOn||!p||st.asleep&&false){bar.hidden=true; return;}
+  if(!A.simsOn||!p){bar.hidden=true; hl.visible=false; return;}
   let best=pin, bs=1e9; const f=SM.view(), fx=Math.sin(f), fz=Math.cos(f), list=items();
   if(pin){best=null; list.forEach(function(it){if(it.name===pin.name) best=it;}); if(A.t-pinT>7||!best) pin=best=null;}
   if(!best) list.forEach(function(it){
-    const dx=it.x-p.x, dz=it.z-p.z, d=Math.hypot(dx,dz); if(d>1.9) return;
-    const c=d<0.05?1:(dx*fx+dz*fz)/d; if(d>1.0&&c<0.35) return;
-    const s=d-0.9*c; if(s<bs){bs=s; best=it;}
+    const keep=focus&&focus.name===it.name;                   // hold on to the current thing a little, so it does not flicker
+    const dx=it.x-p.x, dz=it.z-p.z, d=Math.hypot(dx,dz); if(d>(keep?2.3:1.9)) return;
+    const c=d<0.05?1:(dx*fx+dz*fz)/d; if(d>1.0&&c<(keep?0:0.35)) return;
+    const s=d-0.9*c-(keep?0.5:0); if(s<bs){bs=s; best=it;}
   });
-  if(st.asleep){best={name:'Asleep',acts:[['Wake up',DO.wake]]};}
+  if(st.asleep){const b0=SM.seatBy('bedR'); best={name:'Asleep',acts:[['Wake up',DO.wake]],box:b0?[b0.x-1.15,b0.x+0.85,0,0.62,b0.z-1.1,b0.z+0.4]:null};}
   focus=best;
-  if(!best){bar.hidden=true; return;}
+  if(!best){bar.hidden=true; hl.visible=false; return;}
+  if(!outline(best.box)) labelAt.set(best.x==null?p.x:best.x,1.5,best.z==null?p.z:best.z);
   const key=best.name+'|'+best.acts.map(function(a){return a[0];}).join('|');
   if(bar.dataset.k!==key){bar.dataset.k=key; $('useName').textContent=best.name; $('useBtns').innerHTML=best.acts.map(function(a,i){return '<button class="fab" data-i="'+i+'">'+a[0]+'</button>';}).join('');}
   bar.hidden=false;
 }
 $('useBtns').onclick=function(e){const b=e.target.closest('button'); if(b&&focus&&focus.acts[+b.dataset.i]){pin=null; focus.acts[+b.dataset.i][1]();}};
-const tp=new THREE.Vector3();
 function tap(ray){               // tap a thing in the room: walk up to it
   let best=null, bd=1e9; items().forEach(function(it){if(it.sx==null) return; tp.set(it.x,0.8,it.z); const d=ray.distanceToPoint(tp); if(d<0.42&&d<bd){bd=d; best=it;}});
   if(!best||st.asleep) return false;
@@ -297,7 +322,7 @@ A.life={
     const p=me(); if(p&&!st.started){st.started=1; p.p.shoes(true); SM.toast('You just came home. Tap things to use them, or pick from the list.');}
     lastRoom=null; renderNeeds(); renderGoals(); hud();
   },
-  reset:function(){SM.cancel(tok); tok={}; mode=''; cancelProps(); if(partner&&!partner.gone){partner.release(); partner.path=[]; partner.next=A.t+4; partner.busy=false;} pin=null; $('useBar').hidden=!A.simsOn; if(!A.simsOn) musicOn(false);},
+  reset:function(){SM.cancel(tok); tok={}; mode=''; cancelProps(); hl.visible=false; if(partner&&!partner.gone){partner.release(); partner.path=[]; partner.next=A.t+4; partner.busy=false;} pin=null; $('useBar').hidden=!A.simsOn; if(!A.simsOn) musicOn(false);},
   respawn:function(){const sh=true; spawnPartner(); carry(st.carry); if(me()) me().p.shoes(sh); hud();},
   tap:tap, state:st, DO:DO, get partner(){return partner;}, dirt:dirt
 };
