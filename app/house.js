@@ -290,13 +290,41 @@ function tiled(k,y1){
   A.spans(k).forEach(function(s){mk(s[0],s[1],0,y1);});
   w.holes.forEach(function(h){if(y1>2.06) mk(h[0],h[1],2.05,y1);});
 }
+/* washbasins: one glazed shell built ring by ring, from the middle of the underside, up the outside, over the rim and down into the bowl.
+   A ring is [half-width, half-depth, y, squareness, z shift, squareness of the back half]: 2 is an ellipse, higher is squarer.
+   The back is at +z, against the wall; the bowl sits toward the front, which leaves a ledge for the tap. */
+function shell(rings,parent){
+  const N=48, pos=[], idx=[], v=new THREE.Vector3();
+  rings.forEach(function(q){for(let i=0;i<=N;i++){const a=i/N*2*R, s=Math.round(Math.sin(a)*1e6)/1e6, c=Math.round(Math.cos(a)*1e6)/1e6, e=2/(c>0&&q[5]||q[3]);
+    pos.push(Math.sign(s)*Math.pow(Math.abs(s),e)*q[0],q[2],Math.sign(c)*Math.pow(Math.abs(c),e)*q[1]+(q[4]||0));}});
+  for(let j=0;j<rings.length-1;j++) for(let i=0;i<N;i++){const p=j*(N+1)+i, q=p+N+1; idx.push(p,p+1,q,p+1,q+1,q);}
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setIndex(idx); g.computeVertexNormals();
+  const nm=g.attributes.normal;                                           // the seam runs down the back: give both sides of it one normal
+  for(let j=0;j<rings.length;j++){const p=j*(N+1), q=p+N; v.set(nm.getX(p)+nm.getX(q),nm.getY(p)+nm.getY(q),nm.getZ(p)+nm.getZ(q)).normalize(); nm.setXYZ(p,v.x,v.y,v.z); nm.setXYZ(q,v.x,v.y,v.z);}
+  const m=new THREE.Mesh(g,M(0xfbfbfa)); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m;
+}
+function mixer(g,x,z,k){            // single-lever basin mixer standing on the ledge, spout toward -z; the water leaves it at (x, 0.077k, z-0.115k)
+  const c=M(0xc9cdd0), t=G(g); t.position.set(x,0,z); t.scale.setScalar(k);
+  cyl(0.026,0.008,c,0,0.004,0,t,18); cyl(0.02,0.1,c,0,0.058,0,t,16,0.017);                              // base and body
+  cyl(0.011,0.115,c,0,0.082,-0.062,t,12).rotation.x=0.2-R/2; cyl(0.012,0.016,c,0,0.085,-0.115,t,12);    // spout, rising a little, and the aerator under its tip
+  cyl(0.0175,0.016,c,0,0.116,0,t,16,0.015); box(0.014,0.008,0.075,c,0,0.14,-0.03,t).rotation.x=0.35;    // cap and lever
+}
+function soap(g,x,z){cyl(0.022,0.085,0x7fb39a,x,0.0425,z,g,14); cyl(0.007,0.035,0xf4f4f1,x,0.1,z,g,8); box(0.012,0.008,0.04,0xf4f4f1,x,0.118,z-0.014,g);}   // pump bottle of hand soap
 inRoom('wc',function(){
   ['wc_n','wc_w','wc_e','wc_s'].forEach(function(k){tiled(k,1.2);});
   const mz=(WC.z0+WC.z1)/2, bx=(wd[0]+wd[1])/2;
   box(0.2,1.15,WC.z1-WC.z0-0.02,0xf6f6f3,WC.x1-0.1,0.575,mz);                 // cistern box with ledge
   box(0.5,0.34,0.36,0xfbfbfa,WC.x1-0.45,0.42,mz);
   box(0.01,0.16,0.2,0x3c4043,WC.x1-0.205,0.95,mz);
-  box(0.4,0.12,0.24,0xfbfbfa,bx-0.2,0.82,WC.z1-0.13); box(0.36,0.6,0.02,0xb9c9cf,bx-0.2,1.5,WC.z1-0.012);   // basin and mirror, opposite the door
+  // wall-hung basin opposite the door: a real bowl with a ledge for the tap, a waste, a bottle trap running to the wall, and the mirror above
+  const hb=G(), hz=-0.027, cr=M(0xc9cdd0); hb.position.set(bx-0.2,0.86,WC.z1-0.162);
+  shell([[0.001,0.001,-0.15,2,hz],[0.05,0.05,-0.15,2,hz],[0.13,0.1,-0.13,2.5,-0.01],[0.19,0.135,-0.085,3,0.015,10],[0.21,0.15,-0.045,3,0,12],[0.21,0.15,-0.006,3,0,12],[0.208,0.148,-0.002,3,0,12],[0.204,0.144,0,3,0,12],
+    [0.171,0.101,0,2.6,hz],[0.167,0.097,-0.002,2.6,hz],[0.164,0.094,-0.008,2.6,hz],[0.15,0.084,-0.04,2.6,hz],[0.125,0.068,-0.072,2.5,hz],[0.085,0.048,-0.092,2.3,hz],[0.04,0.03,-0.1,2,hz],[0.001,0.001,-0.101,2,hz]],hb);
+  cyl(0.02,0.004,cr,0,-0.098,hz,hb,16);
+  cyl(0.015,0.08,cr,0,-0.19,hz,hb,10); cyl(0.028,0.07,cr,0,-0.255,hz,hb,14); cyl(0.013,0.18,cr,0,-0.24,hz+0.09,hb,10).rotation.x=R/2; cyl(0.03,0.006,cr,0,-0.24,0.152,hb,14).rotation.x=R/2;
+  mixer(hb,0,0.11,0.85); soap(hb,0.13,0.108);
+  A.basins={guest:{x:bx-0.2,z:WC.z1-0.162+0.11-0.115*0.85,y1:0.86+0.077*0.85,y0:0.765}};      // where the water leaves the tap, and where it lands
+  box(0.36,0.6,0.02,0xb9c9cf,bx-0.2,1.5,WC.z1-0.012);
   seat({id:'wc',label:'Guest toilet',room:'wc',x:WC.x1-0.5,z:mz,y:0.6,h:-R/2,type:'sit',hidden:true});
 });
 
@@ -307,9 +335,15 @@ inRoom('bath',function(){
   const tz=(bd[0]+bd[1])/2;
   A.windowOn('ba_e',tz-BA.z0-0.3,tz-BA.z0+0.3,1.6,2.2,1,0);              // window above the toilet
   A.windowOn('ba_e',0.25,0.75,1.75,2.25,1,0);                            // frosted window in the shower
-  const vx=BA.x0+0.7, vz=BA.z1-0.23;                                     // vanity with a navy cabinet and mirror
-  box(0.8,0.5,0.44,0x26386b,vx,0.6,vz); box(0.84,0.1,0.47,0xfbfbfa,vx,0.88,vz+0.01);
-  box(0.03,0.16,0.03,0xb9bdc0,vx,1.0,BA.z1-0.08);
+  const vx=BA.x0+0.7, vb=G(), vo=-0.015, navy=M(0x26386b), cr=M(0xc9cdd0);   // vanity: navy cabinet on the wall, a ceramic top with the bowl sunk into it, mirror and shelf
+  vb.position.set(vx,0.93,BA.z1-0.24);
+  box(0.8,0.53,0.02,navy,0,-0.315,-0.2,vb); [-0.39,0.39].forEach(function(x){box(0.02,0.53,0.42,navy,x,-0.315,0.02,vb);}); box(0.76,0.02,0.42,navy,0,-0.57,0.02,vb);   // the cabinet is hollow: the bowl hangs into it
+  box(0.006,0.5,0.004,0x1a2749,0,-0.315,-0.211,vb); [-0.045,0.045].forEach(function(x){box(0.012,0.12,0.016,cr,x,-0.2,-0.218,vb);});                               // two doors and their handles
+  shell([[0.37,0.18,-0.05,14,0,24],[0.42,0.23,-0.05,14,0,24],[0.42,0.23,-0.05,14,0,24],[0.42,0.23,-0.006,14,0,24],[0.418,0.228,-0.002,14,0,24],[0.414,0.224,0,14,0,24],
+    [0.256,0.151,0,3.5,vo],[0.252,0.147,-0.002,3.5,vo],[0.249,0.144,-0.008,3.5,vo],[0.235,0.132,-0.04,3.4,vo],[0.2,0.11,-0.075,3.2,vo],[0.14,0.075,-0.097,2.8,vo],[0.06,0.04,-0.105,2,vo],[0.001,0.001,-0.106,2,vo]],vb);
+  cyl(0.022,0.004,cr,0,-0.103,vo,vb,16);
+  mixer(vb,0,0.183,1.1); soap(vb,0.24,0.17);
+  A.basins.bath={x:vx,z:BA.z1-0.24+0.183-0.115*1.1,y1:0.93+0.077*1.1,y0:0.834};
   box(0.6,0.8,0.02,0xb9c9cf,vx,1.6,BA.z1-0.015); box(0.5,0.03,0.12,0xb98a4e,vx,1.15,BA.z1-0.07);
   const wx=BA.x0+0.5, wz=BA.z0+0.33;                                     // washing machine, basket and bucket on top, boiler cabinet above
   box(0.6,0.85,0.6,0xfbfbfa,wx,0.425,wz);

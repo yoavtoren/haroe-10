@@ -79,6 +79,8 @@ const tapRing=mesh(new THREE.TorusGeometry(0.03,0.005,6,16),water,props,A.sink.x
 const suds=grp(), foam=pm(0xffffff,{transparent:true,opacity:0.85}); for(let i=0;i<26;i++){const a=i*2.4, q=0.02+0.0065*i; mesh(sphG(0.006+0.004*(i%4)),foam,suds,A.sink.x+Math.cos(a)*q*1.3,A.sink.y0+0.008,A.sink.z-0.06+Math.sin(a)*q*0.75).castShadow=false;}
 function tapOn(v,bubbles){tapStream.visible=tapRing.visible=v; if(bubbles!=null) suds.visible=bubbles; AU.loop('tap',v);}
 tapStream.visible=tapRing.visible=suds.visible=false;
+const handStream=mesh(cylG(0.005,0.006,1,8),water,props,0,0,0); handStream.castShadow=false; handStream.visible=false;      // the same water at the two bathroom basins
+function basinTap(id){const b=id&&A.basins[id]; handStream.visible=!!b; if(b){handStream.scale.y=b.y1-b.y0; handStream.position.set(b.x,(b.y1+b.y0)/2,b.z);} AU.loop('tap',!!b);}
 const brew=mesh(cylG(0.004,0.004,0.1,6),new THREE.MeshBasicMaterial({color:0x4a2c18}),props,0,0,0); brew.castShadow=false; brew.visible=false;
 const hobGlow=mesh(cylG(0.08,0.08,0.004,24),new THREE.MeshBasicMaterial({color:0xff5a2a,transparent:true,opacity:0}),props,HOB[0],0.936,HOB[1]); hobGlow.castShadow=false;
 // shower: streaks of water under the head, spray where it lands, fog on the glass
@@ -184,7 +186,7 @@ function cancel(){              // whatever was going on stops here, and the fla
   if(partner){partner.p.act=null; partner.busy=false;}
   hot=false; hide(panSteam); hide(cupSteam); plates.forEach(function(g){g.visible=false;}); spatula.visible=false; props.add(spatula); brew.visible=false; plateFood(true);
   if(pan.visible){pan.visible=false; props.add(pan); panFood.visible=false; st.panOut=false;}
-  tapOn(false,false); heap.visible=false; setCensor(null); if(showerOn) showerFx(false);
+  tapOn(false,false); handStream.visible=false; heap.visible=false; setCensor(null); if(showerOn) showerFx(false);
   ['sizzle','vacuum'].forEach(function(n){AU.loop(n,false);});
   if(st.asleep){st.asleep=false; if(p) p.sleep(false); if(partner) partner.sleep(false);}
   dressAgain(!A.simsOn);
@@ -284,8 +286,8 @@ const DO={
       Ps(standing?5:6.5),
       Do(function(){if(!standing) p.release(); pose('undress');}),Ps(0.75),Do(function(){p.p.pants(0); setCensor(null); AU.blip('zip'); pose(null);}),Ps(0.35),
       Do(function(){AU.blip('flush'); if(fem||!standing) t.lid.target=0; else if(partner) SM.later(7,function(){partner.say('Seat down, please!',3);},st); doing('washing hands');}),
-      Wk(t.basin[0],t.basin[1],0),Ps(0.2),Do(function(){pose('wash'); AU.loop('tap',true);}),Ps(1.8),
-      Do(function(){AU.loop('tap',false); pose(null); A.door(t.door).force=null; doing(''); hud();})]);
+      Wk(t.basin[0],t.basin[1],0),Ps(0.2),Do(function(){pose('wash'); basinTap(id);}),Ps(1.8),
+      Do(function(){basinTap(null); pose(null); A.door(t.door).force=null; doing(''); hud();})]);
   },
   shower:function(where){
     const p=me(); begin('shower');
