@@ -75,6 +75,14 @@ body{
 #stickMove{left:calc(18px + env(safe-area-inset-left,0px))} #stickLook{right:calc(18px + env(safe-area-inset-right,0px))}
 .stick::after{position:absolute; left:0; right:0; top:-20px; text-align:center; font-size:11px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6)}
 #stickMove::after{content:"WALK"} #stickLook::after{content:"LOOK"}
+#guestBar{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:6px; background:var(--label-bg); border:1px solid var(--yellow); border-radius:99px; padding:5px 6px 5px 14px; font-size:13px; white-space:nowrap}
+body.sticks #guestBar{bottom:140px}
+#shopCard{position:absolute; left:12px; bottom:36px; z-index:3; max-width:270px; background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:14px; padding:12px 34px 12px 14px; box-shadow:0 8px 28px rgba(0,0,0,.2); display:flex; flex-direction:column; gap:5px; font-size:13px}
+#shopCard b{font-size:15px} #shopCard span{color:var(--muted)} #shopCard span:empty{display:none}
+#shopCard a{align-self:flex-start; margin-top:4px; background:var(--green); color:var(--on); font-weight:700; text-decoration:none; padding:7px 12px; border-radius:99px}
+#shopClose{position:absolute; right:6px; top:4px; border:0; background:transparent; color:var(--muted); font-size:20px; cursor:pointer; padding:2px 6px}
+body.editing #stage{outline:3px solid var(--yellow); outline-offset:-3px}
+.btn[aria-pressed="true"]{background:var(--yellow); border-color:var(--yellow); color:#163F2E}
 body.nomenu #panel{display:none}
 body.sticks #hint{display:none}
 body.sticks #pieceBar{bottom:140px}
@@ -167,11 +175,13 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   <div id="labels"></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="stageBtns">
-    <button class="fab" id="bLabels" aria-pressed="true">Hide labels</button>
+    <button class="fab" id="bLabels" aria-pressed="false">Show labels</button>
     <button class="fab" id="bMenu" aria-pressed="true">Hide menu</button>
   </div>
   <div id="rotateTip" hidden>Tip: turn your phone sideways (rotation unlocked) for easier control. <button id="bTipClose" aria-label="Close">×</button></div>
   <div id="pieceBar" hidden><b id="pieceName"></b><button class="fab" id="bRotate">Rotate 45°</button><button class="fab" id="bPieceDone">Done</button></div>
+  <div id="shopCard" hidden><button id="shopClose" aria-label="Close">×</button><b id="shopName"></b><span id="shopNote"></span><a id="shopLink" target="_blank" rel="noopener"></a></div>
+  <div id="guestBar" hidden><b id="guestName"></b><button class="fab" id="bKick">Send home</button><button class="fab" id="bGuestKeep">Cancel</button></div>
   <div class="stick" id="stickMove" hidden aria-label="Move"><i></i></div>
   <div class="stick" id="stickLook" hidden aria-label="Look"><i></i></div>
   <div id="hint">Drag to rotate, pinch or scroll to zoom</div>
@@ -210,8 +220,8 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 
   <section id="pDesign">
     <div class="seg wide" role="group" aria-label="Current or proposed" style="margin-bottom:8px">
-      <button id="d_now" aria-pressed="false">Now</button>
-      <button id="d_new" aria-pressed="true">Proposed</button>
+      <button id="d_now" aria-pressed="false">Current state</button>
+      <button id="d_new" aria-pressed="true">Proposals</button>
     </div>
     <div class="seg wide" role="group" aria-label="Proposal" id="segABC" style="margin-bottom:12px">
       <button id="d_a" aria-pressed="true">Option A</button>
@@ -223,15 +233,16 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
     <div class="pal" id="dPal" aria-hidden="true"></div>
     <div class="row">
       <button class="btn primary" id="bTable"></button>
+      <button class="btn" id="bEdit" aria-pressed="false">Edit layout</button>
       <button class="btn" id="bResetMoves" hidden>Put furniture back</button>
     </div>
-    <p class="note" style="margin:-4px 0 12px">Touch any piece of living-room furniture and drag it to move it.</p>
+    <p class="note" id="editNote" style="margin:-4px 0 12px"></p>
     <div class="row">
       <div class="seg" role="group" aria-label="View">
         <button id="b3d" aria-pressed="true">3D</button>
         <button id="bTop" aria-pressed="false">From above</button>
       </div>
-      <label class="check"><input type="checkbox" id="cLabels" checked> Labels</label>
+      <label class="check"><input type="checkbox" id="cLabels"> Labels</label>
       <label class="check"><input type="checkbox" id="cCut"> Cut walls low</label>
       <label class="check"><input type="checkbox" id="cDims"> Dimensions</label>
     </div>

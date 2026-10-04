@@ -1,7 +1,7 @@
 /* Haroe 10 — Sims mode: people, walking, actions, lights and shutters, friends, pajama party */
 (function(){
 'use strict';
-const A=window.APP, D=A.D, K=A.kit, S=A.state, W=D.W, L=D.L, KX=D.KX, KZ=D.KZ, AZ=A.AZ, BA=A.BA, WC=A.WC;
+const A=window.APP, D=A.D, K=A.kit, S=A.state, W=D.W, L=D.L, KX=D.KX, KZ=D.KZ, AZ=A.AZ, BA=A.BA, WC=A.WC, ZW=D.ZW, BLK=D.BLK;
 const scene=A.scene, camera=A.camera, controls=A.controls, R=Math.PI;
 const $=function(id){return document.getElementById(id);};
 const actors=new THREE.Group(); actors.userData.nc=true; actors.visible=false; scene.add(actors);
@@ -14,14 +14,12 @@ const LOOKS={
   yoav:{id:'yoav',name:'Yoav',h:1.8,skin:0xdcab85,hair:0x2a1e17,style:'short',beard:'goatee',top:0x1f5a41,pants:0x2b2f38,shoes:0x3a2c20,pj:0x9db7dd}
 };
 const FRIENDS=[
-  {id:'noa',name:'Noa',h:1.66,skin:0xe8bfa0,hair:0x7a4a2a,style:'long',top:0xc4673f,pants:0x2b2f38,pj:0xf1c9d4,slim:true},
+  {id:'maya',name:'Maya',h:1.62,skin:0xd9a47f,hair:0x2a1a12,style:'curly',top:0x9fc4d6,pants:0xf3ebdc,pj:0xf2d98a,slim:true},
   {id:'itai',name:'Itai',h:1.82,skin:0xc99a72,hair:0x1b1512,style:'short',beard:'full',top:0x26386b,pants:0x6b6f76,pj:0xa9c7b0},
-  {id:'maya',name:'Maya',h:1.6,skin:0xa8724f,hair:0x18110d,style:'curly',top:0x8fbd9b,pants:0xf3ebdc,pj:0xf2d98a,slim:true},
-  {id:'omer',name:'Omer',h:1.76,skin:0xe4b594,hair:0xb5803f,style:'short',top:0xf3ebdc,pants:0x3d5a80,pj:0xc7b8e6},
-  {id:'tamar',name:'Tamar',h:1.7,skin:0xd9a47f,hair:0x8a2f1f,style:'bun',top:0x7a4a8a,pants:0x22262a,pj:0xf5b9a0,slim:true},
-  {id:'daniel',name:'Daniel',h:1.85,skin:0x8a5a3c,hair:0x120d0a,style:'bald',beard:'full',top:0xd9463e,pants:0x2b2f38,pj:0x9fd0d8},
-  {id:'shira',name:'Shira',h:1.62,skin:0xf0cdb0,hair:0xd9b25f,style:'long',top:0x1f5a41,pants:0xd9c9a8,pj:0xe8a8c0,slim:true},
-  {id:'lior',name:'Lior',h:1.74,skin:0xcf9e78,hair:0x3a2a1c,style:'short',top:0xe8c91a,pants:0x3b3f3c,pj:0xb9d48a}
+  {id:'nofar',name:'Nofar',h:1.66,skin:0xe8bfa0,hair:0x7a4a2a,style:'long',top:0xc4673f,pants:0x2b2f38,pj:0xf1c9d4,slim:true},
+  {id:'alon',name:'Alon',h:1.78,skin:0xe4b594,hair:0xb5803f,style:'short',top:0xf3ebdc,pants:0x3d5a80,pj:0xc7b8e6},
+  {id:'ben',name:'Ben',h:1.85,skin:0x8a5a3c,hair:0x120d0a,style:'bald',beard:'full',top:0x8fbd9b,pants:0x2b2f38,pj:0x9fd0d8},
+  {id:'guy',name:'Guy',h:1.74,skin:0xcf9e78,hair:0x3a2a1c,style:'short',top:0xe8c91a,pants:0x3b3f3c,pj:0xb9d48a}
 ];
 const css=function(c){return '#'+('000000'+c.toString(16)).slice(-6);};
 
@@ -114,10 +112,12 @@ function makePerson(spec){
 /* =====================================================================
    Walking: a 10 cm grid over the flat, A* and string pulling
    ===================================================================== */
-const CS=0.1, GX0=-0.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.4)/CS), NZ=Math.ceil((L-AZ+0.4)/CS), RAD=0.17;
+const CS=0.1, GX0=-0.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.4)/CS), NZ=Math.ceil((L-AZ+0.4)/CS), RAD=0.13;
 const free=new Uint8Array(NX*NZ);
-const EX=(D.entrance[0]+D.entrance[1])/2;      // centre of the front door
-const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],[W-0.35,W+0.35,5.3,5.9],[W+0.7,W+1.5,4.8,5.5],[W-0.2,W+0.2,0.2,2.0]];
+const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.5;      // centre of the front door; where people stand just inside it
+const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
+  [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.35,ZW+0.35],
+  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3]];
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
   const i0=Math.max(0,Math.ceil((x0-GX0)/CS-0.5)), i1=Math.min(NX-1,Math.floor((x1-GX0)/CS-0.5));
@@ -135,11 +135,11 @@ function collect(o){
 }
 function buildNav(){
   free.fill(0);
-  for(const k in A.rooms){const r=A.rooms[k].r; fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);}
+  for(const k in A.rooms) A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});
   scene.updateMatrixWorld(true); collect(scene);
   PASS.forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);});
   // keep only what can be reached from just inside the front door
-  const start=cell(EX,L-0.5), seen=new Uint8Array(NX*NZ), q=[start]; if(start<0||!free[start]) return; seen[start]=1;
+  const start=cell(EX,SPAWN), seen=new Uint8Array(NX*NZ), q=[start]; if(start<0||!free[start]) return; seen[start]=1;
   while(q.length){const c=q.pop(), i=c%NX, j=(c-i)/NX;
     if(i>0&&free[c-1]&&!seen[c-1]){seen[c-1]=1; q.push(c-1);} if(i<NX-1&&free[c+1]&&!seen[c+1]){seen[c+1]=1; q.push(c+1);}
     if(j>0&&free[c-NX]&&!seen[c-NX]){seen[c-NX]=1; q.push(c-NX);} if(j<NZ-1&&free[c+NX]&&!seen[c+NX]){seen[c+NX]=1; q.push(c+NX);}}
@@ -198,7 +198,7 @@ function angLerp(a,b,k){let d=b-a; while(d>R) d-=2*R; while(d<-R) d+=2*R; return
 
 function Actor(spec,me){
   this.spec=spec; this.me=!!me; this.p=makePerson(spec);
-  this.x=EX; this.z=L-0.7; this.h=R; this.hT=R; this.path=[]; this.cb=null; this.seat=null; this.held=null;
+  this.x=EX; this.z=SPAWN; this.h=R; this.hT=R; this.path=[]; this.cb=null; this.seat=null; this.held=null;
   this.speed=me?2.3:1.8; this.tag=A.tag(spec.name,me?'me':'who'); this.bubble=null; this.zz=null; this.room=null; this.ver=-1; this.slide=null;
   this.gone=false;
 }
@@ -273,7 +273,7 @@ Actor.prototype.headPos=function(v){return this.p.head.getWorldPosition(v);};
 let player=null, who='angela';
 const guests=[];
 function makePlayer(){
-  let x=EX, z=L-0.9, h=R;
+  let x=EX, z=SPAWN, h=R;
   if(player){x=player.x; z=player.z; h=player.h; player.remove();}
   player=new Actor(LOOKS[who],true); player.x=x; player.z=z; player.h=player.hT=h;
   const c=nearest(x,z); if(c>=0){player.x=cx(c); player.z=cz(c);}
@@ -300,8 +300,8 @@ function afterLayout(fn){if(A.layoutBusy()) layoutWait=fn; else fn();}
 A.layoutFns.push(function(){buildNav(); const f=layoutWait; layoutWait=null; if(f) f();});
 
 function coffeeSpot(){          // where the espresso machine lives in this design: [stand x, stand z, facing]
-  if(S.design==='a') return [KX-1.5,1.9,0];
-  const p=A.pieces[S.design==='b'?'cart':S.design==='c'?'cbar':'station'], f=p.to[2], fx=Math.cos(f), fz=-Math.sin(f);
+  if(S.design==='a'||S.design==='c') return [KX-1.5,1.9,0];
+  const p=A.pieces[S.design==='b'?'cart':'station'], f=p.to[2], fx=Math.cos(f), fz=-Math.sin(f);
   return [p.to[0]+fx*0.65,p.to[1]+fz*0.65,Math.atan2(-fx,-fz)];
 }
 const ACT={
@@ -321,7 +321,7 @@ const ACT={
     player.goTo(sp.ax,sp.az,function(){
       needLight('bath'); DOOR.bath.force=0;
       player.slide={fx:player.x,fz:player.z,tx:sp.x,tz:sp.z,t:0,dur:0.6,then:function(){
-        doing='in the shower'; player.hT=R*0.75; shower.on(true); refresh();
+        doing='in the shower'; player.hT=R; shower.on(true); refresh();
         later(8,function(){
           shower.on(false);
           player.slide={fx:player.x,fz:player.z,tx:sp.ax,tz:sp.az,t:0,dur:0.6,then:function(){DOOR.bath.force=null; doing=''; toast('Fresh and clean.'); refresh();}};
@@ -352,7 +352,7 @@ const ACT={
     doing='setting the table';
     afterLayout(function(){
       if(tk!==token) return;
-      const s=firstFree(S.design==='a'?['sofaM','sofaL','sofaR']:S.design==='b'?['fc1','fc2']:S.design==='c'?['gc1','gc3','gc2','gc4']:['chairA','chairB']);
+      const s=firstFree(S.design==='a'?['sofaM','sofaL','sofaR']:S.design==='b'?['fc1','fc2']:S.design==='c'?['gc1','gc3','gc2','gc4']:['chairB','chairA']);
       if(!s){doing=''; refresh(); return;}
       player.sitOn(s,function(){doing='having lunch at the table'; refresh();});
     });
@@ -378,7 +378,7 @@ const ACT={
 /* shower effects: falling water, steam and the classic pixel censor */
 const shower=(function(){
   const g=new THREE.Group(); g.visible=false; g.userData.nc=true; scene.add(g);
-  const sp=A.showerSpot, hx=BA.x1-0.5, hz=BA.z0+0.45;
+  const sp=A.showerSpot, hx=sp.x, hz=sp.z;
   const dropMat=new THREE.MeshBasicMaterial({color:0xcfeaf7,transparent:true,opacity:0.75}), drops=[], rnd=A.rng(77);
   for(let i=0;i<70;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(0.006,0.07,0.006),dropMat); m.position.set(hx+(rnd()-0.5)*0.34,rnd()*2.1,hz+(rnd()-0.5)*0.34); g.add(m); drops.push(m);}
   const steamMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.1,depthWrite:false}), steam=[];
@@ -403,6 +403,10 @@ const shower=(function(){
    Lights, shutters, time of day
    ===================================================================== */
 let evening=false, auto=false;
+function focusRooms(){          // the room you are in stays bright, the rest of the flat fades back
+  const node=A.simsOn&&player?A.rooms[player.room||'living'].node:null;
+  for(const k in A.rooms) A.set('F:'+k,(!node||A.rooms[k].node===node)?1:0);
+}
 function setLight(room,on){A.set('L:'+room,on?1:0); renderRooms();}
 function setShutter(win,open){A.set('S:'+win,open?1:0); renderRooms();}
 function setEvening(v){
@@ -434,7 +438,7 @@ function anyoneIn(room,except){
 /* =====================================================================
    Friends
    ===================================================================== */
-function roster(){const partner=LOOKS[who==='angela'?'yoav':'angela']; return [partner].concat(FRIENDS).filter(function(f){return !guests.some(function(g){return g.spec.id===f.id;});});}
+function roster(){const partner=LOOKS[who==='angela'?'yoav':'angela']; return FRIENDS.concat([partner]).filter(function(f){return !guests.some(function(g){return g.spec.id===f.id;});});}
 function freeSeats(){return A.liveSeats().filter(function(s){return s.type==='sit'&&!s.hidden&&s.room==='living'&&!s.occ;});}
 function arrive(list,each){
   DOOR.entrance.force=1; player.say('Come in!');
@@ -443,7 +447,7 @@ function arrive(list,each){
     if(pj.on) a.p.outfit(true);
     if(it.seat) {it.seat.occ=a; a.held=it.seat;}
     later(0.7+i*1.0,function(){
-      a.path=[[EX,L-0.55]];
+      a.path=[[EX,SPAWN]];
       a.cb=function(){a.say(['Hi!','Hey!','Shalom!','We are here!'][i%4]); each(a,it);};
     },a);
   });
@@ -457,7 +461,7 @@ function goodbye(){
   guests.slice().forEach(function(a,i){
     a.leaving=true;
     later(i*0.7,function(){
-      a.say('Bye!'); a.goTo(EX,L-0.55,function(){
+      a.say('Bye!'); a.goTo(EX,SPAWN,function(){
         a.path=[[EX,L+1.8]]; a.cb=function(){
           a.remove(); const k=guests.indexOf(a); if(k>=0) guests.splice(k,1);
           if(!guests.length){DOOR.entrance.force=null;} refresh();
@@ -467,6 +471,22 @@ function goodbye(){
   });
   refresh();
 }
+let kicking=null;
+function kickBar(a){kicking=a; $('guestBar').hidden=!a; if(a) $('guestName').textContent=a.spec.name;}
+function kick(a){
+  if(!a||a.gone||a.leaving) return;
+  a.leaving=true; a.sleep(false); a.say('OK, bye!'); DOOR.entrance.force=1;
+  a.goTo(EX,SPAWN,function(){
+    a.path=[[EX,L+1.8]]; a.cb=function(){
+      a.remove(); const k=guests.indexOf(a); if(k>=0) guests.splice(k,1);
+      if(!guests.some(function(g){return g.leaving;})) DOOR.entrance.force=null;
+      if(!guests.length&&pj.on) endPJ(true);
+      refresh();
+    };
+  });
+  refresh();
+}
+$('bKick').onclick=function(){const a=kicking; kickBar(null); kick(a);}; $('bGuestKeep').onclick=function(){kickBar(null);};
 function clearGuests(){guests.slice().forEach(function(a){a.remove();}); guests.length=0; DOOR.entrance.force=null;}
 
 /* ---------- dialogs ---------- */
@@ -516,10 +536,10 @@ function openInvite(){
 
 /* ---------- pajama party ---------- */
 const pj={on:false,asleep:false,spots:{}};
-const SPOTS=[{id:'sofaLie',label:'On the sofa',sit:'sofaM'},{id:'mat1',label:'Mattress by the sofa'},{id:'mat2',label:'Mattress by the TV'}];
+const SPOTS=[{id:'sofaLie',label:'On the sofa',sit:'sofaM'},{id:'mat1',label:'Mattress by the sofa'},{id:'mat2',label:'Mattress by the bedroom doors'}];
 function openPJ(){
   if(guests.length){toast('Say goodbye to your guests first.'); return;}
-  const list=roster(); let sel=[0+1,2].filter(function(i){return i<list.length;}), pick=null;
+  const list=roster(); let sel=[0,1], pick=null;
   function step1(){
     modal('<h2>Pajama party</h2><p class="sub">Who is sleeping over? Up to three friends.</p><div class="chips" id="mChips">'+chipsHtml(list,sel)+'</div>'+
       '<div class="foot"><button class="btn" id="mCancel">Cancel</button><button class="btn primary" id="mNext"'+(sel.length?'':' disabled')+'>Next: who sleeps where</button></div>');
@@ -601,14 +621,16 @@ function refresh(){
   if(d.table&&!pj.on) h+=btn('lunch','Have lunch at the table')+btn('table',d.table[S.table?1:0]);
   else if(!pj.on) h+=btn('lunch','Sit at the dining table','full');
   $('acts').innerHTML=h;
+  const hint=guests.length?'<p class="note" style="grid-column:1/-1;margin:0">Tap a friend to send them home.</p>':'';
   let s='';
   if(pj.on){
     s+=pj.asleep?btn('morning','Good morning','primary full'):btn('lightsout','Lights out, good night','primary full');
     s+=btn('goodbye','End the party','full');
   }else{
     s+=btn('invite','Call friends over','primary')+btn('pj','Pajama party');
-    if(guests.length) s+=btn('goodbye','Say goodbye ('+guests.length+')','full');
+    if(guests.length) s+=btn('goodbye','Say goodbye to everyone ('+guests.length+')','full');
   }
+  s+=hint;
   $('social').innerHTML=s;
   status();
 }
@@ -638,7 +660,7 @@ const eye=new THREE.Vector3(), tgt=new THREE.Vector3(), delta=new THREE.Vector3(
 function setCam(m){
   camMode=m; $('camFollow').setAttribute('aria-pressed',m==='follow'); $('camEye').setAttribute('aria-pressed',m==='eye');
   if(m==='eye'){
-    controls.enabled=false; camera.fov=72; camera.near=0.1; camera.updateProjectionMatrix(); yaw=player.h; pitch=-0.05; freeLook=false; player.p.g.visible=false; A.stopFly();
+    controls.enabled=false; wideFov(); camera.near=0.1; yaw=player.h; pitch=-0.05; freeLook=false; player.p.g.visible=false; A.stopFly();
     $('hint').textContent='Drag to look around, tap the floor to walk'; $('hint').style.opacity=1;
   }else{
     controls.enabled=true; camera.fov=40; camera.near=0.1; camera.updateProjectionMatrix(); if(player) player.p.g.visible=true; camera.rotation.order='XYZ';
@@ -646,6 +668,11 @@ function setCam(m){
     if(A.simsOn) flyToPlayer();
   }
 }
+function wideFov(){          // eye view: an ultra-wide lens, about 125 degrees across, so a whole room fits
+  const a=A.stage.clientWidth/Math.max(1,A.stage.clientHeight);
+  camera.fov=Math.min(104,Math.max(78,2*Math.atan(Math.tan(62.5*Math.PI/180)/a)*180/Math.PI)); camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',function(){if(A.simsOn&&camMode==='eye') wideFov();});
 function flyToPlayer(){
   tgt.set(player.x,1.0,player.z);
   A.fly(new THREE.Vector3(player.x+3.6,6.6,player.z+4.6),tgt,800);
@@ -668,7 +695,7 @@ function wallsVisible(){
 /* In eye view, only draw rooms you could actually see: your own, plus any reached through an open door.
    Besides saving work, this keeps things standing right behind a wall from flickering through it on phones. */
 const NODE={living:'lk',kitchen:'lk',bed1:'bed1',bed2:'bed2',wc:'wc',bath:'bath'};
-const LINKS=[['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['wc','bath','bath']];
+const LINKS=[['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['lk','bath','bath']];
 let cullKey='all';
 function cullRooms(){
   let vis=null;
@@ -696,7 +723,10 @@ window.addEventListener('pointerup',function(e){
   const d=down; down=null; if(!d||!A.simsOn||e.target!==cv) return;
   if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>7||performance.now()-d.t>500) return;
   const r=cv.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
-  ray.setFromCamera(ndc,camera); if(!ray.ray.intersectPlane(floorPlane,hit)) return;
+  ray.setFromCamera(ndc,camera);
+  for(let i=0;i<guests.length;i++){if(guests[i].leaving) continue; if(ray.intersectObject(guests[i].p.g,true).length){kickBar(guests[i]); return;}}   // tap a friend to send them home
+  kickBar(null);
+  if(!ray.ray.intersectPlane(floorPlane,hit)) return;
   walkTo(hit.x,hit.z);
 });
 function walkTo(x,z){
@@ -740,10 +770,10 @@ function driveSticks(dt){
     player.hT=Math.atan2(mx,mz); player.manual=true;
   }
   if(Math.hypot(jLook.x,jLook.y)>0.15){
-    if(camMode==='eye'){yaw-=jLook.x*dt*2.2; pitch=Math.max(-1.1,Math.min(1.1,pitch-jLook.y*dt*1.5)); freeLook=true; lastDrag=A.t;}
+    if(camMode==='eye'){yaw-=jLook.x*dt*2.2; pitch=Math.max(-1.1,Math.min(1.1,pitch+jLook.y*dt*1.5)); freeLook=true; lastDrag=A.t;}
     else if(!A.flying()){
       offv.copy(camera.position).sub(controls.target); sphc.setFromVector3(offv);
-      sphc.theta-=jLook.x*dt*2.2; sphc.phi=Math.max(0.2,Math.min(Math.PI/2-0.06,sphc.phi+jLook.y*dt*1.4));
+      sphc.theta-=jLook.x*dt*2.2; sphc.phi=Math.max(0.2,Math.min(Math.PI/2-0.06,sphc.phi-jLook.y*dt*1.4));
       offv.setFromSpherical(sphc); camera.position.copy(controls.target).add(offv);
     }
   }
@@ -759,6 +789,7 @@ A.frameFns.push(function(dt,t){
   driveSticks(dt);
   player.update(dt); for(let i=0;i<guests.length;i++) guests[i].update(dt);
   if(player.room!==before){
+    focusRooms();
     if(auto&&before){if(!anyoneIn(before,player)) A.set('L:'+before,0); A.set('L:'+player.room,1);}
     renderRooms();
   }
@@ -797,7 +828,7 @@ A.labelFns.push(function(){
 function resetSims(){
   stopAction(); clearGuests(); timers.length=0;
   if(pj.on){pj.on=false; pj.asleep=false; S.pj=false; A.set('string',0); A.set('tv',0); K.tvShow='day'; if(player){player.sleep(false); player.p.outfit(false); player.ver=-1;}}
-  if(player){player.release(); player.path=[]; player.x=EX; player.z=L-0.9; player.h=player.hT=R;}
+  if(player){player.release(); player.path=[]; player.x=EX; player.z=SPAWN; player.h=player.hT=R;}
 }
 A.onDesign=function(){resetSims(); afterLayout(function(){if(player){const c=nearest(player.x,player.z); if(c>=0){player.x=cx(c); player.z=cz(c);}} refresh();});};
 A.onPanel=function(){if(player) refresh();};
@@ -808,13 +839,13 @@ function setMode(sims){
   if(sims){
     if(!player){buildNav(); makePlayer();}
     $('hint').textContent='Tap the floor to walk. Drag to rotate, pinch or scroll to zoom'; $('hint').style.opacity=1;
-    setCam('follow'); renderRooms(); refresh(); showSticks(true);
+    setCam('follow'); renderRooms(); refresh(); showSticks(true); player.room=A.roomAt(player.x,player.z); focusRooms(); A.setEdit(false);
   }else{
     showSticks(false);
     if(camMode==='eye') setCam('follow');
     const wasPJ=pj.on; resetSims(); if(wasPJ){A.layout(); A.renderPanel();}
     setEvening(false); for(const k in A.rooms) A.set('L:'+k,0); ['kitchen','bed1','bed2'].forEach(function(w){A.set('S:'+w,1);}); A.set('tv',0);
-    for(const k in A.walls) A.walls[k].g.visible=true; cullRooms();
+    for(const k in A.walls) A.walls[k].g.visible=true; cullRooms(); focusRooms(); kickBar(null);
     for(let i=0;i<A.doors.length;i++) A.doors[i].target=0;
     $('hint').textContent='Drag to rotate, pinch or scroll to zoom';
     A.setView('3d');
@@ -824,12 +855,16 @@ A.setMode=setMode;
 $('tabDesign').onclick=function(){setMode(false);}; $('tabSims').onclick=function(){setMode(true);};
 A.sims={ACT:ACT,guests:guests,pj:pj,setEvening:setEvening,setLight:setLight,setShutter:setShutter,setCam:setCam,setWho:setWho,startPJ:startPJ,lightsOut:lightsOut,morning:morning,arrive:arrive,goodbye:goodbye,roster:roster,freeSeats:freeSeats,openInvite:openInvite,openPJ:openPJ,get player(){return player;}};
 
-/* ---------- phone in portrait: suggest turning it sideways ---------- */
+/* ---------- phone in portrait: suggest turning it sideways, once ---------- */
 (function(){
-  const tip=$('rotateTip'); let closed=false;
-  function upd(){tip.hidden=closed||!TOUCH||window.innerWidth>window.innerHeight||window.innerWidth>700;}
-  $('bTipClose').onclick=function(){closed=true; upd();};
-  window.addEventListener('resize',upd); upd();
+  const tip=$('rotateTip'); let seen=false;
+  try{seen=localStorage.getItem('haroe-rotate-tip')==='1';}catch(e){}
+  function upd(){
+    const show=!seen&&TOUCH&&window.innerWidth<window.innerHeight&&window.innerWidth<=700; tip.hidden=!show;
+    if(show){seen=true; try{localStorage.setItem('haroe-rotate-tip','1');}catch(e){} setTimeout(function(){tip.hidden=true;},9000);}
+  }
+  $('bTipClose').onclick=function(){tip.hidden=true;};
+  upd();
 })();
 
 /* ---------- go ---------- */
