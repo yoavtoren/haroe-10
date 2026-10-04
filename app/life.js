@@ -325,21 +325,40 @@ function items(){
 }
 const tp=new THREE.Vector3();
 let focus=null;
-/* yellow outline round whatever you are looking at: twelve bars along the edges of its bounding box */
+/* A thin yellow line round the thing you are looking at: each of its parts is redrawn slightly larger,
+   back faces only, so just a rim shows round the silhouette. */
 const hl=new THREE.Group(); hl.visible=false; hl.userData.nc=true; A.scene.add(hl);
-const hlMat=new THREE.MeshBasicMaterial({color:0xE8C91A,depthTest:false,transparent:true,opacity:0.95}), bars=[];
-for(let i=0;i<12;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),hlMat); m.renderOrder=9; hl.add(m); bars.push(m);}
-const bx=new THREE.Box3(), tb=new THREE.Box3(), labelAt=new THREE.Vector3();
-function grow(o){if(!o.visible||o.userData.nc) return; if(o.isMesh&&o.geometry){if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); bx.union(tb);} for(let i=0;i<o.children.length;i++) grow(o.children[i]);}
-function outline(b){
-  if(!b){hl.visible=false; return false;}
-  if(b.isObject3D){bx.makeEmpty(); b.updateMatrixWorld(true); grow(b); if(bx.isEmpty()){hl.visible=false; return false;}}
-  else bx.set(new THREE.Vector3(b[0],b[2],b[4]),new THREE.Vector3(b[1],b[3],b[5]));
-  bx.expandByScalar(0.03); const a=bx.min, c=bx.max, t=0.022, sx=c.x-a.x, sy=c.y-a.y, sz=c.z-a.z, mx=(a.x+c.x)/2, my=(a.y+c.y)/2, mz=(a.z+c.z)/2; let i=0;
-  [a.y,c.y].forEach(function(y){[a.z,c.z].forEach(function(z){bars[i].position.set(mx,y,z); bars[i++].scale.set(sx+t,t,t);});});
-  [a.x,c.x].forEach(function(x){[a.z,c.z].forEach(function(z){bars[i].position.set(x,my,z); bars[i++].scale.set(t,sy+t,t);});});
-  [a.x,c.x].forEach(function(x){[a.y,c.y].forEach(function(y){bars[i].position.set(x,y,mz); bars[i++].scale.set(t,t,sz+t);});});
-  labelAt.set(mx,c.y+0.12,mz); hl.visible=true; return true;
+const hlMat=new THREE.MeshBasicMaterial({color:0xF2CF1D,side:THREE.BackSide}), RIM=0.011;
+const bx=new THREE.Box3(), tb=new THREE.Box3(), labelAt=new THREE.Vector3(), cv=new THREE.Vector3(), sv=new THREE.Vector3(), mA=new THREE.Matrix4(), mB=new THREE.Matrix4();
+let hlKey=null, hlSrc=[];
+function solidMesh(o){if(!o.isMesh||!o.geometry||o.userData.floor) return false; const m=Array.isArray(o.material)?o.material[0]:o.material; return !(m.transparent&&!m.depthWrite)&&m.side!==THREE.BackSide;}
+function gather(o,out,box){
+  if(!o.visible||o===hl||o===props||(me()&&o===me().p.g.parent)) return;
+  if(solidMesh(o)){
+    if(!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+    tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+    if(!box||(box.containsBox(tb)&&tb.max.y-tb.min.y+tb.max.x-tb.min.x+tb.max.z-tb.min.z>0.02)) out.push(o);
+  }
+  for(let i=0;i<o.children.length;i++) gather(o.children[i],out,box);
+}
+function outline(b,key){
+  if(!b){hl.visible=false; hlKey=null; return false;}
+  if(key!==hlKey){                                 // new target: collect its parts once
+    hlKey=key; hlSrc=[]; while(hl.children.length) hl.remove(hl.children[0]);
+    if(b.isObject3D){b.updateMatrixWorld(true); gather(b,hlSrc,null);}
+    else{A.scene.updateMatrixWorld(true); const q=new THREE.Box3(new THREE.Vector3(b[0]-0.04,b[2]-0.04,b[4]-0.04),new THREE.Vector3(b[1]+0.04,b[3]+0.04,b[5]+0.04)); gather(A.scene,hlSrc,q);}
+    hlSrc.forEach(function(o){const m=new THREE.Mesh(o.geometry,hlMat); m.matrixAutoUpdate=false; m.frustumCulled=false; hl.add(m);});
+  }
+  if(!hlSrc.length){hl.visible=false; return false;}
+  bx.makeEmpty();
+  hlSrc.forEach(function(o,i){
+    const g=o.geometry.boundingBox; g.getCenter(cv); g.getSize(sv);
+    mA.makeTranslation(cv.x,cv.y,cv.z); mB.makeScale(1+2*RIM/Math.max(0.02,sv.x),1+2*RIM/Math.max(0.02,sv.y),1+2*RIM/Math.max(0.02,sv.z)); mA.multiply(mB);
+    mB.makeTranslation(-cv.x,-cv.y,-cv.z); mA.multiply(mB);
+    hl.children[i].matrix.multiplyMatrices(o.matrixWorld,mA); hl.children[i].matrixWorldNeedsUpdate=true;
+    tb.copy(g).applyMatrix4(o.matrixWorld); bx.union(tb);
+  });
+  labelAt.set((bx.min.x+bx.max.x)/2,bx.max.y+0.1,(bx.min.z+bx.max.z)/2); hl.visible=true; return true;
 }
 A.labelFns.push(function(){            // the action label floats on the outlined thing
   const bar=$('useBar'); if(bar.hidden) return;
@@ -361,8 +380,8 @@ function hud(){
   });
   if(st.asleep){const b0=SM.seatBy('bedR'); best={name:'Asleep',acts:[['Wake up',DO.wake]],box:b0?[b0.x-1.15,b0.x+0.85,0,0.62,b0.z-1.1,b0.z+0.4]:null};}
   focus=best;
-  if(!best){bar.hidden=true; hl.visible=false; return;}
-  if(!outline(best.box)) labelAt.set(best.x==null?p.x:best.x,1.5,best.z==null?p.z:best.z);
+  if(!best){bar.hidden=true; outline(null); return;}
+  if(!outline(best.box,best.name+ST.design)) labelAt.set(best.x==null?p.x:best.x,1.5,best.z==null?p.z:best.z);
   const key=best.name+'|'+best.acts.map(function(a){return a[0];}).join('|');
   if(bar.dataset.k!==key){bar.dataset.k=key; $('useName').textContent=best.name; $('useBtns').innerHTML=best.acts.map(function(a,i){return '<button class="fab" data-i="'+i+'">'+a[0]+'</button>';}).join('');}
   bar.hidden=false;
