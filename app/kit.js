@@ -255,10 +255,23 @@ K.chair=function(p,frame,seat){                // faces +x. Padded seat, curved 
   [-0.17,0.17].forEach(function(z){const s=cyl(0.016,0.5,frame,-0.2,0.7,z,p,8); s.rotation.z=0.07;});
   const r1=rbox(0.03,0.11,0.4,frame,-0.215,0.9,0,p,0.012); r1.rotation.z=0.07; const r2=rbox(0.024,0.06,0.36,frame,-0.203,0.72,0,p,0.01); r2.rotation.z=0.07;
 };
+/* office chair, facing +x, origin on the floor under the middle of the seat (seat top at 0.52): a five-star base on twin castors, gas lift,
+   tilt mechanism with its lever, a padded seat, a tall back upholstered in three sections that narrow upward, a headrest, and armrests.
+   The arm pads stay outside the sitter's forearms and low enough to slide under a desk. */
 K.officeChair=function(p,c){
-  rbox(0.48,0.09,0.48,c,0,0.48,0,p,0.04); const ob=rbox(0.07,0.56,0.44,c,-0.24,0.84,0,p,0.035); ob.rotation.z=0.08;
-  [0,1,2,3,4].forEach(function(i){const a=i/5*Math.PI*2, l=box(0.26,0.025,0.035,0x8d9092,Math.cos(a)*0.13,0.05,Math.sin(a)*0.13,p); l.rotation.y=-a; cyl(0.025,0.03,0x2b2b2b,Math.cos(a)*0.26,0.025,Math.sin(a)*0.26,p,8);});
-  cyl(0.03,0.4,0x8d9092,0,0.24,0,p,8);
+  const fab=M(c), dk=M(0x2b2d30), al=M(0x8d9092), Q=Math.PI/2;
+  for(let i=0;i<5;i++){const s=A.G(p); s.rotation.y=-(i/5*Math.PI*2+0.3);
+    box(0.29,0.022,0.036,al,0.17,0.082,0,s).rotation.z=-0.13; cyl(0.008,0.03,dk,0.31,0.058,0,s,8);
+    [-0.014,0.014].forEach(function(z){cyl(0.026,0.018,dk,0.31,0.026,z,s,14).rotation.x=Q;});}
+  cyl(0.042,0.05,al,0,0.105,0,p,16,0.034); cyl(0.027,0.15,dk,0,0.2,0,p,14); cyl(0.016,0.17,0xc9cdd0,0,0.345,0,p,12);                      // hub, gas lift
+  box(0.2,0.04,0.22,dk,0,0.43,0,p); box(0.2,0.025,0.06,dk,-0.14,0.425,0,p);                                                              // tilt mechanism, and the arm that carries the back
+  cyl(0.006,0.14,dk,0.05,0.425,0.17,p,8).rotation.x=Q; box(0.035,0.008,0.045,dk,0.05,0.425,0.245,p);                                    // its lever
+  rbox(0.45,0.03,0.45,dk,0.025,0.455,0,p,0.012,0.08); rbox(0.48,0.07,0.48,fab,0.03,0.486,0,p,0.032,0.1);                                 // seat shell and cushion, just clear of the spine
+  const b=A.G(p); b.position.set(-0.19,0.47,0); b.rotation.z=0.11;                                                                        // the back leans a little
+  box(0.02,0.855,0.045,dk,-0.03,0.3725,0,b);                                                                                               // one spine, from under the seat up to the headrest
+  [[0.22,0.45,0.19],[0.22,0.42,0.4],[0.18,0.37,0.59],[0.12,0.25,0.775]].forEach(function(q){rbox(0.046,q[0],q[1],fab,0.002,q[2],0,b,0.02);});   // lumbar, middle and shoulder sections in one plane, meeting at seams; then the headrest
+  [-0.285,0.285].forEach(function(z){                                                                                                       // armrests: bracket, post, pad
+    box(0.05,0.014,0.1,dk,-0.03,0.447,z*0.85,p); box(0.045,0.238,0.018,dk,-0.03,0.559,z,p); rbox(0.24,0.022,0.055,dk,0.005,0.689,z,p,0.009,0.025);});
 };
 K.cushions=[];                              // every loose cushion: one that would be inside somebody sitting or lying there is put away
 K.cushion=function(p,c,x,y,z,s,tilt){       // a plump scatter cushion
@@ -272,6 +285,15 @@ K.screens=[];
 K.screen=function(p,w,h,x,y,z,rotY){
   const m=new THREE.MeshBasicMaterial({map:wkTex,color:0x0b0c0d}), s=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);
   s.position.set(x,y,z); s.rotation.y=rotY; (p||A.scene).add(s); const o={m:m,on:0,target:0}; K.screens.push(o); return o;
+};
+/* a monitor standing on a desk, facing +z before rotY: foot, neck, a thin panel with a narrow bezel and a chin, tipped back a little.
+   x,y,z is the middle of the panel's width, on the desk top; w,h are the picture. Returns its screen (see K.screen). */
+K.monitor=function(p,x,y,z,rotY,w,h){
+  const g=A.G(p), dk=M(0x1b1c1e), sv=M(0xb9bdc0), hd=A.G(g), cy=0.13+h/2; g.position.set(x,y,z); g.rotation.y=rotY||0;
+  rbox(0.24,0.012,0.18,sv,0,0.006,-0.03,g,0.005,0.04); box(0.05,cy,0.014,sv,0,cy/2,-0.07,g).rotation.x=0.1;                         // foot and neck
+  hd.position.set(0,cy,0); hd.rotation.x=-0.07;
+  rbox(w+0.016,h+0.03,0.016,dk,0,-0.007,0,hd,0.006); rbox(w*0.55,h*0.6,0.035,dk,0,0,-0.018,hd,0.012); box(0.07,0.07,0.03,sv,0,-0.02,-0.04,hd);   // panel, the bulge behind it, the mount
+  return K.screen(hd,w,h,0,0,0.01,0);
 };
 A.frameFns.push(function(dt,t){
   let any=false;
