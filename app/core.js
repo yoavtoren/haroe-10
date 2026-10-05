@@ -70,7 +70,7 @@ const rooms=A.rooms={
   bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
-  hall:{name:'Lobby', rs:[[-6.5,5.3,L,L+6.5],[-1.25,0.05,L+6.5,L+7.6],[2.95,4.25,L+6.5,L+7.6]], win:null, dl:0.75, node:'hall', on:true},      // the hall and its two bridges
+  hall:{name:'Lobby', rs:[[-3.8,5.3,L,L+11.8],[-4.9,-3.8,L+0.2,L+1.5],[-4.9,-3.8,L+9.45,L+10.75]], win:null, dl:0.75, node:'hall', on:true},      // the hall, running west from our door, and its two bridges on the north side
   out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true},      // the yard and the neighbouring building
   street:{name:'Street', rs:[], win:null, dl:1, node:'out', ext:true}     // the square in front and Haroe St, lit by their own lamps in the evening
 };

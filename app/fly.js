@@ -44,8 +44,8 @@ A.frameFns.push(function(dt){
   const fx=Math.sin(yaw), fz=Math.cos(yaw), sp=1.8*dt;
   pos.x+=(fx*(-sy)-fz*sx)*sp; pos.z+=(fz*(-sy)+fx*sx)*sp;
   pos.y+=(vy+(keys.e?1:0)-(keys.q?1:0))*1.2*dt;
-  pos.x=Math.max(-12,Math.min(14,pos.x)); pos.z=Math.max(-12,Math.min(37.5,pos.z));            // as far as the other side of Haroe St
-  pos.y=Math.max(pos.z>A.D.L+8?-0.3:0.3,Math.min(6,pos.y));                                     // the square in front is a metre lower
+  pos.x=Math.max(-29,Math.min(14,pos.x)); pos.z=Math.max(-12,Math.min(30,pos.z));              // as far as the other side of Haroe St, to the north
+  pos.y=Math.max(pos.x<-12.4?1.3:0.3,Math.min(6,pos.y));                                        // past the garden steps the square is at street level, higher than the lobby
   if(Math.hypot(l.x,l.y)>0.15){yaw-=l.x*Math.abs(l.x)*dt*1.5; pitch=Math.max(-1.3,Math.min(1.3,pitch+l.y*Math.abs(l.y)*dt*1.0));}
   cam.position.copy(pos); cam.rotation.order='YXZ'; cam.rotation.set(-pitch,yaw+R,0);
 });
