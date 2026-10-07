@@ -134,6 +134,8 @@ body.nomenu #panel{display:none}
 #bSave:not(:disabled){background:var(--green); color:var(--on); border-color:var(--green)}
 body.sticks #editTools{bottom:140px}
 body.nomenu.edOpen #editTools{bottom:calc(44% + 14px)}
+#isoRow{gap:6px} #isoRow b{font-size:13px; margin-right:2px}
+#isoChips .chip{padding:5px 11px; font-size:13px} #bIso{white-space:nowrap}
 #palNow{display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin:-4px 0 10px; font-size:13px} #palNow b{margin-right:6px} #palNow i{width:18px; height:18px; border-radius:50%; border:1px solid var(--line)}
 body.sticks #hint{display:none}
 #panel{
@@ -236,7 +238,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   <div id="shopCard" hidden><button id="shopClose" aria-label="Close">×</button><b id="shopName"></b><span id="shopNote"></span><a id="shopLink" target="_blank" rel="noopener"></a></div>
   <div id="useBar" hidden><b id="useName"></b><span id="useBtns"></span></div>
   <div id="guestBar" hidden><b id="guestName"></b><button class="fab" id="bKick">Send home</button><button class="fab" id="bGuestKeep">Cancel</button></div>
-  <div id="editTools" hidden><button class="fab" id="bUndo" disabled>Undo</button><button class="fab" id="bSave" disabled>Saved</button><button class="fab" id="bResetMoves" disabled title="Put this design back the way it was">Reset</button></div>
+  <div id="editTools" hidden><button class="fab" id="bIso" hidden title="Show the whole flat again">Whole flat</button><button class="fab" id="bUndo" disabled>Undo</button><button class="fab" id="bSave" disabled>Saved</button><button class="fab" id="bResetMoves" disabled title="Put this design back the way it was">Reset</button></div>
   <div id="flyBtns" hidden><button class="fab" id="flyUp" aria-label="Up">▲</button><button class="fab" id="flyDown" aria-label="Down">▼</button></div>
   <div class="stick" id="stickMove" hidden aria-label="Move"><i></i></div>
   <div class="stick" id="stickLook" hidden aria-label="Look"><i></i></div>
@@ -311,6 +313,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
       </div>
       <div class="row"><label class="check"><input type="checkbox" id="cSolid" checked> Solid furniture: nothing passes through walls, fittings or other pieces</label></div>
       <div id="palNow" hidden></div>
+      <div class="row" id="isoRow"><b>Work on</b><div class="chips" id="isoChips"></div></div>
     </div>
     <p class="note" id="editNote" style="margin:-4px 0 12px"></p>
     <div class="row">

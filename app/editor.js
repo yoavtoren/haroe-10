@@ -12,6 +12,7 @@ const clone=function(o){return o==null?null:JSON.parse(JSON.stringify(o));};
 const esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
 const INSIDE={living:1,kitchen:1,bed1:1,bed2:1,bath:1,wc:1};
 for(const k in A.walls) A.walls[k].g.userData.wallKey=k;
+let iso=null;              // the room you are working on by itself, or null for the whole flat
 
 /* =====================================================================
    Your changes: kept per design and undoable; Save keeps them in this browser
@@ -119,7 +120,7 @@ function applyGone(){
   });
 }
 A.beforeLayout=syncItems;
-A.onLayout=function(){syncAttached(); applyGone(); if(A.paint) A.paint.apply(); if(sel&&!selObj()) deselect();};
+A.onLayout=function(){syncAttached(); applyGone(); if(A.paint) A.paint.apply(); if(sel&&!selObj()) deselect(); if(iso) isoBuild();};
 
 /* =====================================================================
    Picking: what is under the finger
@@ -128,7 +129,7 @@ const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), floorPlane=new THREE.P
 function aim(e){const r=canvas.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1); ray.setFromCamera(ndc,A.camera);}
 function aimCentre(){ndc.set(0,-0.15); ray.setFromCamera(ndc,A.camera);}
 function skip(o){
-  if(!o.isMesh||o.userData.hl) return true;
+  if(!o.isMesh||o.userData.hl||!o.layers.test(A.camera.layers)) return true;
   const m=Array.isArray(o.material)?o.material[0]:o.material;
   return !m||m.blending===THREE.AdditiveBlending||m.visible===false;
 }
@@ -138,6 +139,7 @@ function pickAll(list,excl){
     if(skip(o)||!shownObj(o)) continue;
     if(excl&&isIn(o,excl)) continue;
     if(h.point.y>A.cut.constant+0.01&&A.cut.constant<50) continue;      // above the cut when walls are cut low
+    if(iso&&!inClip(h.point)) continue;                                 // cut away round the room you are working on
     return classify(h);
   }
   return null;
@@ -160,6 +162,7 @@ function insideFlat(x,z){
   for(const k in INSIDE){const rs=A.rooms[k].rs; for(let i=0;i<rs.length;i++){const r=rs[i]; if(x>r[0]+0.02&&x<r[1]-0.02&&z>r[2]+0.02&&z<r[3]-0.02) return k;}}
   return null;
 }
+function inWork(x,z){const r=insideFlat(x,z); return !!r&&(!iso||r===iso);}      // inside the flat, and in the room you are working on
 function defOfPiece(p){return p&&p.def?p.def:null;}
 function isThingPiece(p){const d=defOfPiece(p); return !!(d&&(d.cat==='plant'||d.cat==='decor'||d.cat==='lamp'||d.place==='top'));}
 function targetOf(c){
@@ -174,13 +177,13 @@ function targetOf(c){
 function spotOf(c){
   if(!c) return null;
   if(c.wall&&Math.abs(c.n.y)<0.3){const w=A.walls[c.wall]; if(!INSIDE[w.room]) return null; return {kind:'wall',wall:c.wall,point:c.point,n:[w.n[0],w.n[1]]};}
-  if(c.n.y<-0.7) return insideFlat(c.point.x,c.point.z)?{kind:'ceil',point:c.point}:null;
+  if(c.n.y<-0.7) return inWork(c.point.x,c.point.z)?{kind:'ceil',point:c.point}:null;
   if(c.n.y>0.7){
-    if(c.o.userData.floor||c.point.y<0.03) return insideFlat(c.point.x,c.point.z)?{kind:'floor',point:c.point}:null;
-    return insideFlat(c.point.x,c.point.z)?{kind:'top',point:c.point,pieceId:c.pieceId&&P[c.pieceId]&&!P[c.pieceId].flat?c.pieceId:null}:null;
+    if(c.o.userData.floor||c.point.y<0.03) return inWork(c.point.x,c.point.z)?{kind:'floor',point:c.point}:null;
+    return inWork(c.point.x,c.point.z)?{kind:'top',point:c.point,pieceId:c.pieceId&&P[c.pieceId]&&!P[c.pieceId].flat?c.pieceId:null}:null;
   }
   const f=new THREE.Vector3(); if(!ray.ray.intersectPlane(floorPlane,f)) return null;
-  return insideFlat(f.x,f.z)?{kind:'floor',point:f}:null;
+  return inWork(f.x,f.z)?{kind:'floor',point:f}:null;
 }
 
 /* =====================================================================
@@ -208,6 +211,7 @@ A.frameFns.push(function(){
     const g=m.geometry.boundingBox; g.getCenter(cv); g.getSize(sv);
     mA.makeTranslation(cv.x,cv.y,cv.z); mB.makeScale(1+2*RIM/Math.max(0.02,sv.x),1+2*RIM/Math.max(0.02,sv.y),1+2*RIM/Math.max(0.02,sv.z)); mA.multiply(mB);
     mB.makeTranslation(-cv.x,-cv.y,-cv.z); mA.multiply(mB); hl.children[i].matrix.multiplyMatrices(m.matrixWorld,mA); hl.children[i].matrixWorldNeedsUpdate=true;
+    hl.children[i].visible=m.layers.test(A.camera.layers);      // no rim round a part that has stepped aside
   });
   hl.visible=hlSrc.length>0;
 });
@@ -503,7 +507,7 @@ function duplicateSel(){
   snap(); const pos=curPos(sel), sz=sizeOf(sp.t,sp.f), off=sz.w+0.06, r=pos[2];
   const rec={t:sp.t,c:sp.c,f:clone(sp.f),r:r};
   if(sel.k==='att'){const it=items()[sel.uid]; Object.assign(rec,{on:it.on,x:it.x+Math.sin(r)*off,y:it.y,z:it.z+Math.cos(r)*off});}
-  else{rec.x=pos[0]+Math.sin(r)*off; rec.z=pos[1]+Math.cos(r)*off; rec.y=pos[3]; if(!insideFlat(rec.x,rec.z)){rec.x=pos[0]-Math.sin(r)*off; rec.z=pos[1]-Math.cos(r)*off;}}
+  else{rec.x=pos[0]+Math.sin(r)*off; rec.z=pos[1]+Math.cos(r)*off; rec.y=pos[3]; if(!inWork(rec.x,rec.z)){rec.x=pos[0]-Math.sin(r)*off; rec.z=pos[1]-Math.cos(r)*off;}}
   const uid=newItem(rec); changed(); if(!rec.on) fit({k:'piece',id:uid},1.2,null,true); select(rec.on?{k:'att',uid:uid}:{k:'piece',id:uid}); openItem(); toast('Copied. Long-press the copy to drag it.');
 }
 function rotateSel(a){
@@ -603,10 +607,11 @@ function moveDrag(e){
   if(drag.mode==='floor'){
     const p=P[t.id], f=new THREE.Vector3(); if(!ray.ray.intersectPlane(floorPlane,f)) return;
     let x=f.x-drag.ox, z=f.z-drag.oz;
-    if(p.item){if(!insideFlat(x,z)) return;}
+    if(p.item){if(!inWork(x,z)) return;}
     else{x=Math.min(D.KX-0.15,Math.max(0.1,x)); z=Math.min(D.L-0.1,Math.max(0.1,z));
       if(x>D.W-0.05&&z>D.KZ-0.1){if(p.cur[0]>D.W-0.05) z=D.KZ-0.1; else x=D.W-0.05;}
-      if(z>D.ZW-0.05&&x>D.BLK-0.05) x=D.BLK-0.05;}
+      if(z>D.ZW-0.05&&x>D.BLK-0.05) x=D.BLK-0.05;
+      if(iso&&insideFlat(x,z)!==iso) return;}
     if(drag.solid){const q=slide(drag.solid,poseOf(p,true),[x,z,p.cur[2],p.y||0]); x=q[0]; z=q[1];}      // stops at what is in the way and slides along it
     p.cur[0]=x; p.cur[1]=z; p.g.position.set(x,p.y||0,z); A.touch(3);
   }else if(drag.mode==='wall'){
@@ -617,7 +622,7 @@ function moveDrag(e){
   }else{
     const g=drag.g, c=pickAll(null,g); if(!c) return;
     if(c.n.y<0.6) return;
-    if(!insideFlat(c.point.x,c.point.z)) return;
+    if(!inWork(c.point.x,c.point.z)) return;
     g.position.copy(c.point); g.position.y+=0.001; if(!g.parent||g.parent!==scene) scene.attach(g);
     drag.on=c.pieceId&&P[c.pieceId]&&!P[c.pieceId].flat&&c.pieceId!==(t.k==='piece'?t.id:null)&&!c.item?c.pieceId:null; drag.pt=c.point.clone(); A.touch(3);
   }
@@ -653,7 +658,7 @@ function onTap(e,p){
   }
   const pp=A.paint&&A.paint.partOf(c);                                  // the flat's own fittings: pick one to colour it
   if(pp){if(same(pp,sel)&&c.n.y>0.7){openAdd({kind:'top',point:c.point,pieceId:null}); return;} select(pp,c); openItem(); return;}
-  const s=spotOf(c); if(!s){deselect(); toast('Tap somewhere inside the flat.'); return;}
+  const s=spotOf(c); if(!s){deselect(); toast(iso?'Tap somewhere in the '+A.rooms[iso].name.toLowerCase()+'.':'Tap somewhere inside the flat.'); return;}
   sel=null; hlFor=null; openAdd(s);
 }
 function shopCard(o){
@@ -888,12 +893,146 @@ function applyPalette(){
 let palShown=null;
 
 /* =====================================================================
+   One room on its own: the rest of the flat steps away, and as you turn round the room, each wall that stands
+   between you and it steps aside too, with its door and whatever hangs on it, so you can always see in and reach in
+   ===================================================================== */
+const OFF=7;                                       // a layer the camera does not draw, and taps do not find
+const ISO=Object.keys(INSIDE), clipBox=[0,0,0,0], clipPl=[0,1,2,3].map(function(){return new THREE.Plane(new THREE.Vector3(),0);});
+let isoOn=false, isoHid=[], isoHang={}, isoDoors={}, isoWalls=[], nearKey='';
+const ub=new THREE.Box3(), mb=new THREE.Box3();
+function matOf(m){return Array.isArray(m.material)?m.material[0]:m.material;}
+function glowy(m){const t=matOf(m); return !!t&&t.blending===THREE.AdditiveBlending;}
+function boxOf(o,all){            // the box round what is drawn of o; with all, round every part of it, shown or not
+  ub.makeEmpty();
+  (function walk(q){if(!all&&!q.visible) return;
+    if(q.isMesh&&q.geometry&&(all||!glowy(q))){if(!q.geometry.boundingBox) q.geometry.computeBoundingBox(); mb.copy(q.geometry.boundingBox).applyMatrix4(q.matrixWorld); ub.union(mb);}
+    for(let i=0;i<q.children.length;i++) walk(q.children[i]);})(o);
+  return ub;
+}
+function meshesOf(o,out){o.traverse(function(m){if((m.isMesh||m.isLine||m.isPoints)&&m.layers.mask===1) out.push(m);}); return out;}
+function layer(list,n){for(let i=0;i<list.length;i++) list[i].layers.set(n);}
+function roomBox(k){const b=[1e9,-1e9,1e9,-1e9]; A.rooms[k].rs.forEach(function(r){b[0]=Math.min(b[0],r[0]); b[1]=Math.max(b[1],r[1]); b[2]=Math.min(b[2],r[2]); b[3]=Math.max(b[3],r[3]);}); return b;}
+function inClip(p){return p.x>=clipBox[0]&&p.x<=clipBox[1]&&p.z>=clipBox[2]&&p.z<=clipBox[3];}
+function inRects(k,x,z){const rs=A.rooms[k].rs; for(let i=0;i<rs.length;i++){const r=rs[i]; if(x>r[0]&&x<r[1]&&z>r[2]&&z<r[3]) return true;} return false;}
+/* does this wall face into the room? (the long wall with the bedroom doors faces the living room and the kitchen) */
+function serves(w,k){for(let u=0.15;u<w.len;u+=0.3) if(inRects(k,w.a[0]+w.d[0]*u+w.n[0]*0.1,w.a[1]+w.d[1]*u+w.n[1]*0.1)) return true; return false;}
+function pieceRoom(p){return insideFlat(p.to[0],p.to[1])||p.builtRoom||p.room||'living';}
+/* the separate things the flat is made of, apart from walls, doors and pieces, each with the room its materials belong to */
+function wide(o){if(o.userData.decor) return false; const b=boxOf(o,true); return !b.isEmpty()&&Math.max(b.max.x-b.min.x,b.max.z-b.min.z)>2.2;}      // a group that runs round a room is many things
+function isoUnits(matRoom,doorSet){
+  const out=[], roomIn=function(o){let r=null; o.traverse(function(m){if(!r&&m.isMesh) r=matRoom.get(matOf(m))||null;}); return r;};
+  (function walk(o){for(let i=0;i<o.children.length;i++){const c=o.children[i];
+    if(c===hl||c.userData.hl||c.userData.wallKey||c.userData.piece||doorSet.has(c)) continue;
+    const r=c.isMesh?matRoom.get(matOf(c))||null:roomIn(c);
+    if(!c.isMesh&&c.children.length&&(c.userData.only||!r||wide(c))) walk(c); else out.push({o:c,room:r});}})(scene);
+  return out;
+}
+function isoClear(){
+  if(!isoOn) return; isoOn=false;
+  layer(isoHid,0); for(const k in isoHang) layer(isoHang[k],0); isoHid=[]; isoHang={}; isoDoors={}; isoWalls=[]; nearKey='';
+  for(const k in A.walls) A.walls[k].g.visible=true; A.doors.forEach(function(d){d.p.visible=true;});
+  A.renderer.clippingPlanes=[]; A.touch(3);
+}
+function isoBuild(){
+  isoClear(); if(!iso) return; isoOn=true;
+  scene.updateMatrixWorld(true);
+  const b=roomBox(iso), m=0.21; clipBox[0]=b[0]-m; clipBox[1]=b[1]+m; clipBox[2]=b[2]-m; clipBox[3]=b[3]+m;      // wide enough for an outside wall's thickness
+  clipPl[0].set(new THREE.Vector3(1,0,0),-clipBox[0]); clipPl[1].set(new THREE.Vector3(-1,0,0),clipBox[1]);
+  clipPl[2].set(new THREE.Vector3(0,0,1),-clipBox[2]); clipPl[3].set(new THREE.Vector3(0,0,-1),clipBox[3]);
+  A.renderer.clippingPlanes=clipPl;
+  for(const k in A.walls){const w=A.walls[k]; if(serves(w,iso)){isoWalls.push(k); isoHang[k]=[]; isoDoors[k]=[];} else w.g.visible=false;}
+  A.doors.forEach(function(d){
+    const k=isoWalls.find(function(k){const w=A.walls[k], dx=d.cx-w.a[0], dz=d.cz-w.a[1], u=dx*w.d[0]+dz*w.d[1]; return Math.abs(dx*w.n[0]+dz*w.n[1])<0.08&&u>0&&u<w.len;});
+    if(k&&d.cx>clipBox[0]&&d.cx<clipBox[1]&&d.cz>clipBox[2]&&d.cz<clipBox[3]) isoDoors[k].push(d); else d.p.visible=false;
+  });
+  const matRoom=new Map(); for(const k in A.rooms) A.rooms[k].mats.forEach(function(e){matRoom.set(e.m,k);});
+  const things=[];
+  isoUnits(matRoom,new Set(A.doors.map(function(d){return d.p;}))).forEach(function(u){
+    let r=u.room; if(!r){const bb=boxOf(u.o,true); if(bb.isEmpty()) return; bb.getCenter(v3); r=insideFlat(v3.x,v3.z)||'out';}      // light pools and the like go by where they are
+    if(r!==iso){meshesOf(u.o,isoHid); return;}
+    if(A.shells.indexOf(u.o)<0&&shownObj(u.o)) things.push({o:u.o});
+  });
+  for(const id in P){const p=P[id], d=p.def;
+    if(pieceRoom(p)!==iso){meshesOf(p.g,isoHid); continue;}
+    if(p.to[3]>=1&&shownObj(p.g)) things.push({o:p.g,wall:!!(d&&(d.place==='wall'||(d.eket&&p.cfg&&p.cfg.base==='wall')))});
+  }
+  layer(isoHid,OFF);
+  /* what hangs on a wall: anything off the floor that neither rests on something standing nor is fixed within the height
+     of something standing (a handle on a cupboard), and anything resting on such a thing */
+  const list=[]; things.forEach(function(t){const bb=boxOf(t.o); if(!bb.isEmpty()){t.b=bb.clone(); list.push(t);}});
+  list.sort(function(a,c){return a.b.min.y-c.b.min.y||(c.b.max.y-a.b.max.y);});
+  const holds=function(s,t){
+    if(!(s.min.x-0.03<t.max.x&&s.max.x+0.03>t.min.x&&s.min.z-0.03<t.max.z&&s.max.z+0.03>t.min.z)) return false;
+    return (s.min.y<t.min.y-0.005&&Math.abs(s.max.y-t.min.y)<0.05)||(s.min.y<=t.min.y+0.01&&s.max.y>=t.max.y-0.02);
+  };
+  list.forEach(function(t){
+    if(t.wall){t.hang=true; return;}
+    if(t.b.min.y<0.1){t.hang=false; return;}
+    t.hang=!list.some(function(s){return s!==t&&s.hang===false&&holds(s.b,t.b);});
+  });
+  const c=new THREE.Vector3(), e=new THREE.Vector3();
+  list.forEach(function(t){
+    if(!t.hang) return; t.b.getCenter(c); t.b.getSize(e).multiplyScalar(0.5); let best=null, bd=0.45;      // the door of a wall cupboard is its depth out from the wall
+    isoWalls.forEach(function(k){const w=A.walls[k];      // its back against the wall, and not reaching far into the room
+      const cn=(c.x-w.a[0])*w.n[0]+(c.z-w.a[1])*w.n[1], en=Math.abs(w.n[0])*e.x+Math.abs(w.n[1])*e.z;
+      const cu=(c.x-w.a[0])*w.d[0]+(c.z-w.a[1])*w.d[1], eu=Math.abs(w.d[0])*e.x+Math.abs(w.d[1])*e.z;
+      if(cn-en<-0.2||cn+en>1.0||cu+eu<0.05||cu-eu>w.len-0.05) return;      // a TV on a swing arm reaches a good way out
+      if(Math.abs(cn-en)<bd){bd=Math.abs(cn-en); best=k;}
+    });
+    if(best) meshesOf(t.o,isoHang[best]);
+  });
+  A.touch(3);
+}
+A.frameFns.push(function(){                         // a wall steps aside while you are behind it
+  if(!iso) return;
+  const c=A.camera.position; let key='';
+  for(let i=0;i<isoWalls.length;i++){const w=A.walls[isoWalls[i]]; key+=(c.x-w.a[0])*w.n[0]+(c.z-w.a[1])*w.n[1]<-0.05?'1':'0';}
+  if(key===nearKey) return; nearKey=key;
+  isoWalls.forEach(function(k,i){const near=key[i]==='1'; A.walls[k].g.visible=!near; isoDoors[k].forEach(function(d){d.p.visible=!near;}); layer(isoHang[k],near?OFF:0);});
+  A.touch(2);
+});
+A.layoutFns.push(function(){if(iso) isoBuild();});      // once pieces have finished moving, look again at what hangs where
+function frameRoom(k,top,instant){
+  const b=roomBox(k), t=new THREE.Vector3((b[0]+b[1])/2,0.8,(b[2]+b[3])/2), s=Math.max(b[1]-b[0],b[3]-b[2]);
+  const d=(2.4+s*1.3)*Math.max(1,1.15*A.stage.clientHeight/Math.max(1,A.stage.clientWidth));
+  if(top){A.fly(new THREE.Vector3(t.x,t.y+d*1.05,t.z+0.01),t,800,instant); return;}
+  const c=A.camera.position, q=A.controls.target, el=0.9;
+  const az=Math.hypot(c.x-q.x,c.z-q.z)<0.3?Math.atan2(0.5,0.6):Math.atan2(c.x-q.x,c.z-q.z);      // keep the side you are looking from
+  A.fly(new THREE.Vector3(t.x+Math.sin(az)*Math.cos(el)*d,t.y+Math.sin(el)*d,t.z+Math.cos(az)*Math.cos(el)*d),t,800,instant);
+}
+function setIso(k,stay){
+  k=k&&INSIDE[k]?k:null; if(k===iso) return;
+  iso=k; deselect(); isoBuild(); renderIso();
+  if(stay) return;
+  if(k){frameRoom(k); toast(A.rooms[k].name+' on its own. Walls in your way step aside as you turn round it.');}
+  else A.setView('3d');
+}
+function noteText(){
+  if(!S.edit) return 'Tap a piece of furniture to see where to get it.';
+  return (iso?A.rooms[iso].name+' on its own: walls between you and the room, with whatever hangs on them, step aside as you turn round it. ':'')+
+    'Tap anything to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall or the ceiling to paint it or to add something from IKEA.';
+}
+function renderIso(){
+  const ch=$('isoChips'); for(let i=0;i<ch.children.length;i++) ch.children[i].setAttribute('aria-pressed',(ch.children[i].dataset.r||null)===iso);
+  $('bIso').hidden=!iso||!S.edit; $('editNote').textContent=noteText();
+}
+$('isoChips').innerHTML='<button class="chip" data-r="" aria-pressed="true">Whole flat</button>'+ISO.map(function(k){return '<button class="chip" data-r="'+k+'" aria-pressed="false">'+esc(A.rooms[k].name)+'</button>';}).join('');
+$('isoChips').onclick=function(e){const b=e.target.closest('[data-r]'); if(b) setIso(b.dataset.r||null);};
+$('bIso').onclick=function(){setIso(null);};
+const setView0=A.setView;
+A.setView=function(v,instant){           // 3D and From above frame the room you are working on; the street brings the whole flat back
+  if(iso&&v==='street') setIso(null,true);
+  setView0(v,instant); if(iso) frameRoom(iso,v==='top',instant);
+};
+
+/* =====================================================================
    The panel: the Edit button and its bar
    ===================================================================== */
 A.setEdit=function(on){
+  if(!on) setIso(null,true);
   S.edit=on; $('bEdit').setAttribute('aria-pressed',on); $('bEdit').textContent=on?'Done editing':'Edit layout';
   document.body.classList.toggle('editing',on); deselect(); shopCard(null); renderBar();
-  $('editNote').textContent=on?'Tap anything to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall or the ceiling to paint it or to add something from IKEA.':'Tap a piece of furniture to see where to get it.';
+  $('editNote').textContent=noteText();
   if(on&&!localSeen()) toast('Edit mode: tap to change, long-press to drag, tap an empty spot to add.');
 };
 function localSeen(){try{if(localStorage.getItem('haroe-edit-tip')) return true; localStorage.setItem('haroe-edit-tip','1');}catch(err){} return false;}
@@ -903,9 +1042,10 @@ function renderBar(){
   const e=A.EDITS[S.design], dirty=!!(e&&(Object.keys(e.items).length||Object.keys(e.gone).length||Object.keys(e.t).length||Object.keys(e.c).length||Object.keys(e.f).length||Object.keys(e.paint||{}).length))||Object.keys(A.USER).some(function(k){return k[0]===S.design;});
   const pending=unsaved(); $('bSave').disabled=!pending; $('bSave').textContent=pending?'Save':'Saved';
   $('bResetMoves').disabled=!dirty; $('bShare').hidden=!dirty;
+  renderIso();
   const pn=$('palNow'); if(palShown&&on){pn.hidden=false; pn.innerHTML='<b>'+esc(palShown.n)+'</b>'+['main','accent','soft','wood','case','case2','metal','rug'].map(function(r){return '<i style="background:'+hex(palShown[r])+'"></i>';}).join('');} else pn.hidden=true;
 }
-A.renderEdit=function(){renderBar(); try{localStorage.setItem('haroe10-design',S.design);}catch(err){} $('editNote').textContent=S.edit?'Tap anything to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall or the ceiling to paint it or to add something from IKEA.':'Tap a piece of furniture to see where to get it.';};
+A.renderEdit=function(){renderBar(); try{localStorage.setItem('haroe10-design',S.design);}catch(err){} $('editNote').textContent=noteText();};
 $('bEdit').onclick=function(){
   if(S.edit&&undo.length&&unsaved()&&confirm('Save your changes before you finish editing?\n\nCancel leaves them on screen without saving.')) doSave();
   A.setEdit(!S.edit);
@@ -918,7 +1058,7 @@ $('bPalette').onclick=function(){if(!S.edit) A.setEdit(true); applyPalette();};
 $('bAddHere').onclick=function(){
   if(!S.edit) A.setEdit(true);
   aimCentre(); const f=new THREE.Vector3(); let pt=null;
-  if(ray.ray.intersectPlane(floorPlane,f)&&insideFlat(f.x,f.z)) pt=f; else pt=new THREE.Vector3(1.6,0,3.0);
+  if(ray.ray.intersectPlane(floorPlane,f)&&inWork(f.x,f.z)) pt=f; else if(iso){const r=A.rooms[iso].rs[0]; pt=new THREE.Vector3((r[0]+r[1])/2,0,(r[2]+r[3])/2);} else pt=new THREE.Vector3(1.6,0,3.0);
   sel=null; hlFor=null; openAdd({kind:'floor',point:pt});
 };
 $('bResetMoves').onclick=function(){
