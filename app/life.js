@@ -168,7 +168,7 @@ function goal(k){if(st.done[k]) return; st.done[k]=1; renderGoals(); SM.toast('D
   if(Object.keys(st.done).length===GOALS.length) SM.later(3.5,function(){SM.toast('A full day at Haroe 10. Good night.');},st);}
 function walk(x,z,h,cb){const t=tok, p=me(); p.goTo(x,z,function(){if(t!==tok) return; if(h!=null) p.hT=h; if(cb) cb();});}
 function slideTo(x,z,dur){const p=me(); p.slide={fx:p.x,fz:p.z,tx:x,tz:z,t:0,dur:dur,then:null};}
-function front(id,dist){const p=A.pieces[id]; if(!p||p.to[3]<1) return null; const f=p.to[2], c=Math.cos(f), s=Math.sin(f);
+function front(id,dist){const p=A.pieceFor?A.pieceFor(id):A.pieces[id]; if(!p||p.to[3]<1) return null; const f=p.to[2], c=Math.cos(f), s=Math.sin(f);
   return {x:p.to[0],z:p.to[1],sx:p.to[0]+c*dist,sz:p.to[1]-s*dist,h:Math.atan2(-c,s),obj:p.g};}
 function firstPiece(ids,dist){for(let i=0;i<ids.length;i++){const q=front(ids[i],dist); if(q) return q;} return null;}
 function bedKey(){return ST.design==='n'?'n':'p';}
@@ -372,7 +372,7 @@ const DO={
     chain([Do(function(){doing('choosing a book');}),Wk(q.sx,q.sz,q.h),Ps(0.25),Do(function(){pose('reachmid');}),Ps(1.0),Do(function(){carry('book'); sit();})]);
   },
   record:function(dir){
-    const q=front('music',0.7); if(!q){SM.toast('The record player is part of the proposals. Pick option A to F.'); return;} begin();
+    const q=front('music',0.7); if(!q){SM.toast('There is no record player in this design. Add one in Design, Edit layout.'); return;} begin();
     chain([Do(function(){doing('at the record player');}),Wk(q.sx,q.sz,q.h),Ps(0.25),Do(function(){pose('reachmid');}),Ps(0.9),
       Do(function(){pose(null); doing(''); if(dir===0) music(-1); else{music(st.track<0?0:st.track+1); goal('record'); if(partner) partner.say(['Love this one.','Turn it up!','Nice.'][st.track%3]);} hud();})]);
   },
@@ -560,7 +560,7 @@ A.frameFns.push(function(dt,t){          // runs in every mode: things that ease
   props.visible=!!A.simsOn; rackWet.visible=st.hung&&!!A.simsOn;
   if(coverAmt!==coverT||coverKey!==bedKey()){coverKey=bedKey(); const d=coverT-coverAmt, q=dt/1.1; coverAmt=Math.abs(d)<=q?coverT:coverAmt+Math.sign(d)*q;
     for(const k in A.beds){const b=A.beds[k], on=k===bedKey()?coverAmt:0, e=on*on*(3-2*on); b.cover.visible=on>0.03; b.flat.visible=on<0.45; b.cover.scale[b.axis]=Math.max(0.05,e);} A.touch(2);}
-  const mp=A.pieces.music; if(mp){const d=mp.g.userData.disc, a=mp.g.userData.arm, on=st.track>=0; if(on) d.rotation.y-=dt*3.5; a.rotation.y+=((on?-0.2-Math.min(0.18,(t-st.trackT)*0.0012):0.12)-a.rotation.y)*Math.min(1,dt*3);}
+  const mp=A.pieceFor?A.pieceFor('music'):A.pieces.music; if(mp&&mp.g.userData.disc){const d=mp.g.userData.disc, a=mp.g.userData.arm, on=st.track>=0; if(on) d.rotation.y-=dt*3.5; a.rotation.y+=((on?-0.2-Math.min(0.18,(t-st.trackT)*0.0012):0.12)-a.rotation.y)*Math.min(1,dt*3);}
   if(st.wash>0){st.wash-=dt; A.washer.drum.rotation.z+=dt*(Math.sin(t*0.5)>0?9:-9); if(st.wash<=0){st.wash=0; st.washDone=true; AU.loop('washer',false); if(A.simsOn){AU.blip('ding'); SM.toast('The washing is done. Hang it on the rack.');}}}
   const sec=Math.ceil(st.wash); if(sec!==A.washer.shown||st.washDone!==A.washer.doneShown){A.washer.shown=sec; A.washer.doneShown=st.washDone; const g=A.washer.canvas.getContext('2d');
     g.fillStyle='#0d1411'; g.fillRect(0,0,128,48); g.fillStyle=st.washDone?'#E8C91A':'#63C398'; g.font='bold 34px monospace'; g.textAlign='center'; g.fillText(st.wash>0?clock(st.wash):st.washDone?'End':'--:--',64,36); A.washer.tex.needsUpdate=true;

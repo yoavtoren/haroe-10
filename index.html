@@ -69,7 +69,6 @@ body{
 .fab{font:inherit; font-size:12px; font-weight:700; color:var(--ink); background:var(--label-bg); border:1px solid var(--line); border-radius:99px; padding:6px 11px; cursor:pointer}
 #rotateTip{position:absolute; left:10px; right:10px; top:48px; z-index:3; background:#E8C91A; color:#163F2E; font-size:13px; font-weight:600; padding:8px 34px 8px 12px; border-radius:12px}
 #rotateTip button{position:absolute; right:6px; top:3px; border:0; background:transparent; font-size:20px; color:#163F2E; cursor:pointer; padding:2px 6px}
-#pieceBar{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:6px; background:var(--label-bg); border:1px solid var(--yellow); border-radius:99px; padding:5px 6px 5px 14px; font-size:13px; white-space:nowrap}
 .stick{position:absolute; bottom:calc(18px + env(safe-area-inset-bottom,0px)); width:112px; height:112px; border-radius:50%; background:rgba(23,33,28,.28); border:2px solid rgba(255,255,255,.55); touch-action:none; z-index:3; user-select:none; -webkit-user-select:none}
 .stick i{position:absolute; left:50%; top:50%; width:48px; height:48px; margin:-24px 0 0 -24px; border-radius:50%; background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(0,0,0,.3); pointer-events:none}
 #stickMove{left:calc(18px + env(safe-area-inset-left,0px))} #stickLook{right:calc(18px + env(safe-area-inset-right,0px))}
@@ -92,8 +91,41 @@ body.editing #stage{outline:3px solid var(--yellow); outline-offset:-3px}
 #flyBtns{position:absolute; right:calc(140px + env(safe-area-inset-right,0px)); bottom:calc(30px + env(safe-area-inset-bottom,0px)); z-index:3; display:flex; flex-direction:column; gap:8px}
 #flyBtns .fab{width:44px; height:44px; font-size:16px; padding:0; touch-action:none}
 body.nomenu #panel{display:none}
+#stage{-webkit-touch-callout:none; -webkit-user-select:none; user-select:none}
+#segABC{display:grid; grid-template-columns:repeat(6,1fr); gap:2px}
+#segABC button{padding:6px 0}
+/* Edit mode: the sheet lies over the panel (or the bottom of the room when the menu is hidden) */
+#edSheet{position:fixed; left:0; right:0; bottom:0; height:44%; z-index:6; background:var(--panel); color:var(--ink); border-top:1px solid var(--line); box-shadow:0 -10px 30px rgba(0,0,0,.18); display:flex; flex-direction:column; padding-bottom:env(safe-area-inset-bottom,0px)}
+.edHead{display:flex; align-items:baseline; gap:8px; padding:12px 8px 8px 16px; border-bottom:1px solid var(--line)}
+.edHead b{font-size:17px; line-height:1.2} .edHead span{color:var(--muted); font-size:12px; flex:1}
+#edClose{border:0; background:transparent; font-size:26px; line-height:1; color:var(--muted); cursor:pointer; padding:0 8px; align-self:center}
+#edBody{overflow:auto; padding:10px 16px 20px; flex:1; -webkit-overflow-scrolling:touch}
+#edBody h4{margin:14px 0 7px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+#edBody h4 span{text-transform:none; letter-spacing:0; color:var(--ink); font-size:13px; margin-left:6px}
+#edBody .note{margin:10px 0 0}
+.edFoot{display:flex; gap:6px; padding:8px 12px; border-top:1px solid var(--line); background:var(--panel)}
+.edFoot .btn{padding:7px 10px; font-size:13px} .edFoot .btn.primary{flex:1; text-align:center}
+.edRow{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; align-items:center}
+.edRow .btn{padding:7px 11px}
+.btn.danger{color:#b3261e}
+.btn.wide{display:block; width:100%; margin-top:12px; text-align:center}
+.btn.shop{display:inline-block; text-decoration:none; margin-top:12px}
+.sws{display:flex; flex-wrap:wrap; gap:9px}
+.swc{width:34px; height:34px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0}
+.swc[aria-pressed="true"]{border-color:var(--panel); box-shadow:0 0 0 3px var(--yellow)}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px}
+.card{font:inherit; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 5px 8px; border:1px solid var(--line); border-radius:12px; background:var(--chip); color:var(--ink); cursor:pointer; text-align:center}
+.card:hover{border-color:var(--green)}
+.card img{width:84px; height:84px; object-fit:contain}
+.card b{font-size:12px; line-height:1.2; font-weight:600} .card span{font-size:11px; color:var(--muted)}
+.tabs{display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin:0 -16px 6px; padding-left:16px; padding-right:16px; scrollbar-width:none}
+.tabs .chip{white-space:nowrap; padding:6px 12px}
+.ekTypes{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px} .ekTypes .chip{font-size:12px; padding:4px 10px}
+.ekGrid{width:100%; max-width:440px; display:block; margin:12px 0 6px; background:var(--chip); border-radius:8px; touch-action:manipulation; cursor:crosshair}
+.ekGrid line.g1{stroke:var(--line); stroke-width:.5} .ekGrid line.g2{stroke:var(--line); stroke-width:1.2} .ekGrid line.fl{stroke:var(--ink); stroke-width:2.5} .ekGrid line.hd{stroke:rgba(0,0,0,.4); stroke-width:1.5}
+.ekGrid rect{stroke:rgba(0,0,0,.28); stroke-width:1; cursor:pointer} .ekGrid rect.on{stroke:var(--yellow); stroke-width:3.5}
+#palNow{display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin:-4px 0 10px; font-size:13px} #palNow b{margin-right:6px} #palNow i{width:18px; height:18px; border-radius:50%; border:1px solid var(--line)}
 body.sticks #hint{display:none}
-body.sticks #pieceBar{bottom:140px}
 #panel{
   flex:0 1 44%; min-height:0; overflow:auto; background:var(--panel);
   border-top:1px solid var(--line); padding:14px 16px 18px;
@@ -160,6 +192,7 @@ table.rooms td.sw{text-align:right; width:1%; white-space:nowrap; padding-left:6
 .assign i{width:16px; height:16px; border-radius:50%; display:inline-block}
 select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--line); background:var(--chip); color:var(--ink); width:100%}
 @media (min-width:860px){
+  #edSheet{left:auto; top:0; width:384px; height:auto; border-top:0; border-left:1px solid var(--line); box-shadow:-10px 0 30px rgba(0,0,0,.12)}
   body{flex-direction:row}
   #stage{flex:1 1 auto}
   #panel{flex:0 0 384px; border-top:0; border-left:1px solid var(--line); padding:24px 22px}
@@ -174,6 +207,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
   #panel{flex:0 0 300px; border-top:0; border-left:1px solid var(--line); padding:10px 12px}
   .brand{display:none}
   .stick{width:96px; height:96px}
+  #edSheet{left:auto; top:0; width:320px; height:auto; border-top:0; border-left:1px solid var(--line)}
 }
 @media (prefers-reduced-motion: reduce){.tag.zzz{animation:none}}
 </style>
@@ -187,7 +221,6 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
     <button class="fab" id="bMenu" aria-pressed="true">Hide menu</button>
   </div>
   <div id="rotateTip" hidden>Tip: turn your phone sideways (rotation unlocked) for easier control. <button id="bTipClose" aria-label="Close">×</button></div>
-  <div id="pieceBar" hidden><b id="pieceName"></b><button class="fab" id="bRotate">Rotate 45°</button><button class="fab" id="bPieceDone">Done</button></div>
   <div id="shopCard" hidden><button id="shopClose" aria-label="Close">×</button><b id="shopName"></b><span id="shopNote"></span><a id="shopLink" target="_blank" rel="noopener"></a></div>
   <div id="useBar" hidden><b id="useName"></b><span id="useBtns"></span></div>
   <div id="guestBar" hidden><b id="guestName"></b><button class="fab" id="bKick">Send home</button><button class="fab" id="bGuestKeep">Cancel</button></div>
@@ -241,6 +274,12 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
       <button id="d_d" aria-pressed="false" aria-label="Option D">D</button>
       <button id="d_e" aria-pressed="false" aria-label="Option E">E</button>
       <button id="d_f" aria-pressed="false" aria-label="Option F">F</button>
+      <button id="d_g" aria-pressed="false" aria-label="Option G">G</button>
+      <button id="d_h" aria-pressed="false" aria-label="Option H">H</button>
+      <button id="d_i" aria-pressed="false" aria-label="Option I">I</button>
+      <button id="d_j" aria-pressed="false" aria-label="Option J">J</button>
+      <button id="d_k" aria-pressed="false" aria-label="Option K">K</button>
+      <button id="d_l" aria-pressed="false" aria-label="Option L">L</button>
     </div>
     <h2 id="dTitle"></h2>
     <p class="sub" id="dSub"></p>
@@ -250,7 +289,16 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
       <button class="btn" id="bTable"></button>
       <button class="btn" id="bLift" hidden></button>
       <button class="btn" id="bEdit" aria-pressed="false">Edit layout</button>
-      <button class="btn" id="bResetMoves" hidden>Put furniture back</button>
+    </div>
+    <div id="editBar" hidden>
+      <div class="row">
+        <button class="btn primary" id="bPalette">Choose a matched colour set</button>
+        <button class="btn" id="bAddHere">Add furniture</button>
+        <button class="btn" id="bUndo" disabled>Undo</button>
+        <button class="btn" id="bShare" hidden>Share link</button>
+        <button class="btn" id="bResetMoves" hidden>Reset this design</button>
+      </div>
+      <div id="palNow" hidden></div>
     </div>
     <p class="note" id="editNote" style="margin:-4px 0 12px"></p>
     <div class="row">
@@ -336,6 +384,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
     </div>
   </section>
 </aside>
+<div id="edSheet" hidden role="dialog" aria-label="Edit"><div class="edHead"><b id="edTitle"></b><span id="edSub"></span><button id="edClose" aria-label="Close">×</button></div><div id="edBody"></div><div class="edFoot"><button class="btn" data-a="undo" id="edUndo">Undo</button><button class="btn primary" data-a="pal">Choose a matched colour set</button><button class="btn" data-a="close">Close</button></div></div>
 <div id="modal" hidden><div class="sheet" role="dialog" aria-modal="true" id="sheet"></div></div>
 
 <script src="vendor/three.min.js"></script>
@@ -344,7 +393,9 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 <script src="app/kit.js"></script>
 <script src="app/house.js"></script>
 <script src="app/exterior.js"></script>
+<script src="app/catalog.js"></script>
 <script src="app/furniture.js"></script>
+<script src="app/editor.js"></script>
 <script src="app/climate.js"></script>
 <script src="app/people.js"></script>
 <script src="app/audio.js"></script>

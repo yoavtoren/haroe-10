@@ -4,6 +4,9 @@
 const A=window.APP, rbox=A.rbox, box=A.box, cyl=A.cyl, sph=A.sph, torus=A.torus, M=A.M, canvasTex=A.canvasTex, rng=A.rng, H=A.D.H;
 const K=A.kit={};
 const GREENS=[0x2f7d4f,0x3f9160,0x246b43,0x4a9a66];
+/* every loose thing (a plant, a row of books, a candle, a lamp, a cushion) gets its own group, tagged with what it is,
+   so Edit mode can pick it out of the piece it stands on and swap, recolour or move it */
+K.dec=function(p,kind){const g=A.G(p); g.userData.decor=kind; return g;};
 const PAL=K.PAL={green:'#1F5A41',sage:'#8fbd9b',blue:'#9fc4d6',sky:'#cfe3ec',cream:'#F3EBDC',ink:'#3b4a44',oak:'#C99A5B',white:'#fbfaf6'};   // modern rustic: green, light blue, wood, white
 
 /* ---------- plants: real leaf shapes cut from one painted sheet, one mesh per plant ---------- */
@@ -55,12 +58,13 @@ function foliage(parent){
     }
   };
 }
+K.foliage=foliage;
 K.pot=function(p,x,z,r,h,col,y0){
   y0=y0||0; cyl(r*0.76,h,col==null?0xe6ddcd:col,x,y0+h/2,z,p,22,r); torus(r*0.98,r*0.07,col==null?0xe6ddcd:col,x,y0+h-r*0.03,z,p).rotation.x=Math.PI/2;      // body and rolled rim
   cyl(r*0.9,0.02,0x3a2c20,x,y0+h-0.02,z,p,18);
 };
-K.monstera=function(p,x,z,s,seed){
-  s=s||1; K.pot(p,x,z,0.19*s,0.3*s,0xe6ddcd);
+K.monstera=function(p,x,z,s,seed,pc){
+  p=K.dec(p,'plant'); s=s||1; K.pot(p,x,z,0.19*s,0.3*s,pc==null?0xe6ddcd:pc);
   const r=rng(seed||11), f=foliage(p), y0=0.28*s;
   for(let i=0;i<10;i++){
     const a=i/10*6.283+r()*0.5, lean=0.25+r()*0.45, len=(0.45+r()*0.5)*s, lw=(0.3+r()*0.14)*s;
@@ -70,8 +74,8 @@ K.monstera=function(p,x,z,s,seed){
   }
   f.done();
 };
-K.fiddle=function(p,x,z,h,seed){
-  h=h||1.7; K.pot(p,x,z,0.2,0.34,0x3b3f3c);
+K.fiddle=function(p,x,z,h,seed,pc){
+  p=K.dec(p,'plant'); h=h||1.7; K.pot(p,x,z,0.2,0.34,pc==null?0x3b3f3c:pc);
   cyl(0.022,h-0.45,0x6b4a2f,x,0.34+(h-0.45)/2,z,p,8,0.014);
   const r=rng(seed||5), f=foliage(p);
   for(let i=0;i<16;i++){
@@ -80,20 +84,20 @@ K.fiddle=function(p,x,z,h,seed){
   }
   f.done();
 };
-K.snake=function(p,x,z,h,seed){
-  h=h||0.7; K.pot(p,x,z,0.13,0.24,0xfbfaf6);
+K.snake=function(p,x,z,h,seed,pc){
+  p=K.dec(p,'plant'); h=h||0.7; K.pot(p,x,z,0.13,0.24,pc==null?0xfbfaf6:pc);
   const r=rng(seed||3), f=foliage(p);
   for(let i=0;i<11;i++){const a=r()*6.283, o=r()*0.07; f.at(x+Math.sin(a)*o,0.2,z+Math.cos(a)*o,a+r(),0.06+r()*0.22,(r()-0.5)*0.15).leaf(0.075+r()*0.03,h*(0.55+r()*0.45),'blade',0.08);}
   f.done();
 };
 K.bush=function(p,x,y,z,r0,col){
-  cyl(r0*0.62,r0*1.1,col==null?0xf3ebdc:col,x,y+r0*0.55,z,p,16,r0*0.8);
+  p=K.dec(p,'plant'); cyl(r0*0.62,r0*1.1,col==null?0xf3ebdc:col,x,y+r0*0.55,z,p,16,r0*0.8);
   const r=rng(Math.round((x+z)*977+y*131)), f=foliage(p);
   for(let i=0;i<14;i++){const a=i/14*6.283+r(), t=0.15+r()*1.0; f.at(x,y+r0*1.0,z,a,t,(r()-0.5)*0.5).leaf(r0*(0.8+r()*0.5),r0*(1.5+r()*0.9),'oval',0.4);}
   f.done();
 };
-K.pothos=function(p,x,y,z,drop,seed){
-  cyl(0.085,0.13,0xe6ddcd,x,y+0.065,z,p,16,0.11);
+K.pothos=function(p,x,y,z,drop,seed,pc){
+  if(!(p&&p.userData.decor)) p=K.dec(p,'pothos'); cyl(0.085,0.13,pc==null?0xe6ddcd:pc,x,y+0.065,z,p,16,0.11);
   const r=rng(seed||9), f=foliage(p);
   for(let i=0;i<9;i++){const a=i/9*6.283+r(); f.at(x,y+0.11,z,a,0.5+r()*0.8).leaf(0.075,0.085,'heart',0.3);}
   for(let s=0;s<7;s++){
@@ -104,7 +108,7 @@ K.pothos=function(p,x,y,z,drop,seed){
   f.done();
 };
 K.hanging=function(p,x,y,z,drop,seed){   // planter hung from the ceiling
-  cyl(0.003,H-y-0.12,0x6f6a60,x,(H+y+0.12)/2,z,p,5); K.pothos(p,x,y,z,drop,seed);
+  p=K.dec(p,'hanging'); cyl(0.003,H-y-0.12,0x6f6a60,x,(H+y+0.12)/2,z,p,5); K.pothos(p,x,y,z,drop,seed);
 };
 
 /* ---------- lamps (shade materials glow with their light channel) ---------- */
@@ -120,7 +124,7 @@ K.floorLamp=function(p,ch){
   A.pool(ch,0xffc47a,0,0.03,0,1.1,p,0.5);
 };
 K.tableLamp=function(p,x,y,z,ch,s){
-  s=s||1; cyl(0.045*s,0.15*s,0xb08d4a,x,y+0.075*s,z,p,12,0.03*s);
+  p=K.dec(p,'lamp'); s=s||1; cyl(0.045*s,0.15*s,0xb08d4a,x,y+0.075*s,z,p,12,0.03*s);
   cyl(0.1*s,0.13*s,A.lampMat(ch,0xefe6d2,null,0.5),x,y+0.2*s,z,p,18,0.065*s);
   A.pool(ch,0xffc47a,x,y+0.012,z,0.42*s,p,0.5);
 };
@@ -139,11 +143,11 @@ K.pendant=function(p,x,y,z,ch,kind,col,poolR){
   A.pool(ch,0xffc47a,x,0.032,z,poolR||1.5,p,0.42);
 };
 K.ceilDisc=function(p,x,z,ch){
-  cyl(0.18,0.04,0xf8f8f4,x,H-0.02,z,p,32); cyl(0.16,0.012,A.lampMat(ch,0xffffff,0xfff0d0,1),x,H-0.046,z,p,32);
+  cyl(0.18,0.04,0xf8f8f4,x,H-0.02,z,p,32).castShadow=false; cyl(0.16,0.012,A.lampMat(ch,0xffffff,0xfff0d0,1),x,H-0.046,z,p,32).castShadow=false;      // flush to the ceiling: no shadow of its own
   A.pool(ch,0xffe2b0,x,0.03,z,1.7,p,0.3);
 };
 K.candle=function(p,x,y,z,h){
-  cyl(0.024,h,0xf3ebdc,x,y+h/2,z,p,10);
+  p=K.dec(p,'candle'); cyl(0.024,h,0xf3ebdc,x,y+h/2,z,p,10);
   sph(0.011,A.lampMat('candle',0x4a3a2a,0xffa53c,1.4),x,y+h+0.014,z,p,1,1.9,1);
   A.pool('candle',0xffb45e,x,y+0.006,z,0.3,p,0.5);
 };
@@ -188,22 +192,24 @@ K.onlyAll=function(list,spec){list.forEach(function(m){A.only(m,spec);}); return
 
 /* ---------- books and cube shelving ---------- */
 const bookCols=['#1F5A41','#9fc4d6','#C99A5B','#5d7f8c','#F3EBDC','#8fbd9b','#3b4a44','#cfe3ec','#f7f7f2','#a9825a'];
-K.bookTex=function(seed){
+K.bookCols=bookCols;
+K.bookTex=function(seed,cols){
+  cols=cols||bookCols;
   return canvasTex(128,64,function(g){
     const r=rng(seed); g.fillStyle='#2a2622'; g.fillRect(0,0,128,64); let x=0;
-    while(x<128){const w=6+r()*10, hh=44+r()*20; g.fillStyle=bookCols[Math.floor(r()*bookCols.length)]; g.fillRect(x,64-hh,w-1,hh);
+    while(x<128){const w=6+r()*10, hh=44+r()*20; g.fillStyle=cols[Math.floor(r()*cols.length)]; g.fillRect(x,64-hh,w-1,hh);
       if(r()>0.5){g.fillStyle='rgba(255,255,255,.55)'; g.fillRect(x+1,64-hh+8,w-3,3);} x+=w;}
   });
 };
 /* a row of books: wd along z, d along x, spines on ±x */
-K.books=function(p,x,y,z,wd,h,d,seed){
-  const side=M(0xefe9dc), sp=A.MT(K.bookTex(seed),null,true);
+K.books=function(p,x,y,z,wd,h,d,seed,cols){
+  p=K.dec(p,'books'); const side=M(0xefe9dc), sp=A.MT(K.bookTex(seed,cols),null,true);
   const m=new THREE.Mesh(new THREE.BoxGeometry(d,h,wd),[sp,sp,side,side,side,side]);
   m.position.set(x,y+h/2,z); m.castShadow=true; p.add(m); return m;
 };
-K.bookStack=function(p,x,y,z,n,seed){
-  const r=rng(seed||2); let yy=y;
-  for(let i=0;i<n;i++){const t=0.025+r()*0.02; box(0.16+r()*0.05,t,0.22+r()*0.05,parseInt(bookCols[Math.floor(r()*bookCols.length)].slice(1),16),x,yy+t/2,z,p).rotation.y=(r()-0.5)*0.4; yy+=t;}
+K.bookStack=function(p,x,y,z,n,seed,cols){
+  p=K.dec(p,'stack'); cols=cols||bookCols; const r=rng(seed||2); let yy=y;
+  for(let i=0;i<n;i++){const t=0.025+r()*0.02; box(0.16+r()*0.05,t,0.22+r()*0.05,parseInt(cols[Math.floor(r()*cols.length)].slice(1),16),x,yy+t/2,z,p).rotation.y=(r()-0.5)*0.4; yy+=t;}
   return yy;
 };
 /* IKEA-style cube shelf. Opens toward +x, width along z, origin at floor centre.
@@ -222,12 +228,12 @@ K.kallax=function(p,rows,col,opt){
     const ch=rows[nr-1-j][i], zc=-wd/2+o+c/2+i*(c+t), yb=o+j*(c+t), seed=31+j*7+i*13+(opt.seed||0);
     if(ch==='b'){K.books(p,0.03,yb,zc+0.02,0.27,0.25,0.2,seed); }
     else if(ch==='s'){K.bookStack(p,0.04,yb,zc,4,seed);}
-    else if(ch==='x'||ch==='y'){const bc=ch==='x'?(opt.box==null?0xd9c9a8:opt.box):(opt.box2==null?0x8fbd9b:opt.box2);
-      box(0.36,0.315,0.318,bc,0.012,yb+0.16,zc,p); box(0.006,0.03,0.1,0x3a3a36,0.194,yb+0.24,zc,p);}
+    else if(ch==='x'||ch==='y'){const bc=ch==='x'?(opt.box==null?0xd9c9a8:opt.box):(opt.box2==null?0x8fbd9b:opt.box2), q=K.dec(p,'insert');
+      box(0.36,0.315,0.318,bc,0.012,yb+0.16,zc,q); box(0.006,0.03,0.1,0x3a3a36,0.194,yb+0.24,zc,q);}
     else if(ch==='p'){K.bush(p,0.04,yb,zc,0.085);}
-    else if(ch==='v'){cyl(0.05,0.22,opt.vase==null?0x9fc4d6:opt.vase,0.04,yb+0.11,zc,p,14,0.028);}
+    else if(ch==='v'){cyl(0.05,0.22,opt.vase==null?0x9fc4d6:opt.vase,0.04,yb+0.11,zc,K.dec(p,'vase'),14,0.028);}
     else if(ch==='l'){K.tableLamp(p,0.04,yb,zc,opt.ch||'L:living',0.8);}
-    else if(ch==='k'){box(0.16,0.26,0.17,0x2b2b2b,0.04,yb+0.13,zc,p); cyl(0.05,0.004,0x55585c,0.122,yb+0.13,zc,p,14).rotation.z=Math.PI/2;}
+    else if(ch==='k'){const q=K.dec(p,'speaker'); box(0.16,0.26,0.17,0x2b2b2b,0.04,yb+0.13,zc,q); cyl(0.05,0.004,0x55585c,0.122,yb+0.13,zc,q,14).rotation.z=Math.PI/2;}
   }
   return {w:wd,h:hg,d:d};
 };
@@ -275,7 +281,7 @@ K.officeChair=function(p,c){
 };
 K.cushions=[];                              // every loose cushion: one that would be inside somebody sitting or lying there is put away
 K.cushion=function(p,c,x,y,z,s,tilt){       // a plump scatter cushion
-  const g=A.G(p); g.position.set(x,y,z); g.rotation.z=tilt==null?0.3:tilt; K.cushions.push(g);
+  const g=A.G(p); g.position.set(x,y,z); g.rotation.z=tilt==null?0.3:tilt; K.cushions.push(g); g.userData.decor='cushion';
   rbox(0.15*s,0.36*s,0.36*s,c,0,0,0,g,0.07*s); return g;};
 
 /* ---------- computer screens: dark until someone sits down to work ---------- */

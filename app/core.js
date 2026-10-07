@@ -243,6 +243,15 @@ function relight(){
   A.lightVer++;
 }
 A.relight=relight;
+/* a piece is being rebuilt or thrown away: drop its materials, lamps and light pools from the lighting, and free its GPU memory */
+A.forget=function(root){
+  const mats=new Set(), meshes=new Set();
+  root.traverse(function(o){if(!o.isMesh) return; meshes.add(o); [].concat(o.material).forEach(function(m){mats.add(m);}); if(o.geometry) o.geometry.dispose();});
+  for(const k in rooms){const r=rooms[k]; r.mats=r.mats.filter(function(e){return !mats.has(e.m);});}
+  for(let i=lits.length-1;i>=0;i--) if(mats.has(lits[i].m)) lits.splice(i,1);
+  for(let i=glows.length-1;i>=0;i--) if(meshes.has(glows[i].m)) glows.splice(i,1);
+  mats.forEach(function(m){m.dispose();});
+};
 function syncBg(){
   const c=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#E9ECE7';
   bgDay.set(c); A.dirty=true;
