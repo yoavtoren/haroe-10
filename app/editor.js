@@ -716,7 +716,7 @@ function showSheet(title,sub){
   body.scrollTop=0; fillThumbs();
 }
 function sizeText(d,f){if(d.eket){const b=A.eketBounds(f||d.cfg); return Math.round(b.w*100)+' × '+((f||d.cfg).d||35)+' × '+Math.round(b.h*100+((f||d.cfg).base==='legs'?10:0))+' cm';} return d.w+' × '+d.d+(d.cat==='rug'?'':' × '+d.h)+' cm';}
-function swatch(c,i,on){const bg=c.h2!=null&&c.h2!==c.h?'linear-gradient(135deg,'+hex(c.h)+' 50%,'+hex(c.h2)+' 50%)':c.x&&c.x.length?'linear-gradient(90deg,'+c.x.slice(0,5).join(',')+')':hex(c.h);
+function swatch(c,i,on){const bg=c.h2!=null&&c.h2!==c.h?'linear-gradient(135deg,'+hex(c.h)+' 50%,'+hex(c.h2)+' 50%)':Array.isArray(c.x)&&c.x.length?'linear-gradient(90deg,'+c.x.slice(0,5).join(',')+')':hex(c.h);
   return '<button class="swc" data-a="col" data-i="'+i+'" title="'+esc(c.n)+'" aria-label="'+esc(c.n)+'" aria-pressed="'+!!on+'" style="background:'+bg+'"></button>';}
 function card(t,act,extra){const d=CAT[t]; return '<button class="card'+(extra||'')+'" data-a="'+act+'" data-t="'+t+'"><img data-th="'+t+'" alt=""><b>'+esc(d.n)+'</b><span>'+sizeText(d)+'</span></button>';}
 function altsFor(cat,place){
