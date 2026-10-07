@@ -1,6 +1,6 @@
 /* Haroe 10 — Edit mode. Tap a piece to swap it for another IKEA piece or change its colour; long-press it to drag it;
    tap the floor, a wall, a shelf or the ceiling to add something there. Every plant, book, lamp and basket can be picked
-   on its own. Changes are kept per design and can be undone; Save keeps them in this browser, Reset goes back to the
+   on its own, and anything (a part of a piece, the flat's own fittings, the walls, floor and ceiling) can be painted. Changes are kept per design and can be undone; Save keeps them in this browser, Reset goes back to the
    original, and a design can be shared as a link. */
 (function(){
 'use strict';
@@ -119,7 +119,7 @@ function applyGone(){
   });
 }
 A.beforeLayout=syncItems;
-A.onLayout=function(){syncAttached(); applyGone(); if(sel&&!selObj()) deselect();};
+A.onLayout=function(){syncAttached(); applyGone(); if(A.paint) A.paint.apply(); if(sel&&!selObj()) deselect();};
 
 /* =====================================================================
    Picking: what is under the finger
@@ -236,7 +236,7 @@ function snapToWall(x,z,dd,reach){
 }
 function faceCamera(x,z){const c=A.camera.position, a=Math.atan2(-(c.z-z),c.x-x); return Math.round(a/(R/2))*(R/2);}
 function sizeOf(t,f){const d=CAT[t]; if(d.eket){const b=A.eketBounds(f||d.cfg); return {w:b.w,d:((f||d.cfg).d||35)/100,h:b.h+((f||d.cfg).base==='legs'?0.1:0)};} return {w:d.w/100,d:d.d/100,h:d.h/100};}
-const SNAPCATS={sofa:1,media:1,shelf:1,eket:1,hall:1};
+const SNAPCATS={sofa:1,media:1,shelf:1,eket:1,hall:1,bed:1,ward:1,bath:1};
 
 /* =====================================================================
    Changing things
@@ -262,6 +262,7 @@ function setColour(t,ci,byUser){
   if(t.k==='piece'){const p=P[t.id]; if(p.item) p.item.c=ci; else{e.c[t.id]=ci; if(byUser) e.uc[t.id]=1; else delete e.uc[t.id];}}
   else if(t.k==='att') items()[t.uid].c=ci;
   if(byUser&&t.k!=='piece') (items()[t.uid||t.id]||{}).uc=1;
+  if(A.paint) A.paint.clearThing(t);                                    // an IKEA colour replaces any colour painted on it
 }
 function setCfg(t,f){
   const e=E(S.design);
@@ -281,7 +282,7 @@ function depthOf(g){
   bx.setFromObject(g); const d=bx.max.x-bx.min.x; g.position.copy(p); g.rotation.y=r; g.scale.copy(s); g.updateMatrixWorld(true); return isFinite(d)&&d>0?d:0.5;
 }
 function swapTo(t,nt){
-  snap(); const e=E(S.design), nd=CAT[nt];
+  snap(); const e=E(S.design), nd=CAT[nt]; if(A.paint) A.paint.clearThing(t);
   const sp=specOf(t), oldD=sp?sizeOf(sp.t,sp.f).d:t.k==='piece'?depthOf(P[t.id].g):0.5, newD=sizeOf(nt,nd.cfg).d;
   if(t.k==='piece'){
     const p=P[t.id], pos=curPos(t), q=keepBack(pos[0],pos[1],pos[2],oldD,newD);
@@ -329,7 +330,7 @@ function replaceLoose(t,nt,ci,keepSel){
   changed(); const it=items()[uid]; select(it.on?{k:'att',uid:uid}:{k:'piece',id:uid}); openItem();
 }
 function removeSel(){
-  if(!sel) return; snap(); const e=E(S.design);
+  if(!sel||sel.k==='part') return; snap(); const e=E(S.design);
   if(sel.k==='piece'){const p=P[sel.id]; if(p.item){delete e.items[sel.id]; for(const k in e.items) if(e.items[k].on===sel.id) delete e.items[k];} else e.gone[sel.id]=1;}
   else if(sel.k==='att') delete e.items[sel.uid];
   else e.gone[sel.key]=1;
@@ -479,6 +480,8 @@ function onTap(e,p){
     if(same(t,sel)&&t.k==='piece'&&c.n.y>0.7&&!isThingPiece(P[t.id])&&!P[t.id].flat){openAdd({kind:'top',point:c.point,pieceId:t.id}); return;}   // tap the top of the piece you picked: put something on it
     select(t,c); openItem(); return;
   }
+  const pp=A.paint&&A.paint.partOf(c);                                  // the flat's own fittings: pick one to colour it
+  if(pp){if(same(pp,sel)&&c.n.y>0.7){openAdd({kind:'top',point:c.point,pieceId:null}); return;} select(pp,c); openItem(); return;}
   const s=spotOf(c); if(!s){deselect(); toast('Tap somewhere inside the flat.'); return;}
   sel=null; hlFor=null; openAdd(s);
 }
@@ -541,7 +544,7 @@ function swatch(c,i,on){const bg=c.h2!=null&&c.h2!==c.h?'linear-gradient(135deg,
   return '<button class="swc" data-a="col" data-i="'+i+'" title="'+esc(c.n)+'" aria-label="'+esc(c.n)+'" aria-pressed="'+!!on+'" style="background:'+bg+'"></button>';}
 function card(t,act,extra){const d=CAT[t]; return '<button class="card'+(extra||'')+'" data-a="'+act+'" data-t="'+t+'"><img data-th="'+t+'" alt=""><b>'+esc(d.n)+'</b><span>'+sizeText(d)+'</span></button>';}
 function altsFor(cat,place){
-  const rel={sofa:['sofa'],arm:['arm','chair'],chair:['chair','arm'],table:['table'],media:['media','eket'],shelf:['shelf','eket','media'],eket:['eket','shelf','media'],dining:['dining'],lamp:['lamp'],plant:['plant'],decor:['decor','plant'],wall:['wall','eket'],rug:['rug'],hall:['hall','shelf','eket']}[cat]||[cat];
+  const rel={sofa:['sofa'],arm:['arm','chair'],chair:['chair','arm'],table:['table'],media:['media','eket'],shelf:['shelf','eket','media','ward'],eket:['eket','shelf','media'],dining:['dining'],lamp:['lamp'],plant:['plant'],decor:['decor','plant'],wall:['wall','eket'],rug:['rug'],hall:['hall','shelf','eket'],ward:['ward','shelf'],kitchen:['kitchen','dining'],out:['out','chair']}[cat]||[cat];
   const out=[]; rel.forEach(function(k){for(const t in CAT){const d=CAT[t]; if(d.cat!==k) continue; if(place==='wall'?d.place!=='wall':place==='top'?d.place!=='top':place==='ceil'?d.place!=='ceil':(d.place==='wall'||d.place==='ceil')) continue; out.push(t);}});
   return out;
 }
@@ -553,6 +556,7 @@ function nameOf(t){
 }
 function openItem(){
   if(!sel){closeSheet(); return;}
+  if(sel.k==='part'){mode='item'; body.innerHTML=A.paint.partSheet(sel); showSheet(A.rooms[sel.room].name,'Part of the flat'); return;}
   mode='item'; const t=sel, sp=specOf(t), d=sp?CAT[sp.t]:null; let h='';
   const place=d?d.place:(t.k==='baked'?'top':'floor');
   h+='<div class="edRow">';
@@ -565,6 +569,7 @@ function openItem(){
   h+='<button class="btn danger" data-a="del">Remove</button></div>';
   if(d&&d.col.length>1) h+='<h4>Colour <span id="edColName">'+esc(d.col[sp.c]?d.col[sp.c].n:'')+'</span></h4><div class="sws">'+d.col.map(function(c,i){return swatch(c,i,i===sp.c);}).join('')+'</div>';
   else if(t.k==='baked'){const kind=looseKind(t.g), dd=CAT[kind]; if(dd.col.length>1) h+='<h4>Colour</h4><div class="sws">'+dd.col.map(function(c,i){return swatch(c,i,false).replace('data-a="col"','data-a="bcol" data-t="'+kind+'"');}).join('')+'</div>';}
+  if(A.paint) h+=A.paint.thingSection(t,selObj(),selHit&&selHit.o);
   if(d&&d.eket) h+='<button class="btn primary wide" data-a="eket">Edit the EKET combination</button>';
   const sn=t.k==='fixed'?((t.obj.userData.shop||{}).name||''):'';
   const cat=d?d.cat:t.k==='piece'?(A.CUSTOMCAT[t.id]||'shelf'):t.k==='baked'?(CAT[looseKind(t.g)].cat):/rug|runner/i.test(sn)?'rug':/chair/i.test(sn)?'arm':/desk|table/i.test(sn)?'dining':/lamp/i.test(sn)?'lamp':'shelf';
@@ -579,7 +584,7 @@ function openAdd(s){
   const cats=A.CATS.filter(function(c){return altsFor(c[0],kind==='floor'?'floor':kind).some(function(t){return CAT[t].cat===c[0];});});
   if(!cats.some(function(c){return c[0]===tab[kind];})) tab[kind]=cats.length?cats[0][0]:'decor';
   const list=altsFor(tab[kind],kind==='floor'?'floor':kind).filter(function(t){return CAT[t].cat===tab[kind];});
-  let h='<div class="tabs">'+cats.map(function(c){return '<button class="chip" data-a="tab" data-c="'+c[0]+'" aria-pressed="'+(c[0]===tab[kind])+'">'+esc(c[1])+'</button>';}).join('')+'</div>';
+  let h=(A.paint?A.paint.surfaceSection(s):'')+'<div class="tabs">'+cats.map(function(c){return '<button class="chip" data-a="tab" data-c="'+c[0]+'" aria-pressed="'+(c[0]===tab[kind])+'">'+esc(c[1])+'</button>';}).join('')+'</div>';
   h+='<div class="cards">'+list.map(function(t){return card(t,'add');}).join('')+'</div>';
   const where={floor:'Add on the floor',wall:'Add on this wall',top:s.pieceId?'Put on the '+(P[s.pieceId].def?P[s.pieceId].def.n:A.NAMES[s.pieceId]||'piece'):'Put on this surface',ceil:'Hang from the ceiling'}[kind];
   body.innerHTML=h; showSheet(where,'Tap a piece to place it here');
@@ -633,6 +638,7 @@ sheet.addEventListener('click',function(e){
   const a=b.dataset.a;
   if(a==='close'){deselect(); return;}
   if(a==='undo'){doUndo(); return;}
+  if(a.slice(0,2)==='pt'){A.paint.click(b); return;}
   if(a==='pal'){applyPalette(); if(mode==='item') openItem(); return;}
   if(a==='tab'){tab[spot.kind==='top'?'top':spot.kind]=b.dataset.c; openAdd(spot); return;}
   if(a==='add'){addAt(b.dataset.t,spot); return;}
@@ -716,19 +722,19 @@ let palShown=null;
 A.setEdit=function(on){
   S.edit=on; $('bEdit').setAttribute('aria-pressed',on); $('bEdit').textContent=on?'Done editing':'Edit layout';
   document.body.classList.toggle('editing',on); deselect(); shopCard(null); renderBar();
-  $('editNote').textContent=on?'Tap a piece to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall, a shelf or the ceiling to add something from IKEA.':'Tap a piece of furniture to see where to get it.';
+  $('editNote').textContent=on?'Tap anything to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall or the ceiling to paint it or to add something from IKEA.':'Tap a piece of furniture to see where to get it.';
   if(on&&!localSeen()) toast('Edit mode: tap to change, long-press to drag, tap an empty spot to add.');
 };
 function localSeen(){try{if(localStorage.getItem('haroe-edit-tip')) return true; localStorage.setItem('haroe-edit-tip','1');}catch(err){} return false;}
 function renderBar(){
   const on=S.edit; $('editBar').hidden=!on; $('editTools').hidden=!on;
   $('bUndo').disabled=!undo.length; $('edUndo').disabled=!undo.length;
-  const e=A.EDITS[S.design], dirty=!!(e&&(Object.keys(e.items).length||Object.keys(e.gone).length||Object.keys(e.t).length||Object.keys(e.c).length||Object.keys(e.f).length))||Object.keys(A.USER).some(function(k){return k[0]===S.design;});
+  const e=A.EDITS[S.design], dirty=!!(e&&(Object.keys(e.items).length||Object.keys(e.gone).length||Object.keys(e.t).length||Object.keys(e.c).length||Object.keys(e.f).length||Object.keys(e.paint||{}).length))||Object.keys(A.USER).some(function(k){return k[0]===S.design;});
   const pending=unsaved(); $('bSave').disabled=!pending; $('bSave').textContent=pending?'Save':'Saved';
   $('bResetMoves').disabled=!dirty; $('bShare').hidden=!dirty;
   const pn=$('palNow'); if(palShown&&on){pn.hidden=false; pn.innerHTML='<b>'+esc(palShown.n)+'</b>'+['main','accent','soft','wood','case','case2','metal','rug'].map(function(r){return '<i style="background:'+hex(palShown[r])+'"></i>';}).join('');} else pn.hidden=true;
 }
-A.renderEdit=function(){renderBar(); try{localStorage.setItem('haroe10-design',S.design);}catch(err){} $('editNote').textContent=S.edit?'Tap a piece to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall, a shelf or the ceiling to add something from IKEA.':'Tap a piece of furniture to see where to get it.';};
+A.renderEdit=function(){renderBar(); try{localStorage.setItem('haroe10-design',S.design);}catch(err){} $('editNote').textContent=S.edit?'Tap anything to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall or the ceiling to paint it or to add something from IKEA.':'Tap a piece of furniture to see where to get it.';};
 $('bEdit').onclick=function(){
   if(S.edit&&undo.length&&unsaved()&&confirm('Save your changes before you finish editing?\n\nCancel leaves them on screen without saving.')) doSave();
   A.setEdit(!S.edit);
@@ -767,6 +773,8 @@ window.addEventListener('keydown',function(e){
 });
 let toastT=0;
 function toast(t){const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){el.classList.remove('show');},3200);}
+A.ed={att:att,bakedOf:bakedOf,houseThings:houseThings,roomAt:insideFlat,E:E,snap:snap,changed:changed,openAdd:openAdd,
+  sel:function(){return sel;},selHit:function(){return selHit;},spot:function(){return spot;},mode:function(){return mode;},reopen:function(){if(mode==='add') openAdd(spot); else openItem();}};
 A.editTest={select:function(t){select(t); openItem();},sel:function(){return sel;},addAt:addAt,swapTo:swapTo,applyPalette:applyPalette,openAdd:openAdd,openEket:openEket,setColour:function(i){snap(); setColour(sel,i,true); changed();},
   undo:doUndo,removeSel:removeSel,targetOf:targetOf,pickAt:function(x,y){aimAt(x,y); return pickAll();},att:att,thumbOf:thumbOf,ekGridAdd:function(gx,gy){const f=ekCfg(), T=A.EKM[ekType], m={t:ekType,x:gx,y:gy,c:ekCol}; if(ekFits(f.mods,m,-1)){f.mods.push(m); ekApply(f); return true;} return false;}};
 })();

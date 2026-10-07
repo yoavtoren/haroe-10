@@ -112,6 +112,9 @@ body.nomenu #panel{display:none}
 .btn.shop{display:inline-block; text-decoration:none; margin-top:12px}
 .sws{display:flex; flex-wrap:wrap; gap:9px}
 .swc{width:34px; height:34px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0}
+.swc.pick{position:relative; overflow:hidden; background:conic-gradient(#e0473c,#e8c91a,#6aa84f,#3d85c6,#8e6bbf,#e0473c)}
+.swc.pick input{position:absolute; inset:-4px; width:calc(100% + 8px); height:calc(100% + 8px); opacity:0; cursor:pointer; border:0; padding:0}
+.pchips .chip i{display:inline-block; width:13px; height:13px; border-radius:50%; border:1px solid var(--line); margin-right:6px; vertical-align:-2px}
 .swc[aria-pressed="true"]{border-color:var(--panel); box-shadow:0 0 0 3px var(--yellow)}
 .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px}
 .card{font:inherit; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 5px 8px; border:1px solid var(--line); border-radius:12px; background:var(--chip); color:var(--ink); cursor:pointer; text-align:center}
@@ -404,6 +407,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 <script src="app/catalog.js"></script>
 <script src="app/furniture.js"></script>
 <script src="app/editor.js"></script>
+<script src="app/paint.js"></script>
 <script src="app/climate.js"></script>
 <script src="app/people.js"></script>
 <script src="app/audio.js"></script>
