@@ -683,7 +683,9 @@ function thumbOf(t,ci){
       ts.add(new THREE.HemisphereLight(0xffffff,0x9aa39e,0.95)); const dl=new THREE.DirectionalLight(0xffffff,0.55); dl.position.set(4,6,3); ts.add(dl); tc=new THREE.PerspectiveCamera(28,1,0.01,60);}
     const g=new THREE.Group(); ts.add(g); A.buildItem(g,t,ci||0,null,'living');
     g.traverse(function(o){if(o.isMesh&&o.material&&o.material.blending===THREE.AdditiveBlending) o.visible=false;});
-    const b=new THREE.Box3().setFromObject(g), c=b.getCenter(new THREE.Vector3()), s=b.getSize(new THREE.Vector3()), r=Math.max(0.12,s.length()/2);
+    const b=new THREE.Box3(), mb=new THREE.Box3(); g.updateMatrixWorld(true);              // frame what you see, not a lamp's pool of light
+    g.traverse(function(o){if(o.isMesh&&o.visible&&o.geometry){if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.union(mb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld));}});
+    const c=b.getCenter(new THREE.Vector3()), s=b.getSize(new THREE.Vector3()), r=Math.max(0.12,s.length()/2);
     if(CAT[t].place==='ceil'){c.y=b.max.y-Math.min(s.y,0.7)/2; }
     const dir=new THREE.Vector3(1,0.55,0.75).normalize(), dist=r/Math.sin(14*Math.PI/180)*0.92;
     tc.position.copy(c).addScaledVector(dir,dist); tc.lookAt(c); tc.near=dist/50; tc.far=dist*4; tc.updateProjectionMatrix();
