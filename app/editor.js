@@ -239,6 +239,161 @@ function sizeOf(t,f){const d=CAT[t]; if(d.eket){const b=A.eketBounds(f||d.cfg); 
 const SNAPCATS={sofa:1,media:1,shelf:1,eket:1,hall:1,bed:1,ward:1,bath:1};
 
 /* =====================================================================
+   Solid furniture (a setting, on unless you turn it off): a piece you drag, turn, add or swap stops at the walls,
+   at the flat's own fittings and at other furniture. Rugs only stop at walls. Something that already overlaps
+   where it stands may move out, but not further in.
+   ===================================================================== */
+const SOLID='haroe10-solid', TOL=0.004;
+let solidOn=true; try{solidOn=localStorage.getItem(SOLID)!=='0';}catch(err){}
+/* a shape on the floor: its corners, the axes to test, the heights it spans, and its bounding box */
+function shape(pts,ax,y0,y1){
+  let x0=1e9, x1=-1e9, z0=1e9, z1=-1e9;
+  for(let i=0;i<pts.length;i++){const p=pts[i]; if(p[0]<x0) x0=p[0]; if(p[0]>x1) x1=p[0]; if(p[1]<z0) z0=p[1]; if(p[1]>z1) z1=p[1];}
+  return {pts:pts,ax:ax,y0:y0,y1:y1,x0:x0,x1:x1,z0:z0,z1:z1};
+}
+/* a rectangle: centre, its first axis, half sizes along it and across it */
+function quad(cx,cz,ux,uz,hu,hv,y0,y1){
+  const vx=-uz, vz=ux;
+  return shape([[cx+ux*hu+vx*hv,cz+uz*hu+vz*hv],[cx-ux*hu+vx*hv,cz-uz*hu+vz*hv],[cx-ux*hu-vx*hv,cz-uz*hu-vz*hv],[cx+ux*hu-vx*hv,cz+uz*hu-vz*hv]],[[ux,uz],[vx,vz]],y0,y1);
+}
+function boxShape(b){return quad((b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2,1,0,(b.max.x-b.min.x)/2,(b.max.z-b.min.z)/2,b.min.y,b.max.y);}
+/* the box a piece takes up in its own frame, and that box set down at x, z, turned r and lifted y */
+function poseShape(lb,x,z,r,y){
+  const c=Math.cos(r), s=Math.sin(r), lx=(lb.min.x+lb.max.x)/2, lz=(lb.min.z+lb.max.z)/2;
+  return quad(x+lx*c+lz*s,z-lx*s+lz*c,c,-s,(lb.max.x-lb.min.x)/2,(lb.max.z-lb.min.z)/2,y+lb.min.y,y+lb.max.y);
+}
+/* how far a must move to clear b; 0 when they are apart */
+function proj(pts,a){let lo=1e9, hi=-1e9; for(let i=0;i<pts.length;i++){const d=pts[i][0]*a[0]+pts[i][1]*a[1]; if(d<lo) lo=d; if(d>hi) hi=d;} return [lo,hi];}
+function pen(a,b){
+  if(a.x1<=b.x0||b.x1<=a.x0||a.z1<=b.z0||b.z1<=a.z0||Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)<=TOL) return 0;
+  let best=1e9;
+  for(let k=0;k<2;k++){const ax=k?b.ax:a.ax;
+    for(let i=0;i<ax.length;i++){const p=proj(a.pts,ax[i]), q=proj(b.pts,ax[i]), o=Math.min(p[1]-q[0],q[1]-p[0]); if(o<=0) return 0; if(o<best) best=o;}}
+  return best;
+}
+/* everything a shape passes over on its way from a to b (same turn and height): the hull of both */
+function hull(pts){
+  pts=pts.slice().sort(function(p,q){return p[0]-q[0]||p[1]-q[1];});
+  const cr=function(o,a,b){return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);}, lo=[], up=[];
+  for(let i=0;i<pts.length;i++){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],pts[i])<=0) lo.pop(); lo.push(pts[i]);}
+  for(let i=pts.length-1;i>=0;i--){while(up.length>1&&cr(up[up.length-2],up[up.length-1],pts[i])<=0) up.pop(); up.push(pts[i]);}
+  lo.pop(); up.pop(); return lo.concat(up);
+}
+function sweep(a,b){
+  const pts=hull(a.pts.concat(b.pts)), ax=[];
+  for(let i=0;i<pts.length;i++){const p=pts[i], q=pts[(i+1)%pts.length], dx=q[0]-p[0], dz=q[1]-p[1], l=Math.hypot(dx,dz); if(l>1e-6) ax.push([-dz/l,dx/l]);}
+  return shape(pts,ax,b.y0,b.y1);
+}
+function solidMat(o){const m=Array.isArray(o.material)?o.material[0]:o.material; return !!m&&m.visible!==false&&m.blending!==THREE.AdditiveBlending&&!(m.transparent&&m.depthWrite===false);}
+const lbB=new THREE.Box3();
+function localBox(g){
+  const pos=g.position.clone(), ry=g.rotation.y, sc=g.scale.clone(), out=new THREE.Box3();
+  g.position.set(0,0,0); g.rotation.y=0; g.scale.set(1,1,1); g.updateMatrixWorld(true);
+  (function walk(o){if((!o.visible&&o!==g)||o.userData.hl) return;          // the piece itself may still be fading in
+    if(o.isMesh&&o.geometry&&!o.userData.floor&&solidMat(o)){if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); lbB.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); if(isFinite(lbB.min.x)) out.union(lbB);}
+    for(let i=0;i<o.children.length;i++) walk(o.children[i]);})(g);
+  g.position.copy(pos); g.rotation.y=ry; g.scale.copy(sc); g.updateMatrixWorld(true);
+  return out;
+}
+/* the walls of the flat, as thin slabs; the front door stays shut, other doorways stay open below their lintels */
+function wallShapes(){
+  const out=[];
+  for(const k in A.walls){const w=A.walls[k]; if(!INSIDE[w.room]) continue;
+    const hs=(k==='end'?[]:w.holes).slice().sort(function(p,q){return p[0]-q[0];});
+    const seg=function(u0,u1,y0){if(u1-u0<0.005) return; const um=(u0+u1)/2, s=quad(w.a[0]+w.d[0]*um,w.a[1]+w.d[1]*um,w.d[0],w.d[1],(u1-u0)/2,0.002,y0,H+1);
+      if(!y0) s.seg=[w.a[0]+w.d[0]*u0,w.a[1]+w.d[1]*u0,w.a[0]+w.d[0]*u1,w.a[1]+w.d[1]*u1]; out.push(s);};
+    let u=0; hs.forEach(function(h){seg(u,h[0],0); seg(h[0],h[1],h[2]||2.05); u=h[1];}); seg(u,w.len,0);
+  }
+  return out;
+}
+function inFlatBox(b){
+  for(const k in INSIDE){const rs=A.rooms[k].rs; for(let i=0;i<rs.length;i++){const r=rs[i]; if(b.max.x>r[0]+0.005&&b.min.x<r[1]-0.005&&b.max.z>r[2]+0.005&&b.min.z<r[3]-0.005) return true;}}
+  return false;
+}
+/* the flat's own fittings: kitchen, fridge, beds, bathroom, anything built in that is showing */
+function fixedShapes(){
+  const out=[]; scene.updateMatrixWorld(true);
+  (function walk(o){
+    if(!o.visible||o.userData.nc||o.userData.piece||o.userData.uid||o.userData.hl) return;
+    if(o.isMesh&&o.geometry&&!o.userData.floor&&solidMat(o)){
+      if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); bx.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+      if(bx.max.y>0.03&&bx.min.y<H-0.02&&(bx.max.x-bx.min.x>0.03||bx.max.z-bx.min.z>0.03)&&inFlatBox(bx)) out.push(boxShape(bx));
+    }
+    for(let i=0;i<o.children.length;i++) walk(o.children[i]);
+  })(scene);
+  return out;
+}
+function pieceShapes(self){
+  const out=[];
+  for(const k in P){const q=P[k]; if(k===self||q.to[3]<1||q.flat) continue; const lb=localBox(q.g); if(!lb.isEmpty()) out.push(poseShape(lb,q.to[0],q.to[1],q.to[2],q.y||0));}
+  return out;
+}
+/* what piece t has to keep clear of, and how far into each thing it already reaches at pose [x,z,r,y] (nothing, when strict) */
+function solidCtx(t,pose,strict){
+  if(!solidOn||!t||t.k!=='piece'||!P[t.id]) return null;
+  const p=P[t.id], lb=localBox(p.g); if(lb.isEmpty()) return null;
+  const obs=p.flat?wallShapes():wallShapes().concat(fixedShapes(),pieceShapes(t.id)), here=poseShape(lb,pose[0],pose[1],pose[2],pose[3]);
+  return {id:t.id,lb:lb,obs:obs,pen0:obs.map(function(o){return strict?0:pen(here,o);})};
+}
+function poseOf(p,live){return live?[p.cur[0],p.cur[1],p.cur[2],p.y||0]:[p.to[0],p.to[1],p.to[2],p.y||0];}
+/* can the piece go from pose a to pose b (a null: just stand at b)? */
+function canMove(ctx,a,b){
+  const lb=ctx.lb, end=poseShape(lb,b[0],b[1],b[2],b[3]), same=a&&Math.abs(a[2]-b[2])<1e-9, level=same&&a[3]===b[3];
+  const sw=level?sweep(poseShape(lb,a[0],a[1],a[2],a[3]),end):end;
+  let mid=null;
+  const steps=function(){if(mid) return mid; mid=[]; if(!same) return mid;      // poses every 2 cm along the way
+    const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1],b[3]-a[3])/0.02); for(let j=1;j<n;j++){const t=j/n; mid.push(poseShape(lb,a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,b[2],a[3]+(b[3]-a[3])*t));}
+    return mid;};
+  for(let i=0;i<ctx.obs.length;i++){const o=ctx.obs[i], p0=ctx.pen0[i];
+    if(p0>TOL){if(pen(end,o)>p0+0.002) return false; const m=steps(); for(let j=0;j<m.length;j++) if(pen(m[j],o)>p0+0.002) return false;}
+    else{if(pen(sw,o)>TOL) return false; if(same&&!level){const m=steps(); for(let j=0;j<m.length;j++) if(pen(m[j],o)>TOL) return false;}}
+  }
+  return true;
+}
+function lerpPose(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,b[2],a[3]+(b[3]-a[3])*t];}
+/* as far from a toward b as it can go */
+function advance(ctx,a,b){
+  if(canMove(ctx,a,b)) return b;
+  let lo=0, hi=1; for(let i=0;i<9;i++){const m=(lo+hi)/2; if(canMove(ctx,a,lerpPose(a,b,m))) lo=m; else hi=m;}
+  return lo>0?lerpPose(a,b,lo):a;
+}
+/* blocked: slide along what is in the way, one direction at a time */
+function slide(ctx,a,b){
+  const q=advance(ctx,a,b); if(q===b) return b;
+  const go=function(order){let s=q; order.forEach(function(i){if(s[i]===b[i]) return; const t=s.slice(); t[i]=b[i]; s=advance(ctx,s,t);}); return s;};
+  const s1=go([0,1,3]), s2=go([1,0,3]), d=function(s){return Math.hypot(s[0]-b[0],s[1]-b[1],s[3]-b[3]);};
+  return d(s1)<=d(s2)?s1:s2;
+}
+function crossesWall(ctx,a,b){
+  const side=function(p,q,x,z){return (q[0]-p[0])*(z-p[1])-(q[1]-p[1])*(x-p[0]);};
+  for(let i=0;i<ctx.obs.length;i++){const s=ctx.obs[i].seg; if(!s) continue; const p=[s[0],s[1]], q=[s[2],s[3]];
+    if(side(p,q,a[0],a[1])*side(p,q,b[0],b[1])<0&&side(a,b,p[0],p[1])*side(a,b,q[0],q[1])<0) return true;}
+  return false;
+}
+/* after an add, a swap or a turn: a piece that now overlaps something moves to the nearest free spot it can reach
+   without going through a wall. pre: what it was clear of before (else it has to be clear of everything).
+   Returns 'ok', 'moved' or 'stuck'. */
+function settle(t,reach,pre){
+  if(!solidOn||!t||t.k!=='piece'||!P[t.id]) return 'ok';
+  const p=P[t.id], a=poseOf(p), ctx=pre?Object.assign({},pre,{lb:localBox(p.g)}):solidCtx(t,a,true);
+  if(!ctx||ctx.lb.isEmpty()||canMove(ctx,null,a)) return 'ok';
+  const wallish=p.def&&p.def.place==='wall', r=a[2], al=[Math.sin(r),Math.cos(r)], tall=ctx.lb.max.y-ctx.lb.min.y;
+  const here=poseShape(ctx.lb,a[0],a[1],a[2],a[3]), m=reach+0.05, near={lb:ctx.lb,obs:[],pen0:[]};      // only what is within reach
+  ctx.obs.forEach(function(o,i){if(o.seg||(o.x1>here.x0-m&&o.x0<here.x1+m&&o.z1>here.z0-m&&o.z0<here.z1+m)){near.obs.push(o); near.pen0.push(ctx.pen0[i]);}});
+  for(let rr=0.03;rr<=reach+1e-6;rr+=0.03){const n=Math.max(8,Math.ceil(2*R*rr/0.03));
+    for(let i=0;i<n;i++){const an=i/n*2*R, cu=Math.cos(an)*rr, sv=Math.sin(an)*rr;
+      const b=wallish?[a[0]+al[0]*cu,a[1]+al[1]*cu,r,Math.max(0.02,Math.min(H-tall-0.02,a[3]+sv))]:[a[0]+cu,a[1]+sv,r,a[3]];      // a wall piece slides along its wall and up or down
+      if((!wallish&&!insideFlat(b[0],b[1]))||crossesWall(near,a,b)||!canMove(near,null,b)) continue;
+      setPos(t,b[0],b[1],b[2],b[3]); return 'moved';}}
+  return 'stuck';
+}
+function setSolid(on){
+  solidOn=on; $('cSolid').checked=on; try{localStorage.setItem(SOLID,on?'1':'0');}catch(err){}
+}
+$('cSolid').checked=solidOn;
+$('cSolid').onchange=function(e){setSolid(e.target.checked); toast(solidOn?'Solid furniture: pieces now stop at walls, fittings and each other.':'Pieces can now pass through anything.');};
+
+/* =====================================================================
    Changing things
    ===================================================================== */
 function isBuiltIn(p){return p&&!p.item;}
@@ -282,6 +437,7 @@ function depthOf(g){
   bx.setFromObject(g); const d=bx.max.x-bx.min.x; g.position.copy(p); g.rotation.y=r; g.scale.copy(s); g.updateMatrixWorld(true); return isFinite(d)&&d>0?d:0.5;
 }
 function swapTo(t,nt){
+  const pre=t.k==='piece'?solidCtx(t,poseOf(P[t.id])):null;
   snap(); const e=E(S.design), nd=CAT[nt]; if(A.paint) A.paint.clearThing(t);
   const sp=specOf(t), oldD=sp?sizeOf(sp.t,sp.f).d:t.k==='piece'?depthOf(P[t.id].g):0.5, newD=sizeOf(nt,nd.cfg).d;
   if(t.k==='piece'){
@@ -292,10 +448,16 @@ function swapTo(t,nt){
       if(q[0]!==pos[0]||q[1]!==pos[1]) setPos(t,q[0],q[1],pos[2],pos[3]);}
     else{                                     // a piece drawn by hand (what is there today): it goes, and the new one takes its place
       e.gone[p.id]=1; const uid=newItem({t:nt,c:0,f:clone(nd.cfg)||null,x:q[0],z:q[1],r:pos[2],y:nd.place==='wall'?pos[3]:0,seatAs:p.id==='sofa'?'sofa':undefined});
-      changed(); clearClash(uid); select({k:'piece',id:uid}); openItem(); return;}
+      changed(); fit({k:'piece',id:uid},0.8,pre,false,true); select({k:'piece',id:uid}); openItem(); return;}
   }else if(t.k==='att'){const it=items()[t.uid]; it.t=nt; it.c=0; it.f=clone(nd.cfg)||null;}
   else if(t.k==='baked'||t.k==='fixed'){replaceLoose(t,nt,0); return;}
-  changed(); hlFor=null; if(t.k==='piece') clearClash(t.id); openItem();
+  changed(); hlFor=null; if(t.k==='piece') fit(t,0.8,pre,false,true); openItem();
+}
+/* with solid furniture on, a piece that now overlaps something moves clear. clash: prints on the wall make room for what still does not fit. */
+function fit(t,reach,pre,quiet,clash){
+  const s=settle(t,reach,pre); if(s==='moved'){changed(); if(!quiet) setTimeout(function(){toast('Moved it a little so it does not overlap anything.');},50);}
+  if(s==='stuck') setTimeout(function(){toast('There is no free spot for it nearby, so it overlaps. Long-press it to drag it clear.');},60);
+  if(clash&&(s==='stuck'||(s==='ok'&&!solidOn))) clearClash(t.id);
 }
 /* a tall piece set against a wall takes down the prints or shelves hanging where it now stands */
 function footBox(p){
@@ -342,14 +504,20 @@ function duplicateSel(){
   const rec={t:sp.t,c:sp.c,f:clone(sp.f),r:r};
   if(sel.k==='att'){const it=items()[sel.uid]; Object.assign(rec,{on:it.on,x:it.x+Math.sin(r)*off,y:it.y,z:it.z+Math.cos(r)*off});}
   else{rec.x=pos[0]+Math.sin(r)*off; rec.z=pos[1]+Math.cos(r)*off; rec.y=pos[3]; if(!insideFlat(rec.x,rec.z)){rec.x=pos[0]-Math.sin(r)*off; rec.z=pos[1]-Math.cos(r)*off;}}
-  const uid=newItem(rec); changed(); select(rec.on?{k:'att',uid:uid}:{k:'piece',id:uid}); openItem(); toast('Copied. Long-press the copy to drag it.');
+  const uid=newItem(rec); changed(); if(!rec.on) fit({k:'piece',id:uid},1.2,null,true); select(rec.on?{k:'att',uid:uid}:{k:'piece',id:uid}); openItem(); toast('Copied. Long-press the copy to drag it.');
 }
 function rotateSel(a){
-  if(!sel) return; const pos=curPos(sel); if(!pos) return; snap();
+  if(!sel) return; const pos=curPos(sel); if(!pos) return; const pre=solidCtx(sel,pos); snap();
   let r=pos[2]+a; if(Math.abs(a)>=R/2-0.01) r=Math.round(r/(R/2))*(R/2);
   setPos(sel,pos[0],pos[1],r,pos[3]); changed();
+  if(pre&&settle(sel,0.35,pre)==='stuck'){undo.pop(); setPos(sel,pos[0],pos[1],pos[2],pos[3]); changed(); toast('There is no room to turn it here.');}
+  else if(pre) changed();
 }
-function raiseSel(dy){const pos=curPos(sel); if(!pos) return; snap(); setPos(sel,pos[0],pos[1],pos[2],Math.max(0,Math.min(H-0.1,pos[3]+dy))); changed();}
+function raiseSel(dy){
+  const pos=curPos(sel); if(!pos) return; const y=Math.max(0,Math.min(H-0.1,pos[3]+dy)), pre=solidCtx(sel,pos);
+  if(pre&&!canMove(pre,pos,[pos[0],pos[1],pos[2],y])){toast('Something is in the way.'); return;}
+  snap(); setPos(sel,pos[0],pos[1],pos[2],y); changed();
+}
 function addAt(nt,spot){
   const d=CAT[nt], f=clone(d.cfg)||null, sz=sizeOf(nt,f); snap();
   const pt=spot.point, rec={t:nt,c:0,f:f,r:0,y:0};
@@ -361,7 +529,7 @@ function addAt(nt,spot){
     else if(spot.kind==='floor'&&SNAPCATS[d.cat]&&d.place==='floor'){const s=snapToWall(pt.x,pt.z,sz.d,sz.d/2+0.45); if(s){rec.x=s.x; rec.z=s.z; rec.r=s.r;}}}
   const uid=newItem(rec); changed();
   select(rec.on?{k:'att',uid:uid}:{k:'piece',id:uid}); openItem();
-  toast(d.n+' added. Long-press it to drag it.'); if(!rec.on) clearClash(uid);
+  toast(d.n+' added. Long-press it to drag it.'); if(!rec.on) fit({k:'piece',id:uid},1.5,null,true,true);
 }
 
 /* =====================================================================
@@ -423,7 +591,8 @@ function startDrag(pr){
   else if(t.k==='att'||(d&&d.place==='top')){drag.mode='top';
     const g=selObj(); drag.g=g; if(t.k==='att'){drag.parent=g.parent; scene.attach(g);} drag.ry=new THREE.Euler().setFromQuaternion(g.getWorldQuaternion(new THREE.Quaternion()),'YXZ').y;}
   if(drag.mode!=='top'){const f=new THREE.Vector3(); aimAt(pr.x,pr.y); ray.ray.intersectPlane(floorPlane,f)||f.set(p.cur[0],0,p.cur[1]); drag.ox=f.x-p.cur[0]; drag.oz=f.z-p.cur[1];
-    if(drag.mode==='wall'){const c=pickAll(wallMeshes()); drag.oy=c?c.point.y-(p.y||0):0.3; drag.du=0;}}
+    if(drag.mode==='wall'){const c=pickAll(wallMeshes()); drag.oy=c?c.point.y-(p.y||0):0.3; drag.du=0;}
+    drag.solid=solidCtx(t,poseOf(p,true));}
   $('hint').textContent='Drag it, then let go.'; $('hint').style.opacity=1;
 }
 function aimAt(x,y){aim({clientX:x,clientY:y});}
@@ -438,10 +607,12 @@ function moveDrag(e){
     else{x=Math.min(D.KX-0.15,Math.max(0.1,x)); z=Math.min(D.L-0.1,Math.max(0.1,z));
       if(x>D.W-0.05&&z>D.KZ-0.1){if(p.cur[0]>D.W-0.05) z=D.KZ-0.1; else x=D.W-0.05;}
       if(z>D.ZW-0.05&&x>D.BLK-0.05) x=D.BLK-0.05;}
+    if(drag.solid){const q=slide(drag.solid,poseOf(p,true),[x,z,p.cur[2],p.y||0]); x=q[0]; z=q[1];}      // stops at what is in the way and slides along it
     p.cur[0]=x; p.cur[1]=z; p.g.position.set(x,p.y||0,z); A.touch(3);
   }else if(drag.mode==='wall'){
     const c=pickAll(wallMeshes()); if(!c||!c.wall) return; const p=P[t.id], sp=specOf(t), sz=sizeOf(sp.t,sp.f), w=A.walls[c.wall], gap=sz.d/2+0.012;
-    const x=c.point.x+w.n[0]*gap, z=c.point.z+w.n[1]*gap, y=Math.max(0.02,Math.min(H-sz.h-0.02,c.point.y-drag.oy)), r=Math.atan2(-w.n[1],w.n[0]);
+    let x=c.point.x+w.n[0]*gap, z=c.point.z+w.n[1]*gap, y=Math.max(0.02,Math.min(H-sz.h-0.02,c.point.y-drag.oy)), r=Math.atan2(-w.n[1],w.n[0]);
+    if(drag.solid){const a=poseOf(p,true), b=[x,z,r,y], q=Math.abs(a[2]-r)<1e-6?slide(drag.solid,a,[x,z,a[2],y]):canMove(drag.solid,null,b)?b:a; x=q[0]; z=q[1]; r=q[2]; y=q[3];}
     p.cur[0]=x; p.cur[1]=z; p.cur[2]=r; p.y=y; p.g.position.set(x,y,z); p.g.rotation.y=r; A.touch(3);
   }else{
     const g=drag.g, c=pickAll(null,g); if(!c) return;
@@ -594,10 +765,10 @@ function ekCfg(){const sp=specOf(sel); return clone(sp.f||CAT[sp.t].cfg);}
 function ekFits(mods,m,skipI){const T=A.EKM[m.t]; if(m.x<0||m.y<0||m.x+T.w*2>18||m.y+T.h*2>12) return false;
   return mods.every(function(o,i){if(i===skipI) return true; const U=A.EKM[o.t]; return m.x>=o.x+U.w*2||o.x>=m.x+T.w*2||m.y>=o.y+U.h*2||o.y>=m.y+T.h*2;});}
 function ekApply(f,msg){
-  const sp=specOf(sel), old=sizeOf(sp.t,sp.f), b0=A.eketBounds(sp.f||CAT[sp.t].cfg), b1=A.eketBounds(f), pos=curPos(sel);
+  const sp=specOf(sel), old=sizeOf(sp.t,sp.f), b0=A.eketBounds(sp.f||CAT[sp.t].cfg), b1=A.eketBounds(f), pos=curPos(sel), pre=solidCtx(sel,pos);
   snap(); const dz=((b1.x0+b1.x1)-(b0.x0+b0.x1))/2, r=pos[2];        // the cubes you did not touch stay where they are
   if(sel.k!=='att') setPos(sel,pos[0]+Math.sin(r)*dz,pos[1]+Math.cos(r)*dz,r,f.base==='wall'&&(sp.f||{}).base!=='wall'?Math.max(pos[3],0.8):f.base!=='wall'&&(sp.f||{}).base==='wall'?0:pos[3]);
-  setCfg(sel,f); changed(); openEket(); if(msg) toast(msg);
+  setCfg(sel,f); changed(); if(pre) fit(sel,0.6,pre,!!msg); openEket(); if(msg) toast(msg);
 }
 function openEket(){
   mode='eket'; const f=ekCfg(), EC=A.IKEA.eket; let h='';
@@ -775,6 +946,7 @@ let toastT=0;
 function toast(t){const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){el.classList.remove('show');},3200);}
 A.ed={att:att,bakedOf:bakedOf,houseThings:houseThings,roomAt:insideFlat,E:E,snap:snap,changed:changed,openAdd:openAdd,
   sel:function(){return sel;},selHit:function(){return selHit;},spot:function(){return spot;},mode:function(){return mode;},reopen:function(){if(mode==='add') openAdd(spot); else openItem();}};
-A.editTest={select:function(t){select(t); openItem();},sel:function(){return sel;},addAt:addAt,swapTo:swapTo,applyPalette:applyPalette,openAdd:openAdd,openEket:openEket,setColour:function(i){snap(); setColour(sel,i,true); changed();},
+A.editTest={solid:{ctx:solidCtx,canMove:canMove,slide:slide,settle:settle,pen:pen,poseShape:poseShape,localBox:localBox,fixed:fixedShapes,walls:wallShapes,set:setSolid,on:function(){return solidOn;}},
+  select:function(t,c){select(t,c); openItem();},sel:function(){return sel;},addAt:addAt,swapTo:swapTo,applyPalette:applyPalette,openAdd:openAdd,openEket:openEket,setColour:function(i){snap(); setColour(sel,i,true); changed();},
   undo:doUndo,removeSel:removeSel,targetOf:targetOf,pickAt:function(x,y){aimAt(x,y); return pickAll();},att:att,thumbOf:thumbOf,ekGridAdd:function(gx,gy){const f=ekCfg(), T=A.EKM[ekType], m={t:ekType,x:gx,y:gy,c:ekCol}; if(ekFits(f.mods,m,-1)){f.mods.push(m); ekApply(f); return true;} return false;}};
 })();
