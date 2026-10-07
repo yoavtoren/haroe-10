@@ -4,6 +4,7 @@
    Keys:  o|<thing>|<colour>   one colour of a piece or a decoration (thing = p:<piece id>, a:<item uid>, k:<decor key>)
           r|<room>|<colour>    that colour on the flat's own fittings in a room;    m|<part>   one fitting
           w|<room>  f|<room>  c|<room>   the walls, the floor, the ceiling of a room
+          x|<room>  k|<room>   the tiles on its walls; its skirting and door frames
    A value is a colour, or {h:colour,t:'wood'|'stone'} for a floor laid in another material. */
 (function(){
 'use strict';
@@ -63,6 +64,9 @@ function houseIdx(idx){
   return house;
 }
 function wallsOf(room){const out=[]; for(const k in A.walls){const w=A.walls[k]; if(w.room===room&&w.g.children[0]) out.push(w.g.children[0]);} return out;}
+/* what hangs flat on a wall besides its paint: tiles (drawn with a texture), and skirting and door frames (plain) */
+function onWalls(room,tiles){const out=[]; for(const k in A.walls){const w=A.walls[k]; if(w.room!==room) continue;
+  for(let i=1;i<w.g.children.length;i++){const c=w.g.children[i]; if(c.isMesh&&c.material&&!Array.isArray(c.material)&&!!c.material.map===tiles) out.push(c);}} return out;}
 function floorsOf(room,idx){return scene.children.filter(function(c){const q=c.isMesh&&c.userData.floor&&idx.get(c.material); return q&&q.room===room;});}
 function ceilsOf(room,idx){return A.shells.filter(function(c){const q=c.parent===scene&&idx.get(c.material); return q&&q.room===room;});}
 
@@ -83,7 +87,7 @@ function apply(){
       if(s[0]==='o') (byThing[s[1]]||(byThing[s[1]]={}))[s[2]]=v;
       else if(s[0]==='r') (byRoom[s[1]]||(byRoom[s[1]]={}))[s[2]]=v;
       else if(s[0]==='m') one.push([s[1],v]);
-      else (s[0]==='w'?wallsOf(s[1]):s[0]==='f'?floorsOf(s[1],idx):s[0]==='c'?ceilsOf(s[1],idx):[]).forEach(function(o){want.set(o,v);});}
+      else (s[0]==='w'?wallsOf(s[1]):s[0]==='f'?floorsOf(s[1],idx):s[0]==='c'?ceilsOf(s[1],idx):s[0]==='x'?onWalls(s[1],true):s[0]==='k'?onWalls(s[1],false):[]).forEach(function(o){want.set(o,v);});}
     for(const k in byThing){const g=thingOf(k); if(g) meshesOf(g).forEach(function(o){const v=byThing[k][hx(origOf(o,idx))]; if(v!=null) want.set(o,v);});}
     if(one.length||Object.keys(byRoom).length){const h=houseIdx(idx);
       for(const r in byRoom) (h.byRoom[r]||[]).forEach(function(o){const v=byRoom[r][hx(origOf(o,idx))]; if(v!=null) want.set(o,v);});
@@ -115,11 +119,12 @@ function partsOf(root){
   return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.area-a.area;}).slice(0,8);
 }
 function valOf(v){return v==null?null:typeof v==='number'?v:v.h;}
-function swatches(list,l,cur,act){
+function swatches(list,l,cur,act,key){
+  const dk=key?' data-key="'+esc(key)+'"':'';
   return list.map(function(c,i){const h=valOf(c[1]), w=c[1].t==='wood', st=c[1].t==='stone';
     const bg=w?'repeating-linear-gradient(90deg,'+css(h)+' 0 7px,'+css(A.shade(h,0.86))+' 7px 8px)':st?'radial-gradient(circle at 30% 30%,'+css(A.shade(h,0.9))+' 0 2px,'+css(h)+' 3px)':css(h);
-    return '<button class="swc" data-a="'+act+'" data-l="'+l+'" data-i="'+i+'" title="'+esc(c[0])+'" aria-label="'+esc(c[0])+'" aria-pressed="'+(cur!=null&&JSON.stringify(cur)===JSON.stringify(c[1]))+'" style="background:'+bg+'"></button>';}).join('')+
-    '<label class="swc pick" title="Any colour you like" aria-label="Any colour you like"><input type="color" data-a="ptPick" value="'+css(valOf(cur)==null?0xffffff:valOf(cur))+'"></label>';
+    return '<button class="swc" data-a="'+act+'"'+dk+' data-l="'+l+'" data-i="'+i+'" title="'+esc(c[0])+'" aria-label="'+esc(c[0])+'" aria-pressed="'+(cur!=null&&JSON.stringify(cur)===JSON.stringify(c[1]))+'" style="background:'+bg+'"></button>';}).join('')+
+    '<label class="swc pick" title="Any colour you like" aria-label="Any colour you like"><input type="color" data-a="ptPick"'+dk+' value="'+css(valOf(cur)==null?0xffffff:valOf(cur))+'"></label>';
 }
 /* a piece, an item or a decoration: its colours, biggest first; the one you tapped is picked */
 function thingSection(t,root,hit){
@@ -135,53 +140,71 @@ function thingSection(t,root,hit){
   if(any) h+='<button class="btn" data-a="ptClear" style="margin-top:10px">Original colours</button>';
   return h;
 }
-/* one of the flat's own fittings: that colour everywhere in the room, or this part alone */
+/* one of the flat's own fittings: that colour everywhere in the room, the unit it belongs to (the parts of that colour
+   touching it, so base and wall cupboards can differ), or this part alone */
+function scopeOf(t){
+  const idx=regIndex(), h0=origOf(t.obj,idx), same=(houseIdx(idx).byRoom[t.room]||[]).filter(function(o){return origOf(o,idx)===h0;});
+  const bb=new Map(); same.forEach(function(o){bb.set(o,new THREE.Box3().setFromObject(o).expandByScalar(0.02));});
+  const unit=[t.obj], seen=new Set(unit);
+  for(let i=0;i<unit.length;i++) same.forEach(function(o){if(!seen.has(o)&&bb.get(o).intersectsBox(bb.get(unit[i]))){seen.add(o); unit.push(o);}});
+  const sc=pick.scope==='unit'&&(unit.length<2||unit.length>=same.length)?(unit.length<2?'one':'room'):same.length<2?'one':pick.scope;
+  return {h0:h0,same:same,unit:unit,scope:sc,rk:'r|'+t.room+'|'+hx(h0)};
+}
+const mk=function(o){return 'm|'+o.userData.pkey;};
 function partSheet(t){
-  const idx=regIndex(), h0=origOf(t.obj,idx), room=t.room, rn=(A.rooms[room]&&A.rooms[room].name||'room').toLowerCase();
-  const same=(houseIdx(idx).byRoom[room]||[]).filter(function(o){return origOf(o,idx)===h0;}).length;
-  const pm=paintMap(), rk='r|'+room+'|'+hx(h0), cur=pick.scope==='one'?(pm[t.key]!=null?pm[t.key]:pm[rk]):pm[rk];
+  const s=scopeOf(t), rn=(A.rooms[t.room]&&A.rooms[t.room].name||'room').toLowerCase(), pm=paintMap();
+  const cur=s.scope==='room'?pm[s.rk]:(pm[t.key]!=null?pm[t.key]:pm[s.rk]);
+  const chip=function(sc,label){return '<button class="chip" data-a="ptScope" data-s="'+sc+'" aria-pressed="'+(s.scope===sc)+'">'+label+'</button>';};
   let h='<h4>Colour</h4>';
-  if(same>1) h+='<div class="edRow"><button class="chip" data-a="ptScope" data-s="room" aria-pressed="'+(pick.scope==='room')+'">All '+same+' parts this colour in the '+esc(rn)+'</button><button class="chip" data-a="ptScope" data-s="one" aria-pressed="'+(pick.scope==='one')+'">Just this part</button></div>';
+  if(s.same.length>1) h+='<div class="edRow">'+chip('room','All '+s.same.length+' parts this colour in the '+esc(rn))+
+    (s.unit.length>1&&s.unit.length<s.same.length?chip('unit','This unit ('+s.unit.length+' parts)'):'')+chip('one','Just this part')+'</div>';
   h+='<div class="sws">'+swatches(PAINT,'p',cur,'ptSet')+'</div>';
-  if(pm[rk]!=null||pm[t.key]!=null) h+='<button class="btn" data-a="ptClear" style="margin-top:10px">Original colour</button>';
+  if(pm[s.rk]!=null||s.same.some(function(o){return pm[mk(o)]!=null;})) h+='<button class="btn" data-a="ptClear" style="margin-top:10px">Original colour</button>';
   if(A.ed.selHit()&&A.ed.selHit().n.y>0.7) h+='<button class="btn wide" data-a="ptOn">Put something on it</button>';
   h+='<p class="note">Part of the flat as it is. A colour you pick here stays with this design; Undo takes it back.</p>';
   return h;
 }
 /* the wall, floor or ceiling you tapped, at the top of the Add sheet */
+let lastHit=null;           // the tap that led to the Add sheet, to tell tiles and skirting from the paint
 function surfaceSection(s){
   const room=s.kind==='wall'?A.walls[s.wall].room:A.ed.roomAt(s.point.x,s.point.z); if(!room||!INSIDE[room]) return '';
   const kind=s.kind==='wall'?'w':s.kind==='floor'?'f':s.kind==='ceil'?'c':null; if(!kind) return '';
-  const rn=(A.rooms[room].name||'').toLowerCase(), k=kind+'|'+room, cur=paintMap()[k];
-  let h='<h4>'+(kind==='w'?'Paint the walls':kind==='f'?'Floor':'Ceiling colour')+' <span>'+esc(rn)+'</span></h4><div class="sws">'+swatches(kind==='f'?FLOORS:WALLS,kind==='f'?'f':'w',cur,'ptSet')+'</div>';
-  if(cur!=null) h+='<button class="btn" data-a="ptClear" style="margin-top:10px">'+(kind==='f'?'Floor as it is':'As it is')+'</button>';
+  const rn=(A.rooms[room].name||'').toLowerCase(), pm=paintMap();
+  const row=function(title,k,list,l,reset){const cur=pm[k]; return '<h4>'+title+' <span>'+esc(rn)+'</span></h4><div class="sws">'+swatches(list,l,cur,'ptSet',k)+'</div>'+
+    (cur!=null?'<button class="btn" data-a="ptClear" data-key="'+k+'" style="margin-top:10px">'+reset+'</button>':'');};
+  let h='';
+  const o=kind==='w'&&lastHit&&lastHit.point===s.point?lastHit.o:null, w=A.walls[s.wall];
+  if(o&&w&&o.parent===w.g&&o!==w.g.children[0]&&o.material&&!Array.isArray(o.material))
+    h+=o.material.map?row('Tiles','x|'+room,PAINT,'p','Tiles as they are'):row('Skirting and door frames','k|'+room,PAINT,'p','As they are');
+  h+=kind==='w'?row('Paint the walls','w|'+room,WALLS,'w','As it is'):kind==='f'?row('Floor','f|'+room,FLOORS,'f','Floor as it is'):row('Ceiling colour','c|'+room,WALLS,'w','As it is');
   return h+'<h4>Add here</h4>';
 }
 /* which key a click is about */
-function keysFor(){
-  const s=A.ed.mode()==='add'?A.ed.spot():null, t=A.ed.sel();
-  if(s){const room=s.kind==='wall'?A.walls[s.wall].room:A.ed.roomAt(s.point.x,s.point.z); return {set:(s.kind==='wall'?'w':s.kind==='floor'?'f':'c')+'|'+room};}
-  if(!t) return null;
-  if(t.k==='part'){const rk='r|'+t.room+'|'+hx(origOf(t.obj,regIndex())); return pick.scope==='one'?{set:t.key,also:rk}:{set:rk,also:t.key,clear:[rk,t.key]};}
-  const k=thingKey(t); return k?{set:'o|'+k+'|'+hx(pick.hex),prefix:'o|'+k+'|'}:null;
+function keysFor(el){
+  if(el&&el.dataset.key) return {set:[el.dataset.key]};
+  const t=A.ed.sel(); if(!t) return null;
+  if(t.k==='part'){const s=scopeOf(t), every=s.same.map(mk).concat([s.rk]);
+    return s.scope==='room'?{set:[s.rk],drop:s.same.map(mk),clear:every}:s.scope==='unit'?{set:s.unit.map(mk),clear:s.unit.map(mk)}:{set:[t.key]};}
+  const k=thingKey(t); return k?{set:['o|'+k+'|'+hx(pick.hex)],prefix:'o|'+k+'|'}:null;
 }
 function write(fn){A.ed.snap(); const e=A.ed.E(S.design), pm=e.paint||(e.paint={}); fn(pm); if(!Object.keys(pm).length) delete e.paint; A.ed.changed(); A.ed.reopen();}
-function setTo(v){const k=keysFor(); if(!k) return; write(function(pm){pm[k.set]=v; if(k.also&&pick.scope==='room') delete pm[k.also];});}
+function setTo(v,el){const k=keysFor(el); if(!k) return; write(function(pm){(k.drop||[]).forEach(function(q){delete pm[q];}); k.set.forEach(function(q){pm[q]=v;});});}
 function click(b){
   const a=b.dataset.a;
   if(a==='ptPart'){pick.hex=parseInt(b.dataset.h,16); A.ed.reopen(); return;}
   if(a==='ptScope'){pick.scope=b.dataset.s; A.ed.reopen(); return;}
   if(a==='ptOn'){const h=A.ed.selHit(); A.ed.openAdd({kind:'top',point:h.point.clone(),pieceId:null}); return;}
-  if(a==='ptSet'){const c=LISTS[b.dataset.l][+b.dataset.i]; setTo(c[1]); return;}
-  if(a==='ptClear'){const k=keysFor(); if(!k) return; write(function(pm){if(k.prefix) Object.keys(pm).forEach(function(q){if(q.indexOf(k.prefix)===0) delete pm[q];}); else (k.clear||[k.set]).forEach(function(q){delete pm[q];});}); return;}
+  if(a==='ptSet'){const c=LISTS[b.dataset.l][+b.dataset.i]; setTo(c[1],b); return;}
+  if(a==='ptClear'){const k=keysFor(b); if(!k) return; write(function(pm){if(k.prefix) Object.keys(pm).forEach(function(q){if(q.indexOf(k.prefix)===0) delete pm[q];}); else (k.clear||k.set).forEach(function(q){delete pm[q];});}); return;}
 }
 /* the colour picker reports when it closes, not as a click */
 document.getElementById('edSheet').addEventListener('change',function(e){
-  if(e.target.dataset.a!=='ptPick') return; const v=parseInt(e.target.value.slice(1),16);
-  const k=keysFor(); if(k&&k.set[0]==='f') setTo({h:v}); else setTo(v);
+  if(e.target.dataset.a!=='ptPick') return; const v=parseInt(e.target.value.slice(1),16), k=keysFor(e.target);
+  if(k&&k.set[0][0]==='f') setTo({h:v},e.target); else setTo(v,e.target);
 });
 /* what a tap on the flat's own fittings picks */
 function partOf(c){
+  lastHit=c;
   if(!c||c.wall||c.item||c.decor||c.pieceId||c.shopObj||c.o.userData.floor) return null;
   const h=houseIdx(regIndex()), o=c.o; if(!o.userData.pkey||h.byKey[o.userData.pkey]!==o) return null;
   return {k:'part',obj:o,room:o.userData.proom,key:'m|'+o.userData.pkey};
