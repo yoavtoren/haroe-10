@@ -1,6 +1,7 @@
 /* Haroe 10 — Edit mode. Tap a piece to swap it for another IKEA piece or change its colour; long-press it to drag it;
    tap the floor, a wall, a shelf or the ceiling to add something there. Every plant, book, lamp and basket can be picked
-   on its own. Changes are kept per design in this browser, can be undone, and can be shared as a link. */
+   on its own. Changes are kept per design and can be undone; Save keeps them in this browser, Reset goes back to the
+   original, and a design can be shared as a link. */
 (function(){
 'use strict';
 const A=window.APP, D=A.D, K=A.kit, CAT=A.CAT, P=A.pieces, S=A.state, scene=A.scene, R=Math.PI, H=D.H;
@@ -13,12 +14,19 @@ const INSIDE={living:1,kitchen:1,bed1:1,bed2:1,bath:1,wc:1};
 for(const k in A.walls) A.walls[k].g.userData.wallKey=k;
 
 /* =====================================================================
-   Your changes: kept per design, saved in this browser, undoable
+   Your changes: kept per design and undoable; Save keeps them in this browser
    ===================================================================== */
 const STORE='haroe10-edits-v1';
-let seq=1, saveT=0, startDesign=null;
+let seq=1, startDesign=null, savedSig='';
 function E(d){const e=A.edits(d); e.uc=e.uc||{}; return e;}
-function save(){clearTimeout(saveT); saveT=setTimeout(function(){try{localStorage.setItem(STORE,JSON.stringify({v:1,n:seq,e:A.EDITS,u:A.USER,d:S.design}));}catch(err){}},200);}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({v:1,n:seq,e:A.EDITS,u:A.USER,d:S.design}));}catch(err){return false;} savedSig=sig(); renderBar(); return true;}
+function sig(){                                                            // what Save keeps, empty parts left out, keys in order
+  const e={}, u={};
+  for(const d in A.EDITS){const x=A.EDITS[d], o={}; for(const k in x) if(x[k]&&Object.keys(x[k]).length) o[k]=x[k]; if(Object.keys(o).length) e[d]=o;}
+  for(const k in A.USER) if(A.USER[k]&&Object.keys(A.USER[k]).length) u[k]=A.USER[k];
+  return JSON.stringify({e:e,u:u},function(k,v){if(!v||typeof v!=='object'||Array.isArray(v)) return v; const o={}; Object.keys(v).sort().forEach(function(n){o[n]=v[n];}); return o;});
+}
+function unsaved(){return sig()!==savedSig;}
 function tidy(e){
   e.t=e.t||{}; e.c=e.c||{}; e.f=e.f||{}; e.gone=e.gone||{}; e.items=e.items||{}; e.uc=e.uc||{};
   for(const k in e.t) if(!CAT[e.t[k]]) delete e.t[k];
@@ -31,13 +39,14 @@ function tidy(e){
     if(j&&j.v===1){seq=j.n||1; for(const d in j.e||{}) if(A.DESIGNS[d]) A.EDITS[d]=tidy(j.e[d]); for(const k in j.u||{}) if(A.DESIGNS[k[0]]) A.USER[k]=j.u[k];}
     const ld=localStorage.getItem('haroe10-design'); if(ld&&A.DESIGNS[ld]) startDesign=ld;
   }catch(err){}
+  savedSig=sig();
   const m=/[#&]e=([A-Za-z0-9_\-]+)/.exec(location.hash);                     // a shared design
   if(m){try{const j=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
     if(j&&A.DESIGNS[j.d]){A.EDITS[j.d]=tidy(j.e||{}); for(const k in A.USER) if(k[0]===j.d) delete A.USER[k]; Object.assign(A.USER,j.u||{});
       for(const k in A.EDITS[j.d].items){const n=+k.slice(1); if(n>=seq) seq=n+1;} startDesign=j.d; A.sharedLoaded=true;}
     history.replaceState(null,'',location.pathname+location.search);}catch(err){}}
 })();
-setTimeout(function(){if(startDesign&&startDesign!==S.design) A.setDesign(startDesign,true); if(A.sharedLoaded) toast('Loaded the shared design.');},0);
+setTimeout(function(){if(startDesign&&startDesign!==S.design) A.setDesign(startDesign,true); if(A.sharedLoaded) toast('Loaded the shared design. Press Save in Edit layout to keep it.');},0);
 const undo=[];
 function snap(){
   const d=S.design, u={}; for(const k in A.USER) if(k[0]===d) u[k]=A.USER[k];
@@ -49,7 +58,7 @@ function doUndo(){
   for(const k in A.USER) if(k[0]===s.d) delete A.USER[k]; Object.assign(A.USER,JSON.parse(s.u));
   deselect(); if(s.d!==S.design) A.setDesign(s.d); else changed(); toast('Undone.');
 }
-function changed(){save(); hlFor=null; A.layout(); renderBar();}
+function changed(){hlFor=null; A.layout(); renderBar();}
 function items(d){return E(d||S.design).items;}
 
 /* =====================================================================
@@ -399,7 +408,7 @@ function adoptLoose(t){
   let uid;
   if(t.pid&&P[t.pid]&&d.place==='top'){const pg=P[t.pid].g; pg.updateMatrixWorld(true); const l=pg.worldToLocal(bottom.clone()); uid=newItem({t:nt,c:0,f:clone(d.cfg)||null,on:t.pid,x:l.x,y:l.y,z:l.z,r:0});}
   else uid=newItem({t:nt,c:0,f:clone(d.cfg)||null,x:c.x,z:c.z,r:faceCamera(c.x,c.z),y:d.place==='top'?Math.max(0,bx.min.y):0});
-  save(); A.layout(true); const it=items()[uid]; return it.on?{k:'att',uid:uid}:{k:'piece',id:uid};
+  A.layout(true); const it=items()[uid]; return it.on?{k:'att',uid:uid}:{k:'piece',id:uid};
 }
 function startDrag(pr){
   let t=pr.tg; if(!t) return;
@@ -712,15 +721,22 @@ A.setEdit=function(on){
 };
 function localSeen(){try{if(localStorage.getItem('haroe-edit-tip')) return true; localStorage.setItem('haroe-edit-tip','1');}catch(err){} return false;}
 function renderBar(){
-  const on=S.edit; $('editBar').hidden=!on;
+  const on=S.edit; $('editBar').hidden=!on; $('editTools').hidden=!on;
   $('bUndo').disabled=!undo.length; $('edUndo').disabled=!undo.length;
   const e=A.EDITS[S.design], dirty=!!(e&&(Object.keys(e.items).length||Object.keys(e.gone).length||Object.keys(e.t).length||Object.keys(e.c).length||Object.keys(e.f).length))||Object.keys(A.USER).some(function(k){return k[0]===S.design;});
-  $('bResetMoves').hidden=!dirty; $('bShare').hidden=!dirty;
+  const pending=unsaved(); $('bSave').disabled=!pending; $('bSave').textContent=pending?'Save':'Saved';
+  $('bResetMoves').disabled=!dirty; $('bShare').hidden=!dirty;
   const pn=$('palNow'); if(palShown&&on){pn.hidden=false; pn.innerHTML='<b>'+esc(palShown.n)+'</b>'+['main','accent','soft','wood','case','case2','metal','rug'].map(function(r){return '<i style="background:'+hex(palShown[r])+'"></i>';}).join('');} else pn.hidden=true;
 }
 A.renderEdit=function(){renderBar(); try{localStorage.setItem('haroe10-design',S.design);}catch(err){} $('editNote').textContent=S.edit?'Tap a piece to swap it or change its colour. Long-press a piece and drag to move it. Tap the floor, a wall, a shelf or the ceiling to add something from IKEA.':'Tap a piece of furniture to see where to get it.';};
-$('bEdit').onclick=function(){A.setEdit(!S.edit);};
+$('bEdit').onclick=function(){
+  if(S.edit&&undo.length&&unsaved()&&confirm('Save your changes before you finish editing?\n\nCancel leaves them on screen without saving.')) doSave();
+  A.setEdit(!S.edit);
+};
 $('bUndo').onclick=doUndo;
+function doSave(){toast(save()?'Saved in this browser.':'Could not save: this browser is not keeping data.');}
+$('bSave').onclick=doSave;
+window.addEventListener('beforeunload',function(e){if(undo.length&&unsaved()){e.preventDefault(); e.returnValue='';}});
 $('bPalette').onclick=function(){if(!S.edit) A.setEdit(true); applyPalette();};
 $('bAddHere').onclick=function(){
   if(!S.edit) A.setEdit(true);
@@ -730,7 +746,7 @@ $('bAddHere').onclick=function(){
 };
 $('bResetMoves').onclick=function(){
   if(!confirm('Put this design back the way it was? Undo can bring your changes back.')) return;
-  snap(); delete A.EDITS[S.design]; for(const k in A.USER) if(k[0]===S.design) delete A.USER[k]; palShown=null; deselect(); changed(); toast('Back to the original design.');
+  snap(); delete A.EDITS[S.design]; for(const k in A.USER) if(k[0]===S.design) delete A.USER[k]; palShown=null; deselect(); changed(); toast('Back to the original design. Save to keep it.');
 };
 $('bShare').onclick=function(){
   const d=S.design, u={}; for(const k in A.USER) if(k[0]===d) u[k]=A.USER[k];
@@ -746,6 +762,7 @@ window.addEventListener('keydown',function(e){
   if(e.key==='Escape') deselect();
   else if((e.key==='Delete'||e.key==='Backspace')&&sel){e.preventDefault(); removeSel();}
   else if((e.key==='z'||e.key==='Z')&&(e.ctrlKey||e.metaKey)){e.preventDefault(); doUndo();}
+  else if((e.key==='s'||e.key==='S')&&(e.ctrlKey||e.metaKey)){e.preventDefault(); if(unsaved()) doSave();}
   else if((e.key==='r'||e.key==='R')&&sel&&!e.metaKey&&!e.ctrlKey) rotateSel(e.shiftKey?-R/12:R/12);
 });
 let toastT=0;
