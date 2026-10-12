@@ -547,7 +547,7 @@ $('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){
 $('bTable').onclick=function(){A.setTable(S.table===1?0:1);}; $('bTable2').onclick=function(){A.setTable(S.table===2?0:2);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
 /* ---------- Apartment view: the flat on its own. Building view: the flat in its building, with the lobby, the yard and the street ---------- */
 const OUT=5, OUTR={hall:1,out:1,street:1}, FLATR=['living','kitchen','bed1','bed2','bath','wc'];      // OUT: the layer for whatever is outside the flat
-const BLD3=new THREE.Vector3(4.5,0,8.5), BLDT=new THREE.Vector3(8.5,0,7.3);      // Building view looks at the lobby, with the flat beyond it and the street beside it; from above, at all of it
+const BLD3=new THREE.Vector3(4.5,0,8.5), BLDT=new THREE.Vector3(11.5,0,7.6);      // Building view looks at the lobby, with the flat beyond it and the street beside it; from above, at all of it
 const LBX=[A.LB.XL-0.6,A.LB.XF+0.35,L-0.1,A.LB.ZC+0.5];      // the lobby's ground, from our door to the doorway onto the bridge
 const lobbyCut=new THREE.Plane(new THREE.Vector3(0,-1,0),1000);      // in Building view the lobby is cut at our ceiling, as the flat is, so the stairwell above never hides it
 S.scope='flat'; let curView='3d', flatNow=null, cutNow=null, sorted=false;
@@ -599,7 +599,7 @@ A.viewTarget=function(v){return S.scope!=='building'?A.home:v==='top'?BLDT:BLD3;
 A.viewPos=function(v){
   const d=fitDist(), t=A.viewTarget(v);
   if(S.scope==='building'){
-    if(v==='top') return new THREE.Vector3(t.x,d*1.95,t.z+0.01);
+    if(v==='top') return new THREE.Vector3(t.x,d*2.3,t.z+0.01);
     return new THREE.Vector3(t.x-d*0.6,d*0.85,t.z+d*0.95);      // over the lobby's back corner, looking across it to the flat and the street
   }
   if(v==='top') return new THREE.Vector3(t.x,d*1.02,t.z+0.01);
