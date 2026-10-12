@@ -414,7 +414,7 @@ A.tag=function(text,cls){const e=document.createElement('div'); e.className='tag
 const pv=new THREE.Vector3();
 A.place=function(el,p,visible){
   pv.copy(p).project(camera);
-  const ok=visible&&pv.z<1&&pv.z>-1;
+  const ok=visible&&pv.z<1&&pv.z>-1&&!(A.outsideHidden&&A.outsideHidden(p));
   el.style.opacity=ok?1:0;
   if(ok){el.style.left=((pv.x+1)/2*stage.clientWidth)+'px'; el.style.top=((1-pv.y)/2*stage.clientHeight)+'px';}
 };

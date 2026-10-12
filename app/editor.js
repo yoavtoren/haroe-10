@@ -1087,7 +1087,7 @@ window.addEventListener('keydown',function(e){
 let toastT=0;
 function toast(t){const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){el.classList.remove('show');},3200);}
 A.ed={att:att,bakedOf:bakedOf,houseThings:houseThings,roomAt:insideFlat,E:E,snap:snap,changed:changed,openAdd:openAdd,
-  sel:function(){return sel;},selHit:function(){return selHit;},spot:function(){return spot;},mode:function(){return mode;},reopen:function(){if(mode==='add') openAdd(spot); else openItem();}};
+  sel:function(){return sel;},selHit:function(){return selHit;},spot:function(){return spot;},mode:function(){return mode;},iso:function(){return iso;},reopen:function(){if(mode==='add') openAdd(spot); else openItem();}};
 A.editTest={solid:{ctx:solidCtx,canMove:canMove,slide:slide,settle:settle,pen:pen,poseShape:poseShape,localBox:localBox,fixed:fixedShapes,walls:wallShapes,set:setSolid,on:function(){return solidOn;}},
   select:function(t,c){select(t,c); openItem();},sel:function(){return sel;},addAt:addAt,swapTo:swapTo,applyPalette:applyPalette,openAdd:openAdd,openEket:openEket,setColour:function(i){snap(); setColour(sel,i,true); changed();},
   undo:doUndo,removeSel:removeSel,targetOf:targetOf,pickAt:function(x,y){aimAt(x,y); return pickAll();},att:att,thumbOf:thumbOf,ekGridAdd:function(gx,gy){const f=ekCfg(), T=A.EKM[ekType], m={t:ekType,x:gx,y:gy,c:ekCol}; if(ekFits(f.mods,m,-1)){f.mods.push(m); ekApply(f); return true;} return false;}};

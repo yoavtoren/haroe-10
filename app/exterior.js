@@ -813,7 +813,7 @@ inRoom('street',function(){
   A.frameFns.push(function(){
     const c=st.worldToLocal(lc.copy(A.camera.position)), low=c.y<5.2;      // where the camera is, in the street's own frame
     fac.visible=low&&c.z>0.4&&!(A.simsOn&&!A.eyeView());
-    const solid=low||c.z<0;                            // the tree crowns thin to a ghost when the camera is above the square, so they never hide it
+    const solid=(low||c.z<0)&&!(A.thinTrees&&A.thinTrees());      // the tree crowns thin to a ghost when the camera is above the square, or in Building view, so they never hide it
     if(solid!==crowns){crowns=solid; can.children.forEach(function(m){m.material.transparent=!solid; m.material.opacity=solid?1:0.22; m.material.depthWrite=solid;});}
     far.forEach(function(b){b.g.visible=!b.hide(c);});
     const eve=A.goal('day')<0.5?0.6:0; if(A.goal('L:street')!==eve) A.set('L:street',eve);      // street lamps and the café's bulbs come on in the evening

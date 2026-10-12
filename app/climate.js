@@ -32,7 +32,7 @@ const WINDOWS=[
   {id:'bed1',name:'Bedroom 1 window',wall:'a_far',room:'bed1'}
 ];
 WINDOWS.forEach(function(w){const wl=A.walls[w.wall], q=wl.wins[0]; w.u0=q[0]; w.u1=q[1]; w.out=new THREE.Vector3(-wl.n[0],0,-wl.n[1]); w.pos=A.onWall(w.wall,(q[0]+q[1])/2,(q[2]+q[3])/2,-0.4);});
-const ray=new THREE.Raycaster();
+const ray=new THREE.Raycaster(); ray.layers.enable(A.LAYER_OUT);      // the neighbours and the trees are on the outside's own layer
 function lit(w,s){          // does direct sun reach this window?
   if(s.el<=0.02||s.dir.dot(w.out)<=0.05) return false;
   ray.set(w.pos,s.dir); ray.far=80;
