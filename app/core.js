@@ -18,9 +18,11 @@ const D=A.D={
   KZ:3.30,  // kitchen sink wall; the kitchen window wall is 330 long (window 198)
   ZW:5.02,  // front wall of the guest toilet, which juts into the room at the entrance
   BLK:2.06, // how far that block reaches: the entrance wall is only this wide (measured: 206)
-  BX:5.42,  // bedroom 2 window wall: 85.5 wall -> column, 25.5 column, 152 column -> window
-  NX:2.18, NZ:-1.41,   // bedroom 2's wardrobe niche: its back wall, and how far it runs from the door wall.
-                       // Seen from the study: 52 + frame + door + frame + 63 of door wall, then a 53 cm step out to the 267 cm wall with the bed
+  BX:5.43,  // bedroom 2's window wall: 85.5 from the left wall to the column, the column 25.5, 152 to the window (and 186 from it to the door frame)
+  BXB:5.69, // bedroom 2's wall beside the bed, 26 cm further out: 178 from the column, for a 140 bed and 38 cm to the wall
+  RN:2.13,  // the study's wall beside its door: 52 + frame + door + frame + 63, then a step of about 53 to the window wall
+  NX:2.37, NZ:-1.75,   // bedroom 2's wardrobe niche, 43 deep: its back wall, and how far it runs from the door wall,
+                       // long enough for the chest of drawers and the 3-door wardrobe side by side
   door1:[0.62,1.40],   // study door: 62 from the sofa wall
   door2:[2.70,3.48],   // bedroom 2 door: 130 of wall between the openings (112 between the frames)
   painting:[1.55,2.55,1.40,2.22], // x0,x1,y0,y1 of the bus canvas, between the two door frames
@@ -28,19 +30,23 @@ const D=A.D={
   bathDoor:[4.17,4.85],// bathroom door, in the same plane as the TV wall: 78 of wall from the kitchen to its frame (150 with the fridge)
   wcDoor:[2.18,2.83],  // guest toilet door (x), at a right angle to the bathroom door
   bedDepth:4.08,       // both bedrooms, door wall -> window wall (measured in the study: 408)
-  bedSplit:2.74        // wall between the two bedrooms at the back: the study's window wall is 269
+  bedSplit:2.75        // wall between the two bedrooms at the back: the study's window wall is 269
 };
 const W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ;
 const AZ=A.AZ=-D.bedDepth, SPLIT=A.SPLIT=D.bedSplit;
 const BA=A.BA={x0:W,x1:KX+0.12,z0:KZ+0.1,z1:D.ZW-0.1};   // bathroom: shower, toilet, sink, washing machine
 const WC=A.WC={x0:D.BLK,x1:3.9,z0:D.ZW,z1:L};    // guest toilet
-/* the lobby, from photos: through the doorway at the corner bridge into a small square hall, right into a long corridor
-   with flat 2 on the left, and at its end the stairs on the right and flats 3, 4 and ours (5). See app/exterior.js. */
-const LB=A.LB={XL:-1.9, CX0:-1.3, CX1:1.3, RZ:L+1.8, EH:L+2.75, BZ:L+3.4, ZE:L+9.4, ZC:L+12.4, XF:BA.x1, XS:3.83};
-/* XL: the recess with flat 3's door; CX0..CX1: the corridor; RZ: the end of that recess (the wide pillar);
-   EH: the railing round the stairwell; BZ: where the block between the corridor and the street front starts;
-   ZE..ZC: the square hall by the bridge, ZC being the corner with number 12's wing; XF: the street front; XS: the far end of the flights */
-LB.ZO=LB.ZC-0.85;          // centre of our doorway from the bridge, near the corner with number 12's wing
+/* the lobby, from the photos of the walk in. Through the doorway at the corner bridge into a small square hall, right into a
+   long corridor, and at its end a landing: flat 3 on the left wall, flat 4 and our door (flat 5) on the far wall, the wide
+   stone-clad pillar opposite our door at the corridor's end, and the stairwell on the right with flights up and down.
+   XL: the landing's left wall (flat 3); CX0..CX1: the corridor; RZ: the pillar, where the corridor's left wall begins;
+   SD: where the flight down starts, past the pillar; SU: where the flight up starts, beside our door; EH: the white railing across the end of
+   the corridor, over the flight down, and the stairwell's side behind the corridor's right wall; ZE..ZC: the square hall, ZC being the
+   corner with number 12's wing; XF: the street front */
+const LB=A.LB={XL:-1.85, CX0:-1.0, CX1:1.25, RZ:L+2.3, SD:0.42, SU:1.25, EH:L+2.55, ZE:L+8.8, ZC:L+12.4, XF:BA.x1};
+LB.BZ=LB.EH;
+LB.XE=LB.XF-0.1;           // the stairwell's far wall
+LB.ZO=LB.ZC-1.35;          // centre of our doorway from the bridge, a metre from the corner with number 12's wing
 LB.Z2=LB.ZO-7.0;           // the second bridge, further along the front, into a small hall of its own for flats 1 and 6
 
 const stage=A.stage=document.getElementById('stage'), labelsEl=A.labelsEl=document.getElementById('labels');
@@ -73,11 +79,11 @@ Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:
 const rooms=A.rooms={
   living:{name:'Living room', rs:[[0,W,0,D.ZW],[0,D.BLK,D.ZW,L]], win:'kitchen', dl:1, node:'lk'},
   kitchen:{name:'Kitchen',    rs:[[W,KX,0,KZ]],          win:'kitchen', dl:1, shutter:true, node:'lk'},
-  bed1:{name:'Bedroom 1',     rs:[[0,D.NX-0.05,D.NZ,0],[0,SPLIT-0.05,AZ,D.NZ]],  win:'bed1',    dl:1, shutter:true, node:'bed1'},
-  bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
+  bed1:{name:'Bedroom 1',     rs:[[0,D.RN,D.NZ,0],[0,SPLIT-0.05,AZ,D.NZ]],  win:'bed1',    dl:1, shutter:true, node:'bed1'},
+  bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0],[D.BX,D.BXB,AZ,AZ+2.0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
-  hall:{name:'Lobby', rs:[[LB.XL,LB.CX1,L,LB.RZ],[LB.CX0,LB.CX1,LB.RZ,LB.ZE],[LB.CX0,LB.XF,LB.ZE,LB.ZC],[LB.CX1,LB.XF-0.1,LB.EH,LB.BZ],[2.6,LB.XF,LB.BZ,LB.Z2+1.15]], win:null, dl:0.75, node:'hall', on:true},      // landing, corridor, the square hall by the bridge, the strip by the stairs, the second entrance
+  hall:{name:'Lobby', rs:[[LB.XL,LB.SU,L,L+1.34],[LB.XL,LB.SD,L+0.9,LB.RZ],[LB.CX0+0.3,LB.SD,LB.RZ-0.3,LB.EH+0.45],[LB.CX0,LB.CX1,LB.EH,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC],[2.6,LB.XF,LB.EH,LB.Z2+1.15]], win:null, dl:0.85, node:'hall', on:true},      // the landing before the doors, its part by flat 3, the way past the pillar, corridor, the square hall by the bridge, the second entrance
   out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true},      // the yard and the neighbouring building
   street:{name:'Street', rs:[], win:null, dl:1, node:'out', ext:true}     // the bridges, the garden, the square and Haroe St, lit by their own lamps in the evening; its walkable areas are added in exterior.js
 };
@@ -385,7 +391,8 @@ slatTex.wrapS=slatTex.wrapT=THREE.RepeatWrapping;
 const shutters=A.shutters=[];
 A.windowOn=function(k,u0,u1,y0,y1,panes,bars,winKey){
   const gm=new THREE.MeshBasicMaterial({color:0xa9cdd6,transparent:true,opacity:0.3,depthWrite:false}); glassMats.push(gm);
-  A.rect(k,u0,u1,y0,y1,0xe9ece8,0.006); const pane=A.rect(k,u0+0.05,u1-0.05,y0+0.05,y1-0.05,gm,0.008);
+  [[u0,u0+0.05,y0,y1],[u1-0.05,u1,y0,y1],[u0+0.05,u1-0.05,y0,y0+0.05],[u0+0.05,u1-0.05,y1-0.05,y1]].forEach(function(q){A.rect(k,q[0],q[1],q[2],q[3],0xe9ece8,0.006);});      // the frame round the glass, so you can see out
+  const pane=A.rect(k,u0+0.05,u1-0.05,y0+0.05,y1-0.05,gm,0.008);
   (A.panes=A.panes||[]).push({wall:k,m:pane,x:pane.position.x,w:u1-u0-0.1,cur:0});            // so a window can slide open
   for(let i=1;i<(panes||1);i++){const u=u0+i*(u1-u0)/panes; A.rect(k,u-0.025,u+0.025,y0,y1,0xe9ece8,0.010);}
   if(bars){for(let i=1;i<bars;i++){const u=u0+0.05+i*(u1-u0-0.1)/bars; A.rect(k,u-0.006,u+0.006,y0+0.05,y1-0.05,0xf4f5f3,0.009);}}

@@ -108,14 +108,15 @@ A.inRoom('kitchen',function(){
   [0.35,0.75,1.1].forEach(function(y,i){A.box(0.56,0.1,0.09,0xeef3f3,-0.35,y,0.05,fd); A.cyl(0.03,0.2,[0xfbfaf6,0x8dbb99,0xd9863e][i],-0.2,y+0.1,0.05,fd,10); A.box(0.07,0.14,0.06,[0xd9463e,0xf0d21c,0x9dc2d5][i],-0.45,y+0.08,0.05,fd);});
   KIT.fridge.push(mover(fd,'ry',0,-1.9));
   // crockery in the wall cupboard: plates and bowls below, cups and glasses on the shelf
-  const cg=A.G(); for(let i=0;i<6;i++) A.cyl(0.085,0.012,0xfbfaf6,X0+0.47,1.497+i*0.014,KZ-0.17,cg,20,0.105);
-  for(let i=0;i<3;i++) A.cyl(0.045,0.05,0x9dc2d5,X0+0.74,1.515+i*0.022,KZ-0.17,cg,18,0.075);
-  for(let i=0;i<4;i++){A.cyl(0.027,0.07,[0xfbfaf6,0x8dbb99,0xfbfaf6,0x9dc2d5][i],X0+0.42+i*0.095,1.808,KZ-0.2,cg,14,0.034); A.torus(0.018,0.005,0xfbfaf6,X0+0.42+i*0.095,1.808,KZ-0.245,cg).rotation.y=R/2;}
-  const glass=A.reg(new THREE.MeshLambertMaterial({color:0xdff0f2,transparent:true,opacity:0.45})); for(let i=0;i<3;i++) A.cyl(0.025,0.1,glass,X0+0.5+i*0.09,1.823,KZ-0.09,cg,12,0.03);
+  const WL=A.KL.wl, cg=A.G();                                     // crockery in the yellow cupboard: plates and bowls below, mugs and cups on the shelf
+  for(let i=0;i<7;i++) A.cyl(0.11,0.012,0xfbfaf6,WL+0.17,1.497+i*0.014,KZ-0.18,cg,20,0.13); for(let i=0;i<4;i++) A.cyl(0.1,0.012,0xe9ebee,WL+0.38,1.497+i*0.014,KZ-0.18,cg,20,0.12);
+  for(let i=0;i<4;i++) A.cyl(0.07,0.05,[0xfbfaf6,0x9dc2d5,0xe8e2d4,0xfbfaf6][i],WL+0.6,1.515+i*0.03,KZ-0.18,cg,18,0.09);
+  for(let i=0;i<6;i++){A.cyl(0.03,0.08,[0xfbfaf6,0xc9a46a,0xd9863e,0x5b6b8a,0xfbfaf6,0xe8e2d4][i],WL+0.1+i*0.1,1.813,KZ-0.2,cg,14,0.035); A.torus(0.02,0.005,0xfbfaf6,WL+0.1+i*0.1,1.813,KZ-0.25,cg).rotation.y=R/2;}
+  const glass=A.reg(new THREE.MeshLambertMaterial({color:0xdff0f2,transparent:true,opacity:0.45})); for(let i=0;i<3;i++) A.cyl(0.025,0.1,glass,WL+0.25+i*0.1,1.823,KZ-0.08,cg,12,0.03);
   [['n',0x34373c,0xf0d21c],['abcdef',0x34373c,0xf0d21c]].forEach(function(v){      // charcoal fronts and yellow wall cupboards in every design: the kitchen cannot be painted
     const g=A.G(), c1=v[1], c2=v[2];
-    const cd=A.G(g); cd.position.set(X0+0.325,0,KZ-0.362); A.box(0.56,0.56,0.02,c2,0.28,1.76,0,cd); A.box(0.012,0.1,0.02,0x17181a,0.52,1.56,-0.016,cd);        // cupboard door
-    KIT.cab.push(mover(cd,'ry',0,1.75));
+    const cd=A.G(g); cd.position.set(A.KL.wl+0.4,2.05,KZ-0.36); A.box(0.8,0.57,0.02,0xf4f1ea,0,-0.285,0,cd); [[-0.39],[0.39]].forEach(function(q){A.box(0.02,0.57,0.022,c2,q[0],-0.285,0,cd);}); A.box(0.8,0.02,0.022,c2,0,-0.56,0,cd);   // the lift-up door: white, edged yellow
+    KIT.cab.push(mover(cd,'rx',0,1.95));
     const dr=A.G(g), dx=A.KL.dx;                                                                                                                       // deep drawer by the hob: a pot and the frying pan
     A.box(0.56,0.24,0.02,c1,dx,0.48,0.6,dr); A.box(0.26,0.014,0.02,0x17181a,dx,0.52,0.618,dr); A.box(0.5,0.012,0.46,0xe9e6df,dx,0.375,0.36,dr);
     [-0.25,0.25].forEach(function(o){A.box(0.012,0.16,0.46,0xe9e6df,dx+o,0.45,0.36,dr);}); A.box(0.5,0.16,0.012,0xe9e6df,dx,0.45,0.135,dr);
@@ -139,14 +140,14 @@ const WCs={};
 function toilet(id,hx,z,room,door,basin){
   const t={id:id,x:hx-0.25,z:z,door:door,basin:basin,seatUp:false};
   A.inRoom(room,function(){
-    const sp=A.G(); sp.position.set(hx,0.6,z); A.rbox(0.42,0.02,0.34,0xf4f4f1,-0.21,0,0,sp,0.008);
-    const lp=A.G(); lp.position.set(hx,0.622,z); A.rbox(0.43,0.022,0.35,0xffffff,-0.215,0,0,lp,0.009);
+    const sp=A.G(); sp.position.set(hx,0.6,z); A.rbox(0.42,0.02,0.35,0xf4f4f1,-0.23,0,0,sp,0.008,0.16); A.rbox(0.2,0.022,0.18,0xe9e9e6,-0.24,0.002,0,sp,0.006,0.08);      // an oval seat and its opening
+    const lp=A.G(); lp.position.set(hx,0.622,z); A.rbox(0.44,0.022,0.36,0xffffff,-0.235,0,0,lp,0.009,0.17); [-0.12,0.12].forEach(function(o){A.cyl(0.012,0.04,0xf4f4f1,-0.012,-0.012,o,lp,8).rotation.x=R/2;});
     t.seat=mover(sp,'rz',0,-1.5,3); t.lid=mover(lp,'rz',0,-1.62,3);
   });
   WCs[id]=t;
 }
-toilet('guest',WCS.x1-0.2,mzW,'wc','wc',[(D.wcDoor[0]+D.wcDoor[1])/2-0.2,WCS.z1-0.6]);
-toilet('bath',BA.x1-0.03,tzB,'bath','bath',[BA.x0+0.7,BA.z1-0.8]);
+toilet('guest',WCS.x1-0.2,mzW,'wc','wc',[WCS.x0+0.42,WCS.z1-0.62]);
+toilet('bath',BA.x1-0.22,tzB,'bath','bath',[BA.x0+0.93,BA.z1-0.62]);
 
 /* ---------- wet laundry over the rails of the drying rack ---------- */
 const rackWet=new THREE.Group(); rackWet.visible=false; A.pieces.rack1.g.add(rackWet);
@@ -201,7 +202,7 @@ SM.onStop=cancel;
    ===================================================================== */
 function fridgeOpen(){return [Wk(W+0.22,KZ-1.42,0.2),Ps(0.25),Do(function(){openK('fridge',true); pose('reachmid');}),Ps(1.4)];}
 function fridgeShut(){return [Ps(0.3),Do(function(){openK('fridge',false); pose(null);}),Ps(0.5)];}
-function cupboardTake(what){return [Wk(X0+0.6,KZ-1.02,0),Ps(0.25),Do(function(){openK('cab',true); pose('reach');}),Ps(1.1),Do(function(){carry(what);}),Ps(0.3),Do(function(){openK('cab',false);}),Ps(0.45)];}
+function cupboardTake(what){return [Wk(A.KL.wl+0.4,KZ-0.95,0),Ps(0.25),Do(function(){openK('cab',true); pose('reach');}),Ps(1.1),Do(function(){carry(what);}),Ps(0.3),Do(function(){openK('cab',false);}),Ps(0.45)];}
 function toSink(n){return [Do(function(){doing('taking the dishes to the sink');}),Wk(SX,KZ-1.02,0),Ps(0.3),Do(function(){carry(null); plateFood(true); dishes(st.dishes+n); AU.blip('click');})];}
 const wv=new THREE.Vector3(), wq=new THREE.Quaternion();
 function shown(o){for(;o;o=o.parent) if(!o.visible) return false; return true;}
@@ -293,7 +294,7 @@ const DO={
     chain([Do(function(){doing('heading for the shower');}),Wk(SP.ax,SP.az,R),Ps(0.2),
       Do(function(){A.door('bath').force=0; A.set('L:bath',1); SM.renderRooms(); doing('undressing'); pose('undress');}),Ps(1.1),
       Do(function(){const o=OUTFITS[SM.who][st.outfit]; [o.top,o.pants,o.top].forEach(function(c,i){recolor(heapM[i],c);});
-        if(where==='toilet'){WCs.bath.lid.target=0; WCs.bath.seat.target=0; heap.position.set(BA.x1-0.3,0.66,tzB);} else heap.position.set(A.washer.x,A.washer.top+0.05,A.washer.z+0.12);
+        if(where==='toilet'){WCs.bath.lid.target=0; WCs.bath.seat.target=0; heap.position.set(BA.x1-0.48,0.66,tzB);} else heap.position.set(A.washer.x,A.washer.top+0.05,A.washer.z+0.12);
         heap.visible=true; p.p.nude(true); setCensor(p,'body'); pose(null); slideTo(SP.x,SP.z,0.7);}),
       Ps(0.8),Do(function(){showerFx(true); pose('shower'); mode='showering'; doing('in the shower');}),Ps(10),
       Do(function(){showerFx(false); mode='shower'; pose(null); doing('drying off'); slideTo(SP.ax,SP.az,0.7); p.hT=R;}),Ps(0.9),
@@ -427,7 +428,7 @@ function items(){
   add('Sink',{x:SX,z:KZ-0.32,sx:SX,sz:KZ-1.02,h:0},[[st.dishes?'Wash the dishes ('+st.dishes+')':'Sink is clean',DO.wash]],[SX-0.31,SX+0.31,0.86,1.25,KZ-0.56,KZ-0.03]);
   const tacts=function(id){return SM.who==='angela'?[['Use the toilet',function(){DO.toilet(id,false);}]]:[['Pee standing up',function(){DO.toilet(id,true);}],['Sit down',function(){DO.toilet(id,false);}]];};
   add('Guest toilet',{x:WCS.x1-0.45,z:mzW,sx:WCS.x1-1.07,sz:mzW,h:R/2},tacts('guest'),[WCS.x1-0.7,WCS.x1-0.2,0,0.7,mzW-0.2,mzW+0.2]);
-  add('Toilet',{x:BA.x1-0.28,z:tzB,sx:BA.x1-0.9,sz:tzB,h:R/2},tacts('bath'),[BA.x1-0.53,BA.x1-0.03,0,0.7,tzB-0.2,tzB+0.2]);
+  add('Toilet',{x:BA.x1-0.47,z:tzB,sx:BA.x1-0.92,sz:tzB-0.12,h:R/2},tacts('bath'),[BA.x1-0.74,BA.x1-0.22,0,0.7,tzB-0.2,tzB+0.2]);
   add('Sofa',front('sofa',1.0),[['Flop down',DO.flop],['Give a massage',function(){DO.massage(true);}],['Ask for a massage',function(){DO.massage(false);}]]);
   add('Record player',front('music',0.7),st.track<0?[['Play a record',function(){DO.record(1);}]]:[['Next record',function(){DO.record(1);}],['Stop',function(){DO.record(0);}]]);
   add('Bookshelf',shelf(),[[st.carry==='book'?'Put the book back':'Take a book',DO.book],['Read on the sofa',DO.read]]);
@@ -554,7 +555,7 @@ A.frameFns.push(function(dt,t){          // runs in every mode: things that ease
   for(let i=tweens.length-1;i>=0;i--){const o=tweens[i]; if(o.tok&&o.tok!==tok){tweens.splice(i,1); continue;}
     o.t=Math.min(1,o.t+dt/o.dur); const k=o.t; o.fn(k*k*(3-2*k)); if(o.t>=1){tweens.splice(i,1); if(o.done) o.done();}}
   for(let i=0;i<movers.length;i++){const m=movers[i]; if(m.cur!==m.target){const d=m.target-m.cur, q=dt*m.rate; m.cur=Math.abs(d)<=q?m.target:m.cur+Math.sign(d)*q;
-    const k=m.cur, v=m.closed+(m.open-m.closed)*k*k*(3-2*k); if(m.axis==='ry') m.o.rotation.y=v; else if(m.axis==='rz') m.o.rotation.z=v; else m.o.position.z=v; A.touch(2);}}
+    const k=m.cur, v=m.closed+(m.open-m.closed)*k*k*(3-2*k); if(m.axis==='ry') m.o.rotation.y=v; else if(m.axis==='rz') m.o.rotation.z=v; else if(m.axis==='rx') m.o.rotation.x=v; else m.o.position.z=v; A.touch(2);}}
   KIT.n.visible=ST.design==='n'; KIT.abcdef.visible=ST.design!=='n'; KIT.pans.forEach(function(g){g.visible=!st.panOut;});
   props.visible=!!A.simsOn; rackWet.visible=st.hung&&!!A.simsOn;
   if(coverAmt!==coverT||coverKey!==bedKey()){coverKey=bedKey(); const d=coverT-coverAmt, q=dt/1.1; coverAmt=Math.abs(d)<=q?coverT:coverAmt+Math.sign(d)*q;

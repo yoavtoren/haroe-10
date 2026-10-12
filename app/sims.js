@@ -32,11 +32,11 @@ const WB=(function(){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; for(const k in A.rooms) 
 const CS=0.1, GX0=WB[0], GZ0=WB[2], NX=Math.ceil((WB[1]-GX0)/CS), NZ=Math.ceil((WB[3]-GZ0)/CS), RAD=0.13, LB=A.LB;
 const gy=A.groundAt||function(){return 0;};
 const free=new Uint8Array(NX*NZ);
-const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+1.0, LOBBY=[0,L+4.6];      // centre of the front door; where people stand just inside it; on the landing; up the corridor
+const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+1.0, LOBBY=[(A.LB.CX0+A.LB.CX1)/2,L+5.0];      // centre of the front door; where people stand just inside it; on the landing; up the corridor
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
   [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
-  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3],
-  [LB.CX0+0.13,LB.CX1-0.13,LB.RZ-0.3,LB.RZ+0.3],[LB.CX0+0.13,LB.CX1-0.13,LB.ZE-0.3,LB.ZE+0.3],[LB.CX1-0.3,LB.CX1+0.3,LB.EH+0.13,LB.BZ-0.13]].concat(A.streetPass||[]);      // doorways; joins between the lobby's parts; the doorways from the bridges
+  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[W+0.36,W+0.92,D.bathDoor[0],D.bathDoor[0]+0.28],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3],
+].concat(A.streetPass||[]);      // doorways; joins between the lobby's parts; the doorways from the bridges
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
   const i0=Math.max(0,Math.ceil((x0-GX0)/CS-0.5)), i1=Math.min(NX-1,Math.floor((x1-GX0)/CS-0.5));
