@@ -249,11 +249,29 @@ inRoom('bed2',function(){
   box(0.03,0.12,0.08,0xf4f4f1,BX-0.015,2.5,dkz+0.62); (function(){const pts=[[BX-0.08,2.4,dkz+0.42],[BX-0.06,2.25,dkz+0.5],[BX-0.07,2.12,dkz+0.46],[BX-0.05,2.18,dkz+0.55],[BX-0.06,2.3,dkz+0.6],[BX-0.03,2.5,dkz+0.62]].map(function(q){return new THREE.Vector3(q[0],q[1],q[2]);});
     const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),24,0.006,6,false),M(0xf4f4f1)); scene.add(m);})();      // its cord looped in a knot to the socket
   const wz=NZ+0.02+0.585, cz=-0.03-0.25;                                // the wardrobe at the far end of the niche, the chest of drawers by the door
-  box(0.5,1.9,1.17,0xf8f8f6,NX+0.25,0.95,wz); [-0.39,0,0.39].forEach(function(o){box(0.006,1.82,0.37,0xfdfdfb,NX+0.503,0.97,wz+o);}); box(0.004,1.4,0.12,0xb9c6cc,NX+0.508,1.05,wz);
-  [-0.23,0.16,0.23].forEach(function(o){box(0.012,0.2,0.012,0xb9bdc0,NX+0.514,1.02,wz+o);});                     // door handles
-  A.rbox(0.36,0.42,0.3,0x1e2a44,NX+0.25,2.11,wz-0.38,n,0.08); box(0.003,0.16,0.04,0xf4f4f1,NX+0.432,2.12,wz-0.38,n);       // on the wardrobe: a navy duvet bag,
-  box(0.3,0.16,0.22,0x5b8f3a,NX+0.25,1.98,wz-0.1,n); A.rbox(0.38,0.36,0.42,0xd8d8d2,NX+0.25,2.08,wz+0.32,n,0.08);            // a green cool bag, a big check bag,
-  for(let i=0;i<4;i++) box(0.004,0.36,0.06,0x2f3133,NX+0.441,2.08,wz+0.16+i*0.11,n);
+  /* the wardrobe: IKEA BRIMNES, three doors, white. The outer two are framed panels, the middle one a framed mirror; white bar handles,
+     the left door's by its right edge, the other two by their left edges. From the room the door side (+z) is on your left. */
+  const fx=NX+0.503, wd=0.37, fw=0xfdfdfb;
+  box(0.5,1.9,1.17,0xf8f8f6,NX+0.25,0.95,wz); box(0.42,0.04,1.1,0xeeeeeb,NX+0.25,0.02,wz);
+  [-0.39,0,0.39].forEach(function(o){const z=wz+o;
+    box(0.006,1.82,wd,0xf4f4f1,fx,0.97,z);                                                                         // the door, its panel set in
+    [-1,1].forEach(function(sd){box(0.012,1.82,0.065,fw,fx+0.004,0.97,z+sd*(wd/2-0.0325));});                     // stiles
+    box(0.012,0.09,wd,fw,fx+0.004,1.835,z); box(0.012,0.11,wd,fw,fx+0.004,0.115,z);                              // rails
+    if(!o) box(0.004,1.5,wd-0.15,A.reg(new THREE.MeshLambertMaterial({color:0xcbd7dc,emissive:0x2a3236}),'bed2'),fx+0.006,1.0,z);      // the mirror
+  });
+  [-0.23,0.16,0.23].forEach(function(o){box(0.016,0.2,0.016,0xf6f6f4,NX+0.52,1.02,wz+o); [0.92,1.12].forEach(function(y){box(0.012,0.012,0.012,0xe6e6e2,NX+0.514,y,wz+o);});});      // white bar handles
+  /* on top, left to right as you face it, from the photos: a navy NAUTICA HOME duvet bag, a white duvet showing in its open zip; a green
+     camouflage cool bag with a zip bag of coffee beans in front; black laptop sleeves on edge; a big black-and-white check bag; a dark box behind it */
+  const nau=canvasTex(64,96,function(g){g.fillStyle='#1e2a44'; g.fillRect(0,0,64,96); g.fillStyle='#f2f2ee'; g.save(); g.translate(30,14); g.rotate(R/2); g.font='bold 13px serif'; g.fillText('NAUTICA',0,0); g.font='7px serif'; g.fillText('HOME',18,-11); g.restore(); g.fillStyle='#e8e4da'; g.fillRect(50,0,14,96);});
+  A.rbox(0.36,0.46,0.34,A.MT(nau,'bed2'),NX+0.25,2.13,wz+0.39,n,0.09); A.rbox(0.2,0.4,0.2,0xf1efe8,NX+0.2,2.16,wz+0.27,n,0.08);
+  const camo=canvasTex(64,64,function(g){const r=A.rng(12); g.fillStyle='#5b8f3a'; g.fillRect(0,0,64,64); for(let i=0;i<26;i++){g.fillStyle=['#2f4a24','#c9c24a','#1d2a18','#8bb04a'][i%4]; g.beginPath(); g.ellipse(r()*64,r()*64,4+r()*8,2+r()*5,r()*3,0,7); g.fill();}});
+  A.rbox(0.3,0.2,0.26,A.MT(camo,'bed2'),NX+0.24,2.0,wz+0.07,n,0.03);
+  A.rbox(0.03,0.13,0.17,A.reg(new THREE.MeshLambertMaterial({color:0xdfe8ec,transparent:true,opacity:0.6}),'bed2'),NX+0.42,1.97,wz+0.03,n,0.01); box(0.02,0.08,0.14,0x4a2e1c,NX+0.42,1.95,wz+0.03,n);   // the coffee beans
+  box(0.36,0.06,0.3,0x1d1f21,NX+0.25,1.93,wz-0.05,n);                                                                 // a black bag flattened under them
+  for(let i=0;i<4;i++) box(0.3,0.34,0.025,[0x1d1f21,0x2f3133,0x2c3a55,0x3a3d40][i],NX+0.26,2.07,wz-0.15-i*0.045,n);        // laptop sleeves on edge
+  const chk=canvasTex(64,64,function(g){g.fillStyle='#e9e8e4'; g.fillRect(0,0,64,64); g.fillStyle='rgba(40,42,46,0.85)'; [4,30].forEach(function(x){g.fillRect(x,0,12,64);}); [10,40].forEach(function(y){g.fillRect(0,y,64,12);}); g.fillStyle='rgba(120,122,126,0.5)'; [22,52].forEach(function(x){g.fillRect(x,0,4,64);});},true);
+  A.rbox(0.42,0.44,0.4,A.MT(chk,'bed2'),NX+0.25,2.12,wz-0.37,n,0.1); A.rbox(0.36,0.08,0.3,A.MT(chk,'bed2'),NX+0.3,1.94,wz-0.2,n,0.03);      // the check bag, its strap slumped toward the sleeves
+  box(0.34,0.3,0.32,0x1f2840,NX+0.12,2.42,wz-0.46,n);                                                                 // and the dark box behind it
   /* by the door, beside the wardrobe: an oak-effect shoe cabinet, three tilting flaps, a black gap above each */
   box(0.28,1.32,0.5,0xc9a473,NX+0.14,0.66,cz); box(0.3,0.02,0.52,0xb8925f,NX+0.15,1.33,cz);
   [[0.06,0.48],[0.5,0.92],[0.94,1.3]].forEach(function(q){box(0.022,q[1]-q[0]-0.02,0.48,0xcfab7a,NX+0.29,(q[0]+q[1])/2,cz).rotation.z=-0.04; box(0.004,0.012,0.48,0x1d1f21,NX+0.284,q[1]-0.004,cz);});
@@ -265,7 +283,9 @@ inRoom('bed2',function(){
   sph(0.12,0xd9762e,NX+0.4,0.12,cz+0.17,n); cyl(0.09,0.17,0xf1f1ee,NX+0.62,0.085,cz-0.32,n,14,0.1);                     // a basketball, a paint tub
   (function(){const dl=A.door('bed2').p; box(0.5,0.03,0.025,0x1d1f21,0.38,1.8,-0.035,dl); [0.18,0.3,0.42,0.54].forEach(function(x){box(0.015,0.05,0.035,0x1d1f21,x,1.77,-0.05,dl);});   // on the back of the door: a black hook rail,
     A.rbox(0.3,0.95,0.03,0xf4f3ef,0.2,1.3,-0.07,dl,0.012); A.rbox(0.18,0.08,0.18,0xa89060,0.36,1.72,-0.11,dl,0.03); A.rbox(0.18,0.08,0.18,0x5a2f2f,0.42,1.68,-0.12,dl,0.03);   // a white towel, two caps,
-    A.rbox(0.26,0.4,0.12,0x1d1f21,0.5,1.45,-0.1,dl,0.04);})();                                                            // and a black bag
+    A.rbox(0.26,0.4,0.12,0x1d1f21,0.5,1.45,-0.1,dl,0.04);                                                               // a black bag,
+    const sb=canvasTex(32,48,function(g){g.fillStyle='#f4f4f2'; g.fillRect(0,0,32,48); g.fillStyle='#2aa6a0'; g.fillRect(4,14,24,14); g.fillStyle='#1d1f21'; g.fillRect(6,32,20,4); g.fillRect(6,40,14,3);});
+    A.rbox(0.28,0.38,0.08,A.MT(sb,'bed2'),0.32,1.5,-0.15,dl,0.04);})();                                                  // and a white shopping bag with a teal print
   const kx=l+0.385;                                                     // 2 x 4 cube shelf between the wall and the column
   const ks=G(); ks.position.set(kx,0,kz); ks.rotation.y=-R/2; K.kallax(ks,['bx','sb','yb','xb'],0xfafaf8,{box:0xd9c9a8,box2:SAGE,seed:5});        // open cubes facing the door: books and baskets
   [[-0.28,0x1d1f21],[-0.15,0xf0d21c],[-0.02,0xd9463e],[0.11,0xd9463e],[0.24,0x9fb4c8]].forEach(function(q){const c=G(n); c.position.set(kx+q[0],1.48,kz); box(0.11,0.035,0.05,q[1],0,0.03,0,c); box(0.06,0.025,0.045,0x3a4a5a,-0.005,0.06,0,c); [-0.035,0.035].forEach(function(x){cyl(0.012,0.05,0x111213,x,0.015,0,c,8).rotation.x=R/2;});});      // a row of model cars on top
