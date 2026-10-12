@@ -113,9 +113,14 @@ inRoom('kitchen',function(){
   box(0.23,0.76,0.58,char,x0+0.115,0.5,KZ-0.29); box(0.59,0.76,0.58,char,x1-0.3,0.5,KZ-0.29);                         // either side of the sink
   [x1-1.095,x1-0.665].forEach(function(x){box(0.13,0.76,0.03,char,x,0.5,KZ-0.565);});                                    // fixed strips either side of the pull-out bin (built in life.js)
   box(1.55,0.76,0.57,char,(c0+c1)/2,0.5,0.295);                                                                          // backs stop 1 cm short of the wall plane, or they flicker through it into bedroom 2
-  [1.48,2.04].forEach(function(y){box(0.8,0.02,0.35,yel,wl+0.4,y,KZ-0.175);}); [0.01,0.79].forEach(function(o){box(0.02,0.56,0.35,yel,wl+o,1.76,KZ-0.175);});      // the yellow wall cupboard, 80 wide, over the sink
-  box(0.78,0.54,0.02,0xf4f1ea,wl+0.4,1.76,KZ-0.012); box(0.76,0.016,0.3,yel,wl+0.4,1.765,KZ-0.17); box(0.76,0.004,0.3,0xf4f1ea,wl+0.4,1.757,KZ-0.17);   // white inside, one shelf with a yellow edge
-  [0.06,0.74].forEach(function(o){box(0.02,0.02,0.16,0x9aa0a4,wl+o,1.98,KZ-0.3).rotation.x=0.6;});                                             // the gas struts of its lift-up door
+  /* the yellow wall cupboard over the sink, 80 wide, from the photo with its door up: yellow outside and along every front edge, pale grey-white
+     inside, one shelf halfway. Its door lifts up flat on two lift mechanisms (hung in life.js). */
+  const cin=0xe7e7e3;
+  [1.48,2.04].forEach(function(y){box(0.8,0.022,0.35,yel,wl+0.4,y,KZ-0.175);}); [0.011,0.789].forEach(function(o){box(0.022,0.56,0.35,yel,wl+o,1.76,KZ-0.175);});
+  box(0.756,0.002,0.33,cin,wl+0.4,1.4915,KZ-0.17); box(0.756,0.002,0.33,cin,wl+0.4,2.0285,KZ-0.17); [0.0225,0.7775].forEach(function(o){box(0.002,0.535,0.33,cin,wl+o,1.76,KZ-0.17);});   // the inside faces
+  box(0.756,0.54,0.012,0xeeeeeb,wl+0.4,1.76,KZ-0.008);                                                                                          // the back
+  box(0.756,0.018,0.31,cin,wl+0.4,1.77,KZ-0.175); box(0.756,0.03,0.02,yel,wl+0.4,1.769,KZ-0.33);                                               // the shelf, a yellow lip on its front
+  [0.034,0.766].forEach(function(o){box(0.022,0.13,0.1,0x5f6366,wl+o,1.955,KZ-0.27); box(0.024,0.05,0.05,0x8d9296,wl+o,1.99,KZ-0.33);});        // the lift mechanisms on the side walls, under the top
   box(1.4,0.12,0.5,0x1d1f21,(x0+x1)/2,0.06,KZ-0.25);                          // plinth
   box(0.27,0.04,0.63,top,x0+0.125,0.9,KZ-0.305); box(0.62,0.04,0.63,top,x1-0.3,0.9,KZ-0.305); box(0.56,0.04,0.1,top,sx,0.9,KZ-0.57); box(0.56,0.04,0.12,top,sx,0.9,KZ-0.05);   // counter with a cut-out, the basin sunk into it
   const sz=KZ-0.32;

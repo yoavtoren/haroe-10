@@ -101,7 +101,7 @@ function setCensor(a,part){cens=a?{a:a,part:part}:null; censor.visible=false;}
 const movers=[];
 function mover(o,axis,closed,open,rate){const m={o:o,axis:axis,closed:closed,open:open,cur:0,target:0,rate:rate||2.4}; movers.push(m); return m;}
 const KIT={fridge:[],cab:[],drawer:[],bin:[],pans:[]};
-function openK(k,v){KIT[k].forEach(function(m){m.target=v?1:0;}); AU.blip('click');}
+function openK(k,v){KIT[k].forEach(function(m){m.target=v?1:0;}); if(k==='cab'&&!v) st.cabKeep=false; AU.blip('click');}
 A.inRoom('kitchen',function(){
   const fd=A.G(); fd.position.set(W+0.71,0,KZ-0.72); A.box(0.7,1.75,0.03,0xf7f7f5,-0.35,0.875,-0.015,fd);
   A.fridgeFront.position.set(-(W+0.71),0,-(KZ-0.72)-0.032); fd.add(A.fridgeFront);
@@ -113,10 +113,16 @@ A.inRoom('kitchen',function(){
   for(let i=0;i<4;i++) A.cyl(0.07,0.05,[0xfbfaf6,0x9dc2d5,0xe8e2d4,0xfbfaf6][i],WL+0.6,1.515+i*0.03,KZ-0.18,cg,18,0.09);
   for(let i=0;i<6;i++){A.cyl(0.03,0.08,[0xfbfaf6,0xc9a46a,0xd9863e,0x5b6b8a,0xfbfaf6,0xe8e2d4][i],WL+0.1+i*0.1,1.813,KZ-0.2,cg,14,0.035); A.torus(0.02,0.005,0xfbfaf6,WL+0.1+i*0.1,1.813,KZ-0.25,cg).rotation.y=R/2;}
   const glass=A.reg(new THREE.MeshLambertMaterial({color:0xdff0f2,transparent:true,opacity:0.45})); for(let i=0;i<3;i++) A.cyl(0.025,0.1,glass,WL+0.25+i*0.1,1.823,KZ-0.08,cg,12,0.03);
+  A.cyl(0.13,0.05,0x8fa6b8,WL+0.69,1.52,KZ-0.18,cg,20,0.15);                                                                               // a wide blue-grey bowl on the right, below
+  A.cyl(0.045,0.12,0xd9dcde,WL+0.09,1.84,KZ-0.12,cg,12); [[-0.02,0.12],[0.015,0.14],[0.0,0.17]].forEach(function(q,i){A.cyl(0.006,0.2,0xb9bdc0,WL+0.09+q[0],1.88+q[1]/2,KZ-0.12,cg,6).rotation.z=(i-1)*0.2;});   // a steel pot of whisks and ladles, upper left
+  for(let i=0;i<4;i++) A.cyl(0.035,0.035,0xfbfaf6,WL+0.4,1.795+i*0.03,KZ-0.12,cg,14,0.045);                                                  // a stack of white cups
+  A.cyl(0.03,0.07,0xc98a3e,WL+0.5,1.815,KZ-0.12,cg,12); A.cyl(0.04,0.06,0xd8cbb0,WL+0.6,1.81,KZ-0.13,cg,14);                                 // an amber jar, a pale ceramic one
   [['n',0x34373c,0xf0d21c],['abcdef',0x34373c,0xf0d21c]].forEach(function(v){      // charcoal fronts and yellow wall cupboards in every design: the kitchen cannot be painted
     const g=A.G(), c1=v[1], c2=v[2];
-    const cd=A.G(g); cd.position.set(A.KL.wl+0.4,2.05,KZ-0.36); A.box(0.8,0.57,0.02,0xf4f1ea,0,-0.285,0,cd); [[-0.39],[0.39]].forEach(function(q){A.box(0.02,0.57,0.022,c2,q[0],-0.285,0,cd);}); A.box(0.8,0.02,0.022,c2,0,-0.56,0,cd);   // the lift-up door: white, edged yellow
-    KIT.cab.push(mover(cd,'rx',0,1.95));
+    const cd=A.G(g); cd.position.set(A.KL.wl+0.4,2.05,KZ-0.36);                                                                                     // the lift-up door, no handle: yellow outside, pale grey underneath, yellow edges
+    A.box(0.8,0.58,0.012,c2,0,-0.29,-0.006,cd); A.box(0.79,0.57,0.008,0xe4e4e0,0,-0.29,0.004,cd); A.box(0.8,0.012,0.022,c2,0,-0.574,0,cd);
+    [-0.33,0.33].forEach(function(x){const arm=A.box(0.018,0.018,0.2,0x6f7376,x,-0.07,0.11,cd); arm.rotation.x=-0.5; A.box(0.04,0.03,0.04,0x8d9296,x,-0.12,0.02,cd);});      // the lift arms, fixed to its inside
+    KIT.cab.push(mover(cd,'rx',0,1.66));      // up to just past level, as in the photo
     const dr=A.G(g), dx=A.KL.dx;                                                                                                                       // deep drawer by the hob: a pot and the frying pan
     A.box(0.56,0.24,0.02,c1,dx,0.48,0.6,dr); A.box(0.26,0.014,0.02,0x17181a,dx,0.52,0.618,dr); A.box(0.5,0.012,0.46,0xe9e6df,dx,0.375,0.36,dr);
     [-0.25,0.25].forEach(function(o){A.box(0.012,0.16,0.46,0xe9e6df,dx+o,0.45,0.36,dr);}); A.box(0.5,0.16,0.012,0xe9e6df,dx,0.45,0.135,dr);
@@ -190,7 +196,7 @@ function cancel(){              // whatever was going on stops here, and the fla
   ['sizzle','vacuum'].forEach(function(n){AU.loop(n,false);});
   if(st.asleep){st.asleep=false; if(p) p.sleep(false); if(partner) partner.sleep(false);}
   dressAgain(!A.simsOn);
-  ['fridge','cab','drawer','bin'].forEach(function(k){KIT[k].forEach(function(m){m.target=0;});});
+  ['fridge','cab','drawer','bin'].forEach(function(k){if(k==='cab'&&st.cabKeep) return; KIT[k].forEach(function(m){m.target=0;});});      // a cupboard you opened yourself stays open
   if(openBook.visible){openBook.visible=false; if(st.carry==='book') carry('book');}
   if(st.carry&&st.carry!=='book'&&st.carry!=='clothes'&&st.carry!=='wet') carry(null); else pose(null);
   ['wc','bath'].forEach(function(d){const q=A.door(d); if(q) q.force=null;});
@@ -240,6 +246,10 @@ const DO={
         if(partner&&!partner.busy) partner.say(['Smells good!','What are you making?','I am starving.'][Math.floor(Math.random()*3)],3);}),
       Ps(8),Do(function(){mode='cook'; hot=false; AU.loop('sizzle',false); hide(panSteam); props.add(spatula); spatula.visible=false; pose(null); doing('getting plates'); plateFood(false);})],
       cupboardTake('plates'),[Wk(HOB[0]-0.3,0.98,R),Ps(0.3),Do(function(){pose('reachmid');}),Ps(0.7),Do(function(){panFood.visible=false; plateFood(true); pose(null); SM.toast('Lunch is ready.'); eat();})]));
+  },
+  cab:function(){                     // lift the yellow cupboard's door up, or pull it shut
+    const open=!(KIT.cab[0]&&KIT.cab[0].target>0.5);
+    begin('cab'); chain([Wk(A.KL.wl+0.4,KZ-0.95,0),Ps(0.2),Do(function(){openK('cab',open); st.cabKeep=open; pose('reach');}),Ps(0.7),Do(function(){pose(null); hud();})]);
   },
   snack:function(){
     begin('snack');
@@ -425,7 +435,7 @@ function items(){
   add('Fridge',{x:W+0.36,z:KZ-0.36,sx:W+0.22,sz:KZ-1.42,h:0.2},[['Grab a snack',DO.snack]],[W+0.01,W+0.71,0,1.75,KZ-0.72,KZ]);
   const cs=cupSpot(); if(cs) add('Espresso machine',{x:cs.c.x,z:cs.c.z,sx:cs.s.sx,sz:cs.s.sz,h:cs.s.h},[['Make a coffee',DO.coffee]],cs.obj);
   add('Television',firstPiece(['tvOld','kbench','benchB','benchA'],1.1),[['Netflix',function(){DO.tv('netflix');}],['Football',function(){DO.tv('football');}]].concat(A.goal('tv')>0.5?[['Turn it off',DO.tvOff]]:[]));
-  add('Sink',{x:SX,z:KZ-0.32,sx:SX,sz:KZ-1.02,h:0},[[st.dishes?'Wash the dishes ('+st.dishes+')':'Sink is clean',DO.wash]],[SX-0.31,SX+0.31,0.86,1.25,KZ-0.56,KZ-0.03]);
+  add('Sink',{x:SX,z:KZ-0.32,sx:SX,sz:KZ-1.02,h:0},[[st.dishes?'Wash the dishes ('+st.dishes+')':'Sink is clean',DO.wash],[KIT.cab[0]&&KIT.cab[0].target>0.5?'Close the yellow cupboard':'Open the yellow cupboard',DO.cab]],[SX-0.31,SX+0.31,0.86,1.25,KZ-0.56,KZ-0.03]);
   const tacts=function(id){return SM.who==='angela'?[['Use the toilet',function(){DO.toilet(id,false);}]]:[['Pee standing up',function(){DO.toilet(id,true);}],['Sit down',function(){DO.toilet(id,false);}]];};
   add('Guest toilet',{x:WCS.x1-0.45,z:mzW,sx:WCS.x1-1.07,sz:mzW,h:R/2},tacts('guest'),[WCS.x1-0.7,WCS.x1-0.2,0,0.7,mzW-0.2,mzW+0.2]);
   add('Toilet',{x:BA.x1-0.47,z:tzB,sx:BA.x1-0.92,sz:tzB-0.12,h:R/2},tacts('bath'),[BA.x1-0.74,BA.x1-0.22,0,0.7,tzB-0.2,tzB+0.2]);
