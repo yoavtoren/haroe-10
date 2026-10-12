@@ -406,41 +406,8 @@ inRoom('out',function(){
    All of this is laid out in a frame of its own, as you see it from the street: x runs to the right along our front,
    starting at that corner; z comes out toward you; y=0 is the lobby floor. The whole is then turned into place. */
 
-/* It is built from a great many small parts, so parts of one colour (or one texture) are merged into a single mesh. */
-function batch(parent,lift){             // lift: a little light of their own, for parts on a front that never faces the sun
-  const by=new Map(), m4=new THREE.Matrix4(), nm=new THREE.Matrix3(), q=new THREE.Quaternion(), e=new THREE.Euler(), v=new THREE.Vector3(), one=new THREE.Vector3(1,1,1);
-  function add(geo,c,x,y,z,ry,rx){              // c: a colour or a material. Turned by ry, after tilting by rx
-    let b=by.get(c); if(!b) by.set(c,b={p:[],n:[],u:[],i:[]});
-    const P=geo.attributes.position, N=geo.attributes.normal, U=geo.attributes.uv, I=geo.index, base=b.p.length/3;
-    m4.compose(v.set(x,y,z+api.oz),q.setFromEuler(e.set(rx||0,ry||0,0,'YXZ')),one); nm.getNormalMatrix(m4);
-    for(let k=0;k<P.count;k++){
-      v.fromBufferAttribute(P,k).applyMatrix4(m4); b.p.push(v.x,v.y,v.z);
-      v.fromBufferAttribute(N,k).applyMatrix3(nm); b.n.push(v.x,v.y,v.z);
-      b.u.push(U?U.getX(k):0,U?U.getY(k):0);
-    }
-    if(I) for(let k=0;k<I.count;k++) b.i.push(base+I.getX(k)); else for(let k=0;k<P.count;k++) b.i.push(base+k);
-  }
-  const api={
-    oz:0,                                      // added to every z: a stretch of the street drawn where it was first measured, moved out as a whole
-    geo:add,
-    box:function(w,h,d,c,x,y,z,ry,rx){add(new THREE.BoxGeometry(w,h,d),c,x,y,z,ry,rx);},
-    cyl:function(r,h,c,x,y,z,seg,rTop,ry,rx){add(new THREE.CylinderGeometry(rTop==null?r:rTop,r,h,seg||10),c,x,y,z,ry,rx);},
-    sph:function(r,c,x,y,z,sx,sy,sz){const g=new THREE.SphereGeometry(r,10,7); if(sx) g.scale(sx,sy,sz); add(g,c,x,y,z);},
-    at:function(ox,oy,oz,o){                    // the same three, in the frame of a piece that stands at ox,oz and is turned by o
-      o=o||0; const cs=Math.cos(o), sn=Math.sin(o), X=function(x,z){return ox+x*cs+z*sn;}, Z=function(x,z){return oz-x*sn+z*cs;};
-      return {box:function(w,h,d,c,x,y,z,ry,rx){api.box(w,h,d,c,X(x,z),oy+y,Z(x,z),o+(ry||0),rx);},
-              cyl:function(r,h,c,x,y,z,seg,rTop,ry,rx){api.cyl(r,h,c,X(x,z),oy+y,Z(x,z),seg,rTop,o+(ry||0),rx);},
-              sph:function(r,c,x,y,z,sx,sy,sz){api.sph(r,c,X(x,z),oy+y,Z(x,z),sx,sy,sz);},
-              geo:function(g,c,x,y,z,ry,rx){api.geo(g,c,X(x,z),oy+y,Z(x,z),o+(ry||0),rx);}};
-    },
-    done:function(){by.forEach(function(b,c){
-      const g=new THREE.BufferGeometry();
-      g.setAttribute('position',new THREE.Float32BufferAttribute(b.p,3)); g.setAttribute('normal',new THREE.Float32BufferAttribute(b.n,3));
-      g.setAttribute('uv',new THREE.Float32BufferAttribute(b.u,2)); g.setIndex(b.i);
-      const m=new THREE.Mesh(g,c.isMaterial?c:A.reg(new THREE.MeshLambertMaterial({color:c,emissive:lift||0}))); m.receiveShadow=true; parent.add(m);});}
-  };
-  return api;
-}
+/* It is built from a great many small parts, so parts of one colour (or one texture) are merged into a single mesh: A.batch, in detail.js. */
+function batch(parent,lift,opt){return A.batch(parent,lift,opt);}
 
 inRoom('street',function(){
   const WELL=1.6, BS=WELL+0.25, LZ=4.2, SZ=LZ+0.32, D8=8, GZ=10.4+D8, AW=3.4, U=0.17, LA=-0.15, RY=U-0.13, KZ=18.55+D8, RW=7, ZF=42+D8, FW=ZC-L, TOP=12.6, BRW=1.3, SQ=19.5;
@@ -454,7 +421,8 @@ inRoom('street',function(){
   const BX=[ZC-ZO,ZC-Z2], P2=[BX[1]-0.8,BX[1]+0.8];    // the two bridges, along the front; the path through the garden to the second one
   const st=G(), can=G(st), fac=G(st), far=[];          // everything; the tree crowns; our own street front; the other buildings
   st.userData.nc=true; st.rotation.y=R/2; st.position.set(XF,0,ZC); st.updateMatrixWorld(true);
-  const B=batch(st), C=batch(can), F=batch(fac,0x3c3d3b);
+  const det=A.det, leafC=det.leafM.clone(); leafC.userData={};
+  const B=batch(st), C=batch(can,0,{map:function(k){return k===det.leafM?leafC:k;}}), F=batch(fac,0x3c3d3b), DP=det.P;
   const iron=0x2b2f2c, green=0x23402f, stone=0xd8d2c4, leaf=[0x3f7d4a,0x4a8a58,0x2f6b45], rnd=A.rng(10);
   const tex=function(w,h,draw,wrap){const t=canvasTex(w,h,draw); if(wrap) t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;};
   function flat(x0,x1,z0,z1,y,mat,pitch){            // a level patch, its texture laid out in metres
@@ -469,23 +437,40 @@ inRoom('street',function(){
   /* ---------- ground. From the square a paved alley runs to our front along number 12's side, a fenced garden on its right. At its end two
      broad steps go down to a forecourt, and from there our bridge crosses the sunken ground to the doorway. A path through the garden leads
      the same way, more shortly, to the second bridge. ---------- */
-  const pave=tex(256,256,function(g){                     // the café and the square: brick pavers in red, plum and grey, laid herringbone
-    const r=A.rng(44), cs=['#8c5f52','#7f5a4e','#9a6a5c','#7a6460','#8f7a72','#6e5552','#a37766','#857b78'];
+  function wear(g,S,seed,o){                                // what years of use leave on a surface: gum, stains, cracks, fallen leaves, butts, sand in the joints
+    const r=A.rng(seed);
+    for(let i=0;i<(o.stains||10);i++){const x=r()*S, y=r()*S, q=S*(0.02+r()*0.07), gr=g.createRadialGradient(x,y,0,x,y,q); gr.addColorStop(0,'rgba(40,32,26,'+(0.08+r()*0.12)+')'); gr.addColorStop(1,'rgba(40,32,26,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}
+    for(let i=0;i<(o.gum||14);i++){const x=r()*S, y=r()*S, q=S*(0.004+r()*0.005); g.fillStyle='rgba(60,58,56,0.75)'; g.beginPath(); g.ellipse(x,y,q,q*0.85,r()*3,0,7); g.fill(); g.fillStyle='rgba(150,148,142,0.5)'; g.beginPath(); g.ellipse(x-q*0.2,y-q*0.2,q*0.5,q*0.4,0,0,7); g.fill();}
+    for(let i=0;i<(o.cracks||3);i++){let x=r()*S, y=r()*S; g.strokeStyle='rgba(35,30,26,0.55)'; g.lineWidth=S/512*1.2; g.beginPath(); g.moveTo(x,y); for(let k=0;k<7;k++){x+=(r()-0.5)*S*0.08; y+=(r()-0.3)*S*0.06; g.lineTo(x,y);} g.stroke();}
+    for(let i=0;i<(o.leaves||0);i++){const x=r()*S, y=r()*S, l=S*(0.012+r()*0.012); g.save(); g.translate(x,y); g.rotate(r()*7); g.fillStyle=['#5f7a3a','#9a8a3a','#b58a3a','#7a5a32','#4f6a32'][Math.floor(r()*5)];
+      g.beginPath(); g.moveTo(0,-l); g.quadraticCurveTo(l*0.55,0,0,l); g.quadraticCurveTo(-l*0.55,0,0,-l); g.fill(); g.restore();}
+    for(let i=0;i<(o.butts||4);i++){g.save(); g.translate(r()*S,r()*S); g.rotate(r()*7); const w=S*0.012; g.fillStyle='#efe9dc'; g.fillRect(0,0,w,w*0.3); g.fillStyle='#d9954a'; g.fillRect(0,0,w*0.35,w*0.3); g.restore();}
+    for(let i=0;i<(o.berries||0);i++){g.fillStyle=['rgba(70,30,50,0.7)','rgba(110,50,70,0.6)'][i%2]; g.beginPath(); g.arc(r()*S,r()*S,S*0.003,0,7); g.fill();}
+  }
+  const pave=tex(512,512,function(g){                     // the café and the square: brick pavers in red, plum and grey, laid herringbone
+    g.scale(2,2); const r=A.rng(44), cs=['#8c5f52','#7f5a4e','#9a6a5c','#7a6460','#8f7a72','#6e5552','#a37766','#857b78'];
     g.fillStyle='#5e4a44'; g.fillRect(0,0,256,256);
     for(let j=-2;j<10;j++) for(let i=-2;i<10;i++){const x=i*32+j*16, y=j*32-i*16;
       g.fillStyle=cs[Math.floor(r()*cs.length)]; g.fillRect(x+1,y+1,30,14); g.fillStyle=cs[Math.floor(r()*cs.length)]; g.fillRect(x+17,y+17,14,30);}
     for(let i=0;i<900;i++){g.fillStyle='rgba(255,255,255,'+(r()*0.08)+')'; g.fillRect(r()*256,r()*256,1,1);}
+    for(let j=-2;j<10;j++) for(let i=-2;i<10;i++){const x=i*32+j*16, y=j*32-i*16; g.fillStyle='rgba(255,240,225,0.12)'; g.fillRect(x+1,y+1,30,1.2); g.fillRect(x+17,y+17,1.2,30);
+      g.fillStyle='rgba(30,20,18,0.18)'; g.fillRect(x+1,y+14,30,1); g.fillRect(x+30,y+17,1,30);}     // each brick's edges catch the light
+    g.setTransform(1,0,0,1,0,0); wear(g,512,45,{stains:14,gum:22,cracks:2,leaves:26,butts:6,berries:30});
   },true), paveM=A.MT(pave,null,true);
   const conc=tex(256,256,function(g){                     // the paved area in front of the bridge: old concrete slabs, stained
     const r=A.rng(57); g.fillStyle='#8a857b'; g.fillRect(0,0,256,256);
     for(let j=0;j<2;j++) for(let i=0;i<2;i++){g.fillStyle='rgb('+(170+Math.floor(r()*20))+','+(164+Math.floor(r()*20))+','+(150+Math.floor(r()*20))+')'; g.fillRect(i*128+2,j*128+2,124,124);}
     for(let i=0;i<40;i++){g.fillStyle='rgba(60,50,40,'+(0.05+r()*0.12)+')'; g.beginPath(); g.ellipse(r()*256,r()*256,4+r()*20,3+r()*12,r()*3,0,7); g.fill();}
     for(let i=0;i<60;i++){g.fillStyle=['#a87e4a','#8f6a3e','#6f5a3a'][i%3]; g.fillRect(r()*256,r()*256,3+r()*5,1+r()*2);}
+    wear(g,256,58,{stains:6,gum:6,cracks:5,leaves:14,butts:3});
   },true), concM=A.MT(conc,null,true);
   const slabs=tex(256,256,function(g){                    // the alley: worn beige stone slabs, 40 cm
     const r=A.rng(52); g.fillStyle='#9d9384'; g.fillRect(0,0,256,256);
     for(let j=0;j<4;j++) for(let i=0;i<4;i++){const c=200+Math.floor(r()*26); g.fillStyle='rgb('+c+','+(c-8)+','+(c-22)+')'; g.fillRect(i*64+1.5,j*64+1.5,61,61);
-      for(let k=0;k<60;k++){g.fillStyle='rgba('+(r()>0.5?'90,80,65':'255,250,235')+','+(0.06+r()*0.1)+')'; g.fillRect(i*64+r()*62,j*64+r()*62,1+r()*3,1+r()*2);}}
+      for(let k=0;k<60;k++){g.fillStyle='rgba('+(r()>0.5?'90,80,65':'255,250,235')+','+(0.06+r()*0.1)+')'; g.fillRect(i*64+r()*62,j*64+r()*62,1+r()*3,1+r()*2);}
+      if(r()<0.25){g.strokeStyle='rgba(60,50,40,0.5)'; g.lineWidth=1; g.beginPath(); g.moveTo(i*64+r()*64,j*64); g.lineTo(i*64+r()*64,j*64+64); g.stroke();}      // a slab cracked across
+      g.fillStyle='rgba(70,80,50,0.35)'; g.fillRect(i*64,j*64+62,64,2); g.fillRect(i*64+62,j*64,2,64);}                                                        // moss in the joints
+    wear(g,256,53,{stains:8,gum:8,cracks:1,leaves:18,butts:3});
   },true), slabM=A.MT(slabs,null,true);
   const chips=tex(128,128,function(g){                    // the landing and the bridges: small speckled tiles, 20 cm
     const r=A.rng(61); g.fillStyle='#b9b2a3'; g.fillRect(0,0,128,128);
@@ -513,7 +498,13 @@ inRoom('street',function(){
     B.box(0.12,0.22,GZ-WELL,kerb,q[0]+0.06,U+0.11,(WELL+GZ)/2); B.box(0.12,0.22,GZ-WELL,kerb,q[1]-0.06,U+0.11,(WELL+GZ)/2); B.box(w,0.22,0.12,kerb,xc,U+0.11,WELL+0.06);});
   B.box(SQ+19,U-GY,KZ-GZ,stone,(SQ-19)/2,(GY+U)/2,(GZ+KZ)/2); flat(-19,SQ,GZ,KZ-0.16,U+0.004,paveM,1.6);       // the square, at street level
   B.box(50-SQ,U-GY,KZ-16-D8,stone,(SQ+50)/2,(GY+U)/2,(16+D8+KZ)/2); flat(SQ,50,16+D8,KZ-0.16,U+0.004,paveM,1.6);        // and the pavement on past number 8
-  B.box(69,RY-GY,ZF-KZ,0x5d6164,15.5,(GY+RY)/2,(KZ+ZF)/2);                                            // asphalt
+  B.box(69,RY-GY,ZF-KZ,0x5d6164,15.5,(GY+RY)/2,(KZ+ZF)/2);                                            // asphalt: grey and grainy, patched where it was dug up, oil under the parked cars
+  const asph=tex(512,512,function(g){const r=A.rng(91); g.fillStyle='#5a5e60'; g.fillRect(0,0,512,512);
+    for(let i=0;i<9000;i++){const v=r(); g.fillStyle=v<0.5?'rgba(30,32,34,0.5)':v<0.85?'rgba(140,142,140,0.45)':'rgba(190,180,165,0.5)'; g.fillRect(r()*512,r()*512,1+r()*1.5,1+r()*1.5);}
+    for(let i=0;i<3;i++){const x=r()*400, y=r()*400, w=60+r()*120, h=30+r()*90; g.fillStyle='rgba(60,64,66,0.22)'; g.fillRect(x,y,w,h); g.strokeStyle='rgba(30,30,30,0.3)'; g.lineWidth=2; g.strokeRect(x,y,w,h);}
+    for(let i=0;i<8;i++){let x=r()*512, y=r()*512; g.strokeStyle='rgba(25,25,26,0.7)'; g.lineWidth=1.4; g.beginPath(); g.moveTo(x,y); for(let k=0;k<9;k++){x+=(r()-0.5)*40; y+=(r()-0.5)*40; g.lineTo(x,y);} g.stroke();}
+    for(let i=0;i<10;i++){const x=r()*512, y=r()*512, q=10+r()*30, gr=g.createRadialGradient(x,y,0,x,y,q); gr.addColorStop(0,'rgba(15,15,18,0.35)'); gr.addColorStop(1,'rgba(15,15,18,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}},true);
+  flat(-19,50,KZ,KZ+RW,RY+0.004,A.MT(asph,null,true),4.5);
   B.box(FW,0.04,WELL,0xbdb6a6,FW/2,GY+0.02,WELL/2); B.box(AW,0.04,BL-WELL,0xbdb6a6,AW/2,GY+0.02,(WELL+BL)/2);      // floor of the sunken strip, and of the ground our bridge crosses
   [[-19,-1.7],[3.9,50]].forEach(function(q){                                                          // far pavement, either side of Moshe Sharet St
     B.box(q[1]-q[0],0.13,ZF-KZ-RW,stone,(q[0]+q[1])/2,RY+0.065,(KZ+RW+ZF)/2); flat(q[0],q[1],KZ+RW+0.16,29.05+D8,U+0.004,paveM,1.6);});
@@ -614,74 +605,42 @@ inRoom('street',function(){
   barred(5.75,7.15,LA+0.45,LA+2.0); barred(7.6,9.0,LA+0.45,LA+2.0); barred(0.75,4.6,0.05,2.55);      // along the forecourt, and the tall one beside our bridge
   panel(0.9,2.0,A.MT(tex(32,64,function(g){g.fillStyle='#8f9496'; g.fillRect(0,0,32,64); g.strokeStyle='#6f7476'; g.strokeRect(3,3,26,58);})),0.035,LY+1.0,(LD+LT)/2,R/2);   // the door off the landing
   [[0.18,U+2.55,15.6,1],[0.18,U+2.95,SB+0.2,1],[0.16,U+2.4,17.4,1],[0.18,LA+0.32,6.1,0],[0.18,LA+0.32,7.35,0],[0.18,LA+0.9,6.7,0],[0.2,U+4.6,12.6,1],[0.2,U+4.3,9.0,1],[0.2,U+7.4,11.0,1],[0.2,U+3.6,4.9,1],[0.2,U+3.2,1.6,1]].forEach(function(q){const u=B.at(q[0],q[1],q[2],R/2);      // air conditioners on the wall up every floor, and three on the forecourt
-    u.box(0.8,0.56,0.28,0xeeeeea,0,0,0); u.cyl(0.19,0.012,0x3b3f42,0.13,0.0,0.145,18,null,0,R/2); if(q[3]) u.box(0.06,0.04,0.3,0x6b4a33,-0.36,-0.3,-0.05);});
+    B.bake(det.ac({brand:['electra','tadiran','plain','haier'][Math.round(q[2]*3)%4],bracket:!!q[3],up:0.6,drain:q[3]?1.4:0.3}),q[0]-0.16,q[1]-0.28,q[2],R/2);});
   B.box(0.02,1.4,0.02,0x8f9294,0.05,U+2.0,9.4);
   /* ---------- planting ---------- */
   function bed(x0,x1,z0,z1,h,y){B.box(x1-x0,h,z1-z0,0xb9ab90,(x0+x1)/2,y+h/2,(z0+z1)/2); B.box(x1-x0-0.36,0.02,z1-z0-0.36,0x4d4334,(x0+x1)/2,y+h+0.002,(z0+z1)/2);}      // planted bed, a low border of washed concrete
-  function shrub(x,z,r,c,y){B.sph(r,c,x,y+r*0.6,z,1,0.78,1);}
-  function palm(x,z,h,s,y0,n){                         // a trunk, then fronds that rise and droop
-    n=n||13; B.cyl(0.085*s,h,0x9a8a6a,x,y0+h/2,z,7,0.065*s);
-    for(let k=0;k<n;k++){
-      const a=k*2*R/n+h*3, up=0.25+(k%4)*0.2, l=0.95*s, g1=new THREE.BoxGeometry(0.11*s,0.012,l), g2=new THREE.BoxGeometry(0.08*s,0.012,l);
-      g1.translate(0,0,l/2); g2.translate(0,0,l/2);
-      B.geo(g1,leaf[k%2],x,y0+h,z,a,-up);
-      B.geo(g2,leaf[(k+1)%2],x+Math.sin(a)*Math.cos(up)*l,y0+h+Math.sin(up)*l,z+Math.cos(a)*Math.cos(up)*l,a,0.5);
-    }
+  function shrub(x,z,r,c,y){const t=det.tree('shrub',{w:r*2.1,h:r*1.5,d:r*2.1,seed:Math.floor(x*13+z*7),n:Math.round(26+r*90),size:0.36+r*0.2,tint:c===0x2a5a3a?0xb8c8a8:c===0x9fb04a?0xf0f0b0:0xffffff});
+    B.bake(t.crown,x,y,z,0); B.bake(t.wood,x,y,z,0);}
+  function palm(x,z,h,s,y0,n){const t=det.tree('palm',{h:h/s,s:s*0.95,n:n||22,seed:Math.floor(x*31+z),dates:h>2.5,dead:h>1?6:0}); B.bake(t.wood,x,y0,z,0); B.bake(t.crown,x,y0,z,0);}      // a date palm: a trunk of old leaf bases, arching fronds
+  function ficus(x,z,s,a0,y0,pit){                     // the old fig that roofs the square: a smooth grey trunk on buttress roots, heavy limbs, aerial roots, one wide crown
+    if(pit) B.box(1.5,0.1,1.5,0x4d4334,x,y0+0.052,z);
+    const t=det.tree('ficus',{s:s,a0:a0,seed:Math.floor(x*7+z*3)}); B.bake(t.wood,x,y0,z,0); C.bake(t.crown,x,y0,z,0);
   }
-  function ficus(x,z,s,a0,y0,pit){                     // the old trees that roof the square: a thick trunk, heavy limbs, one wide crown
-    const bark=0x7d6e5c;
-    B.cyl(0.42*s,3.0,bark,x,y0+1.5,z,10,0.3*s); if(pit) B.box(1.5,0.1,1.5,0x4d4334,x,y0+0.052,z);
-    for(let k=0;k<4;k++){
-      const a=a0+k*R/2+(k%2?0.35:0), t=0.75, len=3.6*s;
-      B.cyl(0.17*s,len,bark,x+Math.sin(a)*Math.sin(t)*len/2,y0+2.7+Math.cos(t)*len/2,z+Math.cos(a)*Math.sin(t)*len/2,7,0.1*s,a,t);
-      C.sph(2.9*s,leaf[k%3],x+Math.sin(a)*2.8*s,y0+6.4+(k%2?0.5:0),z+Math.cos(a)*2.8*s,1,0.62,1);
-    }
-    C.sph(3.3*s,leaf[1],x,y0+7.7,z,1,0.6,1);
-  }
-  function yucca(x,z,h,s,y0){                         // a spiky yucca: a few trunks, each with a burst of stiff, striped leaves
-    for(let t=0;t<3;t++){const dx=(t-1)*0.2*s, dz=(t%2)*0.16*s, hh=h*(0.7+0.17*t); B.cyl(0.055*s,hh,0x8a7a5c,x+dx,y0+hh/2,z+dz,6,0.045*s,0,(t-1)*0.1);
-      for(let k=0;k<18;k++){const a=k*2.4+t, up=0.15+(k%6)*0.2, l=0.7*s, g1=new THREE.BoxGeometry(0.055*s,0.01,l); g1.translate(0,0,l/2); B.geo(g1,k%3?0x6f8f4a:0xc2c886,x+dx+(t-1)*0.1,y0+hh,z+dz,a,-up);}}
-  }
-  function tree(x,z,s,a0){                             // a broad old tree: trunk, limbs, and a low crown spreading over the alley
-    const bark=0x7d6e5c; B.cyl(0.24*s,2.6,bark,x,U+1.3,z,9,0.18*s);
-    for(let k=0;k<3;k++){const a=a0+k*2.1, t=0.8, len=2.2*s; B.cyl(0.1*s,len,bark,x+Math.sin(a)*Math.sin(t)*len/2,U+2.3+Math.cos(t)*len/2,z+Math.cos(a)*Math.sin(t)*len/2,7,0.06*s,a,t);
-      C.sph(1.7*s,leaf[k%3],x+Math.sin(a)*1.8*s,U+3.7+(k%2)*0.5,z+Math.cos(a)*1.8*s,1,0.7,1);}
-    C.sph(2.0*s,leaf[1],x,U+4.5,z,1,0.65,1);
-  }
+  function yucca(x,z,h,s,y0){const t=det.tree('yucca',{h:h/s,s:s,a0:x*3+z,seed:Math.floor(x*11+z*5)}); B.bake(t.wood,x,y0,z,0); B.bake(t.crown,x,y0,z,0);}      // a spiky yucca: a few trunks, each with a burst of stiff, striped leaves
+  function tree(x,z,s,a0){const t=det.tree('broad',{s:s,a0:a0,seed:Math.floor(x*17+z*3)}); B.bake(t.wood,x,U,z,0); C.bake(t.crown,x,U,z,0);}      // a broad old tree: trunk, limbs, and a low crown spreading over the alley
+  function clump(bt,x,y,z,rx,ry,rz,n,o){o=o||{}; const g=new THREE.Group(); det.crown(Object.assign({c:[0,0,0],r:[rx,ry,rz],n:n,size:0.5,seed:Math.floor(x*13+y*7+z*3),cell:'broad'},o),g); bt.bake(g,x,y,z,0);}      // a mass of leaves on its own
   const rg=A.rng(23), inPath=function(x){return x>P2[0]-0.45&&x<P2[1]+0.45;};
   const GS=function(z){return WELL+(z-WELL)*(GZ-WELL)/(10.4-WELL);};      // the garden reaches farther out than first drawn: spread what grows in it to match
   tree(5.3,GS(5.4),1.1,4.2); tree(5.2,GS(9.0),0.9,3.6); tree(10.6,GS(5.9),1.0,1.6); tree(12.0,GS(2.6),0.8,0.4); tree(4.8,GS(3.4),1.0,2.6); tree(8.4,GS(8.0),1.0,5.0);      // the old trees that roof the alley and the garden
-  for(let z=BL+0.4;z<GZ-0.6;z+=0.9) C.sph(0.6,leaf[Math.floor(z)%3],AW-0.2,U+2.75+Math.sin(z*3)*0.2,z,1,1.3,1);                 // branches hanging low over the alley
+  for(let z=BL+0.4;z<GZ-0.6;z+=1.3) clump(C,AW-0.2,U+2.75+Math.sin(z*3)*0.2,z,0.6,0.75,0.75,60,{droop:0.5,shell:0.4});                 // branches hanging low over the alley
   [[4.0,2.4,2.4,1.0],[4.2,8.7,3.0,1.15],[6.3,2.3,1.9,0.9],[9.6,2.6,2.6,1.0],[11.5,8.6,3.2,1.15],[6.2,9.4,2.2,0.95],[9.4,9.4,1.8,0.9],[4.1,6.0,2.6,1.0],[4.4,4.1,1.6,0.85]].forEach(function(q){yucca(q[0],GS(q[1]),q[2],q[3],U);});
   palm(5.0,GS(3.4),0.7,0.9,U); palm(11.9,GS(4.6),1.2,0.8,U);
-  for(let i=0;i<60;i++){const z=WELL+0.4+rg()*(GZ-WELL-0.8), y=U+0.5+rg()*1.9, r=0.45+rg()*0.45; B.sph(r,i%4===3?0x2a5a3a:leaf[i%3],AW+0.55+rg()*1.3,y,z,1,0.85+rg()*0.4,1);}      // a wall of green along the fence
-  for(let i=0;i<84;i++){const x=AW+0.35+rg()*(FW-AW-0.7), z=WELL+0.35+rg()*(GZ-WELL-0.7); if(inPath(x)) continue; shrub(x,z,0.35+rg()*0.45,i%4===3?0x2a5a3a:leaf[i%3],U);}      // and everything else is green
-  for(let i=0;i<22;i++){const x=AW+0.3+rg()*0.6, z=BL+rg()*(GZ-BL-0.4); B.sph(0.42,0x335f3f,x,U+0.65+rg()*0.6,z,1.35,0.45,1.15);}           // big leaves leaning over the fence into the alley
+  for(let z=WELL+0.6;z<GZ-0.6;z+=1.6) clump(B,AW+1.2,U+1.25+rg()*0.2,z,0.85,1.05,0.95,150,{cell:'bush',size:0.55,shell:0.35,tint:rg()<0.4?0xc8d8b8:0xffffff});      // a wall of green along the fence
+  for(let z=WELL+1.2;z<GZ-1;z+=3.1) clump(B,AW+0.7,U+1.8,z,0.6,0.7,0.9,90,{cell:'bougain',size:0.4,shell:0.6});      // and bougainvillea climbing through it
+  for(let i=0;i<64;i++){const x=AW+0.35+rg()*(FW-AW-0.7), z=WELL+0.35+rg()*(GZ-WELL-0.7); if(inPath(x)) continue; shrub(x,z,0.35+rg()*0.45,i%4===3?0x2a5a3a:leaf[i%3],U);}      // and everything else is green
+  for(let i=0;i<26;i++){const x=AW+0.3+rg()*(FW-AW-0.6), z=WELL+0.3+rg()*(GZ-WELL-0.6); if(inPath(x)) continue; const t=det.tree('grass',{w:0.35,d:0.35,n:16,seed:i}); B.bake(t.crown,x,U+0.02,z,0);}      // weeds between
+  for(let i=0;i<9;i++){const z=BL+0.4+i*(GZ-BL-0.8)/8; clump(B,AW+0.35,U+0.85+rg()*0.4,z,0.5,0.35,0.5,40,{cell:'broad',size:0.5,droop:0.3,tint:0xd0e0c0});}           // big leaves leaning over the fence into the alley
   ficus(17.4,14.15+D8,0.95,2.0,U);
 
   /* ---------- parked in the alley, as in the photos ---------- */
-  function wheel(x,y,z,o,r){B.geo(new THREE.TorusGeometry(r-0.04,0.05,8,22),0x161718,x,y+r,z,o+R/2); B.cyl(r*0.5,0.06,0x8d9296,x,y+r,z,12,null,o+R/2,R/2);}
-  function moto(x,y,z,o,c,kind){                       // nose along +z. kind: dirt, scooter, sport or covered
-    const m=B.at(x,y,z,o), w=function(dz,r){wheel(x+Math.sin(o)*dz,y,z+Math.cos(o)*dz,o,r);}, dk=0x1d1f21, cr=0x9aa0a4;
-    if(kind==='covered'){w(-0.7,0.28); w(0.7,0.28); m.sph(0.5,0x2a2c2e,0,0.78,0,0.62,1.0,2.0); m.sph(0.3,0x2a2c2e,0,1.18,0.55,0.8,1.2,0.7); return;}
-    if(kind==='dirt'){w(-0.7,0.34); w(0.72,0.34);
-      m.box(0.22,0.28,0.38,0x3a3c3f,0,0.48,-0.02); m.box(0.05,0.05,0.95,dk,0,0.8,-0.02,0,-0.25); m.sph(0.16,c,0,0.98,0.18,0.9,0.7,1.5); m.box(0.2,0.08,0.75,dk,0,1.0,-0.35);
-      [-0.09,0.09].forEach(function(s){m.box(0.03,0.75,0.03,cr,s,0.72,0.6,0,-0.38);}); m.box(0.72,0.025,0.025,dk,0,1.16,0.48); m.box(0.18,0.03,0.4,0xd8d8d2,0,0.78,0.7,0,0.2);
-      m.box(0.2,0.03,0.5,0xd8d8d2,0,0.95,-0.78,0,-0.35); m.cyl(0.04,0.55,cr,0.14,0.68,-0.42,8,null,0,R/2); m.box(0.16,0.12,0.004,0xe8c21e,0,0.82,-1.04); return;}
-    if(kind==='scooter'){w(-0.72,0.27); w(0.75,0.27);
-      m.box(0.38,0.14,0.62,dk,0,0.36,0.08); m.sph(0.34,c,0,0.66,-0.42,0.85,0.85,1.65); m.box(0.32,0.09,0.78,dk,0,1.0,-0.36); m.sph(0.3,c,0,0.82,0.58,1.05,1.65,0.6);
-      m.box(0.4,0.34,0.02,0x55606a,0,1.32,0.66,0,-0.45); m.box(0.7,0.03,0.03,dk,0,1.12,0.52); m.box(0.08,0.06,0.28,dk,0.14,0.98,-0.86); return;}
-    w(-0.68,0.31); w(0.7,0.31);                          // sport
-    m.sph(0.3,c,0,0.78,0.36,0.85,1.0,1.55); m.sph(0.22,c,0,0.98,0.0,0.95,0.75,1.3); m.sph(0.17,c,0,0.98,-0.58,0.75,0.65,1.9); m.box(0.22,0.07,0.5,dk,0,1.08,-0.3);
-    m.box(0.24,0.26,0.4,0x2a2c2e,0,0.5,0.0); m.box(0.3,0.2,0.02,0x2a3440,0,1.2,0.66,0,-0.6); m.box(0.6,0.025,0.025,dk,0,1.05,0.5); m.cyl(0.05,0.5,cr,0.15,0.62,-0.5,8,null,0,R/2-0.2);
-  }
-  moto(1.35,U,SB+0.6,0,0x2b2d30,'dirt');                                                                   // a dirt bike at the stair's foot, its yellow plate
-  moto(3.0,U,15.0,0.06,0,'covered'); moto(2.98,U,17.0,-0.04,0x2a2c2e,'scooter');                        // a covered bike and a maxi scooter against the garden fence
-  moto(2.95,LA,BL+1.5,-0.08,0x2346b8,'sport');                                                            // a blue sports bike down by the bridge
-  [[0.75,LA,8.3],[1.05,LA,8.55]].forEach(function(q){B.sph(0.28,0x151617,q[0],q[1]+0.2,q[2],1.2,0.75,1);});      // black rubbish bags against number 12's wall
-  (function(){function bike(x,y,z,o,c){const b=B.at(x,y,z,o); [-0.5,0.5].forEach(function(dz){B.geo(new THREE.TorusGeometry(0.33,0.02,6,24),0x1b1c1e,x+Math.sin(o)*dz,y+0.36,z+Math.cos(o)*dz,o+R/2);});
-      b.box(0.03,0.03,0.95,c,0,0.62,0.0,0,0.15); b.box(0.03,0.5,0.03,c,0,0.55,-0.25,0,0.3); b.box(0.03,0.45,0.03,c,0,0.6,0.42,0,-0.25); b.box(0.5,0.03,0.03,0x2a2c2e,0,0.95,0.5); b.box(0.1,0.04,0.22,0x2a2c2e,0,0.88,-0.3);}
-    bike(3.22,U,AL+0.7,0.05,0x9fd3c0); bike(0.22,U,SB+1.2,0,0x2b2d30);})();                                       // a mint town bike on the fence by the steps, a black one on number 12's wall
+  function moto(x,y,z,o,c,kind,plate){B.bake(det.moto(kind,{color:c,plate:plate}),x,y,z,o);}       // nose along +z. kind: dirt, scooter, sport or covered
+  moto(1.35,U,SB+0.6,0,0x2b2d30,'dirt','63-418');                                                          // a dirt bike at the stair's foot, its yellow plate
+  moto(3.0,U,15.0,0.06,0,'covered'); moto(2.98,U,17.0,-0.04,0x2a2c2e,'scooter','82-574');                 // a covered bike and a maxi scooter against the garden fence
+  moto(2.95,LA,BL+1.5,-0.08,0x2346b8,'sport','71-905');                                                     // a blue sports bike down by the bridge
+  [[0.75,LA,8.3,0],[1.05,LA,8.55,1.2],[0.86,LA,8.0,2.1]].forEach(function(q){B.sph(0.28,0x151617,q[0],q[1]+0.2,q[2],1.2,0.75,1); B.sph(0.07,0x151617,q[0]+0.08,q[1]+0.42,q[2],1,1.6,1);      // black rubbish bags against number 12's wall, knotted
+    B.box(0.012,0.1,0.06,0x1d1e1f,q[0]+0.12,q[1]+0.48,q[2],q[3]);});
+  B.bake(det.bike('city',{color:0x9fd3c0,basket:true}),3.22,U,AL+0.7,0.05); B.bake(det.bike('mtb',{color:0x2b2d30,grip:0x3a3c3e}),0.42,U,SB+1.2,0);    // a mint town bike on the fence by the steps, a black one on number 12's wall
+  B.bake(det.cat(0xd98a3a),AW+0.06,U+0.22,7.4,-R/2+0.4); B.bake(det.cat(0x2b2d30,{lie:true}),1.2,LA,9.0,0.6);                                     // a ginger cat on the garden kerb, a black one asleep on the forecourt
 
   B.oz=C.oz=D8;      // from here to the cars, all of it stands D8 farther out than first drawn
   /* ---------- the café of number 12, from the photo walking out: marble-topped bistro tables on black cast-iron feet, folding
@@ -691,7 +650,8 @@ inRoom('street',function(){
     for(let i=0;i<9;i++){g.beginPath(); let x=r()*64, y=r()*64; g.moveTo(x,y); for(let k=0;k<5;k++){x+=(r()-0.3)*20; y+=(r()-0.5)*14; g.lineTo(x,y);} g.stroke();}
     g.fillStyle='#2f7d57'; g.beginPath(); g.arc(32,32,5,0,7); g.fill();},true),null,true);
   const castIron=0x1b1c1d, slat=0xa66a35;
-  function fchair(x,z,o){const c=B.at(x,U,z,o);                                  // folding chair, facing its local +z: black frame, wooden slats
+  const seats=[];                                                                // where people can sit: x, z and the way they face, in the street's frame
+  function fchair(x,z,o){const c=B.at(x,U,z,o); seats.push([x,z+B.oz,o]);          // folding chair, facing its local +z: black frame, wooden slats
     [-0.2,0.2].forEach(function(dx){c.box(0.025,0.95,0.025,castIron,dx,0.47,-0.16,0,-0.12); c.box(0.025,0.5,0.025,castIron,dx,0.24,0.18,0,0.32);});
     for(let i=0;i<5;i++) c.box(0.42,0.018,0.06,slat,0,0.46,-0.13+i*0.07);
     for(let i=0;i<3;i++) c.box(0.42,0.05,0.016,slat,0,0.68+i*0.09,-0.23-i*0.012,0,-0.12);}
@@ -699,7 +659,12 @@ inRoom('street',function(){
     B.cyl(0.33,0.025,marble,x,U+0.735,z,24); B.cyl(0.335,0.02,0xb9bcbe,x,U+0.715,z,24);
     B.cyl(0.03,0.68,castIron,x,U+0.37,z,8);
     for(let k=0;k<3;k++){const a=k*2.094+(a0||0); B.box(0.035,0.035,0.32,castIron,x+Math.sin(a)*0.15,U+0.1,z+Math.cos(a)*0.15,a,-0.35); B.sph(0.03,castIron,x+Math.sin(a)*0.3,U+0.03,z+Math.cos(a)*0.3);}
-    for(let i=0;i<n;i++){const a=(a0||0)+0.5+i*2*R/n; fchair(x+Math.sin(a)*0.6,z+Math.cos(a)*0.6,a+R);}
+    for(let i=0;i<n;i++){const a=(a0||0)+0.5+i*2*R/n; fchair(x+Math.sin(a)*0.6,z+Math.cos(a)*0.6,a+R);
+      if((i+Math.round(x*3))%3!==2){const cx=x+Math.sin(a)*0.2, cz=z+Math.cos(a)*0.2;                           // a cup on its saucer, a spoon, in front of most places
+        B.cyl(0.065,0.008,0xf6f4ee,cx,U+0.752,cz,16); B.cyl(0.04,0.06,0xf6f4ee,cx,U+0.786,cz,14,0.045); B.cyl(0.038,0.004,(i%2?0x5a3a22:0xc8a27a),cx,U+0.815,cz,12);
+        B.geo(new THREE.TorusGeometry(0.018,0.005,5,10),0xf6f4ee,cx+Math.cos(a)*0.05,U+0.79,cz-Math.sin(a)*0.05,a+R/2); B.box(0.006,0.003,0.08,0xc9cdd0,cx+0.05,U+0.758,cz,a);}}
+    if(n>2){B.cyl(0.03,0.1,0xe8f0f0,x,U+0.8,z,10,0.025); B.sph(0.035,[0xe84a5a,0xf2c84a,0xf6f4ee][Math.round(x+z)%3],x,U+0.88,z);}      // a little vase with a flower
+    else{B.box(0.08,0.1,0.06,0x2b2d30,x+0.05,U+0.8,z-0.05,0.4); B.box(0.07,0.085,0.004,0xf6f4ee,x+0.05,U+0.81,z-0.018,0.4);}               // or the menu in its holder
   }
   const heater=A.reg(new THREE.MeshLambertMaterial({color:0xff9440,emissive:0xd8601a}),'street');
   function parasol(x,z,s){                                                         // a big square parasol on ribs, a valance round it
@@ -712,6 +677,11 @@ inRoom('street',function(){
   }
   const CAFE=[[1.15,11.5,2,0.4],[1.15,13.0,2,0.2],[1.2,14.5,2,0.9],[1.2,16.0,2,0.3],[4.4,13.6,3,0.6],[5.9,14.2,2,1.0],[4.6,15.4,2,0.1],[6.2,15.8,2,0.5]], UMB=[[1.6,12.2,3.0],[1.6,15.0,3.0],[5.2,14.6,3.2]];      // tables down the café's side, the lane to our alley kept clear
   UMB.forEach(function(q){parasol(q[0],q[1],q[2]);}); CAFE.forEach(function(q){bistro(q[0],q[1],q[2],q[3]);});
+  (function(){const x=3.55, z=10.5, cb=A.MT(tex(128,192,function(g){g.fillStyle='#22282a'; g.fillRect(0,0,128,192); g.strokeStyle='#8a6a48'; g.lineWidth=8; g.strokeRect(0,0,128,192);      // the chalk board out on the square
+      g.fillStyle='#f4f0e2'; g.textAlign='center'; g.font='bold 20px sans-serif'; g.fillText('היום',64,30); g.font='15px sans-serif'; g.textAlign='right';
+      [['הפוך','14'],['אספרסו','9'],['קרואסון','15'],['שקשוקה','52'],['סלט','48'],['לימונענע','16']].forEach(function(q,i){g.fillStyle=i%2?'#f2d36a':'#f4f0e2'; g.fillText(q[0],112,58+i*22); g.textAlign='left'; g.fillText(q[1],16,58+i*22); g.textAlign='right';});
+      g.strokeStyle='#e8a0b0'; g.lineWidth=2; g.beginPath(); g.arc(64,180,6,0,7); g.stroke();}),null,true);
+    [-1,1].forEach(function(s){const fr=B.at(x,U,z+s*0.12,0); fr.box(0.5,0.8,0.03,0x8a6a48,0,0.46,0,0,-s*0.15); fr.geo(new THREE.PlaneGeometry(0.44,0.72),cb,0,0.47,s*0.02,s>0?0:R,-s*0.15);});})();
   B.box(0.12,0.1,0.12,0x8a6a48,1.15,U+0.8,11.5); [0.03,-0.02].forEach(function(o,i){B.box(0.012,0.1,0.03,i?0xf2d33a:0xf6f4ee,1.15+o,U+0.86,11.5);});      // a napkin box with sugar sachets
   (function(){const c=B.at(0.45,U,10.85,R/2), w=0xe9ebeb;                          // the evaporative cooler on its castors, by the café's front, blowing at the tables
     c.box(0.78,0.36,0.52,w,0,0.26,0); c.box(0.74,0.85,0.48,w,0,0.86,0); c.box(0.78,0.1,0.52,0xdfe2e3,0,1.33,0);
@@ -719,7 +689,8 @@ inRoom('street',function(){
     c.box(0.02,0.6,0.36,0xbfc4c6,0.375,0.9,0); c.box(0.16,0.02,0.1,0x2c3a55,-0.2,1.385,0.1);
     [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){c.cyl(0.04,0.05,iron,q[0]*0.33,0.04,q[1]*0.2,6,null,0,R/2);});
   })();
-  for(let i=0;i<5;i++){const z=11.6+i*0.95; B.cyl(0.15,0.38,0x6f6a62,0.18,U+0.19,z,12,0.18); [[0,0.85],[0.06,0.6],[-0.04,0.7]].forEach(function(q,k){B.sph(0.2,leaf[(i+k)%3],0.18+q[0],U+q[1],z+(k-1)*0.1,0.7,1.6,0.7);});}   // tall plants in pots along the glass front
+  for(let i=0;i<5;i++){const z=11.6+i*0.95; B.cyl(0.15,0.38,0x6f6a62,0.18,U+0.19,z,12,0.18); B.cyl(0.14,0.02,0x4d4334,0.18,U+0.38,z,12);
+    const t=det.tree(i%2?'shrub':'yucca',i%2?{w:0.4,h:0.9,d:0.4,seed:i,n:70,size:0.34}:{h:0.6,s:0.8,trunks:2,seed:i}); B.bake(t.wood,0.18,U+0.38,z,i); B.bake(t.crown,0.18,U+0.38,z,i);}   // tall plants in pots along the glass front
   (function(){const x=4.05, z=10.75;                                              // the spare furniture, stacked on the right
     for(let i=0;i<6;i++){const c=B.at(x,U+i*0.07,z,0.15); c.box(0.44,0.03,0.42,0xf2f2ef,0,0.45,0); c.box(0.44,0.42,0.03,0xf2f2ef,0,0.68,-0.2,0,-0.15); [[-1],[1]].forEach(function(q){c.box(0.025,0.45,0.025,0xe6e6e2,q[0]*0.2,0.22,0.18,0,0.12);});}
     [[0.55,0.25],[0.7,-0.25]].forEach(function(q){const c=B.at(x+q[0],U,z+q[1],-0.3); c.box(0.36,0.08,0.34,0xf4f4f1,0,0.6,0); c.box(0.36,0.3,0.04,0xf4f4f1,0,0.78,-0.15);
@@ -727,9 +698,10 @@ inRoom('street',function(){
     const t=B.at(x+0.6,U,z+0.75,0.1); t.box(0.7,0.04,0.7,0xb07a3e,0,0.76,0); t.cyl(0.035,0.72,castIron,0,0.38,0,8); t.box(0.5,0.04,0.04,castIron,0,0.04,0); t.box(0.04,0.04,0.5,castIron,0,0.04,0);
     B.box(0.55,0.75,0.45,0xeef0ef,x-0.25,U+0.375,z+0.75); B.box(0.5,0.05,0.42,0x2c2f31,x-0.25,U+0.78,z+0.75);       // a white cool box under a black cover
   })();
-  [0.95,2.35].forEach(function(x){B.box(1.25,0.45,0.45,0xf1efe8,x,U+0.225,17.55); B.sph(0.42,leaf[0],x-0.3,U+0.72,17.55,1,0.8,0.6); B.sph(0.42,leaf[1],x+0.3,U+0.74,17.55,1,0.8,0.6);});      // hedge in white boxes along the pavement
-  B.cyl(0.22,0.6,0xe6dfcd,0.6,U+0.3,16.75,12,0.34); B.sph(0.4,0x6d4a5c,0.6,U+0.85,16.75,1,0.8,1); B.sph(0.25,0x7a9a4a,0.75,U+1.0,16.65);      // big pot of coleus by the corner
-  B.box(1.0,0.5,0.5,0xa39c92,10.25,U+0.25,14.9); shrub(10,14.9,0.26,leaf[1],U+0.45); B.sph(0.1,0xe8a04a,10.45,U+0.66,14.85); B.sph(0.1,0xf3f0e8,10.25,U+0.7,15);      // brick planter with flowers
+  [0.95,2.35].forEach(function(x,i){B.box(1.25,0.45,0.45,0xf1efe8,x,U+0.225,17.55); B.box(1.17,0.02,0.37,0x4d4334,x,U+0.455,17.55);
+    const t=det.tree('hedge',{w:1.2,h:0.62,d:0.42,seed:40+i,n:150,size:0.3}); B.bake(t.crown,x,U+0.42,17.55,0);});      // hedge in white boxes along the pavement
+  B.cyl(0.22,0.6,0xe6dfcd,0.6,U+0.3,16.75,12,0.34); (function(){const t=det.tree('shrub',{w:0.8,h:0.6,d:0.8,seed:51,n:110,size:0.3,tint:0xc89aa8}); B.bake(t.crown,0.6,U+0.58,16.75,0);})();      // big pot of coleus by the corner
+  B.box(1.0,0.5,0.5,0xa39c92,10.25,U+0.25,14.9); shrub(10,14.9,0.26,leaf[1],U+0.45); clump(B,10.4,U+0.68,14.9,0.3,0.15,0.2,30,{cell:'bougain',size:0.22});      // brick planter with flowers
   [[10.95,15.95],[11.45,15.05]].forEach(function(q){B.cyl(0.16,0.4,0xd9cdb4,q[0],U+0.2,q[1],10,0.22); palm(q[0],q[1],0.2,0.55,U+0.4,9);});
 
   /* ---------- street furniture ---------- */
@@ -739,23 +711,19 @@ inRoom('street',function(){
     if(round) B.cyl(w/2,0.016,0x9aa0a2,x,y,z,24,null,o,R/2); else if(!parent) B.box(w,h,0.016,0x9aa0a2,x,y,z,o);
   }
   const plate=function(n){return tex(64,64,function(g){g.fillStyle='#1f7a4a'; g.fillRect(0,0,64,64); g.strokeStyle='#fff'; g.lineWidth=3; g.strokeRect(4,4,56,56); g.fillStyle='#fff'; g.font='bold 34px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(n,32,34);});};
-  const tCross=tex(128,128,function(g){
-    g.fillStyle='#1f5fb4'; g.fillRect(0,0,128,128); g.fillStyle='#fff'; g.beginPath(); g.moveTo(64,14); g.lineTo(116,108); g.lineTo(12,108); g.fill();
-    g.fillStyle='#111'; g.beginPath(); g.arc(66,46,7,0,7); g.fill(); g.strokeStyle='#111'; g.lineWidth=7; g.lineCap='round';
-    g.beginPath(); g.moveTo(64,56); g.lineTo(60,78); g.lineTo(48,98); g.moveTo(60,78); g.lineTo(74,96); g.moveTo(63,60); g.lineTo(50,72); g.moveTo(63,60); g.lineTo(78,70); g.stroke();
-    g.lineWidth=3; for(let i=0;i<4;i++){g.beginPath(); g.moveTo(32+i*18,104); g.lineTo(42+i*18,104); g.stroke();}});
-  const tMoto=tex(128,128,function(g){
-    g.fillStyle='#fff'; g.beginPath(); g.arc(64,64,63,0,7); g.fill(); g.strokeStyle='#d1322c'; g.lineWidth=13; g.beginPath(); g.arc(64,64,55,0,7); g.stroke();
-    g.strokeStyle='#111'; g.fillStyle='#111'; g.lineWidth=5; g.beginPath(); g.arc(42,80,11,0,7); g.stroke(); g.beginPath(); g.arc(88,80,11,0,7); g.stroke();
-    g.lineWidth=6; g.lineCap='round'; g.beginPath(); g.moveTo(42,80); g.lineTo(58,62); g.lineTo(78,62); g.lineTo(88,80); g.moveTo(58,62); g.lineTo(64,80); g.moveTo(78,62); g.lineTo(84,50); g.lineTo(92,50); g.stroke();
-    g.beginPath(); g.arc(66,46,6,0,7); g.fill();});
-  const tPark=tex(64,64,function(g){g.fillStyle='#1f5fb4'; g.fillRect(0,0,64,64); g.strokeStyle='#fff'; g.lineWidth=4; g.strokeRect(8,8,48,48); g.fillStyle='#fff'; g.font='bold 40px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('P',32,35);});
-  const tNote=tex(64,96,function(g){g.fillStyle='#e9b92c'; g.fillRect(0,0,64,96); g.fillStyle='#3a3320'; for(let y=12;y<88;y+=11) g.fillRect(8,y,48-(y%3)*7,4);});
   const stripe=tex(8,32,function(g){g.fillStyle='#f1f1ec'; g.fillRect(0,0,8,32); g.fillStyle='#2f55a8'; g.fillRect(0,0,8,16);},true); stripe.repeat.set(1,7);
-  B.cyl(0.035,3.0,0x9aa0a2,4.6,U+1.5,18,8); sign(tCross,0.6,0.6,4.6,U+2.6,18.04,0.25);                         // zebra crossing sign
-  B.cyl(0.04,2.9,A.MT(stripe,null,true),2.2,U+1.45,18.05,10);                                                 // the blue and white pole with the parking rules
-  sign(tPark,0.45,0.45,2.2,U+2.62,18.1,0); sign(tNote,0.45,0.62,2.2,U+2.02,18.1,0);
-  B.cyl(0.03,2.9,0x9aa0a2,10.4,U+1.45,13.75,8); sign(tMoto,0.6,0.6,10.4,U+2.6,13.79,0,true);                   // no motorcycles on the square
+  const tZone=tex(128,160,function(g){g.fillStyle='#f6f6f0'; g.fillRect(0,0,128,160); g.strokeStyle='#1f5fb4'; g.lineWidth=5; g.strokeRect(3,3,122,154); g.fillStyle='#1f5fb4'; g.textAlign='center';      // the parking rules, in full
+    g.font='bold 17px sans-serif'; g.fillText('חניה',64,30); g.font='bold 14px sans-serif'; g.fillText('לבעלי תו אזורי',64,50); g.font='bold 34px sans-serif'; g.fillText('5',64,88);
+    g.font='12px sans-serif'; g.fillText("א'-ה' 07:00-21:00",64,114); g.fillText("ו' 07:00-13:00",64,132); g.fillText('גרירה',64,150);});
+  const hro=det.streetSign('הראה',"HARO'E"), msh=det.streetSign('משה שרת','MOSHE SHARET');
+  B.bake(det.sign([['cross',0.6]]),4.6,U,18,0.25);                                                              // zebra crossing sign
+  B.bake(det.sign([['park',0.45],{t:tZone,w:0.45,h:0.56}],{stripes:A.MT(stripe,null,true)}),2.2,U,18.05,0);     // the blue and white pole with the parking rules
+  B.bake(det.sign([['nomoto',0.6]]),10.4,U,13.75,0);                                                            // no motorcycles on the square
+  B.bake(det.sign([{t:hro,w:0.75,h:0.28},['nostop',0.5]],{h:2.9}),8.95,U,18.25,0);                              // the street's name, where the crossing begins; no stopping by the red and white kerb
+  B.bake(det.sign([['bump',0.7]]),22.2,U,18.2,R/2);                                                             // a speed bump ahead
+  B.bake(det.hydrant(),12.9,U,18.0,0.3);
+  [[6.2,15.5,'בזק'],[1.8,14.2,'ביוב'],[14.2,17.2,'מקורות']].forEach(function(q){B.bake(det.manhole(q[2],q[2]==='בזק'?0.3:0.34),q[0],U,q[1],0.4);});
+  B.bake(det.bin({color:0x2f6b3f}),-1.6,U,17.75,R); B.bake(det.bin({color:0xe8b81e,open:0.12}),-2.35,U,17.75,R); B.bake(det.bin({big:true,color:0x6d7174,lid:0x2f6b3f}),-3.6,U,17.6,R);      // the bins out by number 12, recycling and the big one
   [5.3,8.9,10.3].forEach(function(x){B.cyl(0.12,0.7,0xa9aaa6,x,U+0.35,18.15,10); B.sph(0.12,0xa9aaa6,x,U+0.7,18.15);});      // concrete bollards
   function bench(x,y,z,o){const b=B.at(x,y,z,o), wood=0x8a5a3c;                                                // park bench, facing its local +z
     for(let i=0;i<3;i++){b.box(1.7,0.035,0.11,wood,0,0.44,-0.13+i*0.13); b.box(1.7,0.11,0.03,wood,0,0.58+i*0.13,-0.24-i*0.03);}
@@ -790,25 +758,23 @@ inRoom('street',function(){
 
   B.oz=C.oz=0;
   /* ---------- parked cars ---------- */
-  function car(x,z,o,col){const c=B.at(x,RY,z,o);                                      // nose along its local +x
-    c.box(4.1,0.55,1.7,col,0,0.52,0); c.box(2.2,0.48,1.5,0x2c3338,-0.15,1.02,0); c.box(2.3,0.05,1.52,col,-0.15,1.28,0);
-    [[-1.3,-1],[1.3,-1],[-1.3,1],[1.3,1]].forEach(function(q){c.cyl(0.31,0.2,0x1d1f20,q[0],0.31,q[1]*0.78,12,null,0,R/2);});
-    c.box(0.04,0.14,1.3,0xe6e6de,2.05,0.6,0); c.box(0.04,0.14,1.3,0xb43a34,-2.05,0.62,0);}
-  car(-4.1,KZ+1.05,0,0xe9e9e6); car(14.9,KZ+1.05,R,0xb9bcbe); car(20,KZ+1.05,R,0xb5372f); car(13.5,KZ+RW-1.05,0,0x3a4a5a);
+  const pr=A.rng(808), plateNo=function(){const d=function(n){let t=''; for(let i=0;i<n;i++) t+=Math.floor(pr()*10); return t;}; return pr()<0.5?d(2)+'-'+d(3)+'-'+d(2):d(3)+'-'+d(2)+'-'+d(3);};
+  function car(x,z,o,col,kind){B.bake(det.car(kind||'hatch',{color:col,plate:plateNo()}),x,RY,z,o);}                   // nose along its local +x
+  car(-4.1,KZ+1.05,0,0xe9e9e6,'hatch'); car(14.9,KZ+1.05,R,0xb9bcbe,'sedan'); car(20,KZ+1.05,R,0xb5372f,'mini'); car(13.5,KZ+RW-1.05,0,0x3a4a5a,'suv');
+  car(-9.2,KZ+1.05,0,0x2f4f7a,'sedan'); car(25.4,KZ+1.05,R,0xf2f2ee,'van'); car(19.4,KZ+RW-1.05,0,0x7a7f84,'hatch'); car(24.8,KZ+RW-1.05,0,0xd8c9a6,'mini'); car(-7.6,KZ+RW-1.05,0,0x1d1f21,'suv'); car(-13.4,KZ+1.05,0,0x8a1f2a,'hatch');
+  B.bake(det.cat(0xa9a49a,{lie:true}),-2.45,RY+0.9,KZ+1.05,R/2);                                                      // a grey cat asleep on the white car's warm bonnet
+  [-3,11.8,23].forEach(function(x){B.bake(det.drain(0.8),x,RY,KZ+0.22,0);}); B.bake(det.manhole('ביוב',0.32),9.5,RY,KZ+3.5,0); B.bake(det.manhole('חשמל',0.3),17,RY,KZ+2.6,1);
+  B.box(0.5,0.08,RW,0x2b2d2f,21.6,RY+0.04,KZ+RW/2); for(let k=0;k<6;k++) B.box(0.52,0.085,0.5,k%2?0x2b2d2f:0xe8c21e,21.6,RY+0.042,KZ+0.6+k*1.15);      // a rubber speed bump, yellow and black
+  B.bake(det.sign([['stop',0.75]]),4.4,U,KZ+RW+0.45,0); B.bake(det.sign([{t:hro,w:0.8,h:0.3}],{h:2.85}),-2.1,U,KZ+RW+0.45,R); B.bake(det.sign([{t:msh,w:0.8,h:0.3}],{h:2.5}),-2.1,U,KZ+RW+0.45,R/2);      // across the road: a stop sign where Moshe Sharet St comes out, the two names on the corner
 
   /* ---------- the buildings round the square ---------- */
-  const gf=tex(128,128,function(g){g.fillStyle='#d8d0bd'; g.fillRect(0,0,128,128); g.fillStyle='#3d4a50'; g.fillRect(10,30,60,74); g.fillStyle='#5a4634'; g.fillRect(86,34,28,94); g.fillStyle='#c9c1ad'; g.fillRect(0,0,128,12);},true);
-  function house(x0,x1,z0,z1,faces,hide){              // a neighbouring block: a plain volume, windows on the sides that are seen, water heaters on the roof
+  function house(x0,x1,z0,z1,o,hide){                 // a neighbouring block, built whole: o.front ('+z' or '-z') faces the street, o.faces as det.block names them
     const g=G(st), b=batch(g), sx=x1-x0, sz=z1-z0;
-    b.box(sx-0.02,TOP-U,sz-0.02,0xddd5c3,(x0+x1)/2,(U+TOP)/2,(z0+z1)/2); B.box(sx,U+0.03-GY,sz,0xcfc8b6,(x0+x1)/2,(GY+U+0.03)/2,(z0+z1)/2);      // the footing stays when the block itself is hidden
-    faces.forEach(function(f){
-      const len=f[1]==='z'?sx:sz, x=f==='+x'?x1+0.02:f==='-x'?x0-0.02:(x0+x1)/2, z=f==='+z'?z1+0.02:f==='-z'?z0-0.02:(z0+z1)/2, ry=f==='+x'?R/2:f==='-x'?-R/2:f==='-z'?R:0;
-      const t=bt.clone(), t2=gf.clone(); t.needsUpdate=t2.needsUpdate=true; t.repeat.set(Math.round(len/3.4),3); t2.repeat.set(Math.round(len/4),1);
-      panel(len,TOP-U-3.2,A.MT(t),x,(TOP+U+3.2)/2,z,ry,g); panel(len,3.2,A.MT(t2),x,U+1.6,z,ry,g);});
-    for(let i=0;i<Math.floor(sx/6);i++){const x=x0+3+i*6; b.cyl(0.3,1.2,0xf6f6f2,x,TOP+0.9,(z0+z1)/2,12,null,0,R/2); b.box(1.0,0.06,1.6,0x2b3d55,x,TOP+0.5,(z0+z1)/2+1.4,0,0.5);}
+    B.box(sx,U+0.03-GY,sz,0xcfc8b6,(x0+x1)/2,(GY+U+0.03)/2,(z0+z1)/2);      // the footing stays when the block itself is hidden
+    b.bake(det.block(Object.assign({sx:sx,sz:sz,floors:4,ground:3.2,fh:3.0},o)),o.front==='-z'?x1:x0,U,o.front==='-z'?z0:z1,o.front==='-z'?R:0);
     far.push({g:g,hide:hide}); return {g:g,b:b};
   }
-  const n12=house(-12,0,0,16.05+D8,['+x','+z'],function(c){return c.x<1.5||c.z<0.4;});      // number 12 and the wing behind it close the left side of the square; seen only from the street side
+  const n12=house(-12,0,0,16.05+D8,{seed:12,wall:0xe2dac8,faces:{front:{ground:'shops',shops:['flowers','cafe','cafe','cafe'],awnings:false,cables:true},right:{minFloor:2,pipes:2}}},function(c){return c.x<1.5||c.z<0.4;});      // number 12 and the wing behind it close the left side of the square; seen only from the street side
   (function(){const b=n12.b, g=n12.g;
     const aw=tex(16,8,function(c){c.fillStyle='#f4f2ea'; c.fillRect(0,0,16,8); c.fillStyle='#2c5a43'; c.fillRect(0,0,8,8);},true); aw.repeat.set(14,1);
     b.geo(new THREE.BoxGeometry(6.8,0.03,2.0),A.MT(aw,null,true),-4.1,U+2.85,17+D8,0,0.35); b.box(6.8,0.2,0.02,0xf4f2ea,-4.1,U+2.42,17.95+D8);      // striped awning over the café front
@@ -820,13 +786,14 @@ inRoom('street',function(){
     [[-0.3,16.6+D8],[-1.9,16.05+D8]].forEach(function(q){                                        // two flags on poles off the front
       b.cyl(0.015,1.9,0xd9d9d2,q[0],U+3.3+0.59,q[1]+0.74,6,null,0,0.9);
       const m=panel(1.0,0.72,fm,q[0],U+3.72,q[1]+1.0,R/2,g); m.rotation.set(-0.55,R/2,0);});
-    [[16.05,4.3],[20.15,4.3],[17.95,7.6],[21.85,10.8],[0.95,3.3],[6.3,5.4],[10.4,7.9]].forEach(function(q){b.box(0.3,0.58,0.82,0xe6e8e6,0.16,U+q[1],q[0]); b.cyl(0.2,0.02,0x3b3f42,0.32,U+q[1],q[0]-0.1,16,null,R/2,R/2);});      // air conditioners on the flank, one high up by our doorway
+    [[16.05,4.3],[20.15,4.3],[0.95,3.3]].forEach(function(q,i){b.bake(det.ac({brand:['electra','tadiran','plain'][i],bracket:true,up:0.5,drain:1.2}),0.02,U+q[1]-0.28,q[0],R/2);});      // air conditioners on the flank, one high up by our doorway
     const gl=tex(128,64,function(c){c.fillStyle='#2f3a3c'; c.fillRect(0,0,128,64); c.fillStyle='rgba(200,215,210,0.25)'; c.fillRect(0,0,128,30); c.strokeStyle='#c9b98f'; c.lineWidth=3;
       for(let x=0;x<=128;x+=32){c.beginPath(); c.moveTo(x,0); c.lineTo(x,64); c.stroke();} c.strokeRect(1,1,126,62); c.fillStyle='#e8d9a8'; c.fillRect(70,20,16,10);});
     panel(5.2,2.7,A.MT(gl),0.03,U+1.35,13.1+D8,R/2,g); b.box(0.06,0.25,5.4,0xd8ccb2,0.03,U+2.82,13.1+D8);      // the café's glass front, in brass-coloured frames
   })();
-  house(-17.5,-1.7,29.05+D8,39.55+D8,['-z','+x'],function(c){return c.z>27.5+D8;}).b.done(); house(3.9,28.5,29.05+D8,39.55+D8,['-z','-x'],function(c){return c.z>27.5+D8;}).b.done();      // across the street
-  house(SQ+0.5,38,8.9+D8,16+D8,['-x','+z','-z'],function(c){return c.x>SQ&&c.x<38.5&&c.z>8.4+D8&&c.z<16.5+D8;}).b.done();     // and number 8 closes the right, its back across the yard from our windows
+  house(-17.5,-1.7,29.05+D8,39.55+D8,{front:'-z',seed:31,stone:true,wall:0xe6dcc6,faces:{front:{ground:'shops',shops:['kiosk','falafel','barber','grocery','laundry'],cables:true},left:{ground:'flats',stair:1}}},function(c){return c.z>27.5+D8;}).b.done();      // across the street
+  house(3.9,28.5,29.05+D8,39.55+D8,{front:'-z',seed:47,floors:5,fh:2.9,ground:3.1,wall:0xd8d0bd,faces:{front:{ground:'pilotis',stair:3,cables:true},right:{ground:'flats'}}},function(c){return c.z>27.5+D8;}).b.done();
+  house(SQ+0.5,38,8.9+D8,16+D8,{seed:8,number:'8',wall:0xe9e3d4,faces:{front:{ground:'pilotis',stair:2},left:{ground:'flats'},back:{ground:'flats',pipes:2}}},function(c){return c.x>SQ&&c.x<38.5&&c.z>8.4+D8&&c.z<16.5+D8;}).b.done();     // and number 8 closes the right, its back across the yard from our windows
   n12.b.done();
 
   /* ---------- our own street front ----------
@@ -880,6 +847,7 @@ inRoom('street',function(){
   });
   panel(1.5,TOP-0.8-3.0,swM,ZC-(L+EH)/2,(3.0+TOP-0.8)/2,0.05,0,fac);                       // glazing up the front where the stairs are
   B.done(); C.done(); F.done();
+  A.street={st:st,U:U,RY:RY,LA:LA,KZ:KZ,RW:RW,D8:D8,AW:AW,GZ:GZ,SQ:SQ,BL:BL,FZ:FZ,AL:AL,seats:seats,cafe:CAFE.map(function(q){return [q[0],q[1]+D8];})};
   A.streetView=[st.localToWorld(new THREE.Vector3(2.3,U+1.62,12.2+D8)),st.localToWorld(new THREE.Vector3(1.1,1.1,0.4))];      // standing at the café, looking down the alley to our bridge
   /* Sims mode can walk out here: where the ground is (in this frame, turned into the model's), what stands in the way,
      and how high the ground is: the bridges at the lobby's level, the forecourt and the patch a step below, the steps, the square, the road */
@@ -891,7 +859,8 @@ inRoom('street',function(){
   A.streetBlock=[[0,1.08,LT,SB],[0,0.5,5.7,7.8],[0.5,1.3,8.05,8.8],[1.05,1.65,SB-0.2,SB+1.4],[2.6,3.4,14.2,17.9],[2.55,3.4,BL+0.7,BL+2.3],[0,0.45,SB+0.7,SB+1.7],[3.0,3.4,AL+0.3,AL+1.1]].concat(tb,
     [[0.05,0.85,10.45,11.25],[0,0.36,11.3,15.9],[3.55,5.3,10.35,11.85],[P2[1]+0.1,P2[1]+0.4,10.45,10.75],[0.3,4.4,17.3,17.8],[0.3,0.9,16.45,17.05],[11.55,12.45,17.7,18.1],[9.7,10.8,14.6,15.2],[10.75,11.65,14.85,16.15],
     [10.3,10.5,13.65,13.85],[2.1,2.3,17.95,18.15],[4.5,4.7,17.9,18.1],[5.15,5.45,18.0,18.3],[8.75,9.05,18.0,18.3],[10.15,10.45,18.0,18.3],[10.8,11.4,17.35,17.95],
-    [11.7,12.2,14.55,16.35],[12.05,12.35,10.35,10.65],[12.4,19.0,11.45,17.95],[17.9,19.3,17.75,17.95]].map(function(b){return [b[0],b[1],b[2]+D8,b[3]+D8];})).map(wr);
+    [11.7,12.2,14.55,16.35],[12.05,12.35,10.35,10.65],[12.4,19.0,11.45,17.95],[17.9,19.3,17.75,17.95]].map(function(b){return [b[0],b[1],b[2]+D8,b[3]+D8];}),
+    [[-3.95,-1.25,25.25,26.1],[12.7,13.1,25.8,26.2],[8.8,9.1,26.1,26.4],[22.05,22.35,26.05,26.35],[3.25,3.85,18.1,18.9],[4.2,4.6,KZ+RW+0.3,KZ+RW+0.6],[-2.25,-1.95,KZ+RW+0.3,KZ+RW+0.6],[0.95,1.45,8.75,9.25]]).map(wr);      // and what the detail added: bins, the hydrant, sign poles, the chalk board, a sleeping cat
   A.streetPass=[[XF-0.4,XF+0.4,ZO-0.45,ZO+0.45],[XF-0.4,XF+0.4,Z2-0.45,Z2+0.45]];
   A.groundAt=function(x,z){
     if(x<XF-0.05) return 0; const q=x-XF, p=ZC-z;      // q: out from our front; p: along it from number 12's corner
@@ -908,7 +877,7 @@ inRoom('street',function(){
     const c=st.worldToLocal(lc.copy(A.camera.position)), low=c.y<5.2;      // where the camera is, in the street's own frame
     fac.visible=low&&c.z>0.4&&!(A.simsOn&&!A.eyeView());
     const solid=(low||c.z<0)&&!(A.thinTrees&&A.thinTrees());      // the tree crowns thin to a ghost when the camera is above the square, or in Building view, so they never hide it
-    if(solid!==crowns){crowns=solid; can.children.forEach(function(m){m.material.transparent=!solid; m.material.opacity=solid?1:0.22; m.material.depthWrite=solid;});}
+    if(solid!==crowns){crowns=solid; can.children.forEach(function(m){const mt=m.material; mt.transparent=!solid; mt.opacity=solid?1:0.22; mt.depthWrite=solid; if(mt===leafC){mt.alphaTest=solid?0.42:0.04; mt.needsUpdate=true;}});}
     far.forEach(function(b){b.g.visible=!b.hide(c);});
     const eve=A.goal('day')<0.5?0.6:0; if(A.goal('L:street')!==eve) A.set('L:street',eve);      // street lamps and the café's bulbs come on in the evening
   });
