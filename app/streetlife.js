@@ -38,6 +38,11 @@ function seatAt(i,act){const q=seats[i]; if(!q||taken[i]) return null; taken[i]=
   solo.forEach(function(i,k){seatAt(i,k%2?'eat':'drink');});
 })();
 
+/* behind the counter inside, the barista: steaming milk, wiping down, now and then a look out at the tables */
+const barista=(function(){const q=S.inside&&S.inside.barista; if(!q) return null;
+  const p=person({fem:true,style:'bun',top:0x2b2d30,pants:0x2b2f38}); p.g.position.set(q[0],U,q[1]); p.g.rotation.y=q[2]; p.act='cook';
+  const apron=new THREE.Group(); det.P.box(0.34,0.5,0.02,0x6b4a33,0,-0.05,0.16,apron); det.realize(apron,'street'); p.g.add(apron); apron.position.set(0,0.82,-0.03);
+  const f={p:p,kind:'work',next:4,h0:q[2]}; folk.push(f); return f;})();
 /* walking: up and down a line of points, pausing at each end; y follows the kerbs */
 function groundY(x,z){if(z>KZ-0.02&&z<KZ+RW+0.02) return RY; if(z>=KZ+RW&&x>-1.7&&x<3.9) return RY; return U;}      // the road, and the mouth of Moshe Sharet St, are a kerb lower
 function walker(path,o){
@@ -143,6 +148,7 @@ A.frameFns.push(function(dt,t){
         else if(!f.talkTo&&rnd()<0.5) p.act=pick(['drink','eat',null]);}
       p.moved=0; p.update(dt); return;}
     if(f.kind==='ride'){p.moved=0; p.update(dt); return;}
+    if(f.kind==='work'){if((f.next-=dt)<0){f.next=3+rnd()*6; p.act=pick(['cook','wash','cook',null]);} p.g.rotation.y=f.h0+(p.act?0:Math.sin(t*0.4)*0.5); p.g.visible=p.g.visible&&!!S.inside.n12.visible; p.moved=0; p.update(dt); return;}
     if(f.wait>0){f.wait-=dt; p.walking=false; p.moved=0; p.update(dt); return;}
     const n=f.path[f.i+f.dir]; if(!n){f.dir=-f.dir; f.wait=f.pause[0]+rnd()*(f.pause[1]-f.pause[0]); return;}
     const dx=n[0]-f.x, dz=n[1]-f.z, d=Math.hypot(dx,dz), step=f.speed*dt;

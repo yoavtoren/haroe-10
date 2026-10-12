@@ -623,9 +623,12 @@ det.block=function(o){
   const g=P.grp(), sx=o.sx, sz=o.sz, n=o.floors||4, fh=o.fh||2.9, g0=o.ground==null?3.0:o.ground, H=g0+(n-1)*fh, r=A.rng(o.seed||11), wall=o.wall||0xddd5c3, wM=det.plasterM('#'+wall.toString(16).padStart(6,'0'),o.stone?'stone':null);
   const faces=[['front',0,0,0,sx],['right',sx,0,R/2,sz],['back',sx,-sz,R,sx],['left',0,-sz,-R/2,sz]];
   faces.forEach(function(F){const f=o.faces&&o.faces[F[0]], len=F[4], fg=P.grp(F[1],0,F[2],g,F[3]);
-    const y0=f&&f.ground==='pilotis'?g0-0.3:0; mk(wallGeo(len,H+0.9-y0),wM,0,y0,0,fg);                                      // the wall, up to the parapet
+    const y0=f&&f.ground==='pilotis'?g0-0.3:0;                                                                              // the wall, up to the parapet, open where something is seen through it
+    if(f&&f.holes){let x=0; const top=H+0.9, piece=function(x0,x1,ya,yb){if(x1-x0<0.01||yb-ya<0.01) return; const pg=new THREE.PlaneGeometry(x1-x0,yb-ya); pg.translate((x0+x1)/2,(ya+yb)/2,0); const pp=pg.attributes.position, uv=pg.attributes.uv; for(let i=0;i<pp.count;i++) uv.setXY(i,pp.getX(i)/3,pp.getY(i)/3); mk(pg,wM,0,0,0,fg);};
+      f.holes.slice().sort(function(a,b){return a[0]-b[0];}).forEach(function(h){piece(x,h[0],y0,top); piece(h[0],h[1],h[2],top); x=h[1];}); piece(x,len,y0,top);}
+    else mk(wallGeo(len,H+0.9-y0),wM,0,y0,0,fg);
     P.box(len+0.04,0.12,0.14,0xcfc8b6,len/2,H+0.9,0.02,fg);                                                                 // coping
-    if(!(f&&f.ground==='pilotis')) P.box(len,0.45,0.04,0xb9b1a0,len/2,0.22,0.02,fg);                                         // plinth
+    if(!(f&&(f.ground==='pilotis'||f.holes))) P.box(len,0.45,0.04,0xb9b1a0,len/2,0.22,0.02,fg);                                         // plinth
     if(!f) return;
     const nb=f.bays||Math.max(1,Math.round(len/3.4)), bw=len/nb, rr=A.rng((o.seed||11)*7+F[0].length);
     /* ground floor */

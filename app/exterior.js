@@ -774,7 +774,7 @@ inRoom('street',function(){
     b.bake(det.block(Object.assign({sx:sx,sz:sz,floors:4,ground:3.2,fh:3.0},o)),o.front==='-z'?x1:x0,U,o.front==='-z'?z0:z1,o.front==='-z'?R:0);
     far.push({g:g,hide:hide}); return {g:g,b:b};
   }
-  const n12=house(-12,0,0,16.05+D8,{seed:12,wall:0xe2dac8,faces:{front:{ground:'shops',shops:['flowers','cafe','cafe','cafe'],awnings:false,cables:true},right:{minFloor:2,pipes:2}}},function(c){return c.x<1.5||c.z<0.4;});      // number 12 and the wing behind it close the left side of the square; seen only from the street side
+  const n12=house(-12,0,0,16.05+D8,{seed:12,wall:0xe2dac8,faces:{front:{ground:'shops',shops:['flowers','cafe','cafe','cafe'],awnings:false,cables:true},right:{minFloor:2,pipes:2,holes:[[0.35,5.55,2.75]]}}},function(c){return c.x<1.5||c.z<0.4;});      // number 12 and the wing behind it close the left side of the square; seen only from the street side
   (function(){const b=n12.b, g=n12.g;
     const aw=tex(16,8,function(c){c.fillStyle='#f4f2ea'; c.fillRect(0,0,16,8); c.fillStyle='#2c5a43'; c.fillRect(0,0,8,8);},true); aw.repeat.set(14,1);
     b.geo(new THREE.BoxGeometry(6.8,0.03,2.0),A.MT(aw,null,true),-4.1,U+2.85,17+D8,0,0.35); b.box(6.8,0.2,0.02,0xf4f2ea,-4.1,U+2.42,17.95+D8);      // striped awning over the café front
@@ -787,9 +787,42 @@ inRoom('street',function(){
       b.cyl(0.015,1.9,0xd9d9d2,q[0],U+3.3+0.59,q[1]+0.74,6,null,0,0.9);
       const m=panel(1.0,0.72,fm,q[0],U+3.72,q[1]+1.0,R/2,g); m.rotation.set(-0.55,R/2,0);});
     [[16.05,4.3],[20.15,4.3],[0.95,3.3]].forEach(function(q,i){b.bake(det.ac({brand:['electra','tadiran','plain'][i],bracket:true,up:0.5,drain:1.2}),0.02,U+q[1]-0.28,q[0],R/2);});      // air conditioners on the flank, one high up by our doorway
-    const gl=tex(128,64,function(c){c.fillStyle='#2f3a3c'; c.fillRect(0,0,128,64); c.fillStyle='rgba(200,215,210,0.25)'; c.fillRect(0,0,128,30); c.strokeStyle='#c9b98f'; c.lineWidth=3;
-      for(let x=0;x<=128;x+=32){c.beginPath(); c.moveTo(x,0); c.lineTo(x,64); c.stroke();} c.strokeRect(1,1,126,62); c.fillStyle='#e8d9a8'; c.fillRect(70,20,16,10);});
-    panel(5.2,2.7,A.MT(gl),0.03,U+1.35,13.1+D8,R/2,g); b.box(0.06,0.25,5.4,0xd8ccb2,0.03,U+2.82,13.1+D8);      // the café's glass front, in brass-coloured frames
+    /* the café's glass front, in brass-coloured frames, and the café inside it: dark wood and marble, the machine, cakes under glass */
+    const cz=13.1+D8, cw=5.2, brass=0xc9b98f, wood=0x4a3424, glassC=A.reg(new THREE.MeshLambertMaterial({color:0xb8d0cc,transparent:true,opacity:0.16,depthWrite:false}),'street');
+    panel(cw,2.7,glassC,0.03,U+1.35,cz,R/2,g).renderOrder=3; b.box(0.06,0.25,5.4,0xd8ccb2,0.03,U+2.82,cz);
+    for(let k=0;k<=4;k++) b.box(0.07,2.7,0.07,brass,0.04,U+1.35,cz-cw/2+k*cw/4); [0.04,2.18,2.68].forEach(function(y){b.box(0.08,0.06,cw,brass,0.04,U+y,cz);});
+    b.box(0.2,0.04,0.6,0xb9b1a0,0.12,U+0.02,cz+cw/2-0.65);                                                                      // the doorstep
+    b.box(0.05,0.3,0.14,0xd9d9d2,0.08,U+1.05,cz+cw/2-0.4);                                                                       // the door's long handle
+    const IX=-4.2, plank=[0x8a6a48,0x7d5e3e,0x94724e];
+    for(let k=0;k<13;k++) b.box(-IX,0.02,cw/13,plank[k%3],IX/2,U+0.012,cz-cw/2+(k+0.5)*cw/13);                                  // a floor of oak boards
+    const inner=A.MT(tex(256,128,function(c){const r=A.rng(5); c.fillStyle='#e9e1cf'; c.fillRect(0,0,256,128); for(let i=0;i<600;i++){c.fillStyle='rgba(120,100,70,'+(r()*0.06)+')'; c.fillRect(r()*256,r()*128,2,2);}
+      c.fillStyle='#22282a'; c.fillRect(150,14,92,62); c.strokeStyle='#8a6a48'; c.lineWidth=4; c.strokeRect(150,14,92,62); c.fillStyle='#f4f0e2'; c.font='bold 11px sans-serif'; c.textAlign='right';
+      [['אספרסו','9'],['הפוך','14'],['אמריקנו','12'],['קר','17'],['תה','10']].forEach(function(q,i){c.fillText(q[0],236,28+i*11); c.textAlign='left'; c.fillText(q[1],156,28+i*11); c.textAlign='right';});
+      c.fillStyle='#3a5a40'; c.fillRect(0,100,256,28);}),null,true);                                                            // cream walls, a green dado, the price board
+    panel(cw,3.0,inner,IX,U+1.5,cz,R/2,g); panel(-IX,3.0,inner,IX/2,U+1.5,cz-cw/2,0,g); panel(-IX,3.0,inner,IX/2,U+1.5,cz+cw/2,R,g);
+    const ceil=panel(-IX,cw,A.MT(tex(8,8,function(c){c.fillStyle='#f2efe6'; c.fillRect(0,0,8,8);})),IX/2,U+3.0,cz,0,g); ceil.rotation.x=R/2;
+    for(let i=0;i<3;i++){const y=U+1.35+i*0.42; b.box(0.3,0.03,cw-0.8,wood,IX+0.15,y,cz);                                       // shelves of coffee and bottles along the back
+      for(let z=cz-cw/2+0.55;z<cz+cw/2-0.5;z+=0.16+((z*7)%3)*0.04){const k=Math.round(z*13+i)%5;
+        if(k<2) b.box(0.1,0.2,0.1,[0xb8956a,0x2b2d30][k],IX+0.12,y+0.115,z); else if(k<4) b.cyl(0.035,0.26,[0x3a6a3a,0x6a3a22][k-2],IX+0.12,y+0.145,z,8); else b.cyl(0.05,0.14,0xe9e6de,IX+0.12,y+0.085,z,10);}}
+    b.box(0.62,1.0,3.6,wood,-2.3,U+0.5,cz-0.5); b.geo(new THREE.BoxGeometry(0.7,0.04,3.68),marble,-2.3,U+1.02,cz-0.5);            // the counter, a marble top
+    for(let k=0;k<12;k++) b.box(0.012,0.9,0.05,0x3a281c,-1.985,U+0.5,cz-2.2+k*0.3);                                              // its front in vertical boards
+    (function(){const m=b.at(-2.35,U+1.04,cz-1.4,R/2);                                                                           // the espresso machine, two groups, cups warming on top
+      m.box(0.78,0.44,0.5,0xc9cdd0,0,0.22,0); m.box(0.8,0.04,0.52,0x8a8f92,0,0.46,0); m.box(0.7,0.03,0.2,0x6d7174,0,0.03,0.2);
+      [-0.18,0.18].forEach(function(x){m.cyl(0.045,0.06,0x9aa0a4,x,0.28,0.27,12); m.box(0.035,0.035,0.16,0x1d1f21,x,0.24,0.38); m.cyl(0.028,0.06,0xf6f4ee,x,0.07,0.2,10);});
+      m.box(0.008,0.18,0.008,0xd4d8db,0.34,0.24,0.27,0,0.3); for(let i=0;i<6;i++) m.cyl(0.03,0.05,0xf6f4ee,-0.28+i*0.11,0.5,-0.08,10);
+      m.cyl(0.08,0.36,0x2b2d30,-0.62,0.18,0,12); m.cyl(0.09,0.16,0x5a3a22,-0.62,0.44,0,12,0.06);})();                        // the grinder, full of beans
+    (function(){const z=cz+0.35;                                                                                                   // the cakes under glass
+      b.box(0.62,0.04,1.1,0xd8d8d2,-2.3,U+1.06,z); b.box(0.6,0.42,1.08,glassC,-2.3,U+1.29,z);
+      for(let i=0;i<6;i++){const zz=z-0.42+i*0.17; b.sph(0.045,0xc98a3a,-2.36,U+1.11,zz,1.6,0.6,0.9); b.cyl(0.06,0.06,i%2?0x6a3a22:0xf2e2c2,-2.2,U+1.11,zz,12); b.box(0.06,0.012,0.06,0xe84a5a,-2.2,U+1.15,zz);}})();
+    b.box(0.22,0.16,0.18,0x2b2d30,-2.3,U+1.12,cz+1.05); b.box(0.2,0.12,0.005,0x6a9ac8,-2.2,U+1.16,cz+1.05,R/2,-0.4);          // the till, a tablet on its stand
+    const bulbC=A.reg(new THREE.MeshLambertMaterial({color:0xffe2a8,emissive:0xd8a050}),'street');
+    for(let k=0;k<3;k++){const z=cz-1.6+k*1.1; b.cyl(0.004,0.75,0x1d1f21,-2.3,U+2.62,z,4); b.cyl(0.03,0.18,0x1d1f21,-2.3,U+2.18,z,14,0.12); b.sph(0.05,bulbC,-2.3,U+2.1,z);}   // lamps hanging low over the counter
+    A.pool('L:street',0xffc888,-2.3,U+1.07,cz-0.5,1.6,st,0.3);
+    b.box(0.7,2.0,0.7,0xe9ebeb,IX+0.45,U+1.0,cz+cw/2-0.5); b.box(0.02,1.8,0.6,glassC,IX+0.81,U+1.0,cz+cw/2-0.5);                 // the drinks fridge, bottles behind its glass door
+    for(let i=0;i<4;i++) for(let j=0;j<5;j++) b.cyl(0.03,0.22,[0xd84a4a,0x3a8a4a,0xe8b81e,0x9fc4d6,0xf2f2ee][j],IX+0.6,U+0.35+i*0.42,cz+cw/2-0.75+j*0.12,8);
+    [[-1.0,cz+1.6],[-1.1,cz-2.0]].forEach(function(q){b.cyl(0.3,0.03,marble,q[0],U+0.74,q[1],18); b.cyl(0.03,0.72,0x1b1c1d,q[0],U+0.37,q[1],8);           // two small tables inside, by the glass
+      [[0.45,0],[-0.45,0]].forEach(function(d){const c=b.at(q[0]+d[0],U,q[1],d[0]>0?-R/2:R/2); c.box(0.4,0.03,0.4,0xa66a35,0,0.46,0); c.box(0.4,0.4,0.03,0xa66a35,0,0.68,-0.2); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(e){c.box(0.025,0.46,0.025,0x1b1c1d,e[0]*0.18,0.23,e[1]*0.18);});});});
+    A.street_cafe={barista:[-2.95,cz-1.1,R/2],n12:g};
   })();
   house(-17.5,-1.7,29.05+D8,39.55+D8,{front:'-z',seed:31,stone:true,wall:0xe6dcc6,faces:{front:{ground:'shops',shops:['kiosk','falafel','barber','grocery','laundry'],cables:true},left:{ground:'flats',stair:1}}},function(c){return c.z>27.5+D8;}).b.done();      // across the street
   house(3.9,28.5,29.05+D8,39.55+D8,{front:'-z',seed:47,floors:5,fh:2.9,ground:3.1,wall:0xd8d0bd,faces:{front:{ground:'pilotis',stair:3,cables:true},right:{ground:'flats'}}},function(c){return c.z>27.5+D8;}).b.done();
@@ -847,7 +880,7 @@ inRoom('street',function(){
   });
   panel(1.5,TOP-0.8-3.0,swM,ZC-(L+EH)/2,(3.0+TOP-0.8)/2,0.05,0,fac);                       // glazing up the front where the stairs are
   B.done(); C.done(); F.done();
-  A.street={st:st,U:U,RY:RY,LA:LA,KZ:KZ,RW:RW,D8:D8,AW:AW,GZ:GZ,SQ:SQ,BL:BL,FZ:FZ,AL:AL,seats:seats,cafe:CAFE.map(function(q){return [q[0],q[1]+D8];})};
+  A.street={st:st,U:U,RY:RY,LA:LA,KZ:KZ,RW:RW,D8:D8,AW:AW,GZ:GZ,SQ:SQ,BL:BL,FZ:FZ,AL:AL,seats:seats,cafe:CAFE.map(function(q){return [q[0],q[1]+D8];}),inside:A.street_cafe};
   A.streetView=[st.localToWorld(new THREE.Vector3(2.3,U+1.62,12.2+D8)),st.localToWorld(new THREE.Vector3(1.1,1.1,0.4))];      // standing at the café, looking down the alley to our bridge
   /* Sims mode can walk out here: where the ground is (in this frame, turned into the model's), what stands in the way,
      and how high the ground is: the bridges at the lobby's level, the forecourt and the patch a step below, the steps, the square, the road */
