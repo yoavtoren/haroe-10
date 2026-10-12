@@ -275,7 +275,7 @@ inRoom('out',function(){
     const m=new THREE.Mesh(g,A.MT(dirt,'out',true)); m.rotation.x=-R/2; m.position.set((XF+NX)/2,GY+0.012,(z0+z1)/2); m.receiveShadow=true; o.add(m);})();
   ground(NX-0.8,NX,NZ0,NZ1+1.6,GY+0.03,0xa7a39a); ground(XF,XF+0.7,-6,L,GY+0.03,0xa9a59c);      // concrete paths along both walls
   ground(7.1,8.9,-0.3,0.5,GY+0.025,0x9c988f);                                                     // and one across
-  cyl(0.32,0.03,0x8e8a82,7.9,GY+0.04,1.4,o,24); A.torus(0.3,0.015,0x77736b,7.9,GY+0.055,1.4,o).rotation.x=R/2;     // a manhole cover
+  cyl(0.32,0.03,0x8e8a82,8.9,GY+0.04,1.95,o,24); A.torus(0.3,0.015,0x77736b,8.9,GY+0.055,1.95,o).rotation.x=R/2;     // a manhole cover, in front of the gas bottles
   // the building under and beside us: the floor below opens onto the yard. The stairwell's shaft is left open in it.
   const facade=0xe9e3d3, X7=-7, ZC=LB.ZC, EH=LB.EH, XE=LB.XE, hh=-GY-0.01, yc=GY/2-0.005;
   [[X7,XF,AZ-0.4,L],[X7,XB,L,EH],[XE,XF,L,EH],[X7,XF,EH,ZC]].forEach(function(q){box(q[1]-q[0],hh,q[3]-q[2],facade,(q[0]+q[1])/2,yc,(q[2]+q[3])/2,o);});
@@ -288,7 +288,7 @@ inRoom('out',function(){
   strip(D.BXB-X7,(X7+D.BXB)/2,GY+1.4,AZ-0.405,R,2.4);
 
   /* ---------- the neighbour's back, across the yard ---------- */
-  const nb=G(o), blocks=[{g:nb,axis:'x',face:NX}];
+  const nb=G(o), blocks=[{g:nb,axis:'x',face:NX}], WZ0=2.75;      // WZ0: where the neighbours' wing juts out toward us
   const stain=canvasTex(512,512,function(g){const r=A.rng(70); g.fillStyle='#d9c3a3'; g.fillRect(0,0,512,512);
     for(let i=0;i<60;i++){const x=r()*512, y=r()*512, w=20+r()*90, h=30+r()*160, gr=g.createLinearGradient(x,y,x,y+h); const c=r()<0.5?'150,120,85':'235,220,195';
       gr.addColorStop(0,'rgba('+c+',0)'); gr.addColorStop(0.5,'rgba('+c+','+(0.15+r()*0.25)+')'); gr.addColorStop(1,'rgba('+c+',0)'); g.fillStyle=gr; g.fillRect(x,y,w,h);}
@@ -300,7 +300,7 @@ inRoom('out',function(){
   face.position.set(NX-0.005,(GY+TOPN)/2,(NZ0+NZ1)/2); face.rotation.y=-R/2; nb.add(face);
   const shut=canvasTex(64,128,function(g){g.fillStyle='#f3f1ec'; g.fillRect(0,0,64,128); g.fillStyle='#cdcac2'; for(let y=0;y<128;y+=5) g.fillRect(0,y,64,1.4); g.fillStyle='#e2ded5'; g.fillRect(0,0,64,8);});
   shut.wrapT=THREE.RepeatWrapping;
-  const W0=[-7.6,-4.6,-1.4,1.3,3.5], NB=batch(nb);
+  const W0=[-7.6,-4.6,-1.4,1.3], NB=batch(nb);
   function nwin(z,y0,w,h,open,bars){                     // a window: a white frame, a roller shutter part way down over dark glass, bars in front
     NB.box(0.06,h+0.1,w+0.1,0xeae6dc,NX-0.03,y0+h/2,z); NB.box(0.04,h,w,0x2a3236,NX-0.05,y0+h/2,z);
     const t=shut.clone(); t.needsUpdate=true; t.repeat.set(1,(h*(1-open))/0.6);
@@ -312,17 +312,14 @@ inRoom('out',function(){
   [0.55,3.6,6.7,9.8].forEach(function(y,f){W0.forEach(function(z,i){nwin(z,y,i%2?1.1:1.5,1.55,[0.15,0.6,0.35,0.05,0.8][(i+f*2)%5],f===0||i===3);});});
   nwin(-1.2,GY+0.9,1.0,0.75,0.0,false);                                                        // the low window of the floor below, its brown shutter down
   (function(){const t=shut.clone(); t.needsUpdate=true; const m=new THREE.Mesh(new THREE.PlaneGeometry(0.96,0.72),new THREE.MeshLambertMaterial({color:0x8a6a48})); A.reg(m.material,'out'); m.position.set(NX-0.08,GY+1.27,-1.2); m.rotation.y=-R/2; nb.add(m);})();
-  (function(){const z=3.55, y=GY+0.75, lat=canvasTex(64,96,function(g){g.fillStyle='#2c3336'; g.fillRect(0,0,64,96); g.strokeStyle='#f1f0ec'; g.lineWidth=3;     // an ornamental lattice over the window below the neighbours' ground floor
-      for(let j=0;j<6;j++) for(let i=0;i<4;i++){g.beginPath(); g.moveTo(8+i*16,8+j*16); g.lineTo(16+i*16,16+j*16); g.lineTo(8+i*16,24+j*16); g.lineTo(i*16,16+j*16); g.closePath(); g.stroke();}});
-    const m=new THREE.Mesh(new THREE.PlaneGeometry(0.9,1.4),A.MT(lat,'out')); m.position.set(NX-0.07,y+0.7,z); m.rotation.y=-R/2; nb.add(m); NB.box(0.08,1.5,1.0,0xeae6dc,NX-0.04,y+0.7,z);})();
   function ac(z,y,brand){const c=0xf1f1ee, u=B2.at(NX-0.25,y,z,-R/2);              // an air conditioner on a rusty bracket, its fan behind a grille
     u.box(0.82,0.58,0.3,c,0,0,0); u.cyl(0.21,0.02,0x3e4245,0.1,0,0.15,18,null,0,R/2); u.box(0.18,0.08,0.005,brand?0x1d4ea0:0xe8762a,-0.28,0.18,0.152);
     [[-0.3],[0.3]].forEach(function(q){u.box(0.04,0.04,0.4,0x6b4a33,q[0],-0.31,0.05); u.box(0.04,0.4,0.04,0x6b4a33,q[0],-0.12,-0.13,0,0.8);});}
   const B2=batch(nb);
-  [[1.9,GY+1.25,1],[3.05,GY+0.92,0],[0.4,1.15,1],[2.7,1.6,0],[-2.4,2.0,1],[1.6,3.9,0],[-0.6,4.8,1],[3.9,4.2,0],[-3.4,6.9,0],[2.2,7.2,1],[0.8,10.1,0],[-5.8,3.95,1]].forEach(function(q){ac(q[0],q[1],q[2]);});
+  [[0.4,1.15,1],[2.7,1.6,0],[-2.4,2.0,1],[1.6,3.9,0],[-0.6,4.8,1],[3.9,4.2,0],[-3.4,6.9,0],[2.2,7.2,1],[0.8,10.1,0],[-5.8,3.95,1]].forEach(function(q){ac(q[0],q[1],q[2]);});
   [[2.45,0x9b9e9c,0.055],[-0.25,0x6f7275,0.05],[2.62,0x1d1f21,0.03],[0.05,0xf0f0ec,0.03]].forEach(function(q){NB.cyl(q[2],TOPN-GY,q[1],NX-0.12,(GY+TOPN)/2,q[0],8);});     // drain pipes and conduits down the wall
   NB.box(0.5,0.04,0.7,0xd9dcdf,NX-0.6,4.55,2.0,0,0.35); for(let i=0;i<6;i++) NB.box(0.52,0.02,0.02,0xc4c7ca,NX-0.6,4.56+i*0.012,1.7+i*0.12,0,0.35);   // a corrugated plastic awning
-  (function(){const pts=[]; [[GY+0.55],[GY+0.62],[0.2],[0.28]].forEach(function(q,k){const line=[]; for(let i=0;i<=24;i++){const z=NZ0+0.5+i*(NZ1-NZ0-1)/24; line.push(new THREE.Vector3(NX-0.09,q[0]-0.06*Math.sin(i*0.9+k),z));}
+  (function(){const pts=[]; [[GY+0.55],[GY+0.62],[0.2],[0.28]].forEach(function(q,k){const line=[]; for(let i=0;i<=24;i++){const z=NZ0+0.5+i*(WZ0-0.05-NZ0-0.5)/24; line.push(new THREE.Vector3(NX-0.09,q[0]-0.06*Math.sin(i*0.9+k),z));}
       nb.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(line),new THREE.LineBasicMaterial({color:0x1b1c1d})));});})();      // black cables strung along it
   /* at its foot: a white cabinet, gas bottles under a hood, the water meters */
   NB.box(0.26,0.85,0.55,0xeeeeea,NX-0.15,GY+0.43,0.75); NB.box(0.005,0.8,0.5,0xd8d8d4,NX-0.282,GY+0.43,0.75);
@@ -330,6 +327,35 @@ inRoom('out',function(){
   for(let i=0;i<6;i++){NB.box(0.08,0.07,0.12,0x2f6fd6,NX-0.13,GY+0.45+i*0.2,2.05); NB.cyl(0.012,0.2,0x9aa0a4,NX-0.1,GY+0.55+i*0.2,2.05,6);}      // a column of blue water meters on the supply pipe
   NB.cyl(0.02,1.6,0x9aa0a4,NX-0.07,GY+0.9,2.0,6);
   NB.box(0.3,0.25,0.4,0xc9c4ba,NX-0.3,GY+0.12,1.0); NB.cyl(0.14,0.14,0xbab5aa,NX-0.33,GY+0.32,1.0,12,null,0,R/2);      // an old concrete trough
+  /* ---------- the neighbours' wing, from the photo out of the kitchen window to the right: it juts out toward us and closes the yard on
+     that side. Its face toward the yard is whiter plaster: a ground-floor window behind a white diamond lattice, an Electra unit over it, a
+     Haier unit higher up under a window with a white louvred shutter tilted out, white corrugated conduit and an iron bracket near our wall. ---------- */
+  const WX=6.4, WZ1=NZ1+1.6, wf=0xe8e4dc;
+  NB.box(NX-WX,TOPN-GY,WZ1-WZ0,0xddd7cb,(WX+NX)/2,(GY+TOPN)/2,(WZ0+WZ1)/2);
+  const wface=new THREE.Mesh(new THREE.PlaneGeometry(NX-WX,TOPN-GY),(function(){const t=stain.clone(); t.needsUpdate=true; t.repeat.set((NX-WX)/5,(TOPN-GY)/5); const m=A.MT(t,'out',true); m.color.setHex(0xfffcf6); return m;})());
+  wface.position.set((WX+NX)/2,(GY+TOPN)/2,WZ0-0.005); wface.rotation.y=R; nb.add(wface);
+  function wwin(x,y0,w,h,kind){                          // a window in the wing's face toward the yard
+    NB.box(w+0.1,h+0.1,0.06,0xeeebe4,x,y0+h/2,WZ0-0.03); NB.box(w,h,0.04,0x2a3236,x,y0+h/2,WZ0-0.05); NB.box(w+0.16,0.04,0.1,0xcfc6b4,x,y0-0.02,WZ0-0.05);
+    if(kind==='lattice'){const n=Math.round(w/0.16), m=Math.round(h/0.16);
+      for(let i=0;i<n;i++) for(let j=0;j<m;j++){const cx=x-w/2+(i+0.5)*w/n, cy=y0+(j+0.5)*h/m, a=Math.atan2(w/n,h/m), l=Math.hypot(w/n,h/m)/2;
+        [[-1,1,a],[1,1,-a],[-1,-1,-a],[1,-1,a]].forEach(function(q){NB.geo(new THREE.BoxGeometry(0.016,l,0.016).rotateZ(q[2]),0xf1f0ec,cx+q[0]*w/n/4,cy+q[1]*h/m/4,WZ0-0.11);});}
+      NB.box(w+0.14,h+0.14,0.03,0xf1f0ec,x,y0+h/2,WZ0-0.12);}
+    else if(kind==='louvre'){for(let k=0;k<Math.round(h/0.07);k++) NB.box(w,0.06,0.012,0xf4f3ef,x,y0+0.04+k*0.07,WZ0-0.16-k*0.004,0,0.35);      // white slats, the whole shutter tilted out at its foot
+      NB.box(w+0.08,0.08,0.18,0xeeebe4,x,y0+h+0.04,WZ0-0.09);}
+    else if(kind==='bars'){for(let i=0;i<=Math.round(w/0.12);i++) NB.box(0.018,h+0.06,0.018,0xeeeeea,x-w/2+i*w/Math.round(w/0.12),y0+h/2,WZ0-0.14); [0.35,0.75].forEach(function(f){NB.box(w+0.06,0.025,0.02,0xeeeeea,x,y0+h*f,WZ0-0.14);});}
+    else{const t=shut.clone(); t.needsUpdate=true; t.repeat.set(1,h*0.6/0.6); const sm=new THREE.Mesh(new THREE.PlaneGeometry(w,h*0.6),A.MT(t,'out',true)); sm.position.set(x,y0+h*0.7,WZ0-0.075); sm.rotation.y=R; nb.add(sm); NB.box(w+0.12,0.16,0.14,0xe6e2d8,x,y0+h+0.08,WZ0-0.07);}
+  }
+  wwin(8.1,GY+0.6,0.95,1.45,'lattice');
+  wwin(8.45,0.55,1.25,1.6,'louvre'); wwin(6.95,0.7,0.6,1.1,'bars');
+  [3.6,6.7,9.8].forEach(function(y,f){wwin(8.45,y,1.25,1.55,f%2?'louvre':'shut'); wwin(6.95,y+0.15,0.6,1.1,'bars');});
+  function wac(x,y,brand){const u=B2.at(x,y,WZ0-0.25,R);             // an air conditioner on the wing, on a rusty bracket
+    u.box(0.82,0.58,0.3,0xf1f1ee,0,0,0); u.cyl(0.21,0.02,0x3e4245,0.1,0,0.15,18,null,0,R/2); u.box(0.2,0.08,0.005,brand,-0.27,0.18,0.152);
+    [[-0.3],[0.3]].forEach(function(q){u.box(0.04,0.04,0.4,0x6b4a33,q[0],-0.31,0.05); u.box(0.04,0.4,0.04,0x6b4a33,q[0],-0.12,-0.13,0,0.8);});}
+  wac(8.15,GY+2.45,0xe8762a); wac(8.9,-0.25,0x1d4ea0); wac(9.2,3.1,0xe8762a); wac(7.4,6.3,0x1d4ea0);      // Electra over the lattice, Haier under the louvred shutter, and more up the wing
+  for(let y=GY+0.4;y<TOPN-0.4;y+=0.45) NB.cyl(0.03,0.04,0xe6e6e2,WX+0.18,y,WZ0-0.05,8);      // its ribs
+  NB.cyl(0.02,TOPN-GY-0.6,0xf3f3f0,WX+0.18,(GY+TOPN)/2,WZ0-0.05,8); NB.cyl(0.02,TOPN-GY-0.6,0xf3f3f0,WX+0.26,(GY+TOPN)/2,WZ0-0.06,8);      // white corrugated conduit, two runs
+  NB.box(0.04,0.04,0.32,0x7a7d80,WX+0.42,0.25,WZ0-0.16); NB.box(0.04,0.3,0.04,0x7a7d80,WX+0.42,0.12,WZ0-0.04,0,0.7);      // an empty iron bracket
+  NB.cyl(0.05,TOPN-GY,0x1d1f21,WX+0.06,(GY+TOPN)/2,WZ0+0.3,8);                                // a black drain pipe down its front, toward our wall
   NB.done(); B2.done();
   /* trees: the eucalyptus leaning up past the kitchen window, and dense ones further along */
   const C2=batch(o), T=batch(o), bark=0xb9b0a0, leafE=[0x7e9a72,0x93ad84,0x6b8a62,0xa4b78f];
@@ -345,7 +371,7 @@ inRoom('out',function(){
   }
   euc(7.0,-0.6,5.4,0.12,0.9,3); euc(8.6,3.4,4.6,0.1,2.6,5); euc(7.6,-5.2,6.2,0.08,0.3,9);
   function bushy(x,z,s){for(let i=0;i<9;i++){const a=i*2.3; T.sph(0.6*s,[0x46663f,0x5a7a4c,0x3d5a38][i%3],x+Math.sin(a)*0.7*s,GY+0.6*s+(i%3)*0.5*s,z+Math.cos(a)*0.7*s,1,0.85,1);}}
-  bushy(6.4,-2.8,1.3); bushy(6.2,-7.2,1.5); bushy(9.0,-3.6,1.1); bushy(8.9,4.2,0.9);
+  bushy(6.4,-2.8,1.3); bushy(6.2,-7.2,1.5); bushy(9.0,-3.6,1.1);
   [[8.4,-3.0,4.4,1.0],[8.7,-7.4,5.0,1.15]].forEach(function(q){T.cyl(0.16*q[3],q[2],0x6b5a44,q[0],GY+q[2]/2,q[1],8,0.11*q[3]); for(let i=0;i<5;i++){const a=i*1.3; C2.sph(1.3*q[3],[0x3e5f3a,0x4f7146,0x34522f][i%3],q[0]+Math.sin(a)*1.1*q[3],GY+q[2]+0.5+(i%2)*0.6,q[1]+Math.cos(a)*1.1*q[3],1,0.75,1);}});
   T.done(); C2.done();
   for(let i=0;i<10;i++) sph(0.5,i%2?0x3f7d4a:0x4a8a58,-5+i*1.2,GY+0.38,AZ-8.2,o,1,0.8,1);            // a hedge along the east neighbour's edge
