@@ -155,8 +155,8 @@ slot('recShelves','oakShelves3',{y0:1.185,cfg0:{deco:1}});
 for(let i=1;i<=4;i++) slot('gc'+i,'ingolf',{col0:2,seatLabel:'Table chair '+i,label:false});
 for(let i=1;i<=2;i++) slot('fc'+i,'terje',{col0:2,seatLabel:'Table chair '+i,label:false});
 /* places the newer designs fill, each with whatever the design puts there */
-['rug','ctable','tvUnit','corner','hall','hall2','pouf1','pouf2','lamp1','pendant1','plant1','plant2','hang1','hang2'].forEach(function(id){
-  slot(id,{rug:'stoense',ctable:'borgeby',tvUnit:'eketTV',corner:'eketRecord',hall:'eketHall',hall2:'hooks',pouf1:'pouf',pouf2:'pouf',lamp1:'floorLamp',pendant1:'regolit',plant1:'monstera',plant2:'fiddle',hang1:'hangingPlant',hang2:'hangingPlant'}[id],
+['rug','ctable','tvUnit','corner','hall','hall2','pouf1','pouf2','arm','lamp1','pendant1','plant1','plant2','hang1','hang2'].forEach(function(id){
+  slot(id,{arm:'strandmon',rug:'stoense',ctable:'borgeby',tvUnit:'eketTV',corner:'eketRecord',hall:'eketHall',hall2:'hooks',pouf1:'pouf',pouf2:'pouf',lamp1:'floorLamp',pendant1:'regolit',plant1:'monstera',plant2:'fiddle',hang1:'hangingPlant',hang2:'hangingPlant'}[id],
     {label:/pouf2|hang2|plant2/.test(id)?false:undefined});});
 
 
@@ -201,10 +201,10 @@ const LAY={
   /* the newer ideas */
   g:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], corner:[0.19,0.75,0], hall:[1.6,L-0.19,R/2], pouf1:[1.75,SZ+1.0,0], lamp1:[0.25,5.13,0], plant1:[0.3,1.9,0], music:null, recFrames:null}),
   h:lay({kivik:[0.485,SZ+0.15,0], sofaFrames:[0.0155,SZ+0.15,0], corner:[0.162,0.9,0], ctable:[1.75,SZ+0.15,0], rug:[1.6,SZ+0.15,0], tvUnit:[W-0.247,TVZ,R], plant1:[0.32,5.31,0], lamp1:[0.25,2.3,0], pouf1:[1.75,SZ+1.15,0], hall:CAB, music:null, recFrames:null}),
-  i:lay({kivik:[0.485,SZ+0.2,0], sofaFrames:[0.0155,SZ+0.2,0,1.05], rug:[1.6,SZ+0.2,0], ctable:[1.75,SZ+0.2,0], pendant1:[1.75,SZ+0.2,0], tvUnit:[W-0.222,TVZ+0.1,R], corner:[0.162,0.95,0], lamp1:[0.25,5.3,0], plant1:[0.27,2.1,0], hall:HALL, music:null, recFrames:null}),
-  j:lay({kivik:[0.485,SZ+0.1,0], sofaFrames:[0.0155,SZ+0.25,0], rug:[1.7,SZ+0.15,0], ctable:[1.85,4.1,0], pendant1:[1.85,4.1,0], tvUnit:[W-0.187,TVZ,R], corner:[0.19,0.75,0], lamp1:[0.25,5.43,0], hang1:[0.45,1.55,0], hall:[1.6,L-0.162,R/2], music:null, recFrames:null}),
-  k:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], corner:[0.207,0.9,0], pouf1:[1.75,SZ+1.0,0], pouf2:[1.75,SZ-1.0,0], lamp1:[0.25,5.13,0], plant1:[0.32,1.93,0], hall:[1.6,L-0.152,R/2], hall2:[1.6,L-0.052,R/2,1.65], music:null, recFrames:null}),
-  l:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], pendant1:[1.75,SZ,0], tvUnit:[W-0.207,TVZ,R], corner:[0.162,0.9,0], plant1:[0.35,1.75,0], plant2:[0.3,5.19,0], hang1:[0.7,1.9,0], hang2:[2.85,2.0,0], pouf1:[1.75,SZ+1.0,0], hall:HALL, music:null, recFrames:null})
+  i:lay({arm:[1.4,2.45,-R/4], kivik:[0.485,SZ+0.2,0], sofaFrames:[0.0155,SZ+0.2,0,1.05], rug:[1.6,SZ+0.2,0], ctable:[1.75,SZ+0.2,0], pendant1:[1.75,SZ+0.2,0], tvUnit:[W-0.222,TVZ+0.1,R], corner:[0.162,0.95,0], lamp1:[0.25,5.3,0], plant1:[0.27,2.1,0], hall:HALL, music:null, recFrames:null}),
+  j:lay({arm:[0.85,1.88,-R/12], kivik:[0.485,SZ+0.1,0], sofaFrames:[0.0155,SZ+0.25,0], rug:[1.7,SZ+0.15,0], ctable:[1.85,4.1,0], pendant1:[1.85,4.1,0], tvUnit:[W-0.187,TVZ,R], corner:[0.19,0.75,0], lamp1:[0.25,5.43,0], hang1:[0.45,1.55,0], hall:[1.6,L-0.162,R/2], music:null, recFrames:null}),
+  k:lay({arm:[1.4,2.35,-R/4], rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], corner:[0.207,0.9,0], pouf1:[1.75,SZ+1.0,0], lamp1:[0.25,5.13,0], plant1:[0.32,1.93,0], hall:[1.6,L-0.152,R/2], hall2:[1.6,L-0.052,R/2,1.65], music:null, recFrames:null}),
+  l:lay({arm:[1.4,2.35,-R/4], rug:[1.6,SZ,0], ctable:[1.75,SZ,0], pendant1:[1.75,SZ,0], tvUnit:[W-0.207,TVZ,R], corner:[0.162,0.9,0], plant1:[0.35,1.75,0], plant2:[0.3,5.19,0], hang1:[0.7,1.9,0], hang2:[2.85,2.0,0], pouf1:[1.75,SZ+1.0,0], hall:HALL, music:null, recFrames:null})
 };
 /* what each design puts in each catalog piece: the piece, its colour by IKEA's name, and its settings */
 function sp(type,colour,cfg){const d=CAT[type]; let ci=0; if(colour!=null){ci=d.col.findIndex(function(c){return c.n===colour;}); if(ci<0){console.warn('No colour',colour,'for',type); ci=0;}} return [type,ci,cfg||null];}
@@ -219,15 +219,15 @@ const SPEC=A.SPEC={
      sofaFrames:sp('frameTrio','White',{n:3,w:0.62,h:0.82,gap:0.93,seeds:[0,1,3]})},
   h:{kivik:sp('kivik3','Tibbleby beige/grey'), corner:sp('ourOak','Golden oak, as it is',{deco:1}), ctable:sp('listerby','Oak veneer'), rug:sp('rugJute'), tvUnit:sp('hemnesTV','Light brown'),
      plant1:sp('fiddle','Terracotta'), lamp1:sp('arcLamp','Brass'), pouf1:sp('pouf','Beige'), hall:sp('shoeCab','White stain',{deco:1})},
-  i:{kivik:sp('kivik3','Tresund light beige'), sofaFrames:sp('frameL','Oak',{seed:5}), rug:sp('adum','Off-white'), ctable:sp('listerby','White stained oak veneer'), pendant1:sp('regolit'),
+  i:{kivik:sp('kivik3','Tresund light beige'), arm:sp('poang','Birch veneer, Hillared beige'), sofaFrames:sp('frameL','Oak',{seed:5}), rug:sp('adum','Off-white'), ctable:sp('listerby','White stained oak veneer'), pendant1:sp('regolit'),
      tvUnit:sp('bestaTV','White stained oak effect'), corner:sp('ivarSideboard','Pine, painted white (DIY)',{tt:1}), lamp1:sp('vidja'), plant1:sp('snake','Beige'), hall:sp('tjusig','Oak, white',{deco:1})},
-  j:{kivik:sp('kivikChR','Tresund anthracite'), sofaFrames:sp('frameTrio','Black',{n:3,w:0.5,h:0.7,gap:0.7,seeds:[5,6,9]}), rug:sp('rugKilim'), ctable:sp('roundOak','Walnut veneer'), pendant1:sp('hektarP','Dark grey'),
+  j:{kivik:sp('kivikChR','Tresund anthracite'), arm:sp('strandmon','Tommaboda brown-red'), sofaFrames:sp('frameTrio','Black',{n:3,w:0.5,h:0.7,gap:0.7,seeds:[5,6,9]}), rug:sp('rugKilim'), ctable:sp('roundOak','Walnut veneer'), pendant1:sp('hektarP','Dark grey'),
      tvUnit:sp('lackTV','Black-brown'), corner:sp('eketRecord',null,{base:'legs',tt:true,mods:[{t:'Q',x:0,y:0,c:4},{t:'o',x:4,y:0,c:7},{t:'d',x:4,y:2,c:4}]}),
      lamp1:sp('hektar','Dark grey'), hang1:sp('hangingPlant','Black'), hall:sp('hemnesShoe','Black-brown')},
-  k:{kivik:sp('kivik3','Kelinge grey-turquoise'), sofaFrames:sp('frameTrio','White',{n:3,w:0.62,h:0.82,gap:0.93,seeds:[4,1,8]}), rug:sp('rugStripe'), ctable:sp('lackCT','White'),
-     corner:sp('kallax4x2','White',{rows:['bxbx','xbxb'],tt:1}), pouf1:sp('pouf','Light blue'), pouf2:sp('pouf','Linen'), lamp1:sp('tagarp','White'), plant1:sp('palm','White'),
+  k:{kivik:sp('kivik3','Kelinge grey-turquoise'), arm:sp('ekenaset','Kilanda light beige'), sofaFrames:sp('frameTrio','White',{n:3,w:0.62,h:0.82,gap:0.93,seeds:[4,1,8]}), rug:sp('rugStripe'), ctable:sp('lackCT','White'),
+     corner:sp('kallax4x2','White',{rows:['bxbx','xbxb'],tt:1}), pouf1:sp('pouf','Light blue'), lamp1:sp('tagarp','White'), plant1:sp('palm','White'),
      hall:sp('bissa','White'), hall2:sp('hooks','White')},
-  l:{kivik:sp('kivik3','Tibbleby beige/grey'), rug:sp('rugJute'), ctable:sp('borgeby','Birch veneer'), pendant1:sp('misterhult'), tvUnit:sp('kallaxLegs','White'), corner:sp('ivar','Pine',{deco:1}),
+  l:{kivik:sp('kivik3','Tibbleby beige/grey'), arm:sp('buskbo','Rattan, Djupvik white cushion'), rug:sp('rugJute'), ctable:sp('borgeby','Birch veneer'), pendant1:sp('misterhult'), tvUnit:sp('kallaxLegs','White'), corner:sp('ivar','Pine',{deco:1}),
      plant1:sp('monstera','Terracotta'), plant2:sp('fiddle','Rattan basket'), hang1:sp('hangingPlant','Terracotta',{seed:44}), hang2:sp('hangingPlant','White',{seed:47}), pouf1:sp('pouf','Sage'), hall:sp('tjusig','Oak, white',{deco:1})}
 };
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
@@ -324,6 +324,7 @@ const DESIGNS=A.DESIGNS={
   i:{name:'I', like:'a', title:'I · Japandi calm', sub:'Pale wood, off-white and paper light: low, quiet and uncluttered.', table:['Open the dining table for four','Close it to a console'], pal:['#d5cab4','#dccfb7','#f0eee8','#e3c99d','#4a3426'],
      list:[
       ['Sofa','KIVIK in Tresund light beige under one large print.'],
+      ['Armchair','A POÄNG in birch with a Hillared beige cushion at the end of the sofa, turned toward the TV.'],
       ['Light','A REGOLIT paper pendant over the table, a VIDJA column lamp by the sofa.'],
       ['Table and rug','LISTERBY in white-stained oak on a high-pile ÅDUM rug.'],
       ['Record corner','Two IVAR cabinets painted white, on legs, with an oak plank on top and the turntable on it. A DIY classic.'],
@@ -331,12 +332,14 @@ const DESIGNS=A.DESIGNS={
   j:{name:'J', like:'a', title:'J · Dark and cosy', sub:'Anthracite, walnut and a red kilim: a room for evenings.', table:['Open the dining table for four','Close it to a console'], pal:['#4a4b4e','#6b4630','#c4673f','#3e4b5b','#d8a63b'],
      list:[
       ['Sofa','KIVIK 3-seat with a chaise longue in Tresund anthracite. The chaise is on the record-corner side, so the path to the door stays clear.'],
+      ['Armchair','A STRANDMON wing chair in Tommaboda brown-red by the record corner: the chair for listening.'],
       ['Table and light','A round walnut pedestal table with a HEKTAR pendant over it, a HEKTAR floor lamp at the sofa end.'],
       ['Record corner','EKET in dark grey-blue and walnut, with the turntable on top and a pothos hanging above it.'],
       ['TV and entrance','LACK TV bench in black-brown. HEMNES shoe cabinet in black-brown at the door.']]},
   k:{name:'K', like:'a', title:'K · Coastal blue', sub:'White, light blue and grey-turquoise, with stripes and a palm.', table:['Open the dining table for four','Close it to a console'], pal:['#5d7c79','#aabccb','#9fc4d6','#fbfaf6','#efe7d6'],
      list:[
-      ['Sofa','KIVIK in Kelinge grey-turquoise, a light blue and a linen pouf.'],
+      ['Sofa','KIVIK in Kelinge grey-turquoise and a light blue pouf.'],
+      ['Armchair','An EKENÄSET in Kilanda light beige at the end of the sofa, under the palm, turned toward the TV.'],
       ['Record corner','A white KALLAX 4 × 2 on its side: records and baskets inside, the turntable on top.'],
       ['TV','EKET console, white with light grey-blue drawers.'],
       ['Table, rug, lamp','White LACK coffee table, the striped rug, a TÅGARP uplighter.'],
@@ -347,7 +350,8 @@ const DESIGNS=A.DESIGNS={
       ['Plants','A monstera and a fiddle-leaf fig at the ends of the sofa, two hanging pothos.'],
       ['Table and light','A round BORGEBY in birch under a bamboo MISTERHULT pendant, on a jute rug.'],
       ['TV','A KALLAX on oak legs, a DIY TV bench.'],
-      ['Sofa','KIVIK in Tibbleby beige/grey with a sage pouf.']]}
+      ['Sofa','KIVIK in Tibbleby beige/grey with a sage pouf.'],
+      ['Armchair','A rattan BUSKBO with a white cushion, between the monstera and the rug.']]}
 };
 
 /* ---------- state and layout animation ---------- */
