@@ -901,6 +901,7 @@ let palShown=null;
 const OFF=7;                                       // a layer the camera does not draw, and taps do not find
 const ISO=Object.keys(INSIDE), clipBox=[0,0,0,0], clipPl=[0,1,2,3].map(function(){return new THREE.Plane(new THREE.Vector3(),0);});
 let isoOn=false, isoHid=[], isoHang={}, isoDoors={}, isoWalls=[], nearKey='';
+let hang={}, hangKeys=[], hangKey='', hangDirty=true;      // the whole flat: what hangs on each wall, and which walls you are looking through
 const ub=new THREE.Box3(), mb=new THREE.Box3();
 function matOf(m){return Array.isArray(m.material)?m.material[0]:m.material;}
 function glowy(m){const t=matOf(m); return !!t&&t.blending===THREE.AdditiveBlending;}
@@ -924,43 +925,28 @@ function wide(o){if(o.userData.decor) return false; const b=boxOf(o,true); retur
 function isoUnits(matRoom,doorSet){
   const out=[], roomIn=function(o){let r=null; o.traverse(function(m){if(!r&&m.isMesh) r=matRoom.get(matOf(m))||null;}); return r;};
   (function walk(o){for(let i=0;i<o.children.length;i++){const c=o.children[i];
-    if(c===hl||c.userData.hl||c.userData.wallKey||c.userData.piece||doorSet.has(c)) continue;
+    if(c===hl||c.userData.hl||c.userData.live||c.userData.wallKey||c.userData.piece||doorSet.has(c)) continue;      // live: the people and what they carry about
     const r=c.isMesh?matRoom.get(matOf(c))||null:roomIn(c);
     if(!c.isMesh&&c.children.length&&(c.userData.only||!r||wide(c))) walk(c); else out.push({o:c,room:r});}})(scene);
   return out;
 }
-function isoClear(){
-  if(!isoOn) return; isoOn=false;
-  layer(isoHid,0); for(const k in isoHang) layer(isoHang[k],0); isoHid=[]; isoHang={}; isoDoors={}; isoWalls=[]; nearKey='';
-  for(const k in A.walls) A.walls[k].g.visible=true; A.doors.forEach(function(d){d.p.visible=true;});
-  A.renderer.clippingPlanes=[]; A.touch(3);
-}
-function isoBuild(){
-  isoClear(); if(!iso) return; isoOn=true;
-  scene.updateMatrixWorld(true);
-  const b=roomBox(iso), m=0.21; clipBox[0]=b[0]-m; clipBox[1]=b[1]+m; clipBox[2]=b[2]-m; clipBox[3]=b[3]+m;      // wide enough for an outside wall's thickness
-  clipPl[0].set(new THREE.Vector3(1,0,0),-clipBox[0]); clipPl[1].set(new THREE.Vector3(-1,0,0),clipBox[1]);
-  clipPl[2].set(new THREE.Vector3(0,0,1),-clipBox[2]); clipPl[3].set(new THREE.Vector3(0,0,-1),clipBox[3]);
-  A.renderer.clippingPlanes=clipPl;
-  for(const k in A.walls){const w=A.walls[k]; if(serves(w,iso)){isoWalls.push(k); isoHang[k]=[]; isoDoors[k]=[];} else w.g.visible=false;}
-  A.doors.forEach(function(d){
-    const k=isoWalls.find(function(k){const w=A.walls[k], dx=d.cx-w.a[0], dz=d.cz-w.a[1], u=dx*w.d[0]+dz*w.d[1]; return Math.abs(dx*w.n[0]+dz*w.n[1])<0.08&&u>0&&u<w.len;});
-    if(k&&d.cx>clipBox[0]&&d.cx<clipBox[1]&&d.cz>clipBox[2]&&d.cz<clipBox[3]) isoDoors[k].push(d); else d.p.visible=false;
-  });
+/* the flat's own things and every piece, each with the room it is in: each(o,room,piece) */
+function roomThings(each){
   const matRoom=new Map(); for(const k in A.rooms) A.rooms[k].mats.forEach(function(e){matRoom.set(e.m,k);});
-  const things=[];
   isoUnits(matRoom,new Set(A.doors.map(function(d){return d.p;}))).forEach(function(u){
     let r=u.room; if(!r){const bb=boxOf(u.o,true); if(bb.isEmpty()) return; bb.getCenter(v3); r=insideFlat(v3.x,v3.z)||'out';}      // light pools and the like go by where they are
-    if(r!==iso){meshesOf(u.o,isoHid); return;}
-    if(A.shells.indexOf(u.o)<0&&shownObj(u.o)) things.push({o:u.o});
+    each(u.o,r,null);
   });
-  for(const id in P){const p=P[id], d=p.def;
-    if(pieceRoom(p)!==iso){meshesOf(p.g,isoHid); continue;}
-    if(p.to[3]>=1&&shownObj(p.g)) things.push({o:p.g,wall:!!(d&&(d.place==='wall'||(d.eket&&p.cfg&&p.cfg.base==='wall')))});
-  }
-  layer(isoHid,OFF);
-  /* what hangs on a wall: anything off the floor that neither rests on something standing nor is fixed within the height
-     of something standing (a handle on a cupboard), and anything resting on such a thing */
+  for(const id in P) each(P[id].g,pieceRoom(P[id]),P[id]);
+}
+function thing(o,p){      // something shown now, for hangOn; null if it is not
+  if(p?!(p.to[3]>=1&&shownObj(o)):(A.shells.indexOf(o)>=0||!shownObj(o))) return null;
+  const d=p&&p.def; return {o:o,wall:!!(d&&(d.place==='wall'||(d.eket&&p.cfg&&p.cfg.base==='wall')))};
+}
+/* what hangs on a wall: anything off the floor that neither rests on something standing nor is fixed within the height
+   of something standing (a handle on a cupboard), and anything resting on such a thing. Of the walls ws round the room,
+   out[k] gets the meshes of what hangs on wall k. */
+function hangOn(things,ws,out){
   const list=[]; things.forEach(function(t){const bb=boxOf(t.o); if(!bb.isEmpty()){t.b=bb.clone(); list.push(t);}});
   list.sort(function(a,c){return a.b.min.y-c.b.min.y||(c.b.max.y-a.b.max.y);});
   const holds=function(s,t){
@@ -975,14 +961,37 @@ function isoBuild(){
   const c=new THREE.Vector3(), e=new THREE.Vector3();
   list.forEach(function(t){
     if(!t.hang) return; t.b.getCenter(c); t.b.getSize(e).multiplyScalar(0.5); let best=null, bd=0.45;      // the door of a wall cupboard is its depth out from the wall
-    isoWalls.forEach(function(k){const w=A.walls[k];      // its back against the wall, and not reaching far into the room
+    ws.forEach(function(k){const w=A.walls[k];      // its back against the wall, and not reaching far into the room
       const cn=(c.x-w.a[0])*w.n[0]+(c.z-w.a[1])*w.n[1], en=Math.abs(w.n[0])*e.x+Math.abs(w.n[1])*e.z;
       const cu=(c.x-w.a[0])*w.d[0]+(c.z-w.a[1])*w.d[1], eu=Math.abs(w.d[0])*e.x+Math.abs(w.d[1])*e.z;
       if(cn-en<-0.2||cn+en>1.0||cu+eu<0.05||cu-eu>w.len-0.05) return;      // a TV on a swing arm reaches a good way out
       if(Math.abs(cn-en)<bd){bd=Math.abs(cn-en); best=k;}
     });
-    if(best) meshesOf(t.o,isoHang[best]);
+    if(best) meshesOf(t.o,out[best]||(out[best]=[]));
   });
+}
+function isoClear(){
+  if(!isoOn) return; isoOn=false;
+  layer(isoHid,0); for(const k in isoHang) layer(isoHang[k],0); isoHid=[]; isoHang={}; isoDoors={}; isoWalls=[]; nearKey='';
+  for(const k in A.walls) A.walls[k].g.visible=true; A.doors.forEach(function(d){d.p.visible=true;});
+  A.renderer.clippingPlanes=[]; A.touch(3);
+}
+function isoBuild(){
+  isoClear(); hangClear(); if(!iso) return; isoOn=true;
+  scene.updateMatrixWorld(true);
+  const b=roomBox(iso), m=0.21; clipBox[0]=b[0]-m; clipBox[1]=b[1]+m; clipBox[2]=b[2]-m; clipBox[3]=b[3]+m;      // wide enough for an outside wall's thickness
+  clipPl[0].set(new THREE.Vector3(1,0,0),-clipBox[0]); clipPl[1].set(new THREE.Vector3(-1,0,0),clipBox[1]);
+  clipPl[2].set(new THREE.Vector3(0,0,1),-clipBox[2]); clipPl[3].set(new THREE.Vector3(0,0,-1),clipBox[3]);
+  A.renderer.clippingPlanes=clipPl;
+  for(const k in A.walls){const w=A.walls[k]; if(serves(w,iso)){isoWalls.push(k); isoHang[k]=[]; isoDoors[k]=[];} else w.g.visible=false;}
+  A.doors.forEach(function(d){
+    const k=isoWalls.find(function(k){const w=A.walls[k], dx=d.cx-w.a[0], dz=d.cz-w.a[1], u=dx*w.d[0]+dz*w.d[1]; return Math.abs(dx*w.n[0]+dz*w.n[1])<0.08&&u>0&&u<w.len;});
+    if(k&&d.cx>clipBox[0]&&d.cx<clipBox[1]&&d.cz>clipBox[2]&&d.cz<clipBox[3]) isoDoors[k].push(d); else d.p.visible=false;
+  });
+  const things=[];
+  roomThings(function(o,r,p){if(r!==iso){meshesOf(o,isoHid); return;} const t=thing(o,p); if(t) things.push(t);});
+  layer(isoHid,OFF);
+  hangOn(things,isoWalls,isoHang);
   A.touch(3);
 }
 A.frameFns.push(function(){                         // a wall steps aside while you are behind it
@@ -993,7 +1002,27 @@ A.frameFns.push(function(){                         // a wall steps aside while 
   isoWalls.forEach(function(k,i){const near=key[i]==='1'; A.walls[k].g.visible=!near; isoDoors[k].forEach(function(d){d.p.visible=!near;}); layer(isoHang[k],near?OFF:0);});
   A.touch(2);
 });
-A.layoutFns.push(function(){if(iso) isoBuild();});      // once pieces have finished moving, look again at what hangs where
+/* The whole flat, in every mode: a wall is drawn from one side only, so from behind you look through it, and what hangs on it
+   (pictures, shelves, lights, the TV, wall cupboards) goes with it rather than block the room. Looking down from well above,
+   as From above does, a wall hides nothing and what is on it stays. */
+function hangClear(){for(const k in hang) layer(hang[k],0); hang={}; hangKeys=[]; hangKey=''; hangDirty=true;}
+function hangBuild(){
+  hangClear(); hangDirty=false; scene.updateMatrixWorld(true);
+  const by={};
+  roomThings(function(o,r,p){if(!INSIDE[r]) return; const t=thing(o,p); if(t) (by[r]||(by[r]=[])).push(t);});
+  for(const r in by) hangOn(by[r],Object.keys(A.walls).filter(function(k){return serves(A.walls[k],r);}),hang);
+  hangKeys=Object.keys(hang);
+}
+A.frameFns.push(function(){
+  if(iso) return;
+  if(hangDirty&&!A.layoutBusy()) hangBuild();
+  const c=A.camera.position, up=Math.max(0.05,c.y-1.4); let key='';      // how far behind the wall, against how far above what hangs on it
+  for(let i=0;i<hangKeys.length;i++){const w=A.walls[hangKeys[i]]; key+=(w.a[0]-c.x)*w.n[0]+(w.a[1]-c.z)*w.n[1]>0.25*up?'1':'0';}
+  if(key===hangKey) return; hangKey=key;
+  hangKeys.forEach(function(k,i){layer(hang[k],key[i]==='1'?OFF:0);});
+  A.touch(2);
+});
+A.layoutFns.push(function(){if(iso) isoBuild(); else hangDirty=true;});      // once pieces have finished moving, look again at what hangs where
 function frameRoom(k,top,instant){
   const b=roomBox(k), t=new THREE.Vector3((b[0]+b[1])/2,0.8,(b[2]+b[3])/2), s=Math.max(b[1]-b[0],b[3]-b[2]);
   const d=(2.4+s*1.3)*Math.max(1,1.15*A.stage.clientHeight/Math.max(1,A.stage.clientWidth));

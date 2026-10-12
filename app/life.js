@@ -17,7 +17,7 @@ const OUTFITS={
 /* =====================================================================
    Props. Their materials take the light of the room the player is in.
    ===================================================================== */
-const props=new THREE.Group(); props.userData.nc=true; A.scene.add(props);
+const props=new THREE.Group(); props.userData.nc=true; props.userData.live=true; A.scene.add(props);
 const pmats=[];
 const pm=function(c,o){const m=new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})); pmats.push({m:m,b:new THREE.Color(c)}); return m;};
 function mesh(geo,mat,parent,x,y,z){const m=new THREE.Mesh(geo,mat); m.castShadow=true; if(x!=null) m.position.set(x,y,z); (parent||props).add(m); return m;}

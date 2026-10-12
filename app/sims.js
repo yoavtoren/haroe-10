@@ -4,7 +4,7 @@
 const A=window.APP, D=A.D, K=A.kit, S=A.state, W=D.W, L=D.L, KX=D.KX, KZ=D.KZ, AZ=A.AZ, BA=A.BA, WC=A.WC, ZW=D.ZW, BLK=D.BLK;
 const scene=A.scene, camera=A.camera, controls=A.controls, R=Math.PI;
 const $=function(id){return document.getElementById(id);};
-const actors=new THREE.Group(); actors.userData.nc=true; actors.visible=false; scene.add(actors);
+const actors=new THREE.Group(); actors.userData.nc=true; actors.userData.live=true; actors.visible=false; scene.add(actors);
 
 /* =====================================================================
    People
