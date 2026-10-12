@@ -66,6 +66,13 @@ body{
 }
 #toast.show{opacity:.94}
 #stageBtns{position:absolute; right:10px; top:calc(10px + env(safe-area-inset-top,0px)); display:flex; gap:6px; z-index:3}
+/* Sims mode: change the design without leaving the flat (works in eye view and with the menu hidden) */
+#dPick{position:absolute; left:10px; top:calc(10px + env(safe-area-inset-top,0px)); z-index:3; display:flex; align-items:center; background:var(--label-bg); border:1px solid var(--line); border-radius:99px; padding:2px}
+#dPick button{display:flex; color:var(--ink); background:transparent; border:0; border-radius:99px; padding:6px 10px; cursor:pointer}
+#dPick button:hover{background:var(--chip)}
+#dPick select{width:auto; max-width:150px; font-size:13px; font-weight:700; color:var(--ink); background:transparent; border:0; border-radius:6px; padding:4px 2px; cursor:pointer; text-overflow:ellipsis}
+#dPick option{color:#17211C; background:#fff}
+@media (max-width:520px){#dPick{left:auto; right:10px; top:calc(46px + env(safe-area-inset-top,0px))} #dPick select{max-width:128px}}
 .fab{font:inherit; font-size:12px; font-weight:700; color:var(--ink); background:var(--label-bg); border:1px solid var(--line); border-radius:99px; padding:6px 11px; cursor:pointer}
 #rotateTip{position:absolute; left:10px; right:10px; top:48px; z-index:3; background:#E8C91A; color:#163F2E; font-size:13px; font-weight:600; padding:8px 34px 8px 12px; border-radius:12px}
 #rotateTip button{position:absolute; right:6px; top:3px; border:0; background:transparent; font-size:20px; color:#163F2E; cursor:pointer; padding:2px 6px}
@@ -234,6 +241,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
     <button class="fab" id="bLabels" aria-pressed="false">Show labels</button>
     <button class="fab" id="bMenu" aria-pressed="true">Hide menu</button>
   </div>
+  <div id="dPick" hidden role="group" aria-label="Design"><button id="dPrev" aria-label="Previous design"><svg viewBox="0 0 10 16" width="10" height="16" aria-hidden="true"><path d="M7.5 2.5 2.5 8l5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><select id="dSel" aria-label="Design"></select><button id="dNext" aria-label="Next design"><svg viewBox="0 0 10 16" width="10" height="16" aria-hidden="true"><path d="M2.5 2.5 7.5 8l-5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
   <div id="rotateTip" hidden>Tip: turn your phone sideways (rotation unlocked) for easier control. <button id="bTipClose" aria-label="Close">×</button></div>
   <div id="shopCard" hidden><button id="shopClose" aria-label="Close">×</button><b id="shopName"></b><span id="shopNote"></span><a id="shopLink" target="_blank" rel="noopener"></a></div>
   <div id="useBar" hidden><b id="useName"></b><span id="useBtns"></span></div>

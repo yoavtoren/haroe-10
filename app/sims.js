@@ -696,12 +696,46 @@ function resetSims(){
   if(player){player.release(); player.path=[]; player.x=EX; player.z=SPAWN; player.h=player.hT=R;}
   if(A.life) A.life.reset();
 }
-A.onDesign=function(){resetSims(); afterLayout(function(){if(player){const c=nearest(player.x,player.z); if(c>=0){player.x=cx(c); player.z=cz(c);}} refresh();});};
+/* A new design while you are living in the flat: nobody is sent back to the door. Whoever sits on something the
+   new design also has stays sitting and glides along with it; everyone else stands up where they are. */
+function redesign(){
+  stopAction(); kickBar(null); if(A.life) A.life.reset();
+  if(pj.on) endPJ(true);
+  [player].concat(guests).forEach(function(a){
+    if(a.leaving||!a.p.g.visible) return;          // on their way out, or not through the door yet
+    const s=a.seat?seatBy(a.seat.id):null; a.path=[]; a.cb=null;
+    if(!s||(s.occ&&s.occ!==a)){a.release(); return;}
+    if(s!==a.seat){const o=a.seat; if(o.occ===a) o.occ=null; if(o.onLeave) o.onLeave(a);}
+    a.settle(s);
+  });
+  afterLayout(function(){
+    cullKey='';
+    [player].concat(guests,extras).forEach(function(a){          // step out of anything that now stands there
+      if(!a||a.gone||a.seat||a.path.length) return;
+      const c=nearest(a.x,a.z); if(c>=0&&Math.hypot(cx(c)-a.x,cz(c)-a.z)>0.02) a.slide={fx:a.x,fz:a.z,tx:cx(c),tz:cz(c),t:0,dur:0.4,then:null};
+    });
+    guests.forEach(function(a){if(!a.gone&&!a.leaving&&!a.held&&a.p.g.visible){const f=freeSeats(); if(f.length) a.sitOn(f[0]);}});
+    refresh();
+  });
+  pickRender(); refresh();
+}
+A.onDesign=function(){
+  if(A.simsOn&&player){redesign(); return;}
+  resetSims(); afterLayout(function(){if(player){const c=nearest(player.x,player.z); if(c>=0){player.x=cx(c); player.z=cz(c);}} refresh();});
+};
+
+/* ---------- the design switcher on the stage: ‹ A · Lift-top › ---------- */
+const ORDER=['n'].concat(A.DESIGN_KEYS);
+$('dSel').innerHTML=ORDER.map(function(k){return '<option value="'+k+'">'+A.DESIGNS[k].title+'</option>';}).join('');
+function pickRender(){$('dSel').value=S.design;}
+function pickStep(n){const i=ORDER.indexOf(S.design); A.setDesign(ORDER[(i+n+ORDER.length)%ORDER.length]);}
+$('dSel').onchange=function(e){A.setDesign(e.target.value); e.target.blur();};
+$('dPrev').onclick=function(){pickStep(-1);}; $('dNext').onclick=function(){pickStep(1);};
 A.onPanel=function(){if(player) refresh();};
 function setMode(sims){
   A.simsOn=sims;
   $('tabDesign').setAttribute('aria-pressed',!sims); $('tabSims').setAttribute('aria-pressed',sims);
-  $('pDesign').hidden=sims; $('pSims').hidden=!sims; actors.visible=sims;
+  $('pDesign').hidden=sims; $('pSims').hidden=!sims; actors.visible=sims; $('dPick').hidden=!sims; pickRender();
   if(sims){
     if(!player){buildNav(); makePlayer();}
     $('hint').textContent='Tap the floor to walk. Drag to rotate, pinch or scroll to zoom'; $('hint').style.opacity=1;

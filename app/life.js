@@ -490,7 +490,8 @@ A.labelFns.push(function(){            // the action label floats on the outline
   if(!bar.hidden){
     tp.copy(labelAt).project(A.camera); const w=A.stage.clientWidth, h=A.stage.clientHeight;
     let x=(tp.x+1)/2*w, y=(1-tp.y)/2*h; if(tp.z>1){x=w/2; y=h*0.3;}
-    bar.style.left=Math.max(90,Math.min(w-90,x))+'px'; bar.style.top=Math.max(70,Math.min(h-20,y))+'px';
+    const sb=$('stageBtns'), dp=$('dPick'), clear=Math.max(sb.offsetTop+sb.offsetHeight,dp.hidden?0:dp.offsetTop+dp.offsetHeight)+8;      // stay below the buttons along the top
+    bar.style.left=Math.max(90,Math.min(w-90,x))+'px'; bar.style.top=Math.max(clear+bar.offsetHeight,Math.min(h-20,y))+'px';
   }
   tp.set(A.washer.x,1.3,A.washer.z+0.2); A.place(washTag,tp,!!(A.simsOn&&p&&(st.wash>0||st.washDone)&&Math.hypot(p.x-A.washer.x,p.z-A.washer.z)<3.5&&(focus?focus.name!=='Washing machine':true)));
 });

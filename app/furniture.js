@@ -475,7 +475,8 @@ A.pieceFor=function(id){
   return p||null;
 };
 A.setDesign=function(k,instant){
-  S.design=k; S.table=0; S.lift=0; S.pj=false; if(A.clearPick) A.clearPick();
+  const keepT=A.simsOn&&DESIGNS[k].table?S.table:0;          // living in the flat, a table you opened stays open
+  S.design=k; S.table=keepT; S.lift=0; S.pj=false; if(A.clearPick) A.clearPick(); if(k!=='n') lastNew=k;
   A.layout(instant); renderPanel();
   if(A.onDesign) A.onDesign();
 };
@@ -537,7 +538,7 @@ function renderPanel(){
 A.renderPanel=renderPanel;
 let lastNew='a';
 const KEYS=A.DESIGN_KEYS=['a','b','c','d','e','f','g','h','i','j','k','l'];
-KEYS.forEach(function(k){$('d_'+k).onclick=function(){lastNew=k; A.setDesign(k);};});
+KEYS.forEach(function(k){$('d_'+k).onclick=function(){A.setDesign(k);};});
 $('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){A.setDesign(lastNew);};
 $('bTable').onclick=function(){A.setTable(S.table===1?0:1);}; $('bTable2').onclick=function(){A.setTable(S.table===2?0:2);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
 function fitDist(){const a=A.stage.clientWidth/A.stage.clientHeight; return 19*Math.max(1,1.0/Math.max(a,0.5));}
