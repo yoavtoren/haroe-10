@@ -6,7 +6,7 @@ const A=window.APP, D=A.D, SM=A.sims, K=A.kit, ST=A.state, AU=A.audio, R=Math.PI
 const $=function(id){return document.getElementById(id);};
 const me=function(){return SM.player;};
 let partner=null, tok={}, mode='', pin=null, pinT=0;
-const mzW=(WCS.z0+WCS.z1)/2, tzB=(D.bathDoor[0]+D.bathDoor[1])/2, SX=KX-1.05, X0=KX-1.8, HOB=[KX-0.48,0.42], SP=A.showerSpot;      // HOB: the front ring of the cooktop
+const mzW=(WCS.z0+WCS.z1)/2, tzB=(D.bathDoor[0]+D.bathDoor[1])/2, SX=A.KL.sx, X0=A.KL.wl-0.325, HOB=[A.KL.hx-0.1,0.42], SP=A.showerSpot;      // HOB: the front ring of the cooktop
 const st={dishes:0,carry:null,outfit:0,pile:null,track:-1,trackT:0,asleep:false,pj:false,chapters:0,done:{},warned:{},wash:0,washDone:false,hung:false,panOut:false};
 const GOALS=[['shoes','Take your shoes off at the door'],['coffee','Make a coffee'],['record','Put a record on'],['cook','Cook and eat together'],['dishes','Wash the dishes'],['study','Study a chapter'],
   ['vacuum','Vacuum the flat'],['clothes','Change clothes'],['laundry','Wash the laundry and hang it up'],['massage','Give or get a massage'],['read','Read a book'],['shower','Take a shower'],['sleep','Go to sleep together']];
@@ -112,12 +112,11 @@ A.inRoom('kitchen',function(){
   for(let i=0;i<3;i++) A.cyl(0.045,0.05,0x9dc2d5,X0+0.74,1.515+i*0.022,KZ-0.17,cg,18,0.075);
   for(let i=0;i<4;i++){A.cyl(0.027,0.07,[0xfbfaf6,0x8dbb99,0xfbfaf6,0x9dc2d5][i],X0+0.42+i*0.095,1.808,KZ-0.2,cg,14,0.034); A.torus(0.018,0.005,0xfbfaf6,X0+0.42+i*0.095,1.808,KZ-0.245,cg).rotation.y=R/2;}
   const glass=A.reg(new THREE.MeshLambertMaterial({color:0xdff0f2,transparent:true,opacity:0.45})); for(let i=0;i<3;i++) A.cyl(0.025,0.1,glass,X0+0.5+i*0.09,1.823,KZ-0.09,cg,12,0.03);
-  const sage=function(){return A.reg(new THREE.MeshLambertMaterial({color:0x7b8a60,emissive:0x151810}));};
-  [['n',0x34373c,0xf0d21c],['abcdef',null,null]].forEach(function(v){
-    const g=A.G(), c1=v[1]==null?sage():v[1], c2=v[2]==null?sage():v[2];
+  [['n',0x34373c,0xf0d21c],['abcdef',0x34373c,0xf0d21c]].forEach(function(v){      // charcoal fronts and yellow wall cupboards in every design: the kitchen cannot be painted
+    const g=A.G(), c1=v[1], c2=v[2];
     const cd=A.G(g); cd.position.set(X0+0.325,0,KZ-0.362); A.box(0.56,0.56,0.02,c2,0.28,1.76,0,cd); A.box(0.012,0.1,0.02,0x17181a,0.52,1.56,-0.016,cd);        // cupboard door
     KIT.cab.push(mover(cd,'ry',0,1.75));
-    const dr=A.G(g), dx=KX-1.5;                                                                                                                       // deep drawer by the hob: a pot and the frying pan
+    const dr=A.G(g), dx=A.KL.dx;                                                                                                                       // deep drawer by the hob: a pot and the frying pan
     A.box(0.56,0.24,0.02,c1,dx,0.48,0.6,dr); A.box(0.26,0.014,0.02,0x17181a,dx,0.52,0.618,dr); A.box(0.5,0.012,0.46,0xe9e6df,dx,0.375,0.36,dr);
     [-0.25,0.25].forEach(function(o){A.box(0.012,0.16,0.46,0xe9e6df,dx+o,0.45,0.36,dr);}); A.box(0.5,0.16,0.012,0xe9e6df,dx,0.45,0.135,dr);
     A.cyl(0.1,0.12,0xb9bdc0,dx+0.12,0.442,0.3,dr,18); A.cyl(0.105,0.012,0x8d9296,dx+0.12,0.508,0.3,dr,18); A.sph(0.016,0x2a2c2e,dx+0.12,0.526,0.3,dr);
@@ -229,7 +228,7 @@ const DO={
   },
   cook:function(){
     begin('cook');
-    chain([Do(function(){doing('getting the pan');}),Wk(KX-1.5,1.25,R),Ps(0.25),Do(function(){openK('drawer',true); pose('reachlow');}),Ps(1.1),
+    chain([Do(function(){doing('getting the pan');}),Wk(A.KL.dx,1.25,R),Ps(0.25),Do(function(){openK('drawer',true); pose('reachlow');}),Ps(1.1),
       Do(function(){st.panOut=true; panFood.visible=false; carry('pan');}),Ps(0.3),Do(function(){openK('drawer',false);}),Ps(0.3),
       Wk(HOB[0],0.98,R),Ps(0.3),Do(function(){carry(null); props.add(pan); pan.position.set(HOB[0],0.96,HOB[1]); pan.rotation.set(0,-2.2,0); pan.visible=true; hot=true; AU.blip('click');}),Ps(0.4),
       Do(function(){doing('getting food from the fridge');})].concat(fridgeOpen(),[Do(function(){carry('food');})],fridgeShut(),[
@@ -294,7 +293,7 @@ const DO={
     chain([Do(function(){doing('heading for the shower');}),Wk(SP.ax,SP.az,R),Ps(0.2),
       Do(function(){A.door('bath').force=0; A.set('L:bath',1); SM.renderRooms(); doing('undressing'); pose('undress');}),Ps(1.1),
       Do(function(){const o=OUTFITS[SM.who][st.outfit]; [o.top,o.pants,o.top].forEach(function(c,i){recolor(heapM[i],c);});
-        if(where==='toilet'){WCs.bath.lid.target=0; WCs.bath.seat.target=0; heap.position.set(BA.x1-0.3,0.66,tzB);} else heap.position.set(BA.x0+0.42,0.9,BA.z0+0.5);
+        if(where==='toilet'){WCs.bath.lid.target=0; WCs.bath.seat.target=0; heap.position.set(BA.x1-0.3,0.66,tzB);} else heap.position.set(A.washer.x,A.washer.top+0.05,A.washer.z+0.12);
         heap.visible=true; p.p.nude(true); setCensor(p,'body'); pose(null); slideTo(SP.x,SP.z,0.7);}),
       Ps(0.8),Do(function(){showerFx(true); pose('shower'); mode='showering'; doing('in the shower');}),Ps(10),
       Do(function(){showerFx(false); mode='shower'; pose(null); doing('drying off'); slideTo(SP.ax,SP.az,0.7); p.hT=R;}),Ps(0.9),
@@ -347,14 +346,14 @@ const DO={
   laundry:function(){
     if(st.wash>0){SM.toast('The machine is still running.'); return;}
     begin('laundry'); doing('doing the laundry');
-    const load=[Wk(BA.x0+0.55,BA.z0+1.0,R),Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.2),
+    const load=[Wk(A.washer.sx,A.washer.sz,A.washer.h),Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.2),
       Do(function(){carry(null); st.pile=null; pile.visible=false; st.wash=45; st.washDone=false; AU.blip('beep'); AU.loop('washer',true); pose(null); doing(''); SM.toast('The wash is on. 45 seconds on the timer.'); hud();})];
     if(st.pile&&st.carry!=='clothes'){const s=SM.seatBy(st.pile); if(s){chain([Wk(s.x+Math.sin(s.h)*0.65,s.z+Math.cos(s.h)*0.65,null),Do(function(){pile.visible=false; st.pile=null; carry('clothes');})].concat(load)); return;}}
     chain(load);
   },
   hang:function(){
     const q=rackSpot(); if(!st.washDone||!q) return; begin('hang');
-    chain([Do(function(){doing('emptying the machine');}),Wk(BA.x0+0.55,BA.z0+1.0,R),Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.0),Do(function(){st.washDone=false; carry('wet'); doing('hanging the laundry');}),
+    chain([Do(function(){doing('emptying the machine');}),Wk(A.washer.sx,A.washer.sz,A.washer.h),Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.0),Do(function(){st.washDone=false; carry('wet'); doing('hanging the laundry');}),
       Wk(q.sx,q.sz,q.h),Ps(0.3),Do(function(){pose('reach');}),Ps(1.8),Do(function(){carry(null); st.hung=true; doing(''); SM.toast('The laundry is drying.'); goal('laundry'); hud();})]);
   },
   book:function(){
@@ -421,7 +420,7 @@ function items(){
   const add=function(name,q,acts,box){if(q) out.push({name:name,x:q.x==null?q.sx:q.x,z:q.z==null?q.sz:q.z,sx:q.sx,sz:q.sz,h:q.h,acts:acts,box:box||q.obj||null});};
   const around=function(s,rx,rz,y1){return [s.x-rx,s.x+rx,0,y1,s.z-rz,s.z+rz];}, en=D.entrance;
   add('Front door and shoes',{x:SM.EX+0.4,z:L-0.3,sx:SM.EX+0.35,sz:L-0.8,h:0},[[p.p.shoesOn?'Take shoes off':'Put shoes on',DO.shoes]],[en[0],en[1],0,2.05,L-0.08,L]);
-  add('Cooktop',{x:HOB[0],z:HOB[1],sx:HOB[0],sz:0.98,h:R},[['Cook a meal',DO.cook]],[KX-0.68,KX-0.08,0.1,0.96,0.02,0.62]);
+  add('Cooktop',{x:HOB[0],z:HOB[1],sx:HOB[0],sz:0.98,h:R},[['Cook a meal',DO.cook]],[A.KL.hx-0.31,A.KL.hx+0.31,0.1,0.96,0.02,0.62]);
   add('Fridge',{x:W+0.36,z:KZ-0.36,sx:W+0.22,sz:KZ-1.42,h:0.2},[['Grab a snack',DO.snack]],[W+0.01,W+0.71,0,1.75,KZ-0.72,KZ]);
   const cs=cupSpot(); if(cs) add('Espresso machine',{x:cs.c.x,z:cs.c.z,sx:cs.s.sx,sz:cs.s.sz,h:cs.s.h},[['Make a coffee',DO.coffee]],cs.obj);
   add('Television',firstPiece(['tvOld','kbench','benchB','benchA'],1.1),[['Netflix',function(){DO.tv('netflix');}],['Football',function(){DO.tv('football');}]].concat(A.goal('tv')>0.5?[['Turn it off',DO.tvOff]]:[]));
@@ -435,7 +434,7 @@ function items(){
   add('Wardrobe',{x:D.NX+0.25,z:-1.27,sx:D.NX+1.0,sz:-1.27,h:-R/2},[['Change clothes',DO.wardrobe]],[D.NX,D.NX+0.51,0,1.9,-1.86,-0.68]);
   const ch=SM.seatBy('nook')||SM.seatBy('armA')||SM.seatBy('desk3');
   if(ch&&(st.carry==='clothes'||st.pile)) add(st.pile?'Clothes on the chair':'Armchair',{x:ch.x,z:ch.z,sx:ch.x+Math.sin(ch.h)*0.65,sz:ch.z+Math.cos(ch.h)*0.65,h:ch.h+R},st.pile?[['Take them to the wash',DO.laundry]]:[['Drop the clothes here',DO.drop]],around(ch,0.45,0.45,1.0));
-  add('Washing machine',{x:A.washer.x,z:A.washer.z,sx:BA.x0+0.55,sz:BA.z0+1.0,h:R},st.wash>0?[['Washing… '+clock(st.wash),function(){SM.toast('Still washing.');}]]:st.washDone?[['Hang the laundry',DO.hang]]:[['Do the laundry',DO.laundry]],[BA.x0+0.2,BA.x0+0.8,0,0.86,BA.z0+0.03,BA.z0+0.63]);
+  add('Washing machine',{x:A.washer.x,z:A.washer.z,sx:A.washer.sx,sz:A.washer.sz,h:A.washer.h},st.wash>0?[['Washing… '+clock(st.wash),function(){SM.toast('Still washing.');}]]:st.washDone?[['Hang the laundry',DO.hang]]:[['Do the laundry',DO.laundry]],A.washer.box);
   add('Vacuum cleaner',{x:D.BLK-0.1,z:L-0.14,sx:D.BLK-0.45,sz:L-0.6,h:0.6},[['Vacuum the flat',DO.vacuum]],A.vacuumMesh);
   const dk=SM.seatBy('desk2')||SM.seatBy('desk1'); if(dk) add('Desk',{x:dk.x,z:dk.z,sx:dk.x,sz:dk.z,h:dk.h},[['Study',DO.study]],around(dk,0.7,0.7,1.2));
   const bd=SM.seatBy('bedR'); if(bd) add('Bed',{x:bd.x,z:bd.z,sx:bd.x,sz:bd.z,h:bd.h},[[st.asleep?'Wake up':'Go to sleep together',st.asleep?DO.wake:DO.sleep]],bedBox(bd));
@@ -577,7 +576,7 @@ A.frameFns.push(function(dt,t){
     if(lastRoom==='hall'&&p.p.shoesOn&&!st.warned.shoes){st.warned.shoes=1; SM.toast('Shoes still on. Take them off at the door, or you will walk sand through the flat.');}
     lastRoom=p.room;
   }
-  if(p.p.shoesOn&&p.room!=='hall'&&Math.hypot(p.x-lastDrop[0],p.z-lastDrop[1])>0.75){lastDrop=[p.x,p.z]; addDirt(p.x,p.z);}
+  if(p.p.shoesOn&&p.room!=='hall'&&!A.rooms[p.room].ext&&Math.hypot(p.x-lastDrop[0],p.z-lastDrop[1])>0.75){lastDrop=[p.x,p.z]; addDirt(p.x,p.z);}
   if(mode==='vacuum'&&vac.visible){cleanNear(p.x+Math.sin(p.h)*0.5,p.z+Math.cos(p.h)*0.5,0.6); K.vacuumHold(vac,p.p.hand);}
   // kitchen
   if(hot) hobGlow.material.opacity=0.55+0.12*Math.sin(t*9); else if(hobGlow.material.opacity>0) hobGlow.material.opacity=Math.max(0,hobGlow.material.opacity-dt);

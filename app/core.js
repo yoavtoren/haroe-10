@@ -4,37 +4,44 @@
 const A=window.APP={};
 
 /* =====================================================================
-   DIMENSIONS (metres). Edit these when you have tape measurements.
+   DIMENSIONS (metres), from tape measurements taken in October 2026.
    x: 0 = sofa wall, grows toward the TV wall and the kitchen.
    z: 0 = wall with the two bedroom doors, grows toward the entrance.
-   Source of each number: photos scaled against the 80 x 205 cm door
-   openings, the 60 cm kitchen units, the 148 cm TV bench and the
-   90 cm wardrobe.
+   Door frames are 9 to 10 cm wide; "to the frame" below means to its outer edge.
    ===================================================================== */
 const D=A.D={
-  W:3.1,    // living room width at the sofa, sofa wall -> TV wall   (±0.2, not measured)
-  L:5.95,   // living room length, bedroom wall -> entrance wall     (±0.3)
-  H:2.93,   // ceiling                                                (±0.08)
+  W:3.00,   // living room, sofa wall -> TV wall (measured: 300)
+  L:6.41,   // sofa wall, bedroom wall -> entrance wall (measured: 641)
+  H:2.76,   // ceiling (measured: 276)
   T:0.6,    // floor tile                                              (assumed 60 x 60)
-  KX:5.7,   // kitchen window wall, i.e. W + 2.6                       (±0.2)
-  KZ:2.8,   // kitchen sink wall; the TV wall starts here              (±0.2)
-  ZW:4.75,  // front wall of the guest toilet, which juts into the room at the entrance
-  BLK:2.3,  // how far that block reaches: the entrance wall is only this wide
-  BX:4.9,   // bedroom 2 right-hand wall (window, TV, desk)
-  NX:2.05, NZ:-1.9,    // the wardrobe niche in bedroom 2: its back wall, and how far it runs from the door wall
-  door1:[0.50,1.28],   // bedroom 1 opening on the far wall
-  door2:[2.75,3.53],   // bedroom 2 opening on the far wall, toward the kitchen
-  painting:[1.50,2.60,1.40,2.22], // x0,x1,y0,y1 of the bus canvas
-  entrance:[0.20,1.05],// front door, right next to the sofa wall
-  bathDoor:[3.92,4.62],// bathroom door, in the same plane as the TV wall, right of the TV. Only 0.8 m of wall before it.
-  wcDoor:[2.42,3.07],  // guest toilet door (x), at a right angle to the bathroom door
-  bedDepth:4.4,        // both bedrooms, door wall -> window wall (guess)
-  bedSplit:2.5         // wall between the two bedrooms, behind the niche (guess)
+  KX:5.12,  // kitchen window wall: bedroom 2 door, its frame, then 155 of cooktop wall
+  KZ:3.30,  // kitchen sink wall; the kitchen window wall is 330 long (window 198)
+  ZW:5.02,  // front wall of the guest toilet, which juts into the room at the entrance
+  BLK:2.06, // how far that block reaches: the entrance wall is only this wide (measured: 206)
+  BX:5.42,  // bedroom 2 window wall: 85.5 wall -> column, 25.5 column, 152 column -> window
+  NX:2.18, NZ:-1.41,   // bedroom 2's wardrobe niche: its back wall, and how far it runs from the door wall.
+                       // Seen from the study: 52 + frame + door + frame + 63 of door wall, then a 53 cm step out to the 267 cm wall with the bed
+  door1:[0.62,1.40],   // study door: 62 from the sofa wall
+  door2:[2.70,3.48],   // bedroom 2 door: 130 of wall between the openings (112 between the frames)
+  painting:[1.55,2.55,1.40,2.22], // x0,x1,y0,y1 of the bus canvas, between the two door frames
+  entrance:[0.18,1.03],// front door, right next to the sofa wall
+  bathDoor:[4.17,4.85],// bathroom door, in the same plane as the TV wall: 78 of wall from the kitchen to its frame (150 with the fridge)
+  wcDoor:[2.18,2.83],  // guest toilet door (x), at a right angle to the bathroom door
+  bedDepth:4.08,       // both bedrooms, door wall -> window wall (measured in the study: 408)
+  bedSplit:2.74        // wall between the two bedrooms at the back: the study's window wall is 269
 };
 const W=D.W, L=D.L, H=D.H, KX=D.KX, KZ=D.KZ;
 const AZ=A.AZ=-D.bedDepth, SPLIT=A.SPLIT=D.bedSplit;
-const BA=A.BA={x0:W,x1:5.9,z0:KZ+0.1,z1:D.ZW-0.1};   // bathroom: shower, toilet, sink, washing machine
-const WC=A.WC={x0:D.BLK,x1:3.95,z0:D.ZW,z1:L};    // guest toilet
+const BA=A.BA={x0:W,x1:KX+0.12,z0:KZ+0.1,z1:D.ZW-0.1};   // bathroom: shower, toilet, sink, washing machine
+const WC=A.WC={x0:D.BLK,x1:3.9,z0:D.ZW,z1:L};    // guest toilet
+/* the lobby, from photos: through the doorway at the corner bridge into a small square hall, right into a long corridor
+   with flat 2 on the left, and at its end the stairs on the right and flats 3, 4 and ours (5). See app/exterior.js. */
+const LB=A.LB={XL:-1.9, CX0:-1.3, CX1:1.3, RZ:L+1.8, EH:L+2.75, BZ:L+3.4, ZE:L+9.4, ZC:L+12.4, XF:BA.x1, XS:3.83};
+/* XL: the recess with flat 3's door; CX0..CX1: the corridor; RZ: the end of that recess (the wide pillar);
+   EH: the railing round the stairwell; BZ: where the block between the corridor and the street front starts;
+   ZE..ZC: the square hall by the bridge, ZC being the corner with number 12's wing; XF: the street front; XS: the far end of the flights */
+LB.ZO=LB.ZC-0.85;          // centre of our doorway from the bridge, near the corner with number 12's wing
+LB.Z2=LB.ZO-7.0;           // the second bridge, further along the front, into a small hall of its own for flats 1 and 6
 
 const stage=A.stage=document.getElementById('stage'), labelsEl=A.labelsEl=document.getElementById('labels');
 const renderer=A.renderer=new THREE.WebGLRenderer({antialias:true});
@@ -70,9 +77,9 @@ const rooms=A.rooms={
   bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
-  hall:{name:'Lobby', rs:[[-3.8,5.3,L,L+11.8],[-4.9,-3.8,L+0.2,L+1.5],[-4.9,-3.8,L+9.45,L+10.75]], win:null, dl:0.75, node:'hall', on:true},      // the hall, running west from our door, and its two bridges on the north side
+  hall:{name:'Lobby', rs:[[LB.XL,LB.CX1,L,LB.RZ],[LB.CX0,LB.CX1,LB.RZ,LB.ZE],[LB.CX0,LB.XF,LB.ZE,LB.ZC],[LB.CX1,LB.XF-0.1,LB.EH,LB.BZ],[2.6,LB.XF,LB.BZ,LB.Z2+1.15]], win:null, dl:0.75, node:'hall', on:true},      // landing, corridor, the square hall by the bridge, the strip by the stairs, the second entrance
   out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true},      // the yard and the neighbouring building
-  street:{name:'Street', rs:[], win:null, dl:1, node:'out', ext:true}     // the square in front and Haroe St, lit by their own lamps in the evening
+  street:{name:'Street', rs:[], win:null, dl:1, node:'out', ext:true}     // the bridges, the garden, the square and Haroe St, lit by their own lamps in the evening; its walkable areas are added in exterior.js
 };
 const chans=A.chans={};
 function chan(n,v,rate){return chans[n]||(chans[n]={cur:v||0,target:v||0,rate:rate||5});}

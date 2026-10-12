@@ -9,7 +9,7 @@ const pc=(D.painting[0]+D.painting[1])/2, DC=(D.door1[1]+D.door2[0])/2, EX=(D.en
 const $=function(id){return document.getElementById(id);};
 
 const P=A.pieces={};
-const SZ=3.3;                 // the sofa is centred here, between the top zone and the front door
+const SZ=3.75;                // the sofa is centred here, between the top zone and the front door
 function piece(id,opt,build){const g=G(); g.userData.piece=id; P[id]=Object.assign({id:id,g:g,cur:[0,0,0,0],to:[0,0,0,0],h:1,y0:0,y:0},opt||{}); if(build) build(g); return P[id];}
 /* a piece from the catalog (app/catalog.js). It is built the first time it is shown, and rebuilt when a design or you swap or recolour it. */
 function slot(id,type,opt){return piece(id,Object.assign({type0:type,col0:0,cfg0:null,isNew:true},opt||{}),null);}
@@ -186,25 +186,25 @@ K.onlyAll([A.rect('left',0,L,0.08,1.1,A.MT(bead,'living'),0.004),A.rect('left',0
 A.only(A.rect('left',0.1,1.75,0.08,H,0xa9c4ad,0.003),'f');                                // F: sage behind the record corner, with shelves of records
 
 /* ---------- layouts: x, z, rotation, and for things on a wall its height. A piece that is not listed is hidden. ---------- */
-const TVZ=2.9, HALL=[1.6,L-0.225,R/2], CAB=[1.6,L-0.135,R/2], KS=[0.485,SZ,0];      // a few mm clear of the entrance wall, which is also the lobby's wall
+const TVZ=KZ+0.03, HALL=[1.6,L-0.225,R/2], CAB=[1.6,L-0.135,R/2], KS=[0.485,SZ,0];      // the TV bench (148) fills the 150 from the far side of the fridge to the bathroom door frame; a few mm clear of the entrance wall, which is also the lobby's wall
 const COMMON={kivik:KS, music:[0.22,0.9,0], gate:[DC,0.17,0], rack1:[0.45,-2.0,R/2], sofaFrames:[0.0155,SZ,0], recFrames:[0.0155,0.9,0]};   // the drying rack lives in the study; every proposal keeps the record corner and the drop-leaf table
 function lay(o){for(const k in COMMON) if(!(k in o)) o[k]=COMMON[k]; for(const k in o) if(o[k]===null) delete o[k]; return o;}
 const LAY={
   n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.24,TVZ,R], station:[0.30,0.72,0],
      dining:[pc,0.48,0], chairA:[pc-0.92,0.50,0], chairB:[pc+0.92,0.50,R], rack1:[1.2,1.38,0], rack2:[2.55,1.5,0]},
   a:lay({rugA:[1.6,SZ,0], lift:[1.75,SZ,0], kbench:[W-0.2,TVZ,R], poufA1:[1.75,SZ-1.03,0], poufA2:[1.75,SZ+1.03,0], shoeCab:CAB}),
-  b:lay({rugB:[1.6,SZ,0], nest:[1.8,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.205,3.18,R], cart:[KX-0.24,1.8,R], poufB1:[1.75,SZ+1.0,0], hallBench:HALL}),
+  b:lay({rugB:[1.6,SZ,0], nest:[1.8,SZ,0], towerB:[W-0.195,2.75,R], benchB:[W-0.205,3.63,R], cart:[KX-0.24,1.65,R], poufB1:[1.75,SZ+1.0,0], hallBench:HALL}),
   c:lay({rugC:[1.6,SZ,0], table:[1.75,SZ,0], tvOld:[W-0.24,TVZ,R], poufA1:[1.75,SZ+1.03,0], hallBench:HALL}),
-  d:lay({rugC:[1.6,SZ,0], round:[1.8,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.205,3.18,R], poufA1:[1.75,SZ-1.0,0], poufA2:[1.75,SZ+1.0,0], shoeCab:CAB}),
+  d:lay({rugC:[1.6,SZ,0], round:[1.8,SZ,0], towerB:[W-0.195,2.75,R], benchB:[W-0.205,3.63,R], poufA1:[1.75,SZ-1.0,0], poufA2:[1.75,SZ+1.0,0], shoeCab:CAB}),
   e:lay({rugB:[1.6,SZ,0], trunk:[1.8,SZ,0], kbench:[W-0.2,TVZ,R], poufB1:[1.75,SZ+1.05,0], hallBench:HALL}),
-  f:lay({rugA:[1.6,SZ,0], nest:[1.8,SZ,0], towerB:[W-0.195,2.3,R], benchB:[W-0.205,3.18,R], poufA1:[1.75,SZ+1.05,0], shoeCab:CAB, recFrames:null, recShelves:[0.12,0.9,0]}),
+  f:lay({rugA:[1.6,SZ,0], nest:[1.8,SZ,0], towerB:[W-0.195,2.75,R], benchB:[W-0.205,3.63,R], poufA1:[1.75,SZ+1.05,0], shoeCab:CAB, recFrames:null, recShelves:[0.12,0.9,0]}),
   /* the newer ideas */
-  g:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], corner:[0.19,0.75,0], hall:[1.6,L-0.19,R/2], pouf1:[1.75,SZ+1.0,0], lamp1:[0.25,4.68,0], plant1:[0.3,1.72,0], music:null, recFrames:null}),
-  h:lay({kivik:[0.485,SZ+0.15,0], sofaFrames:[0.0155,SZ+0.15,0], corner:[0.162,0.9,0], ctable:[1.75,SZ+0.15,0], rug:[1.6,SZ+0.15,0], tvUnit:[W-0.247,TVZ,R], plant1:[0.32,4.86,0], lamp1:[0.25,2.0,0], pouf1:[1.75,SZ+1.15,0], hall:CAB, music:null, recFrames:null}),
-  i:lay({kivik:[0.485,SZ+0.2,0], sofaFrames:[0.0155,SZ+0.2,0,1.05], rug:[1.6,SZ+0.2,0], ctable:[1.75,SZ+0.2,0], pendant1:[1.75,SZ+0.2,0], tvUnit:[W-0.222,TVZ+0.1,R], corner:[0.162,0.95,0], lamp1:[0.25,4.85,0], plant1:[0.27,1.98,0], hall:HALL, music:null, recFrames:null}),
-  j:lay({kivik:[0.485,SZ+0.1,0], sofaFrames:[0.0155,SZ+0.25,0], rug:[1.7,SZ+0.15,0], ctable:[1.85,3.65,0], pendant1:[1.85,3.65,0], tvUnit:[W-0.187,TVZ,R], corner:[0.19,0.75,0], lamp1:[0.25,4.98,0], hang1:[0.45,1.55,0], hall:[1.6,L-0.162,R/2], music:null, recFrames:null}),
-  k:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], corner:[0.207,0.9,0], pouf1:[1.75,SZ+1.0,0], pouf2:[1.75,SZ-1.0,0], lamp1:[0.25,4.68,0], plant1:[0.32,1.93,0], hall:[1.6,L-0.152,R/2], hall2:[1.6,L-0.052,R/2,1.65], music:null, recFrames:null}),
-  l:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], pendant1:[1.75,SZ,0], tvUnit:[W-0.207,TVZ,R], corner:[0.162,0.9,0], plant1:[0.35,1.75,0], plant2:[0.3,4.74,0], hang1:[0.7,1.9,0], hang2:[2.85,2.0,0], pouf1:[1.75,SZ+1.0,0], hall:HALL, music:null, recFrames:null})
+  g:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], corner:[0.19,0.75,0], hall:[1.6,L-0.19,R/2], pouf1:[1.75,SZ+1.0,0], lamp1:[0.25,5.13,0], plant1:[0.3,1.9,0], music:null, recFrames:null}),
+  h:lay({kivik:[0.485,SZ+0.15,0], sofaFrames:[0.0155,SZ+0.15,0], corner:[0.162,0.9,0], ctable:[1.75,SZ+0.15,0], rug:[1.6,SZ+0.15,0], tvUnit:[W-0.247,TVZ,R], plant1:[0.32,5.31,0], lamp1:[0.25,2.3,0], pouf1:[1.75,SZ+1.15,0], hall:CAB, music:null, recFrames:null}),
+  i:lay({kivik:[0.485,SZ+0.2,0], sofaFrames:[0.0155,SZ+0.2,0,1.05], rug:[1.6,SZ+0.2,0], ctable:[1.75,SZ+0.2,0], pendant1:[1.75,SZ+0.2,0], tvUnit:[W-0.222,TVZ+0.1,R], corner:[0.162,0.95,0], lamp1:[0.25,5.3,0], plant1:[0.27,2.1,0], hall:HALL, music:null, recFrames:null}),
+  j:lay({kivik:[0.485,SZ+0.1,0], sofaFrames:[0.0155,SZ+0.25,0], rug:[1.7,SZ+0.15,0], ctable:[1.85,4.1,0], pendant1:[1.85,4.1,0], tvUnit:[W-0.187,TVZ,R], corner:[0.19,0.75,0], lamp1:[0.25,5.43,0], hang1:[0.45,1.55,0], hall:[1.6,L-0.162,R/2], music:null, recFrames:null}),
+  k:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], corner:[0.207,0.9,0], pouf1:[1.75,SZ+1.0,0], pouf2:[1.75,SZ-1.0,0], lamp1:[0.25,5.13,0], plant1:[0.32,1.93,0], hall:[1.6,L-0.152,R/2], hall2:[1.6,L-0.052,R/2,1.65], music:null, recFrames:null}),
+  l:lay({rug:[1.6,SZ,0], ctable:[1.75,SZ,0], pendant1:[1.75,SZ,0], tvUnit:[W-0.207,TVZ,R], corner:[0.162,0.9,0], plant1:[0.35,1.75,0], plant2:[0.3,5.19,0], hang1:[0.7,1.9,0], hang2:[2.85,2.0,0], pouf1:[1.75,SZ+1.0,0], hall:HALL, music:null, recFrames:null})
 };
 /* what each design puts in each catalog piece: the piece, its colour by IKEA's name, and its settings */
 function sp(type,colour,cfg){const d=CAT[type]; let ci=0; if(colour!=null){ci=d.col.findIndex(function(c){return c.n===colour;}); if(ci<0){console.warn('No colour',colour,'for',type); ci=0;}} return [type,ci,cfg||null];}
@@ -233,26 +233,26 @@ const SPEC=A.SPEC={
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
 const OPEN2={gc1:[DC-0.57,0.55,0], gc2:[DC,1.2,R/2]};      // one leaf up, table still against the wall: seats two
 const PJ={    // pajama party: the coffee table is put away and two mattresses go down
-  n:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], table:null, rack1:null, rack2:null},
-  a:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], lift:null, poufA1:null, poufA2:null},
-  b:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], nest:null, poufB1:null},
-  c:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], table:null, poufA1:null},
-  d:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], round:null, poufA1:null, poufA2:null},
-  e:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], trunk:null, poufB1:null},
-  f:{mat1:[1.95,SZ,0], mat2:[2.0,1.45,R/2], nest:null, poufA1:null}
+  n:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], table:null, rack1:null, rack2:null},
+  a:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], lift:null, poufA1:null, poufA2:null},
+  b:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], nest:null, poufB1:null},
+  c:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], table:null, poufA1:null},
+  d:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], round:null, poufA1:null, poufA2:null},
+  e:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], trunk:null, poufB1:null},
+  f:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], nest:null, poufA1:null}
 };
-'ghijkl'.split('').forEach(function(k){PJ[k]={mat1:[k==='j'?2.15:1.95,SZ+(k==='j'?0.35:0),0], mat2:[2.0,1.45,R/2], ctable:null, pouf1:null, pouf2:null, pendant1:null};});
+'ghijkl'.split('').forEach(function(k){PJ[k]={mat1:[k==='j'?2.15:1.95,SZ+(k==='j'?0.35:0),0], mat2:[2.0,1.6,R/2], ctable:null, pouf1:null, pouf2:null, pendant1:null};});
 
 /* ---------- copy ---------- */
 const DESIGNS=A.DESIGNS={
   n:{name:'Current', title:'Current state', sub:'How the flat is today, modelled from your photos and the video.', table:null, pal:['#1F5A41','#34373c','#f0d21c','#C99A5B','#f3f3ef'],
      list:[
-      ['Living room','About 3.1 m wide and 5.95 m long. Between the fridge and the bathroom door there is about 1 m of wall, so the TV bench stands in front of the fridge side. The guest toilet juts in at the entrance, so the entrance wall is 2.3 m: front door, wardrobe, vacuum. Outside the door: the lobby with the stairs on the left, and the bridge to the street.'],
+      ['Living room','Measured: 3.00 m wide and 6.41 m long, ceiling 2.76. From the kitchen to the bathroom door frame there are 78 cm of wall, 150 with the fridge, so the TV bench stands in front of the fridge side. The guest toilet juts in at the entrance, so the entrance wall is 2.06 m: front door, wardrobe, vacuum. Outside the door, flat 5: the landing with flat 4 beside us, the stairs on the left, and the long corridor back to the bridge and the street.'],
       ['Sofa and TV','Sofa on the long wall, white TV bench opposite, 55 cm from the coffee table.'],
       ['Top of the room','Coffee station in the corner, dining table under the bus painting, drying racks in between.'],
-      ['Bathroom','Its door is in the same wall as the TV, right next to it. Sink on the right, washing machine opposite it under the boiler, toilet on the far wall under the window, shower to its right.'],
+      ['Bathroom','Its door is in the same wall as the TV, right next to it. The washing machine stands right beside the door in a niche under the boiler cupboard; the sink on its navy cabinet with a mirror and a navy cupboard over it, toilet on the far wall under the window, shower to its right.'],
       ['Guest toilet','Its own door, at a right angle to the bathroom door.'],
-      ['Bedroom 2','Dresser and wardrobe in a niche on the left, cube shelf between the wall and the column, bed behind it 40 cm from the TV wall, bike, desk under the big window facing the wardrobe.']]},
+      ['Bedroom 2','Wardrobe in a niche on the left, cube shelf in the 85 cm between the wall and the column, bed behind it 40 cm from the TV wall, bike, desk under the big window facing the wardrobe, chest of drawers by the door.']]},
   a:{name:'A', title:'A · Lift-top', sub:'Modern rustic: white, oak, sage and light blue. The coffee table also rises to eating height.', table:['Open the dining table for four','Close it to a console'], pal:['#5d7c79','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
       ['Sofa','IKEA KIVIK 3-seat, 228 × 95 cm, in Kelinge grey-turquoise. It is a metre shorter than the sofa you have, which leaves room for a lamp and a plant at its ends.'],
@@ -262,7 +262,7 @@ const DESIGNS=A.DESIGNS={
       ['TV wall','About 1 m of wall between the fridge and the bathroom door, so the TV stays on a stand. A white 4 × 2 cube shelf with woven baskets lies in front of the fridge side and hides its lower half; the TV on top covers most of the rest.'],
       ['Entrance','The wardrobe goes. A slim white shoe cabinet with an oak top takes its place, with the round mirror beside it.'],
       ['Light','The flush round ceiling lights stay. Added: lamp at the record corner, picture light, string lights, candles.'],
-      ['Kitchen','Deep muted sage fronts, counter and sink unchanged and cleared, bin gone, light strip, runner.'],
+      ['Kitchen','The charcoal and yellow fronts stay, since the kitchen cannot be painted. Counter cleared, light strip under the wall cupboard, runner.'],
       ['Bedrooms','Bedroom 1 becomes a study with two desks, and the drying rack moves in there, out of the living room. In bedroom 2 the bed turns 90° to face the TV, the bike goes, and a reading nook replaces the desk.']]},
   b:{name:'B', title:'B · Light and open', sub:'The same bones with the lightest furniture: nesting tables and a coffee cart.', table:['Open the dining table for four','Close it to a console'], pal:['#d5cab4','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
@@ -486,16 +486,16 @@ const fixedLabels=[
  {label:'Kitchen', pos:new THREE.Vector3(W+1.5,2.5,2.05)},
  {label:'Entrance', pos:new THREE.Vector3(EX,2.35,L)},
  {label:'Bedroom 1', alt:'Bedroom 1 · study', pos:new THREE.Vector3(1.2,1.5,-2.3)},
- {label:'Bedroom 2', alt:'Bedroom 2 · reading nook', pos:new THREE.Vector3(3.7,1.5,-1.4)},
- {label:'Bathroom and shower', pos:new THREE.Vector3(4.7,1.6,3.7)},
+ {label:'Bedroom 2', alt:'Bedroom 2 · reading nook', pos:new THREE.Vector3(4.1,1.5,-1.4)},
+ {label:'Bathroom and shower', pos:new THREE.Vector3(4.3,1.6,4.0)},
  {label:'Guest toilet', pos:new THREE.Vector3(3.2,1.6,L-0.5)},
- {label:'Stairs', pos:new THREE.Vector3(6.6,1.9,L+1.6)},
- {label:'Lobby', pos:new THREE.Vector3(1.5,1.6,L+6.5)},
- {label:'Yard, one floor down', pos:new THREE.Vector3(9,-1.6,-1)},
- {label:'≈ '+L.toFixed(1)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
- {label:'≈ '+W.toFixed(1)+' m', pos:new THREE.Vector3(W/2,0.05,2.3), dim:true},
- {label:'ceiling ≈ '+H.toFixed(2)+' m', pos:new THREE.Vector3(0.05,H-0.2,L-1.2), dim:true},
- {label:'kitchen ≈ '+(KX-W).toFixed(1)+' × '+KZ.toFixed(1)+' m', pos:new THREE.Vector3((W+KX)/2,0.05,0.95), dim:true},
+ {label:'Stairs', pos:new THREE.Vector3(2.6,1.9,L+1.4)},
+ {label:'Lobby', pos:new THREE.Vector3(0,1.6,L+6.5)},
+ {label:'Yard, one floor down', pos:new THREE.Vector3(9,-1.6,-1.5)},
+ {label:L.toFixed(2)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
+ {label:W.toFixed(2)+' m', pos:new THREE.Vector3(W/2,0.05,2.3), dim:true},
+ {label:'ceiling '+H.toFixed(2)+' m', pos:new THREE.Vector3(0.05,H-0.2,L-1.2), dim:true},
+ {label:'kitchen '+(KX-W).toFixed(2)+' × '+KZ.toFixed(2)+' m', pos:new THREE.Vector3((W+KX)/2,0.05,0.95), dim:true},
  {label:'tiles 60 × 60', pos:new THREE.Vector3(2.2,0.05,2.4), dim:true},
  {label:'doors 78 × 205', pos:new THREE.Vector3((D.door2[0]+D.door2[1])/2,0.1,0.45), dim:true}
 ];

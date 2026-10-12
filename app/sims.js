@@ -26,14 +26,17 @@ const css=function(c){return '#'+('000000'+c.toString(16)).slice(-6);};
 function makePerson(spec){return A.makePerson(spec,actors);}
 
 /* =====================================================================
-   Walking: a 10 cm grid over the flat, A* and string pulling
+   Walking: a 10 cm grid over the flat, the lobby and the street, A* and string pulling
    ===================================================================== */
-const CS=0.1, GX0=-9.2, GZ0=AZ-0.2, NX=Math.ceil((KX+0.6-GX0)/CS), NZ=Math.ceil((L+11.7-GZ0)/CS), RAD=0.13;
+const WB=(function(){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; for(const k in A.rooms) A.rooms[k].rs.forEach(function(r){x0=Math.min(x0,r[0]); x1=Math.max(x1,r[1]); z0=Math.min(z0,r[2]); z1=Math.max(z1,r[3]);}); return [x0-0.2,x1+0.2,z0-0.2,z1+0.2];})();
+const CS=0.1, GX0=WB[0], GZ0=WB[2], NX=Math.ceil((WB[1]-GX0)/CS), NZ=Math.ceil((WB[3]-GZ0)/CS), RAD=0.13, LB=A.LB;
+const gy=A.groundAt||function(){return 0;};
 const free=new Uint8Array(NX*NZ);
-const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+0.85, LOBBY=[-4.7,L+0.85];      // centre of the front door; where people stand just inside it
+const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+1.0, LOBBY=[0,L+4.6];      // centre of the front door; where people stand just inside it; on the landing; up the corridor
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
   [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
-  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[-4.1,-3.5,L+0.35,L+1.35],[-4.1,-3.5,L+9.6,L+10.6],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3]];
+  [W-0.2,W+0.2,0.2,2.0],[0.2,BLK-0.2,ZW-0.3,ZW+0.3],[D.entrance[0]+0.12,D.entrance[1]-0.12,L-0.35,L+0.35],[0.2,D.NX-0.3,D.NZ-0.3,D.NZ+0.3],
+  [LB.CX0+0.13,LB.CX1-0.13,LB.RZ-0.3,LB.RZ+0.3],[LB.CX0+0.13,LB.CX1-0.13,LB.ZE-0.3,LB.ZE+0.3],[LB.CX1-0.3,LB.CX1+0.3,LB.EH+0.13,LB.BZ-0.13]].concat(A.streetPass||[]);      // doorways; joins between the lobby's parts; the doorways from the bridges
 const bb=new THREE.Box3();
 function fillRect(x0,x1,z0,z1,v){
   const i0=Math.max(0,Math.ceil((x0-GX0)/CS-0.5)), i1=Math.min(NX-1,Math.floor((x1-GX0)/CS-0.5));
@@ -53,6 +56,7 @@ function buildNav(){
   free.fill(0);
   for(const k in A.rooms) A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});
   scene.updateMatrixWorld(true); collect(scene);
+  (A.streetBlock||[]).forEach(function(b){fillRect(b[0]-RAD,b[1]+RAD,b[2]-RAD,b[3]+RAD,0);});      // the street is drawn as merged meshes, so what stands there is listed
   PASS.forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);});
   // keep only what can be reached from just inside the front door
   const start=cell(EX,SPAWN), seen=new Uint8Array(NX*NZ), q=[start]; if(start<0||!free[start]) return; seen[start]=1;
@@ -65,7 +69,7 @@ function cell(x,z){const i=Math.floor((x-GX0)/CS), j=Math.floor((z-GZ0)/CS); ret
 function isFree(x,z){const c=cell(x,z); return c>=0&&free[c]===1;}
 function cx(c){return GX0+((c%NX)+0.5)*CS;} function cz(c){return GZ0+(Math.floor(c/NX)+0.5)*CS;}
 function nearest(x,z){
-  const c0=cell(Math.min(KX+0.1,Math.max(GX0+0.1,x)),Math.min(L+11.5,Math.max(AZ-0.1,z))); if(c0>=0&&free[c0]) return c0;
+  const c0=cell(Math.min(WB[1]-0.1,Math.max(GX0+0.1,x)),Math.min(WB[3]-0.1,Math.max(GZ0+0.1,z))); if(c0>=0&&free[c0]) return c0;
   const i0=Math.floor((x-GX0)/CS), j0=Math.floor((z-GZ0)/CS); let best=-1, bd=1e9;
   for(let r=1;r<40;r++){
     for(let j=j0-r;j<=j0+r;j++) for(let i=i0-r;i<=i0+r;i++){
@@ -179,7 +183,7 @@ Actor.prototype.update=function(dt){
   }else{p.walking=!!this.manual; if(!this.manual) this.v=0;}
   this.h=angLerp(this.h,this.hT,Math.min(1,dt*8));
   p.moved=p.walking?Math.hypot(this.x-(this.lx==null?this.x:this.lx),this.z-(this.lz==null?this.z:this.lz)):0; this.lx=this.x; this.lz=this.z;      // ground covered this frame: the stride is measured from it
-  p.g.position.set(this.x,0,this.z); p.g.rotation.y=this.h; p.update(dt);
+  p.g.position.set(this.x,this.seat?0:gy(this.x,this.z),this.z); p.g.rotation.y=this.h; p.update(dt);
   const rm=A.roomAt(this.x,this.z);
   if(rm!==this.room||this.ver!==A.lightVer||p.dirty){p.dirty=false; this.room=rm; this.ver=A.lightVer; p.tint(A.rooms[rm].tint);}
 };
@@ -520,7 +524,7 @@ function wideFov(){          // eye view: a wide lens, about 100 degrees across
 }
 window.addEventListener('resize',function(){if(A.simsOn&&camMode==='eye') wideFov();});
 function flyToPlayer(){
-  tgt.set(player.x,1.0,player.z);
+  tgt.set(player.x,1.0+gy(player.x,player.z),player.z);
   A.fly(new THREE.Vector3(player.x+3.6,6.6,player.z+4.6),tgt,800);
 }
 A.eyeView=function(){return A.simsOn&&camMode==='eye';};
@@ -540,7 +544,7 @@ function wallsVisible(){
 
 /* In eye view, only draw rooms you could actually see: your own, plus any reached through an open door.
    Besides saving work, this keeps things standing right behind a wall from flickering through it on phones. */
-const NODE={living:'lk',kitchen:'lk',bed1:'bed1',bed2:'bed2',wc:'wc',bath:'bath',hall:'hall'};
+const NODE={living:'lk',kitchen:'lk',bed1:'bed1',bed2:'bed2',wc:'wc',bath:'bath',hall:'hall',out:'hall',street:'hall'};
 const LINKS=[['lk','hall','entrance'],['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['lk','bath','bath']];
 let cullKey='all';
 function cullRooms(){
@@ -574,13 +578,14 @@ window.addEventListener('pointerup',function(e){
   kickBar(null);
   if(A.life&&A.life.tap(ray.ray)) return;
   if(!ray.ray.intersectPlane(floorPlane,hit)) return;
+  const h=gy(hit.x,hit.z); if(h){floorPlane.constant=-h; ray.ray.intersectPlane(floorPlane,hit); floorPlane.constant=0;}      // out on the square the ground is higher
   walkTo(hit.x,hit.z);
 });
 function walkTo(x,z){
-  if(x<-9.3||x>KX+0.3||z<AZ-0.3||z>L+11.6) return;
+  if(x<WB[0]||x>WB[1]||z<WB[2]||z>WB[3]) return;
   if(pj.asleep) return;
   stopAction(); const c=nearest(x,z); if(c<0) return;
-  marker.position.set(cx(c),0.03,cz(c)); marker.material.opacity=0.9;
+  marker.position.set(cx(c),0.03+gy(cx(c),cz(c)),cz(c)); marker.material.opacity=0.9;
   player.goTo(cx(c),cz(c),function(){refresh();}); refresh();
 }
 A.walkTo=walkTo;
@@ -666,7 +671,7 @@ A.frameFns.push(function(dt,t){
     camera.rotation.order='YXZ'; camera.rotation.set(-pitch,yaw+R,0);
     if(!freeLook) yaw=angLerp(yaw,player.h,Math.min(1,dt*6));
   }else if(!A.flying()){
-    tgt.set(player.x,1.0,player.z); delta.copy(tgt).sub(controls.target).multiplyScalar(1-Math.exp(-dt*5));
+    tgt.set(player.x,1.0+gy(player.x,player.z),player.z); delta.copy(tgt).sub(controls.target).multiplyScalar(1-Math.exp(-dt*5));
     controls.target.add(delta); camera.position.add(delta);
   }
   wallsVisible(); cullRooms();
