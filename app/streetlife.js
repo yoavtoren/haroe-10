@@ -72,7 +72,7 @@ dogMan.dog=dog;
 /* ---------- a cat on its rounds in the alley ---------- */
 const cat=(function(){
   const g=new THREE.Group(), P=det.P, c=0x8a8a86, stripe=0x5a5a58, legs=[];
-  P.sph(0.1,c,0,0.2,0,g,0.85,0.8,1.75); for(let k=0;k<4;k++) P.sph(0.03,stripe,0,0.27,-0.12+k*0.07,g,2.4,0.4,0.5);      // tabby stripes P.sph(0.065,c,0,0.27,0.19,g); P.sph(0.028,0xf2ece0,0,0.25,0.245,g,1.1,0.8,0.8);
+  P.sph(0.1,c,0,0.2,0,g,0.85,0.8,1.75); P.sph(0.095,stripe,0,0.215,-0.005,g,0.8,0.78,1.68);      // a tabby's darker back P.sph(0.065,c,0,0.27,0.19,g); P.sph(0.028,0xf2ece0,0,0.25,0.245,g,1.1,0.8,0.8);
   [-1,1].forEach(function(s){P.geo(new THREE.ConeGeometry(0.022,0.05,4),c,s*0.033,0.33,0.19,g); P.sph(0.01,0xb8c84a,s*0.024,0.28,0.248,g);});
   [[-0.045,0.1],[0.045,0.1],[-0.045,-0.1],[0.045,-0.1]].forEach(function(q){const l=new THREE.Group(); l.position.set(q[0],0.19,q[1]); g.add(l); P.cyl(0.018,0.19,c,0,-0.095,0,l,6); legs.push(l);});
   const tail=new THREE.Group(); tail.position.set(0,0.24,-0.16); g.add(tail); P.tube([[0,0,0],[0,0.12,-0.08],[0,0.26,-0.06],[0.02,0.32,0.02]],0.014,c,tail);
