@@ -496,7 +496,7 @@ const fixedLabels=[
  {label:'Bathroom and shower', pos:new THREE.Vector3(4.3,1.6,4.0)},
  {label:'Guest toilet', pos:new THREE.Vector3(3.2,1.6,L-0.5)},
  {label:'Stairs', pos:new THREE.Vector3(2.6,1.9,L+1.4)},
- {label:'Lobby', pos:new THREE.Vector3(0,1.6,L+6.5)},
+ {label:'Lobby', pos:new THREE.Vector3(1.4,1.6,L+6.5)},
  {label:'Yard, one floor down', pos:new THREE.Vector3(9,-1.6,-1.5)},
  {label:L.toFixed(2)+' m', pos:new THREE.Vector3(-0.3,0.05,L/2), dim:true},
  {label:W.toFixed(2)+' m', pos:new THREE.Vector3(W/2,0.05,2.3), dim:true},
