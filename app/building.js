@@ -308,11 +308,12 @@ runs.forEach(function(rn){
   frontRun(BSk,rn,0,H,rn.wins.map(function(q){return [q[0],q[1],q[2],q[3]];}));});
 jogs(BSk,0,H);
 (function(){const fg=faceG('w',XN); wall(fg,0,XN+0.12,0,H,west.map(function(w){return w.wins.map(function(q){return [XN-q[1],XN-q[0],q[2],q[3]];});}).reduce(function(a,b){return a.concat(b);},[])); BSk.bake(fg);})();
-/* ---- the rest of our floor, flats 1 to 4 and 6, and the semi-basement: always ---- */
+/* ---- the rest of our floor, flats 1 to 4 and 6, and the semi-basement: always. The other flats are a low slab, their footprint at
+   floor level: our own walls are seen through from outside, so nothing of theirs may stand between the camera and our rooms ---- */
 (function(){
-  const cut=0xc4c8c2, side=0xe6e2d8;      // cut through at our ceiling, like the flat's own walls
+  const cut=0xc4c8c2, side=0xe6e2d8, SL=0.12;
   [[XS+0.25,LB.XL-0.22,ZW+0.25,ZE-0.25],[LB.XL-0.22,-0.22,ZW+0.25,L-0.22],[LB.XL-0.22,LB.CX0-0.22,LB.RZ+0.55,ZC-0.22],[LB.XL-0.22,XF-0.05,ZC+0.22,ZE-0.25],[LB.CX1+0.22,XF-0.05,LB.Z2+1.37,LB.ZE-0.22]].forEach(function(q){      // kept clear of the lobby's and the flat's walls
-    BLo.box(q[1]-q[0],H,q[3]-q[2],side,(q[0]+q[1])/2,H/2,(q[2]+q[3])/2); BLo.box(q[1]-q[0]-0.02,0.012,q[3]-q[2]-0.02,cut,(q[0]+q[1])/2,H+0.006,(q[2]+q[3])/2);});
+    BLo.box(q[1]-q[0],SL,q[3]-q[2],side,(q[0]+q[1])/2,SL/2,(q[2]+q[3])/2); BLo.box(q[1]-q[0]-0.02,0.012,q[3]-q[2]-0.02,cut,(q[0]+q[1])/2,SL+0.006,(q[2]+q[3])/2);});
   [[XS+0.2,-7.01,ZW+0.2,ZE-0.2],[-6.99,XF-0.05,ZC+0.01,ZE-0.2]].forEach(function(q){BLo.box(q[1]-q[0],-GY-0.02,q[3]-q[2],0xe2dccd,(q[0]+q[1])/2,GY/2-0.01,(q[2]+q[3])/2);});      // the semi-basement where the yard's own drawing of it stops
 })();
 /* the west wall: the stretch past the flat on our floor, and the semi-basement where it opens onto the gap by Beit HaChayal */
