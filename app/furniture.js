@@ -547,10 +547,11 @@ $('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){
 $('bTable').onclick=function(){A.setTable(S.table===1?0:1);}; $('bTable2').onclick=function(){A.setTable(S.table===2?0:2);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
 /* ---------- Apartment view: the flat on its own. Building view: the flat in its building, with the lobby, the yard and the street ---------- */
 const OUT=5, OUTR={hall:1,out:1,street:1}, FLATR=['living','kitchen','bed1','bed2','bath','wc'];      // OUT: the layer for whatever is outside the flat
-const BLD3=new THREE.Vector3(4.5,0,8.5), BLDT=new THREE.Vector3(11.5,0,7.6);      // Building view looks at the lobby, with the flat beyond it and the street beside it; from above, at all of it
+const BLD3=new THREE.Vector3(4.5,0,8.5), BLDT=new THREE.Vector3(11.5,0,7.6);      // looking inside: at the lobby, with the flat beyond it and the street beside it; from above, at all of it
+const BW3=new THREE.Vector3(A.LB.XF-4,3,A.LB.ZC-6), BWT=new THREE.Vector3(A.LB.XF+6,0,A.LB.ZC+2);      // the whole building: from over Haroe St, across the garden to our front; from above, the block from Haroe St to David St
 const LBX=[A.LB.XL-0.6,A.LB.XF+0.35,L-0.1,A.LB.ZC+0.5];      // the lobby's ground, from our door to the doorway onto the bridge
 const lobbyCut=new THREE.Plane(new THREE.Vector3(0,-1,0),1000);      // in Building view the lobby is cut at our ceiling, as the flat is, so the stairwell above never hides it
-S.scope='flat'; let curView='3d', flatNow=null, cutNow=null, sorted=false;
+S.scope='flat'; S.inside=false; let curView='3d', flatNow=null, cutNow=null, sorted=false;
 A.camera.layers.enable(OUT); A.LAYER_OUT=OUT;
 function inFlat(p){
   if(p.y<-0.3||p.y>H+0.6) return false;
@@ -577,8 +578,9 @@ function sortOut(){
 }
 /* Sims mode, Sun & air (the neighbours' shadows), Float inside and the street always show the outside; a room on its own never does */
 function wantFlat(){return (S.scope==='flat'||!!(A.ed&&A.ed.iso()))&&!A.simsOn&&$('pClimate').hidden&&!(A.flyOn&&A.flyOn())&&curView!=='street';}
-function wantCut(){return S.scope==='building'&&!A.simsOn&&$('pClimate').hidden&&!(A.flyOn&&A.flyOn())&&curView!=='street'&&!(A.ed&&A.ed.iso());}
+function wantCut(){return S.scope==='building'&&S.inside&&!A.simsOn&&$('pClimate').hidden&&!(A.flyOn&&A.flyOn())&&curView!=='street'&&!(A.ed&&A.ed.iso());}
 A.thinTrees=wantCut;
+A.bldWhole=function(){return S.scope==='building'&&!S.inside&&!A.simsOn&&$('pClimate').hidden;};      // the floors above and the outside of our own, in building.js
 function applyScope(){
   const f=wantFlat(), c=wantCut(); if(f===flatNow&&c===cutNow) return; flatNow=f; cutNow=c;
   if(!sorted) sortOut();
@@ -587,17 +589,23 @@ function applyScope(){
   A.touch(3);
 }
 A.frameFns.push(applyScope);
-A.outsideHidden=function(p){return !!flatNow&&!inFlat(p);};      // labels out there are hidden with it
+A.outsideHidden=function(p){return (!!flatNow&&!inFlat(p))||!!(A.bldWhole&&A.bldWhole()&&A.building&&A.building.covers(p));};      // labels out there are hidden with it; and those inside our building, while it is shown whole
 function setScope(s){
-  S.scope=s; $('bFlat').setAttribute('aria-pressed',s==='flat'); $('bBuilding').setAttribute('aria-pressed',s==='building');
+  S.scope=s; $('bFlat').setAttribute('aria-pressed',s==='flat'); $('bBuilding').setAttribute('aria-pressed',s==='building'); $('bldSeg').hidden=s!=='building';
   if(A.flyOn&&A.flyOn()) A.setFly(false);
   A.setView(curView==='top'?'top':'3d');
 }
 $('bFlat').onclick=function(){setScope('flat');}; $('bBuilding').onclick=function(){setScope('building');};
+function setInside(v){S.inside=v; $('bWhole').setAttribute('aria-pressed',!v); $('bInside').setAttribute('aria-pressed',v); if(S.scope==='building') A.setView(curView==='top'?'top':'3d');}
+$('bWhole').onclick=function(){setInside(false);}; $('bInside').onclick=function(){setInside(true);};
 function fitDist(){const a=A.stage.clientWidth/A.stage.clientHeight; return 19*Math.max(1,1.0/Math.max(a,0.5));}
-A.viewTarget=function(v){return S.scope!=='building'?A.home:v==='top'?BLDT:BLD3;};
+A.viewTarget=function(v){return S.scope!=='building'?A.home:S.inside?(v==='top'?BLDT:BLD3):(v==='top'?BWT:BW3);};
 A.viewPos=function(v){
   const d=fitDist(), t=A.viewTarget(v);
+  if(S.scope==='building'&&!S.inside){
+    if(v==='top') return new THREE.Vector3(t.x-0.01,d*6.4,t.z);      // north at the top, as on a map
+    return new THREE.Vector3(t.x+d*3.3,d*2.8,t.z+d*0.9);      // high over Haroe St, looking south across the garden to our front: number 12 on the left, Beit HaChayal on the right, as from the street
+  }
   if(S.scope==='building'){
     if(v==='top') return new THREE.Vector3(t.x,d*2.3,t.z+0.01);
     return new THREE.Vector3(t.x-d*0.6,d*0.85,t.z+d*0.95);      // over the lobby's back corner, looking across it to the flat and the street
@@ -606,8 +614,8 @@ A.viewPos=function(v){
   return new THREE.Vector3(t.x+d*0.5,d*0.62,t.z+d*0.6);
 };
 A.setView=function(v,instant){
-  if(v==='street'&&S.scope!=='building'){S.scope='building'; $('bFlat').setAttribute('aria-pressed',false); $('bBuilding').setAttribute('aria-pressed',true);}      // the street is outside
-  curView=v;
+  if(v==='street'&&S.scope!=='building'){S.scope='building'; $('bFlat').setAttribute('aria-pressed',false); $('bBuilding').setAttribute('aria-pressed',true); $('bldSeg').hidden=false;}      // the street is outside
+  curView=v; A.controls.maxDistance=S.scope==='building'?260:50;      // room to stand back from the whole block, before the camera flies there
   $('b3d').setAttribute('aria-pressed',v==='3d'); $('bTop').setAttribute('aria-pressed',v==='top'); $('bStreet').setAttribute('aria-pressed',v==='street');
   if(v==='street') A.fly(A.streetView[0],A.streetView[1],900,instant); else A.fly(A.viewPos(v),A.viewTarget(v),700,instant);
 };

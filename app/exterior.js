@@ -1,7 +1,7 @@
 /* Haroe 10 — outside the flat: the lobby and its stairs, the yard one floor down, the neighbouring building, and on the
    street side the two entrance bridges, the square with the café, and Haroe St.
-   Compass: the flat's windows face south-east. In model terms +x is roughly south, -z roughly east, +z west (the lobby
-   runs that way from our door), and Haroe St is to the north, at -x. */
+   Compass, from the satellite view: +x is north (4.6° west of it), toward the garden and Haroe St; +z is east, the way the lobby
+   runs from our door toward number 12; the bedrooms' end of the flat faces west, onto Beit HaChayal. */
 (function(){
 'use strict';
 const A=window.APP, D=A.D, K=A.kit, W=D.W, L=D.L, H=D.H, KX=D.KX, AZ=A.AZ;
@@ -378,26 +378,9 @@ inRoom('out',function(){
   bushy(6.4,-2.8,1.3); bushy(6.2,-7.2,1.5); bushy(9.0,-3.6,1.1);
   [[8.4,-3.0,4.4,1.0],[8.7,-7.4,5.0,1.15]].forEach(function(q){T.cyl(0.16*q[3],q[2],0x6b5a44,q[0],GY+q[2]/2,q[1],8,0.11*q[3]); for(let i=0;i<5;i++){const a=i*1.3; C2.sph(1.3*q[3],[0x3e5f3a,0x4f7146,0x34522f][i%3],q[0]+Math.sin(a)*1.1*q[3],GY+q[2]+0.5+(i%2)*0.6,q[1]+Math.cos(a)*1.1*q[3],1,0.75,1);}});
   T.done(); C2.done();
-  for(let i=0;i<10;i++) sph(0.5,i%2?0x3f7d4a:0x4a8a58,-5+i*1.2,GY+0.38,AZ-8.2,o,1,0.8,1);            // a hedge along the east neighbour's edge
-  /* the neighbouring building to the east: four floors over a ground floor */
-  function block(cx,cz,sx,sz,faceAxis){
-    const o2=G(o); blocks.push({g:o2,axis:faceAxis,face:faceAxis==='x'?cx-sx/2:cz+sz/2});
-    const top=12.6, hh=top-GY;
-    box(sx,hh,sz,0xddd5c3,cx,GY+hh/2,cz,o2);
-    const len=faceAxis==='x'?sz:sx, t=bt.clone(); t.needsUpdate=true; t.repeat.set(Math.round(len/3.4),4);
-    const m=new THREE.Mesh(new THREE.PlaneGeometry(len,12.4),A.MT(t));
-    if(faceAxis==='x'){m.position.set(cx-sx/2-0.02,6.3,cz); m.rotation.y=-R/2;} else{m.position.set(cx,6.3,cz+sz/2+0.02); }
-    o2.add(m);
-    for(let f=0;f<4;f++){const y=0.25+f*3.1; if(faceAxis==='x') box(1.1,0.12,len-1,0xcfc7b3,cx-sx/2-0.55,y,cz,o2); else box(len-1,0.12,1.1,0xcfc7b3,cx,y,cz+sz/2+0.55,o2);}
-    for(let i=0;i<Math.floor(len/5);i++){            // pilotis and the solar water heaters on the roof
-      const u=-len/2+2.5+i*5;
-      if(faceAxis==='x'){box(0.4,2.9,0.4,0xcfc7b3,cx-sx/2-0.3,GY+1.45,cz+u,o2); cyl(0.3,1.2,0xf6f6f2,cx,top+0.9,cz+u,o2,12).rotation.z=R/2; box(1.6,0.06,1.0,0x2b3d55,cx-1.4,top+0.5,cz+u,o2).rotation.z=0.5;}
-      else{box(0.4,2.9,0.4,0xcfc7b3,cx+u,GY+1.45,cz+sz/2+0.3,o2); cyl(0.3,1.2,0xf6f6f2,cx+u,top+0.9,cz,o2,12).rotation.x=R/2; box(1.0,0.06,1.6,0x2b3d55,cx+u,top+0.5,cz+1.4,o2).rotation.x=0.5;}
-    }
-  }
-  block(7,AZ-9-5.5,34,11,'z');
+  /* the blocks beyond the yard, Beit HaChayal first, are in building.js, placed from the satellite view */
   A.frameFns.push(function(){                      // a neighbour is hidden while the camera is behind or inside it, so it never blocks the view
-    const c=A.camera.position; blocks.forEach(function(b){b.g.visible=A.sunReal||(b.axis==='x'?c.x<b.face-0.5:c.z>b.face+1.5);});
+    const c=A.camera.position, whole=A.bldWhole&&A.bldWhole(); blocks.forEach(function(b){b.g.visible=A.sunReal||whole||(b.axis==='x'?c.x<b.face-0.5:c.z>b.face+1.5);});      // Building view shows it whole, as it stands
   });
 });
 
@@ -414,7 +397,7 @@ inRoom('out',function(){
 function batch(parent,lift,opt){return A.batch(parent,lift,opt);}
 
 inRoom('street',function(){
-  const WELL=1.6, BS=WELL+0.25, LZ=4.2, SZ=LZ+0.32, D8=8, GZ=10.4+D8, AW=3.4, U=0.17, LA=-0.15, RY=U-0.13, KZ=18.55+D8, RW=7, ZF=42+D8, FW=ZC-L, TOP=12.6, BRW=1.3, SQ=19.5;
+  const WELL=1.6, BS=WELL+0.25, LZ=4.2, SZ=LZ+0.32, D8=16, GZ=10.4+D8, AW=3.4, U=0.17, LA=-0.15, RY=U-0.13, KZ=18.55+D8, RW=7, ZF=42+D8, FW=ZC-L, TOP=12.6, BRW=1.3, SQ=19.5;
   const BL=2.2, SE=1.0, FZ=BL+0.45+6.0, AL=FZ+0.45;
   /* WELL: width of the sunken strip along our front; BS, LZ..SZ: the second bridge, the paved patch in front of it (LA, a step below the
      lobby) and two steps up from there to its path through the garden; GZ: where the garden meets the square; AW: width of the alley; U: the
@@ -782,7 +765,7 @@ inRoom('street',function(){
     b.bake(det.block(Object.assign({sx:sx,sz:sz,floors:4,ground:3.2,fh:3.0},o)),o.front==='-z'?x1:x0,U,o.front==='-z'?z0:z1,o.front==='-z'?R:0);
     far.push({g:g,hide:hide}); return {g:g,b:b};
   }
-  const n12=house(-12,0,0,16.05+D8,{seed:12,wall:0xe2dac8,faces:{front:{ground:'shops',shops:['flowers','cafe','cafe','cafe'],awnings:false,cables:true},right:{minFloor:2,pipes:2,holes:[[0.35,5.55,2.75]]}}},function(c){return c.x<1.5||c.z<0.4;});      // number 12 and the wing behind it close the left side of the square; seen only from the street side
+  const n12=house(-12,0,0,16.05+D8,{seed:12,floors:5,wall:0xe2dac8,faces:{front:{ground:'shops',shops:['flowers','cafe','cafe','cafe'],awnings:false,cables:true},right:{minFloor:2,pipes:2,holes:[[0.35,5.55,2.75]]}}},function(c){return c.x<1.5||c.z<0.4;});      // number 12 and the wing behind it close the left side of the square; seen only from the street side
   (function(){const b=n12.b, g=n12.g;
     const aw=tex(16,8,function(c){c.fillStyle='#f4f2ea'; c.fillRect(0,0,16,8); c.fillStyle='#2c5a43'; c.fillRect(0,0,8,8);},true); aw.repeat.set(14,1);
     b.geo(new THREE.BoxGeometry(6.8,0.03,2.0),A.MT(aw,null,true),-4.1,U+2.85,17+D8,0,0.35); b.box(6.8,0.2,0.02,0xf4f2ea,-4.1,U+2.42,17.95+D8);      // striped awning over the café front
@@ -832,9 +815,6 @@ inRoom('street',function(){
       [[0.45,0],[-0.45,0]].forEach(function(d){const c=b.at(q[0]+d[0],U,q[1],d[0]>0?-R/2:R/2); c.box(0.4,0.03,0.4,0xa66a35,0,0.46,0); c.box(0.4,0.4,0.03,0xa66a35,0,0.68,-0.2); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(e){c.box(0.025,0.46,0.025,0x1b1c1d,e[0]*0.18,0.23,e[1]*0.18);});});});
     A.street_cafe={barista:[-2.95,cz-1.1,R/2],n12:g};
   })();
-  house(-17.5,-1.7,29.05+D8,39.55+D8,{front:'-z',seed:31,stone:true,wall:0xe6dcc6,faces:{front:{ground:'shops',shops:['kiosk','falafel','barber','grocery','laundry'],cables:true},left:{ground:'flats',stair:1}}},function(c){return c.z>27.5+D8;}).b.done();      // across the street
-  house(3.9,28.5,29.05+D8,39.55+D8,{front:'-z',seed:47,floors:5,fh:2.9,ground:3.1,wall:0xd8d0bd,faces:{front:{ground:'pilotis',stair:3,cables:true},right:{ground:'flats'}}},function(c){return c.z>27.5+D8;}).b.done();
-  house(SQ+0.5,38,8.9+D8,16+D8,{seed:8,number:'8',wall:0xe9e3d4,faces:{front:{ground:'pilotis',stair:2},left:{ground:'flats'},back:{ground:'flats',pipes:2}}},function(c){return c.x>SQ&&c.x<38.5&&c.z>8.4+D8&&c.z<16.5+D8;}).b.done();     // and number 8 closes the right, its back across the yard from our windows
   n12.b.done();
 
   /* ---------- our own street front ----------
@@ -902,7 +882,7 @@ inRoom('street',function(){
     [[0.05,0.85,10.45,11.25],[0,0.36,11.3,15.9],[3.55,5.3,10.35,11.85],[P2[1]+0.1,P2[1]+0.4,10.45,10.75],[0.3,4.4,17.3,17.8],[0.3,0.9,16.45,17.05],[11.55,12.45,17.7,18.1],[9.7,10.8,14.6,15.2],[10.75,11.65,14.85,16.15],
     [10.3,10.5,13.65,13.85],[2.1,2.3,17.95,18.15],[4.5,4.7,17.9,18.1],[5.15,5.45,18.0,18.3],[8.75,9.05,18.0,18.3],[10.15,10.45,18.0,18.3],[10.8,11.4,17.35,17.95],
     [11.7,12.2,14.55,16.35],[12.05,12.35,10.35,10.65],[12.4,19.0,11.45,17.95],[17.9,19.3,17.75,17.95]].map(function(b){return [b[0],b[1],b[2]+D8,b[3]+D8];}),
-    [[-3.95,-1.25,25.25,26.1],[12.7,13.1,25.8,26.2],[8.8,9.1,26.1,26.4],[22.05,22.35,26.05,26.35],[3.25,3.85,18.1,18.9],[4.2,4.6,KZ+RW+0.3,KZ+RW+0.6],[-2.25,-1.95,KZ+RW+0.3,KZ+RW+0.6],[1.15,1.65,3.65,4.15]]).map(wr);      // and what the detail added: bins, the hydrant, sign poles, the chalk board, a sleeping cat
+    [[-3.95,-1.25,17.25+D8,18.1+D8],[12.7,13.1,17.8+D8,18.2+D8],[8.8,9.1,18.1+D8,18.4+D8],[22.05,22.35,18.05+D8,18.35+D8],[3.25,3.85,10.1+D8,10.9+D8],[4.2,4.6,KZ+RW+0.3,KZ+RW+0.6],[-2.25,-1.95,KZ+RW+0.3,KZ+RW+0.6],[1.15,1.65,3.65,4.15]]).map(wr);      // and what the detail added: bins, the hydrant, sign poles, the chalk board, a sleeping cat
   A.streetPass=[[XF-0.4,XF+0.4,ZO-0.45,ZO+0.45],[XF-0.4,XF+0.4,Z2-0.45,Z2+0.45]];
   A.groundAt=function(x,z){
     if(x<XF-0.05) return 0; const q=x-XF, p=ZC-z;      // q: out from our front; p: along it from number 12's corner

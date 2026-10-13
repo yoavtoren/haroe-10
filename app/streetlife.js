@@ -81,7 +81,7 @@ const cat=(function(){
 })();
 
 /* ---------- pigeons on the square ---------- */
-const PIG=[7.2,9.6,19.6+0,22.0];      // where they feed: x0 x1 z0 z1, on the open paving between the café and the planter (z already moved out)
+const PIG=[7.2,9.6,11.6+D8,14.0+D8];      // where they feed: x0 x1 z0 z1, on the open paving between the café and the planter
 const pigeons=[];
 (function(){
   for(let i=0;i<9;i++){

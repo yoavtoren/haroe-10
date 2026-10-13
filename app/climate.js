@@ -7,10 +7,11 @@ const RAD=Math.PI/180;
 let on=false;
 
 /* =====================================================================
-   Sun. Tel Aviv area, latitude 32.08 N. Compass in the model: +x is south, -z is east,
-   so the corner with the windows faces south-east.
+   Sun. Ramat Gan, latitude 32.08 N. Compass in the model, from the satellite view and the map: +x points 4.6° west of
+   true north (from our front out to Haroe St), +z 4.6° north of east (along the front toward number 12). So the kitchen
+   and bedroom 2's big window face north onto the garden, and the bedroom windows at the end face west, onto Beit HaChayal.
    ===================================================================== */
-const LAT=32.08*RAD;
+const LAT=32.08*RAD, TURN=4.6*RAD;
 const SEASONS={
   winter:{name:'21 December',dec:-23.44,tz:2,out:[11,18]},
   spring:{name:'21 March',dec:0,tz:2,out:[13,23]},
@@ -22,7 +23,7 @@ function sunAt(season,hour){
   const s=SEASONS[season], dec=s.dec*RAD, solar=hour+(34.8*4-s.tz*60)/60, h=(solar-12)*15*RAD;
   const el=Math.asin(Math.sin(LAT)*Math.sin(dec)+Math.cos(LAT)*Math.cos(dec)*Math.cos(h));
   const az=Math.atan2(-Math.cos(dec)*Math.sin(h),Math.sin(dec)*Math.cos(LAT)-Math.cos(dec)*Math.sin(LAT)*Math.cos(h));
-  return {el:el,az:(az+2*Math.PI)%(2*Math.PI),dir:new THREE.Vector3(-Math.cos(az)*Math.cos(el),Math.sin(el),-Math.sin(az)*Math.cos(el))};
+  return {el:el,az:(az+2*Math.PI)%(2*Math.PI),dir:new THREE.Vector3(Math.cos(az+TURN)*Math.cos(el),Math.sin(el),Math.sin(az+TURN)*Math.cos(el))};      // az from north, clockwise
 }
 function outdoorT(){const s=SEASONS[sunS.season].out; return s[0]+(s[1]-s[0])*Math.max(0,Math.sin((sunS.hour-6)/14*Math.PI));}
 const WINDOWS=[
@@ -94,7 +95,7 @@ const p=new Float32Array(N), dv=new Float32Array(N), solid=new Uint8Array(N), pf
 const ROOMS=['living','kitchen','bed1','bed2','bath','wc'];
 const air={mode:'off',open:{kitchen:true,bed1:true,bed2:false,bath:false},door:{bed1:true,bed2:true,bath:false,wc:false,entrance:false},wind:'W',speed:3,ac:{kitchen:true,bed1:false,bed2:false},set:23,fan:2};
 const WIN_NAMES=[['kitchen','Kitchen'],['bed1','Bedroom 1'],['bed2','Bedroom 2'],['bath','Bathroom']], DOOR_NAMES=[['bed1','Bedroom 1'],['bed2','Bedroom 2'],['bath','Bathroom'],['wc','Guest toilet'],['entrance','Front door']];
-const WIND={W:[0,-1],E:[0,1],N:[1,0],S:[-1,0]};          // direction the air travels, in (x,z): west wind blows toward the east (-z)
+const WIND={W:[0,1],E:[0,-1],N:[-1,0],S:[1,0]};          // direction the air travels, in (x,z): west wind blows toward the east (+z)
 const AC=[{id:'kitchen',x:KX-0.45,z:1.3,dx:-1,dz:0},{id:'bed1',x:1.3,z:AZ+0.45,dx:0,dz:1},{id:'bed2',x:D.BX-0.45,z:-1.13,dx:-1,dz:0}];
 const DOORS={far:['bed1','bed2'],a_door:['bed1'],b_door:['bed2'],end:['entrance'],tv:['bath'],ba_w:['bath'],blk_n:['wc'],wc_n:['wc']};      // which door each opening in a wall is
 const WINKEY={win:'kitchen',a_far:'bed1',b_r:'bed2',b_far:'bed2',ba_e:'bath'};

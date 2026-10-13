@@ -328,6 +328,10 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
       <button id="bFlat" aria-pressed="true">Apartment view</button>
       <button id="bBuilding" aria-pressed="false">Building view</button>
     </div>
+    <div class="seg wide" role="group" aria-label="Building view" id="bldSeg" hidden style="margin-bottom:8px">
+      <button id="bWhole" aria-pressed="true">Whole building</button>
+      <button id="bInside" aria-pressed="false">Look inside</button>
+    </div>
     <div class="row">
       <div class="seg" role="group" aria-label="View">
         <button id="b3d" aria-pressed="true">3D</button>
@@ -421,6 +425,7 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 <script src="app/detail.js"></script>
 <script src="app/house.js"></script>
 <script src="app/exterior.js"></script>
+<script src="app/building.js"></script>
 <script src="app/catalog.js"></script>
 <script src="app/catalog-more.js"></script>
 <script src="app/furniture.js"></script>
