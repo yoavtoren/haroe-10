@@ -36,12 +36,17 @@ function paintSky(){const d=A.get?A.get('day'):1; if(Math.abs(d-skyDay)<0.01) re
 /* ---------- the sun's shadows come with you when you are out of the flat ---------- */
 const sunHome={pos:A.sun.position.clone(),tgt:A.sun.target.position.clone()}, sunAt=new THREE.Vector3(1e9,0,0);
 let sunOut=false;
+/* out in the neighbourhood, or driving, the shadows reach farther: the blocks' shade lies across the streets */
+const SC=A.sun.shadow.camera, SC0={l:SC.left,r:SC.right,t:SC.top,b:SC.bottom,f:SC.far};
+let wide=null;
+function shadowBox(w){if(w===wide) return; wide=w; const s=w?34:SC0.r; SC.left=-s; SC.right=s; SC.top=s; SC.bottom=-s; SC.far=w?150:SC0.f; SC.updateProjectionMatrix(); A.touch(3);}
 function followSun(p){
   const out=A.simsOn&&p&&(p.lvl!==0||['living','kitchen','bed1','bed2','bath','wc'].indexOf(p.room)<0)&&$hide('pClimate');
-  if(out){const dir=sunHome.pos.clone().sub(sunHome.tgt).normalize();
+  const drv=A.drive&&A.drive.on(), far=out&&p.lvl===0&&(drv||Math.hypot(p.x-(A.LB.XF-11),p.z-(A.LB.ZC+5))>45);
+  if(out){const dir=sunHome.pos.clone().sub(sunHome.tgt).normalize(); shadowBox(far);
     if(!sunOut){sunOut=true; sunAt.set(1e9,0,0);}
-    const y=p.p.g.position.y; if(Math.hypot(p.x-sunAt.x,p.z-sunAt.z)>1.2||Math.abs(y-sunAt.y)>1){sunAt.set(p.x,y,p.z); A.sun.target.position.copy(sunAt); A.sun.position.copy(sunAt).addScaledVector(dir,18); A.sun.target.updateMatrixWorld(); A.touch(3);}}
-  else if(sunOut){sunOut=false; A.sun.position.copy(sunHome.pos); A.sun.target.position.copy(sunHome.tgt); A.sun.target.updateMatrixWorld(); A.touch(3);}
+    const y=p.p.g.position.y, step=far?(drv?6:3):1.2; if(Math.hypot(p.x-sunAt.x,p.z-sunAt.z)>step||Math.abs(y-sunAt.y)>1){sunAt.set(p.x,y,p.z); A.sun.target.position.copy(sunAt); A.sun.position.copy(sunAt).addScaledVector(dir,far?80:18); A.sun.target.updateMatrixWorld(); A.touch(3);}}
+  else if(sunOut){sunOut=false; shadowBox(false); A.sun.position.copy(sunHome.pos); A.sun.target.position.copy(sunHome.tgt); A.sun.target.updateMatrixWorld(); A.touch(3);}
 }
 function $hide(id){const e=document.getElementById(id); return !e||e.hidden;}
 
