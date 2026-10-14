@@ -299,7 +299,7 @@ inRoom('out',function(){
   cyl(0.32,0.03,0x8e8a82,8.9,GY+0.04,1.95,o,24); A.torus(0.3,0.015,0x77736b,8.9,GY+0.055,1.95,o).rotation.x=R/2;     // a manhole cover, in front of the gas bottles
   // the building under and beside us: the floor below opens onto the yard. The stairwell's shaft is left open in it.
   const facade=0xe9e3d3, X7=-7, ZC=LB.ZC, EH=LB.EH, XE=LB.XE, hh=-GY-0.01, yc=GY/2-0.005;
-  [[X7,XF,AZ-0.4,L],[X7,XB,L,EH],[XE,XF,L,EH],[X7,XF,EH,ZC]].forEach(function(q){box(q[1]-q[0],hh,q[3]-q[2],facade,(q[0]+q[1])/2,yc,(q[2]+q[3])/2,o);});
+  [[X7,XF,AZ-0.4,L],[X7,XB,L,EH],[XE,XF,L,EH],[X7,XF,EH,ZC]].forEach(function(q,i){const m=box(q[1]-q[0],hh,q[3]-q[2],facade,(q[0]+q[1])/2,yc,(q[2]+q[3])/2,o); if(i===1||i===3) m.userData.hideBelow=true;});      // the two round the shelter step aside when you are down there
   box(D.BXB-XF+0.02,hh,-AZ+0.4,facade,(XF+D.BXB+0.02)/2,yc,(AZ-0.4)/2,o);
   box(XF-3.94,H,L-A.BA.z1-0.04,0xe4ddcc,(3.92+XF)/2,H/2,(A.BA.z1+0.02+L-0.02)/2,o);        // a block of shafts between our bathroom and the stairs
   const winTex=canvasTex(128,128,function(g){g.fillStyle='#e9e3d3'; g.fillRect(0,0,128,128); g.fillStyle='#8fb0bb'; g.fillRect(30,22,68,70); g.fillStyle='#f6f3ea'; g.fillRect(62,22,4,70); g.fillStyle='#cfc8b6'; g.fillRect(24,94,80,6);});
