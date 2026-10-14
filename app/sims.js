@@ -569,7 +569,9 @@ function wideFov(){          // eye view: a wide lens, about 100 degrees across
 window.addEventListener('resize',function(){if(A.simsOn&&camMode==='eye') wideFov();});
 function flyToPlayer(){
   tgt.set(player.x,1.0+player.p.g.position.y,player.z);
-  A.fly(new THREE.Vector3(player.x+3.6,6.6,player.z+4.6),tgt,800);
+  const r=A.rooms[player.room||A.roomAt(player.x,player.z,player.lvl)]||{}, inside=!r.ext||r.of||/^w\d:/.test(r.key||'');      // in a flat: look in from over the rooms, not through the stairwell by the door
+  if(inside) A.fly(new THREE.Vector3(player.x+3.2,tgt.y+5.8,player.z-3.9),tgt,800);
+  else A.fly(new THREE.Vector3(player.x+3.6,tgt.y+5.6,player.z+4.6),tgt,800);
 }
 A.eyeView=function(){return A.simsOn&&camMode==='eye';};
 $('camFollow').onclick=function(){setCam('follow');}; $('camEye').onclick=function(){setCam('eye');};
@@ -620,6 +622,7 @@ window.addEventListener('pointerup',function(e){
   ray.setFromCamera(ndc,camera);
   for(let i=0;i<guests.length;i++){if(guests[i].leaving) continue; if(ray.intersectObject(guests[i].p.g,true).length){kickBar(guests[i]); return;}}   // tap a friend to send them home
   kickBar(null);
+  if(A.tapHook&&A.tapHook(ray,e)) return;      // people, animals, cars and things you can do something to
   if(A.life&&A.life.tap(ray.ray)) return;
   if(player.script) return;
   if(player.lvl){floorPlane.constant=-lvY(player.lvl); const ok=ray.ray.intersectPlane(floorPlane,hit); floorPlane.constant=0; if(ok) walkTo(hit.x,hit.z); return;}      // up or down the building: the floor you are on
@@ -665,7 +668,7 @@ function driveSticksOn(dt){
     let fx, fz;
     if(camMode==='eye'){fx=Math.sin(yaw); fz=Math.cos(yaw);}
     else{fx=controls.target.x-camera.position.x; fz=controls.target.z-camera.position.z; const n=Math.hypot(fx,fz)||1; fx/=n; fz/=n;}
-    const mx=fx*(-jMove.y)-fz*jMove.x, mz=fz*(-jMove.y)+fx*jMove.x, want=1.45*Math.min(1,(mag-0.18)/0.72);
+    const mx=fx*(-jMove.y)-fz*jMove.x, mz=fz*(-jMove.y)+fx*jMove.x, want=(A.running?3.4:1.45)*Math.min(1,(mag-0.18)/0.72);      // Shift: run
     manSpeed+=(want-manSpeed)*Math.min(1,dt*5);
     const base=Math.atan2(mx,mz), sp=manSpeed*dt, TRY=[0,0.45,-0.45,0.9,-0.9,1.35,-1.35];
     for(let i=0;i<TRY.length;i++){                       // blocked straight ahead: slide round the obstacle

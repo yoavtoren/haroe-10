@@ -217,6 +217,16 @@ A.makePerson=function(spec,parent){
     else if(a==='undress'){T.aLx=T.aRx=-0.5; T.fL=T.fR=-1.6; T.aLz=T.aRz=-0.2; T.tx=0.35; T.hx=0.3;}
     else if(a==='flop'){T.aRx=-2.6; T.fR=-1.9; T.aRz=0.5; T.aLx=-0.1; T.fL=-0.6;}
     else if(a==='point'){T.aRx=-1.2; T.fR=-0.2; T.hy=0;}
+    /* for the street: a guard, a jab, a shove, a hug, a flinch, lifting something heavy, stroking an animal, a cheer */
+    else if(a==='guard'){T.aLx=T.aRx=-1.1; T.fL=T.fR=-1.95; T.aLz=T.aRz=-0.18; T.hx=0.06; T.hy=0;}
+    else if(a==='punch'){const u=(o*3.2)%1, e=u<0.3?Math.sin(u/0.3*R):0; T.aRx=-1.15-0.4*e; T.fR=-1.95+1.85*e; T.aRz=-0.18+0.1*e; T.aLx=-1.1; T.fL=-1.95; T.aLz=-0.2; T.ty=-0.35*e; T.tx=0.08*e; T.hx=0.06; T.hy=0;}
+    else if(a==='push'){T.aLx=T.aRx=-1.5; T.fL=T.fR=-0.12; T.aLz=T.aRz=-0.12; T.tx=0.22; T.hy=0;}
+    else if(a==='hug'){T.aLx=T.aRx=-1.25; T.fL=T.fR=-1.0; T.aLz=T.aRz=-0.6; T.tx=0.1; T.hx=0.1; T.hy=0.25;}
+    else if(a==='hurt'){T.aLx=T.aRx=-0.95; T.fL=T.fR=-1.7; T.aLz=T.aRz=0.35; T.hx=-0.4; T.tx=-0.3; T.hy=0;}
+    else if(a==='lift'){T.aLx=T.aRx=-1.05; T.fL=T.fR=-0.55; T.aLz=T.aRz=-0.15; T.tx=0.42; T.hx=0.25; T.hy=0;}
+    else if(a==='pet'){T.aRx=-0.8; T.fR=-0.25+Math.sin(o*5)*0.18; T.aLx=-0.35; T.fL=-0.4; T.tx=0.75; T.hx=0.45; T.hy=0;}
+    else if(a==='cheer'){T.aLz=T.aRz=2.7; T.aLx=T.aRx=0; T.fL=T.fR=-0.35+f*0.2; T.hx=-0.15; T.hy=0;}
+    else if(a==='kiss'){T.aLx=T.aRx=-0.65; T.fL=T.fR=-0.85; T.aLz=T.aRz=-0.45; T.tx=0.2; T.hx=0.28; T.hy=0;}
   }
   p.update=function(dt){
     p.sit+=(p.sitT-p.sit)*Math.min(1,dt*6.5); p.lie+=(p.lieT-p.lie)*Math.min(1,dt*5);

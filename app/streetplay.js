@@ -127,5 +127,5 @@ A.frameFns.push(function(dt){
       if(engine){const moving=p.path.length>0; engine.g.gain.setTargetAtTime(moving?0.05:0.02,engine.c.currentTime,0.15); engine.o.frequency.setTargetAtTime(moving?95:52,engine.c.currentTime,0.3);}}
   }
 });
-A.streetPlay={seats:seats,scoot:scoot,mount:mount,dismount:dismount,act:act,order:order};
+A.streetPlay={bubble:bubble,seats:seats,scoot:scoot,mount:mount,dismount:dismount,act:act,order:order};
 })();

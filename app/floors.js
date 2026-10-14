@@ -152,7 +152,7 @@ function windowIn(p,x,z,w,y0,y1,alongX,room){            // glass, a white frame
   });
 }
 function put(p,room,type,ci,x,z,fx,fz,y,cfg){        // a catalog piece standing at x,z, facing (fx,fz)
-  const g=new THREE.Group(); g.position.set(x,y||0,z); g.rotation.y=Math.atan2(-fz,fx); p.add(g);
+  const g=new THREE.Group(); g.position.set(x,y||0,z); g.rotation.y=Math.atan2(-fz,fx); p.add(g); g.userData.cat=(A.CAT[type]||{}).cat;
   try{A.buildItem(g,type,ci,cfg||null,room);}catch(e){p.remove(g); return null;}
   return g;
 }
