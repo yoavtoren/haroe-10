@@ -33,6 +33,20 @@ function paintSky(){const d=A.get?A.get('day'):1; if(Math.abs(d-skyDay)<0.01) re
   const P=skyG.attributes.position; for(let i=0;i<P.count;i++){const t=Math.max(0,P.getY(i)/85); cc.copy(cH).lerp(cT,Math.pow(t,0.6)); if(P.getY(i)<0) cc.copy(cH).multiplyScalar(0.92); skyC[i*3]=cc.r; skyC[i*3+1]=cc.g; skyC[i*3+2]=cc.b;}
   skyG.attributes.color.needsUpdate=true;}
 
+/* ---------- clouds: a high thin layer drifting slowly over, tinted by the evening ---------- */
+const cloudT=(function(){const S=256, c=document.createElement('canvas'); c.width=c.height=S; const g=c.getContext('2d'), im=g.createImageData(S,S), d=im.data, r=A.rng(808);
+  const oct=function(n,seed){const q=A.rng(seed), v=new Float32Array(n*n); for(let i=0;i<v.length;i++) v[i]=q(); return function(x,y){const fx=x/S*n, fy=y/S*n, x0=Math.floor(fx), y0=Math.floor(fy), tx=fx-x0, ty=fy-y0, sx=tx*tx*(3-2*tx), sy=ty*ty*(3-2*ty), a=function(i,j){return v[((j+n)%n)*n+((i+n)%n)];};
+    return (a(x0,y0)*(1-sx)+a(x0+1,y0)*sx)*(1-sy)+(a(x0,y0+1)*(1-sx)+a(x0+1,y0+1)*sx)*sy;};}, o1=oct(4,1), o2=oct(8,2), o3=oct(16,3), o4=oct(32,4);
+  for(let y=0;y<S;y++) for(let x=0;x<S;x++){const v=0.5*o1(x,y)+0.25*o2(x,y)+0.15*o3(x,y)+0.1*o4(x,y), a=Math.max(0,Math.min(1,(v-0.5)*3.2)), i=(y*S+x)*4; d[i]=d[i+1]=d[i+2]=255-Math.round(a*30); d[i+3]=Math.round(a*220);}
+  g.putImageData(im,0,0); const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;})();
+const cloudM=new THREE.MeshBasicMaterial({map:cloudT,transparent:true,depthWrite:false,fog:false,opacity:0.85});
+const drift={value:new THREE.Vector2()};
+cloudM.onBeforeCompile=function(sh){sh.uniforms.uDrift=drift; sh.fragmentShader='uniform vec2 uDrift;\n'+sh.fragmentShader.replace('#include <map_fragment>','vec4 texelColor=texture2D(map,vUv*3.0+uDrift); diffuseColor*=texelColor; diffuseColor.a*=smoothstep(0.5,0.16,length(vUv-0.5));');};      // drifting; thinning out toward the horizon
+const clouds=new THREE.Mesh(new THREE.PlaneGeometry(700,700).rotateX(R/2),cloudM); clouds.renderOrder=-9; clouds.frustumCulled=false; clouds.userData.nc=true; clouds.userData.live=true; clouds.layers.set(OUT()); scene.add(clouds);
+const cDay=new THREE.Color(0xffffff), cEve=new THREE.Color(0xd9a07a), cNight=new THREE.Color(0x2a3040);
+A.frameFns.push(function(dt){const c=A.camera.position; clouds.position.set(c.x,c.y+70,c.z); drift.value.x+=dt*0.0048; drift.value.y+=dt*0.002;
+  const d=A.get?A.get('day'):1; cloudM.color.copy(d>0.5?cEve.clone().lerp(cDay,(d-0.5)*2):cNight.clone().lerp(cEve,d*2)); clouds.visible=sky.visible!==false;});
+
 /* ---------- the sun's shadows come with you when you are out of the flat ---------- */
 const sunHome={pos:A.sun.position.clone(),tgt:A.sun.target.position.clone()}, sunAt=new THREE.Vector3(1e9,0,0);
 let sunOut=false;

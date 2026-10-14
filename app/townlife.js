@@ -71,4 +71,21 @@ A.frameFns.push(function(dt){
 });
 A.labelFns.push(function(){folk.forEach(function(a){if(!a.p.g.visible) return; a.headPos(tv); tv.y+=0.28; A.place(a.tag,tv,A.simsOn&&A.state.labels&&!a.bubble&&Math.hypot(a.x-SM.player.x,a.z-SM.player.z)<25); if(a.bubble) A.place(a.bubble,tv,A.simsOn);});});
 A.townFolk=function(){return folk.filter(function(a){return a.p.g.visible;});};
+/* the sound of being out: traffic in the distance, birds by day, crickets at night; quiet at home */
+let amb=null, gesture=false;
+['pointerdown','keydown','touchstart'].forEach(function(ev){window.addEventListener(ev,function(){gesture=true;},{passive:true});});
+function ambStart(){if(amb||!gesture) return; let c; try{c=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+  const n=Math.floor(c.sampleRate*4), buf=c.createBuffer(1,n,c.sampleRate), d=buf.getChannelData(0); let last=0; for(let i=0;i<n;i++){last=(last+0.02*(Math.random()*2-1))/1.02; d[i]=last*3.2;}      // brown noise: the far hum of the city
+  const src=c.createBufferSource(), lp=c.createBiquadFilter(), g=c.createGain(); src.buffer=buf; src.loop=true; lp.type='lowpass'; lp.frequency.value=380; g.gain.value=0; src.connect(lp).connect(g).connect(c.destination); src.start();
+  amb={c:c,g:g,next:0,on:0};}
+function chirp(c){const t=c.currentTime, k=2+Math.floor(Math.random()*4), f0=2600+Math.random()*1800;
+  for(let i=0;i<k;i++){const o=c.createOscillator(), gg=c.createGain(), at=t+i*(0.09+Math.random()*0.06); o.type='sine'; o.frequency.setValueAtTime(f0*(0.9+Math.random()*0.2),at); o.frequency.exponentialRampToValueAtTime(f0*(1.25+Math.random()*0.3),at+0.06);
+    gg.gain.setValueAtTime(0.0001,at); gg.gain.exponentialRampToValueAtTime(0.018,at+0.01); gg.gain.exponentialRampToValueAtTime(0.0001,at+0.07); o.connect(gg).connect(c.destination); o.start(at); o.stop(at+0.09);}}
+function cricket(c){const t=c.currentTime, f=4300+Math.random()*400;
+  for(let i=0;i<3;i++){const o=c.createOscillator(), gg=c.createGain(), at=t+i*0.045; o.type='sine'; o.frequency.value=f; gg.gain.setValueAtTime(0.0001,at); gg.gain.exponentialRampToValueAtTime(0.006,at+0.008); gg.gain.exponentialRampToValueAtTime(0.0001,at+0.035); o.connect(gg).connect(c.destination); o.start(at); o.stop(at+0.05);}}
+A.frameFns.push(function(){const p=SM.player, rm=p&&A.rooms[p.room], out=A.simsOn&&p&&!p.lvl&&rm&&rm.ext;
+  if(out) ambStart(); if(!amb) return; const c=amb.c; if(c.state==='suspended'&&gesture) c.resume();
+  const day=A.get?A.get('day'):1, want=out?(0.035*day+0.016):0; if(Math.abs(want-amb.on)>0.001){amb.on=want; amb.g.gain.setTargetAtTime(want,c.currentTime,0.6);}
+  if(!out||c.currentTime<amb.next) return;
+  if(day>0.5){chirp(c); amb.next=c.currentTime+2+Math.random()*5;} else{cricket(c); amb.next=c.currentTime+0.5+Math.random()*1.4;}});
 })();
