@@ -157,7 +157,7 @@ Actor.prototype.release=function(){
     const st=this.seat; if(st.occ===this) st.occ=null; this.seat=null; if(st.onLeave) st.onLeave(this);
     const self=this, c=onLevel(this.lvl,function(){return nearest(self.x,self.z);}); if(c>=0) this.slide={fx:this.x,fz:this.z,tx:cx(c),tz:cz(c),t:0,dur:0.5,then:null};
   }
-  this.p.sitT=0; this.p.lieT=0; this.sleep(false);
+  if(!this.riding){this.p.sitT=0; this.p.lieT=0;} this.sleep(false);      // on a scooter you stay sat on it
 };
 Actor.prototype.goTo=function(x,z,cb){
   this.release(); const self=this;
@@ -216,7 +216,7 @@ Actor.prototype.update=function(dt){
   }else if(this.path.length){
     const last=this.path[this.path.length-1], rem=Math.hypot(last[0]-this.x,last[1]-this.z);
     this.v=(this.v||0)+(this.speed*Math.min(1,0.35+rem/0.6)-(this.v||0))*Math.min(1,dt*5);      // ease in from a standstill, ease out on arrival
-    let step=this.v*dt; p.walking=true;
+    let step=this.v*dt; p.walking=!this.riding;      // on a scooter you sit still
     while(step>0&&this.path.length){
       const t=this.path[0], dx=t[0]-this.x, dz=t[1]-this.z, d=Math.hypot(dx,dz);
       if(d<=step){this.x=t[0]; this.z=t[1]; step-=d; this.path.shift();}

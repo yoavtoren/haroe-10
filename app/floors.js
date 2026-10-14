@@ -544,5 +544,5 @@ A.moreItems=function(out,p){
 /* once everything is built: the doors on the landings */
 window.addEventListener('load',function(){readMats(); landingDoors(); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});
   const was=A.sims&&A.sims.onStop; if(A.sims) A.sims.onStop=function(){G.picking=false; if(was) was();};});
-A.floors={G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildWest:buildWest,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,WROOMS:WROOMS,SH:SH};
+A.floors={coin:SND.coin,drawHud:drawHud,G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildWest:buildWest,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,WROOMS:WROOMS,SH:SH};
 })();

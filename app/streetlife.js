@@ -197,6 +197,7 @@ A.frameFns.push(function(dt,t){
     const ahead=traffic.reduce(function(m,o){return o!==v&&o.wait<=0&&o.x>v.x?Math.min(m,o.x-o.len/2-(v.x+v.len/2)):m;},99);      // the car in front
     const toX=XW-1.6-(v.x+v.len/2);                                                                   // the stop line before the crossing
     let want=v.cruise; if(cross&&toX>-0.5&&toX<12) want=Math.min(want,Math.max(0,toX*0.8)); if(ahead<9) want=Math.min(want,Math.max(0,(ahead-2.5)*0.9));
+    const me=A.simsOn&&A.sims&&A.sims.player; if(me&&!me.lvl){st.worldToLocal(pv.set(me.x,0,me.z)); const gap=pv.x-(v.x+v.len/2); if(Math.abs(pv.z-LANE)<1.5&&gap>-0.8&&gap<10) want=Math.min(want,Math.max(0,(gap-1.4)*0.9));}      // you, out in the road: they stop for you
     if(Math.abs(v.x-21.6)<4) want=Math.min(want,2.2);                                                  // the speed bump
     v.speed+=(want-v.speed)*Math.min(1,dt*(want<v.speed?3:0.8)); v.x+=v.speed*dt;
     const onBump=Math.max(0,1-Math.abs(v.x-21.6)/0.6);
