@@ -372,6 +372,13 @@ function targets(){
   return out;
 }
 A.targets=targets;
+/* what design d puts where: for furnishing a flat upstairs the way one of the designs would, without touching ours */
+A.designPieces=function(d){
+  const lay=LAY[d]||{}, out=[];
+  for(const id in lay){const p=P[id], v=lay[id]; if(!p||!v) continue;
+    out.push({id:id,x:v[0],z:v[1],r:v[2],y:v[3]!=null?v[3]:(p.y0||0),want:wantOf(p,d),g:p.g,custom:!p.type0&&!p.item});}
+  return out;
+};
 /* which catalog piece, colour and settings a piece shows in design d */
 function wantOf(p,d){
   if(p.item) return [p.item.t,p.item.c||0,p.item.f||null];

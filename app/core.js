@@ -95,6 +95,8 @@ A.set=function(n,v,instant){const c=chan(n); c.target=v; if(instant) c.cur=v; A.
 A.get=function(n){return chan(n).cur;};
 A.goal=function(n){return chan(n).target;};
 for(const k in rooms){const r=rooms[k]; r.key=k; r.mats=[]; r.tint=new THREE.Color(1,1,1); chan('L:'+k,r.on?1:0,5); chan('F:'+k,1,3);}   // F: 1 = in focus, 0 = dimmed
+/* a room on another floor of the building: lvl is its floor (0 is ours), and it is lit like any other room */
+A.addRoom=function(k,def){const r=rooms[k]=def; r.key=k; r.mats=r.mats||[]; r.tint=new THREE.Color(1,1,1); r.light=1; chan('L:'+k,r.on?1:0,5); chan('F:'+k,1,3); return r;};
 chan('day',1,1.4); chan('S:kitchen',1,1.5); chan('S:bed1',1,1.5); chan('S:bed2',1,1.5);
 chan('tv',0,6); chan('string',0,4); chan('candle',0,3);
 function stepChans(dt){
@@ -102,9 +104,9 @@ function stepChans(dt){
   for(const k in chans){const c=chans[k]; if(c.cur!==c.target){const d=c.target-c.cur, s=c.rate*dt; c.cur=Math.abs(d)<=s?c.target:c.cur+Math.sign(d)*s; moved=true;}}
   return moved;
 }
-A.roomAt=function(x,z){
-  let best=null, bd=1e9;
-  for(const k in rooms){const rs=rooms[k].rs;
+A.roomAt=function(x,z,lvl){
+  let best=null, bd=1e9; lvl=lvl||0;
+  for(const k in rooms){if((rooms[k].lvl||0)!==lvl) continue; const rs=rooms[k].rs;
     for(let i=0;i<rs.length;i++){const r=rs[i];
       const dx=Math.max(r[0]-x,0,x-r[1]), dz=Math.max(r[2]-z,0,z-r[3]), d=Math.hypot(dx,dz);
       if(d<bd){bd=d; best=k;}}

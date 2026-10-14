@@ -428,6 +428,8 @@ function eat(){
 /* ---------- things in the flat you can walk up to and use ---------- */
 function items(){
   const out=[], p=me();
+  if(p&&p.lvl){if(A.moreItems) A.moreItems(out,p); return out;}      // up or down the building: only what is there
+  if(A.moreItems) A.moreItems(out,p);
   const add=function(name,q,acts,box){if(q) out.push({name:name,x:q.x==null?q.sx:q.x,z:q.z==null?q.sz:q.z,sx:q.sx,sz:q.sz,h:q.h,acts:acts,box:box||q.obj||null});};
   const around=function(s,rx,rz,y1){return [s.x-rx,s.x+rx,0,y1,s.z-rz,s.z+rz];}, en=D.entrance;
   add('Front door and shoes',{x:SM.EX+0.4,z:L-0.3,sx:SM.EX+0.35,sz:L-0.8,h:0},[[p.p.shoesOn?'Take shoes off':'Put shoes on',DO.shoes]],[en[0],en[1],0,2.05,L-0.08,L]);
@@ -527,7 +529,7 @@ function hud(){
 }
 $('useBtns').onclick=function(e){const b=e.target.closest('button'); if(b&&focus&&focus.acts[+b.dataset.i]){pin=null; AU.unlock(); focus.acts[+b.dataset.i][1]();}};
 function tap(ray){               // tap a thing in the room: walk up to it
-  let best=null, bd=1e9; items().forEach(function(it){if(it.sx==null) return; tp.set(it.x,0.8,it.z); const d=ray.distanceToPoint(tp); if(d<0.42&&d<bd){bd=d; best=it;}});
+  let best=null, bd=1e9; items().forEach(function(it){if(it.sx==null) return; tp.set(it.x,it.y!=null?it.y:0.8,it.z); const d=ray.distanceToPoint(tp); if(d<0.42&&d<bd){bd=d; best=it;}});
   if(!best||st.asleep) return false;
   begin(); pin=best; pinT=A.t+30; walk(best.sx,best.sz,best.h,function(){pinT=A.t; hud();}); return true;
 }
@@ -585,10 +587,10 @@ A.frameFns.push(function(dt,t){
   if(partner){partner.update(dt); if(!partner.busy&&!st.asleep&&t>partner.next) roam(); if(!partner.busy&&t>sayT&&!st.asleep){sayT=t+30+Math.random()*30; partner.say(LINES[Math.floor(Math.random()*LINES.length)],3);}}
   if(p.room!==lastRoom){                                   // shoes and sand
     if(p.room==='hall'&&lastRoom&&!p.p.shoesOn) p.p.shoes(true);
-    if(lastRoom==='hall'&&p.p.shoesOn&&!st.warned.shoes){st.warned.shoes=1; SM.toast('Shoes still on. Take them off at the door, or you will walk sand through the flat.');}
+    if(lastRoom==='hall'&&p.p.shoesOn&&!st.warned.shoes&&!p.lvl&&A.rooms[p.room]&&!A.rooms[p.room].ext){st.warned.shoes=1; SM.toast('Shoes still on. Take them off at the door, or you will walk sand through the flat.');}
     lastRoom=p.room;
   }
-  if(p.p.shoesOn&&p.room!=='hall'&&!A.rooms[p.room].ext&&Math.hypot(p.x-lastDrop[0],p.z-lastDrop[1])>0.75){lastDrop=[p.x,p.z]; addDirt(p.x,p.z);}
+  if(p.p.shoesOn&&p.room!=='hall'&&!p.lvl&&A.rooms[p.room]&&!A.rooms[p.room].ext&&Math.hypot(p.x-lastDrop[0],p.z-lastDrop[1])>0.75){lastDrop=[p.x,p.z]; addDirt(p.x,p.z);}
   if(mode==='vacuum'&&vac.visible){cleanNear(p.x+Math.sin(p.h)*0.5,p.z+Math.cos(p.h)*0.5,0.6); K.vacuumHold(vac,p.p.hand);}
   // kitchen
   if(hot) hobGlow.material.opacity=0.55+0.12*Math.sin(t*9); else if(hobGlow.material.opacity>0) hobGlow.material.opacity=Math.max(0,hobGlow.material.opacity-dt);

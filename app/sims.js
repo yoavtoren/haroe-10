@@ -31,7 +31,13 @@ function makePerson(spec){return A.makePerson(spec,actors);}
 const WB=(function(){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; for(const k in A.rooms) A.rooms[k].rs.forEach(function(r){x0=Math.min(x0,r[0]); x1=Math.max(x1,r[1]); z0=Math.min(z0,r[2]); z1=Math.max(z1,r[3]);}); return [x0-0.2,x1+0.2,z0-0.2,z1+0.2];})();
 const CS=0.1, GX0=WB[0], GZ0=WB[2], NX=Math.ceil((WB[1]-GX0)/CS), NZ=Math.ceil((WB[3]-GZ0)/CS), RAD=0.13, LB=A.LB;
 const gy=A.groundAt||function(){return 0;};
-const free=new Uint8Array(NX*NZ);
+const free0=new Uint8Array(NX*NZ); let free=free0;      // the grid in use: our floor's, or for a moment another floor's
+/* other floors of the building (from floors.js): each has a grid of its own, built from its rooms and what stands on it */
+const grids={};
+function lvY(l){return l&&A.levels&&A.levels[l]?A.levels[l].y:0;}
+function gridOf(l){if(!l) return free0; if(!grids[l]) grids[l]=buildLevel(l); return grids[l];}
+function onLevel(l,fn){const keep=free; free=gridOf(l); try{return fn();} finally{free=keep;}}
+A.navDirty=function(l){if(l) delete grids[l];};
 const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+1.0, LOBBY=[(A.LB.CX0+A.LB.CX1)/2,L+5.0];      // centre of the front door; where people stand just inside it; on the landing; up the corridor
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
   [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
@@ -53,8 +59,8 @@ function collect(o){
   for(let i=0;i<o.children.length;i++) collect(o.children[i]);
 }
 function buildNav(){
-  free.fill(0);
-  for(const k in A.rooms) A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});
+  free=free0; free.fill(0);
+  for(const k in A.rooms){if(A.rooms[k].lvl) continue; A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});}
   scene.updateMatrixWorld(true); collect(scene);
   (A.streetBlock||[]).forEach(function(b){fillRect(b[0]-RAD,b[1]+RAD,b[2]-RAD,b[3]+RAD,0);});      // the street is drawn as merged meshes, so what stands there is listed
   PASS.forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);});
@@ -64,6 +70,28 @@ function buildNav(){
     if(i>0&&free[c-1]&&!seen[c-1]){seen[c-1]=1; q.push(c-1);} if(i<NX-1&&free[c+1]&&!seen[c+1]){seen[c+1]=1; q.push(c+1);}
     if(j>0&&free[c-NX]&&!seen[c-NX]){seen[c-NX]=1; q.push(c-NX);} if(j<NZ-1&&free[c+NX]&&!seen[c+NX]){seen[c+NX]=1; q.push(c+NX);}}
   for(let c=0;c<free.length;c++) free[c]=seen[c];
+}
+/* another floor's grid: its rooms are open, what was built for that floor (marked with its lvl) stands in the way, its doorways are open,
+   and only what can be reached from where the stairs come up is kept */
+function buildLevel(l){
+  const g=new Uint8Array(NX*NZ), keep=free; free=g; const lv=A.levels[l], y0=lv.y;
+  try{
+    for(const k in A.rooms){if(A.rooms[k].lvl!==l) continue; A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});}
+    scene.updateMatrixWorld(true);
+    (function walk(o){if(o.userData.nc&&!o.userData.lvl) return;
+      if(o.isMesh&&o.userData.lvl===l&&!o.userData.floor&&!o.userData.nonav){const geo=o.geometry; if(!geo.boundingBox) geo.computeBoundingBox(); bb.copy(geo.boundingBox).applyMatrix4(o.matrixWorld);
+        if(bb.max.y>y0+0.1&&bb.min.y<y0+1.25&&bb.max.y-bb.min.y>0.05) fillRect(bb.min.x-RAD,bb.max.x+RAD,bb.min.z-RAD,bb.max.z+RAD,0);}
+      for(let i=0;i<o.children.length;i++) walk(o.children[i]);})(scene);
+    (lv.block||[]).forEach(function(b){fillRect(b[0]-RAD,b[1]+RAD,b[2]-RAD,b[3]+RAD,0);});
+    (lv.pass||[]).forEach(function(p){if(!p.shut||!p.shut()) fillRect(p[0],p[1],p[2],p[3],1);});
+    const start=cell(lv.spawn[0],lv.spawn[1]), seen=new Uint8Array(NX*NZ), q=[start];
+    if(start>=0&&g[start]){seen[start]=1;
+      while(q.length){const c=q.pop(), i=c%NX, j=(c-i)/NX;
+        if(i>0&&g[c-1]&&!seen[c-1]){seen[c-1]=1; q.push(c-1);} if(i<NX-1&&g[c+1]&&!seen[c+1]){seen[c+1]=1; q.push(c+1);}
+        if(j>0&&g[c-NX]&&!seen[c-NX]){seen[c-NX]=1; q.push(c-NX);} if(j<NZ-1&&g[c+NX]&&!seen[c+NX]){seen[c+NX]=1; q.push(c+NX);}}
+      for(let c=0;c<g.length;c++) g[c]=seen[c];}
+  } finally {free=keep;}
+  return g;
 }
 function cell(x,z){const i=Math.floor((x-GX0)/CS), j=Math.floor((z-GZ0)/CS); return (i<0||j<0||i>=NX||j>=NZ)?-1:j*NX+i;}
 function isFree(x,z){const c=cell(x,z); return c>=0&&free[c]===1;}
@@ -120,20 +148,20 @@ function Actor(spec,me){
   this.spec=spec; this.me=!!me; this.p=makePerson(spec);
   this.x=EX; this.z=SPAWN; this.h=R; this.hT=R; this.path=[]; this.cb=null; this.seat=null; this.held=null;
   this.speed=me?1.4:1.25; this.tag=A.tag(spec.name,me?'me':'who'); this.bubble=null; this.zz=null; this.room=null; this.ver=-1; this.slide=null;
-  this.gone=false;
+  this.gone=false; this.lvl=0; this.script=null;
 }
 Actor.prototype.release=function(){
   if(this.held){if(this.held.occ===this) this.held.occ=null; this.held=null;}
   this.slide=null;
   if(this.seat){                                    // get up: ease to the nearest clear spot instead of jumping there
     const st=this.seat; if(st.occ===this) st.occ=null; this.seat=null; if(st.onLeave) st.onLeave(this);
-    const c=nearest(this.x,this.z); if(c>=0) this.slide={fx:this.x,fz:this.z,tx:cx(c),tz:cz(c),t:0,dur:0.5,then:null};
+    const self=this, c=onLevel(this.lvl,function(){return nearest(self.x,self.z);}); if(c>=0) this.slide={fx:this.x,fz:this.z,tx:cx(c),tz:cz(c),t:0,dur:0.5,then:null};
   }
   this.p.sitT=0; this.p.lieT=0; this.sleep(false);
 };
 Actor.prototype.goTo=function(x,z,cb){
-  this.release();
-  this.path=findPath(this.x,this.z,x,z); this.cb=cb||null;
+  this.release(); const self=this;
+  this.path=onLevel(this.lvl,function(){return findPath(self.x,self.z,x,z);}); this.cb=cb||null;
   if(!this.path.length){this.cb=null; if(cb) cb();}
 };
 /* walk to a seat, then settle into it. mode: 'floor' sits on a lying spot with legs out */
@@ -164,8 +192,23 @@ Actor.prototype.sleep=function(on){
   if(on&&!this.zz) this.zz=A.tag('z z z','zzz');
   if(!on&&this.zz){this.zz.remove(); this.zz=null;}
 };
+/* up or down a flight of stairs: a path of [x,y,z] points, walked at an easy pace; at its end you are on floor lvl */
+Actor.prototype.climb=function(pts,lvl,cb){
+  this.release(); this.path=[]; this.cb=null; let len=0; for(let i=1;i<pts.length;i++) len+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]);
+  this.script={pts:pts,i:1,lvl:lvl,cb:cb||null,y:pts[0][1]}; this.x=pts[0][0]; this.z=pts[0][2];
+};
 Actor.prototype.update=function(dt){
   const p=this.p;
+  if(this.script){
+    const sc=this.script; let step=0.95*dt; p.walking=true;
+    while(step>0&&sc.i<sc.pts.length){const t=sc.pts[sc.i], dx=t[0]-this.x, dy=t[1]-sc.y, dz=t[2]-this.z, d=Math.hypot(dx,dy,dz);
+      if(d<=step){this.x=t[0]; sc.y=t[1]; this.z=t[2]; step-=d; sc.i++;} else{const k=step/d; this.x+=dx*k; sc.y+=dy*k; this.z+=dz*k; if(Math.hypot(dx,dz)>0.01) this.hT=Math.atan2(dx,dz); step=0;}}
+    this.h=angLerp(this.h,this.hT,Math.min(1,dt*8));
+    p.moved=Math.hypot(this.x-(this.lx==null?this.x:this.lx),this.z-(this.lz==null?this.z:this.lz))+0.4*dt; this.lx=this.x; this.lz=this.z;
+    p.g.position.set(this.x,sc.y,this.z); p.g.rotation.y=this.h; p.update(dt);
+    if(sc.i>=sc.pts.length){this.script=null; this.lvl=sc.lvl; p.walking=false; this.v=0; if(sc.cb) sc.cb();}
+    return;
+  }
   if(this.slide){
     const s=this.slide; s.t=Math.min(1,s.t+dt/s.dur); const e=s.t*s.t*s.t*(s.t*(s.t*6-15)+10);
     this.x=s.fx+(s.tx-s.fx)*e; this.z=s.fz+(s.tz-s.fz)*e; p.walking=false;
@@ -183,8 +226,8 @@ Actor.prototype.update=function(dt){
   }else{p.walking=!!this.manual; if(!this.manual) this.v=0;}
   this.h=angLerp(this.h,this.hT,Math.min(1,dt*8));
   p.moved=p.walking?Math.hypot(this.x-(this.lx==null?this.x:this.lx),this.z-(this.lz==null?this.z:this.lz)):0; this.lx=this.x; this.lz=this.z;      // ground covered this frame: the stride is measured from it
-  p.g.position.set(this.x,this.seat?0:gy(this.x,this.z),this.z); p.g.rotation.y=this.h; p.update(dt);
-  const rm=A.roomAt(this.x,this.z);
+  p.g.position.set(this.x,this.lvl?lvY(this.lvl):this.seat?0:gy(this.x,this.z),this.z); p.g.rotation.y=this.h; p.update(dt);
+  const rm=A.roomAt(this.x,this.z,this.lvl)||this.room||'hall';
   if(rm!==this.room||this.ver!==A.lightVer||p.dirty){p.dirty=false; this.room=rm; this.ver=A.lightVer; p.tint(A.rooms[rm].tint);}
 };
 Actor.prototype.remove=function(){
@@ -201,8 +244,9 @@ const guests=[];
 function makePlayer(){
   let x=EX, z=SPAWN, h=R;
   if(player){x=player.x; z=player.z; h=player.h; player.remove();}
-  player=new Actor(LOOKS[who],true); player.x=x; player.z=z; player.h=player.hT=h;
-  const c=nearest(x,z); if(c>=0){player.x=cx(c); player.z=cz(c);}
+  const lvl=player?player.lvl:0;
+  player=new Actor(LOOKS[who],true); player.x=x; player.z=z; player.h=player.hT=h; player.lvl=lvl;
+  const c=onLevel(lvl,function(){return nearest(x,z);}); if(c>=0){player.x=cx(c); player.z=cz(c);}
   if(pj.on) player.p.outfit(true);
   A.player=player;
 }
@@ -524,7 +568,7 @@ function wideFov(){          // eye view: a wide lens, about 100 degrees across
 }
 window.addEventListener('resize',function(){if(A.simsOn&&camMode==='eye') wideFov();});
 function flyToPlayer(){
-  tgt.set(player.x,1.0+gy(player.x,player.z),player.z);
+  tgt.set(player.x,1.0+player.p.g.position.y,player.z);
   A.fly(new THREE.Vector3(player.x+3.6,6.6,player.z+4.6),tgt,800);
 }
 A.eyeView=function(){return A.simsOn&&camMode==='eye';};
@@ -577,6 +621,8 @@ window.addEventListener('pointerup',function(e){
   for(let i=0;i<guests.length;i++){if(guests[i].leaving) continue; if(ray.intersectObject(guests[i].p.g,true).length){kickBar(guests[i]); return;}}   // tap a friend to send them home
   kickBar(null);
   if(A.life&&A.life.tap(ray.ray)) return;
+  if(player.script) return;
+  if(player.lvl){floorPlane.constant=-lvY(player.lvl); const ok=ray.ray.intersectPlane(floorPlane,hit); floorPlane.constant=0; if(ok) walkTo(hit.x,hit.z); return;}      // up or down the building: the floor you are on
   if(!ray.ray.intersectPlane(floorPlane,hit)) return;
   const h=gy(hit.x,hit.z); if(h){floorPlane.constant=-h; ray.ray.intersectPlane(floorPlane,hit); floorPlane.constant=0;}      // out on the square the ground is higher
   walkTo(hit.x,hit.z);
@@ -584,8 +630,9 @@ window.addEventListener('pointerup',function(e){
 function walkTo(x,z){
   if(x<WB[0]||x>WB[1]||z<WB[2]||z>WB[3]) return;
   if(pj.asleep) return;
-  stopAction(); const c=nearest(x,z); if(c<0) return;
-  marker.position.set(cx(c),0.03+gy(cx(c),cz(c)),cz(c)); marker.material.opacity=0.9;
+  if(player.script) return;
+  stopAction(); const c=onLevel(player.lvl,function(){return nearest(x,z);}); if(c<0) return;
+  marker.position.set(cx(c),0.03+(player.lvl?lvY(player.lvl):gy(cx(c),cz(c))),cz(c)); marker.material.opacity=0.9;
   player.goTo(cx(c),cz(c),function(){refresh();}); refresh();
 }
 A.walkTo=walkTo;
@@ -609,7 +656,8 @@ let manSpeed=0;
 const jMove=stick($('stickMove')), jLook=stick($('stickLook')), sphc=new THREE.Spherical(), offv=new THREE.Vector3();
 A.sticks={move:jMove,look:jLook};
 function showSticks(on){on=on&&TOUCH; $('stickMove').hidden=!on; $('stickLook').hidden=!on; document.body.classList.toggle('sticks',on);}
-function driveSticks(dt){
+function driveSticks(dt){if(player.script) return; onLevel(player.lvl,function(){driveSticksOn(dt);});}
+function driveSticksOn(dt){
   const mag=Math.hypot(jMove.x,jMove.y);
   player.manual=false;
   if(mag>0.18&&!pj.asleep){
@@ -657,10 +705,10 @@ A.frameFns.push(function(dt,t){
   }
   status();
   // doors swing open for anyone walking up to them
-  for(let i=0;i<A.doors.length;i++){const d=A.doors[i];
-    let near=Math.hypot(player.x-d.cx,player.z-d.cz)<1.0&&!player.seat;
-    for(let j=0;j<guests.length&&!near;j++) near=Math.hypot(guests[j].x-d.cx,guests[j].z-d.cz)<1.0&&!guests[j].seat;
-    for(let j=0;j<extras.length&&!near;j++) near=Math.hypot(extras[j].x-d.cx,extras[j].z-d.cz)<1.0&&!extras[j].seat;
+  for(let i=0;i<A.doors.length;i++){const d=A.doors[i], dl=d.lvl||0; if(d.locked||d.held) continue;
+    let near=Math.hypot(player.x-d.cx,player.z-d.cz)<1.0&&!player.seat&&player.lvl===dl&&!player.script;
+    for(let j=0;j<guests.length&&!near;j++) near=!dl&&Math.hypot(guests[j].x-d.cx,guests[j].z-d.cz)<1.0&&!guests[j].seat;
+    for(let j=0;j<extras.length&&!near;j++) near=(extras[j].lvl||0)===dl&&Math.hypot(extras[j].x-d.cx,extras[j].z-d.cz)<1.0&&!extras[j].seat;
     d.target=near?1:0;}
   if(marker.material.opacity>0){marker.material.opacity=Math.max(0,marker.material.opacity-dt*(player.path.length?0.25:2.5)); marker.scale.setScalar(1+0.12*Math.sin(t*7));}
   if(camMode==='eye'){
@@ -671,7 +719,7 @@ A.frameFns.push(function(dt,t){
     camera.rotation.order='YXZ'; camera.rotation.set(-pitch,yaw+R,0);
     if(!freeLook) yaw=angLerp(yaw,player.h,Math.min(1,dt*6));
   }else if(!A.flying()){
-    tgt.set(player.x,1.0+gy(player.x,player.z),player.z); delta.copy(tgt).sub(controls.target).multiplyScalar(1-Math.exp(-dt*5));
+    tgt.set(player.x,1.0+player.p.g.position.y,player.z); delta.copy(tgt).sub(controls.target).multiplyScalar(1-Math.exp(-dt*5));
     controls.target.add(delta); camera.position.add(delta);
   }
   wallsVisible(); cullRooms();
@@ -693,7 +741,7 @@ A.labelFns.push(function(){
 function resetSims(){
   stopAction(); clearGuests(); timers.length=0;
   if(pj.on){pj.on=false; pj.asleep=false; S.pj=false; A.set('string',0); A.set('tv',0); K.tvShow='day'; if(player){player.sleep(false); player.p.outfit(false); player.ver=-1;}}
-  if(player){player.release(); player.path=[]; player.x=EX; player.z=SPAWN; player.h=player.hT=R;}
+  if(player){player.release(); player.path=[]; player.script=null; player.lvl=0; player.x=EX; player.z=SPAWN; player.h=player.hT=R;}
   if(A.life) A.life.reset();
 }
 /* A new design while you are living in the flat: nobody is sent back to the door. Whoever sits on something the
@@ -754,7 +802,7 @@ function setMode(sims){
 }
 A.setMode=setMode;
 $('tabDesign').onclick=function(){setMode(false);}; $('tabSims').onclick=function(){setMode(true);};
-A.sims={Actor:Actor,LOOKS:LOOKS,extras:extras,later:later,cancel:cancelTimers,toast:toast,stop:stopAction,seatBy:seatBy,firstFree:firstFree,afterLayout:afterLayout,refresh:refresh,isFree:isFree,
+A.sims={Actor:Actor,LOOKS:LOOKS,extras:extras,onLevel:onLevel,PASS:PASS,lvY:lvY,FRIENDS:FRIENDS,walkTo:walkTo,flyToPlayer:flyToPlayer,get camMode(){return camMode;},later:later,cancel:cancelTimers,toast:toast,stop:stopAction,seatBy:seatBy,firstFree:firstFree,afterLayout:afterLayout,refresh:refresh,isFree:isFree,
   nearestXZ:function(x,z){const c=nearest(x,z); return c<0?null:[cx(c),cz(c)];},setDoing:function(t){doing=t; refresh();},getDoing:function(){return doing;},renderRooms:renderRooms,
   view:function(){return camMode==='eye'?yaw:player.h;},EX:EX,SPAWN:SPAWN,get who(){return who;},get evening(){return evening;},
   ACT:ACT,guests:guests,pj:pj,setEvening:setEvening,setLight:setLight,setShutter:setShutter,setCam:setCam,setWho:setWho,startPJ:startPJ,lightsOut:lightsOut,morning:morning,arrive:arrive,goodbye:goodbye,roster:roster,freeSeats:freeSeats,openInvite:openInvite,openPJ:openPJ,get player(){return player;}};
