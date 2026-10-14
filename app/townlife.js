@@ -20,6 +20,14 @@ function pave(x0,z0,dmin,dmax){for(let k=0;k<30;k++){const rd=T.net[Math.floor(M
 const folk=[];
 function spawn(px,pz){const q=pave(px,pz,24,90); if(!q) return; const a=new SM.Actor(spec()); a.lvl=0; a.x=a.lx=q[0]; a.z=a.lz=q[1]; a.speed=0.95+Math.random()*0.45; a.town=true; a.next=A.t+Math.random()*2; a.p.act=Math.random()<0.22?'carry':null;
   a.h=a.hT=Math.random()*2*R; folk.push(a);}
+/* waiting for the bus on the bench of a shelter; when it comes they get up, walk to its door and get on */
+function spawnWaiter(px,pz){const st=(T.stops||[]).filter(function(s){const d=Math.hypot(s.x-px,s.z-pz); return d<85&&folk.filter(function(a){return a.stop===s;}).length<3;}); if(!st.length) return false;
+  const s=st[Math.floor(Math.random()*st.length)], k=folk.filter(function(a){return a.stop===s;}).length, f=[Math.sin(s.h),Math.cos(s.h)], u=[f[1],-f[0]], o=(k-1)*0.75;
+  const a=new SM.Actor(spec()); a.lvl=0; a.x=a.lx=s.x-f[0]*0.36+u[0]*o; a.z=a.lz=s.z-f[1]*0.36+u[1]*o; a.h=a.hT=s.h; a.p.seatY=0.47; a.p.sitT=a.p.sit=1; a.stop=s; a.waiting=true; a.busy=true; a.town=true;
+  a.p.act=['read',null,'drink',null][Math.floor(Math.random()*4)]; folk.push(a); return true;}
+A.busAt=function(s,bus){const f=bus.fwd(); folk.forEach(function(a){if(a.stop!==s||!a.waiting) return; a.waiting=false; a.busy=false; a.p.act=null;
+  const dx=bus.x+f[0]*(bus.dim[0]/2-0.8)-a.x, dz=bus.z+f[1]*(bus.dim[0]/2-0.8)-a.z, d=Math.hypot(dx,dz)||1;
+  a.goTo(a.x+dx*(1-1.4/d),a.z+dz*(1-1.4/d),function(){a.boarded=true;}); a.busy=true;});};      // to the front door, and in
 function walkOn(a){if(a.busy||a.path.length||a.slide) return; if(A.t<a.next) return;
   const hurt=a._g&&a._g.hp<100; if(hurt&&!a.fled){a.fled=true; a.speed=2.4; a.p.act=null;}      // hurt: they hurry away from you
   const p=SM.player, q=pave(hurt?p.x:a.x,hurt?p.z:a.z,hurt?60:30,hurt?140:110); if(!q){a.next=A.t+2; return;}
@@ -49,9 +57,11 @@ A.frameFns.push(function(dt){
   for(let i=folk.length-1;i>=0;i--){const a=folk[i]; a.p.g.visible=true;
     if(Math.hypot(a.x-mx,a.z-mz)>150&&!(a._g&&(a._g.down||a._g.fight))){a.remove(); folk.splice(i,1); continue;}
     if(a._g&&a._g.down&&a.p.lieT>0){a.update(dt); continue;}
+    if(a.boarded){a.remove(); folk.splice(i,1); continue;}
+    if(a.waiting&&a._g&&a._g.hp<100){a.waiting=false; a.stop=null; a.p.sitT=0;}      // hit on the bench: no more waiting
     if(a.busy&&a._hold&&A.t>a._hold&&!(a._g&&(a._g.down||a._g.fight))){a.busy=false; a._hold=0;}
     walkOn(a); a.update(dt);}
-  if(folk.length<MAX&&T.inside(mx,mz)&&Math.random()<0.25) spawn(mx,mz);
+  if(folk.length<MAX&&T.inside(mx,mz)&&Math.random()<0.25){if(!(Math.random()<0.25&&spawnWaiter(mx,mz))) spawn(mx,mz);}
   chatter();
 });
 A.labelFns.push(function(){folk.forEach(function(a){if(!a.p.g.visible) return; a.headPos(tv); tv.y+=0.28; A.place(a.tag,tv,A.simsOn&&A.state.labels&&!a.bubble&&Math.hypot(a.x-SM.player.x,a.z-SM.player.z)<25); if(a.bubble) A.place(a.bubble,tv,A.simsOn);});});

@@ -600,8 +600,7 @@ const signs2=A.batch(root);
         addOb(bx,bz,1.0); stops.push({x:q.x,z:q.z,h:Math.atan2(-q.nx*sd,-q.nz*sd),rd:rd});}}});
   /* junctions: lights where a main street crosses, bollards on their corners, a stop sign where a side street meets a main one, the cages for bottles */
   cross.forEach(function(c){if(c.car.length<2||kept(c.x,c.z)||nearHome(c.x,c.z)) return; const mains=c.car.filter(function(x){return x.k===1||x.k===6||x.k===7;}), lights=mains.length>=1&&c.car.length>=2&&(mains.length>=2||c.car.length>=3||r()<0.5);
-    const sig=lights?{x:c.x,z:c.z,grp:new Map()}:null; if(sig) SIG.set(key([c.x,c.z]),sig);
-    const wo=Math.max.apply(null,c.car.map(function(x){return x.w[0]/2+x.w[1];}));
+    const wo=Math.max.apply(null,c.car.map(function(x){return x.w[0]/2+x.w[1];})), sig=lights?{x:c.x,z:c.z,grp:new Map(),wo:wo}:null; if(sig) SIG.set(key([c.x,c.z]),sig);
     c.car.forEach(function(rd){const j=rd.p.findIndex(function(q){return key(q)===key([c.x,c.z]);}); if(j<0) return; const main=rd.k===1||rd.k===6||rd.k===7, grp=mains.length&&mains.length<c.car.length?(main?0:1):(rd===c.car[0]?0:1);
       if(sig) sig.grp.set(rd,grp);
       [j-1,j+1].forEach(function(o){if(o<0||o>=rd.p.length) return; const q=rd.p[o], dx=q[0]-c.x, dz=q[1]-c.z, l=hyp(dx,dz); if(l<9) return; const ux=dx/l, uz=dz/l, rx=uz, rz=-ux;      // r: the right of traffic coming in

@@ -14,8 +14,8 @@ function ang(a,b,k){let d=b-a; while(d>R) d-=2*R; while(d<-R) d+=2*R; return a+d
 function wrap(d){while(d>R) d-=2*R; while(d<-R) d+=2*R; return d;}
 const root=new THREE.Group(); root.userData.nc=true; root.userData.nofight=true; scene.add(root);      // not in the way of the walking map; moves, so no flicker search
 const lampH=A.lampMat('L:street',0xe6ecee,0xfff6dc,1.1), lampT=A.lampMat('L:street',0xb0262a,0xff3a2a,0.9);
-const DIM={mini:[3.6,1.6,2.38],hatch:[4.05,1.76,2.58],sedan:[4.62,1.8,2.7],suv:[4.45,1.84,2.64],van:[4.4,1.78,2.73]};      // length, width, wheelbase
-const NAME={mini:'Little car',hatch:'Hatchback',sedan:'Saloon',suv:'SUV',van:'Van'};
+const DIM={mini:[3.6,1.6,2.38],hatch:[4.05,1.76,2.58],sedan:[4.62,1.8,2.7],suv:[4.45,1.84,2.64],van:[4.4,1.78,2.73],bus:[11.8,2.55,5.9]};      // length, width, wheelbase
+const NAME={mini:'Little car',hatch:'Hatchback',sedan:'Saloon',suv:'SUV',van:'Van',bus:'City bus'};
 
 /* ---------- sounds ---------- */
 let ac=null;
@@ -39,7 +39,22 @@ function sirenOn(on){const c=actx(); if(!c) return;
 /* ---------- the finely built cars: one built for each kind and colour, then copied ---------- */
 const built={}, copRed=new THREE.MeshLambertMaterial({color:0xd82a2a}), copBlue=new THREE.MeshLambertMaterial({color:0x2a5ad8});
 let plateN=0;
+/* the city bus: white with the green band, its windows all down the side, the doors, the route and where it goes in orange lights over the windscreen */
+function busModel(col){const P=det.P, g=P.grp(), L=11.8, W=2.5, Hb=3.05, M=det.mat;
+  const side=det.tex(1024,256,function(c){c.fillStyle='#f2f2ee'; c.fillRect(0,0,1024,256); c.fillStyle='#22302a'; c.fillRect(40,40,940,110);
+    for(let x=40;x<980;x+=94){c.fillStyle='#d9dcd8'; c.fillRect(x,40,6,110);} c.fillStyle='#2f8a4a'; c.fillRect(0,168,1024,26); c.fillStyle='#1f6a36'; c.fillRect(0,198,1024,8);
+    [[60,'f'],[560,'m']].forEach(function(d){c.fillStyle='#2a343c'; c.fillRect(d[0],40,84,216); c.fillStyle='#c9cdcf'; c.fillRect(d[0]+40,40,4,216);});      // the doors
+    c.fillStyle='#2f8a4a'; c.font='bold 40px sans-serif'; c.fillText('דן',870,240); c.fillStyle='#1d1f21'; c.font='bold 26px sans-serif'; c.fillText('61',700,236);},false);
+  const sign=det.tex(256,48,function(c){c.fillStyle='#111'; c.fillRect(0,0,256,48); c.fillStyle='#ffa21a'; c.font='bold 30px sans-serif'; c.textAlign='center'; c.fillText('61 רמת גן',128,36);},false);
+  P.rbox(L,Hb-0.4,W,col,0,0.4+(Hb-0.4)/2,0,g,0.1,0.3);
+  P.plane(L-0.4,(Hb-0.4)*0.98,M(side),0,0.4+(Hb-0.4)/2,W/2+0.012,g); P.plane(L-0.4,(Hb-0.4)*0.98,M(side),0,0.4+(Hb-0.4)/2,-W/2-0.012,g,R);
+  P.box(0.05,1.5,W-0.2,0x26303a,L/2+0.01,1.85,0,g); P.box(0.05,0.3,1.5,M(sign),L/2+0.02,2.78,0,g); P.box(0.05,1.0,W-0.4,0x26303a,-L/2-0.01,2.1,0,g);      // the windscreen, the sign, the rear window
+  P.box(0.16,0.35,W,0x1d1f21,L/2+0.02,0.45,0,g); P.box(0.16,0.35,W,0x1d1f21,-L/2-0.02,0.45,0,g); P.box(2.4,0.3,1.4,0xdcdcd8,-1.5,Hb+0.12,0,g);      // bumpers, the air conditioning on the roof
+  [-1,1].forEach(function(s){P.box(0.05,0.15,0.3,lampH,L/2+0.03,0.75,s*(W/2-0.3),g); P.box(0.05,0.2,0.24,lampT,-L/2-0.03,0.85,s*(W/2-0.25),g); P.box(0.3,0.18,0.04,0x1d1f21,L/2-0.3,2.3,s*(W/2+0.15),g);
+    [L/2-2.5,-L/2+3.1].forEach(function(x){const w=det.wheel(g,0.5,0.3,{style:'car',rim:0xb9bdc0}); w.position.set(x,0.5,s*(W/2-0.2)); w.rotation.order='YXZ'; w.rotation.y=R/2; w.userData.wheel=0.5;});});
+  return g;}
 function model(kind,col,cop){const k=kind+'|'+col+(cop?'|cop':'');
+  if(!built[k]&&kind==='bus'){const g=det.solid(busModel(col),'street'); delete g.userData.wheels; built[k]=g;}
   if(!built[k]){const g0=det.car(kind,{color:col,plate:String(11+(plateN*37)%88)+'-'+String(100+(plateN*53)%899)+'-'+String(10+(plateN*7)%89),lamp:lampH,tail:lampT}); plateN++;
     if(cop){const P=det.P; P.box(0.9,0.12,1.2,0x1d1f22,-0.3,DIM[kind][0]>4.5?1.53:1.55,0,g0); P.box(0.36,0.1,0.5,copBlue,-0.3,1.66,-0.3,g0); P.box(0.36,0.1,0.5,copRed,-0.3,1.66,0.3,g0);
       P.box(2.2,0.18,0.012,0x2a5ad8,0.1,0.72,DIM[kind][1]/2+0.01,g0); P.box(2.2,0.18,0.012,0x2a5ad8,0.1,0.72,-DIM[kind][1]/2-0.01,g0);}
@@ -57,7 +72,7 @@ Car.prototype.wheelsTurn=function(dt){const self=this; this.spin+=this.v*dt/0.31
   this.wheels.forEach(function(w){w.rotation.x=-self.spin; w.rotation.y=R/2+(w.position.x>0?self.steer:0);});};
 Car.prototype.remove=function(){root.remove(this.g); const i=live.indexOf(this); if(i>=0) live.splice(i,1);};
 /* the car as three circles down its length: for bumping into other cars and people */
-Car.prototype.circles=function(){const f=this.fwd(), L=this.dim[0], r=this.dim[1]/2; return [-L/3,0,L/3].map(function(s){return [this.x+f[0]*s,this.z+f[1]*s,r];},this);};
+Car.prototype.circles=function(){const f=this.fwd(), L=this.dim[0], r=this.dim[1]/2, n=Math.max(3,Math.ceil(L/2.2)), out=[]; for(let i=0;i<n;i++){const s=-L/2+r*0.8+(L-r*1.6)*i/(n-1); out.push([this.x+f[0]*s,this.z+f[1]*s,r]);} return out;};      // a long bus, more of them
 const live=[];
 
 /* ---------- parked cars near you are swapped for finely built ones; left far behind, swapped back ---------- */
@@ -186,22 +201,23 @@ const drivable=T.net.filter(function(r){return r.k===1||r.k===2||r.k===6||r.k===
 function laneOff(rd){return rd.k===2?0.0:rd.k===1?0.95:2.1;}      // between the parked cars on a side street; on a main street, its own side
 function segPos(t){const rd=t.rd, a=rd.p[t.j], b=rd.p[t.j+1], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1, s=Math.min(t.s,l), n=[-dz/l,dx/l], lo=laneOff(rd)*t.dir;
   const along=t.dir>0?s:l-s, x=a[0]+dx/l*along+n[0]*lo, z=a[1]+dz/l*along+n[1]*lo; return {x:x,z:z,h:Math.atan2(dx*t.dir,dz*t.dir),l:l};}
-function spawnTraffic(px,pz){
-  for(let tries=0;tries<30;tries++){const rd=drivable[Math.floor(Math.random()*drivable.length)], j=Math.floor(Math.random()*(rd.p.length-1)), a=rd.p[j], b=rd.p[j+1], l=Math.hypot(b[0]-a[0],b[1]-a[1]); if(l<8) continue;
+const mains=drivable.filter(function(r){return r.k!==2;});
+function spawnTraffic(px,pz){const wantBus=!traffic.some(function(o){return o.bus;});
+  for(let tries=0;tries<30;tries++){const rd=wantBus&&tries%2===0?mains[Math.floor(Math.random()*mains.length)]:drivable[Math.floor(Math.random()*drivable.length)], j=Math.floor(Math.random()*(rd.p.length-1)), a=rd.p[j], b=rd.p[j+1], l=Math.hypot(b[0]-a[0],b[1]-a[1]); if(l<8) continue;
     const t={rd:rd,j:j,s:Math.random()*l,dir:Math.random()<0.5?1:-1,wait:0,stop:0,cruise:rd.k===2?6.5:9.5}; const q=segPos(t), d=Math.hypot(q.x-px,q.z-pz);
     if(d<70||d>190||T.kept(q.x,q.z)||nearHome(q.x,q.z)||!A.nav.isFree(q.x,q.z)) continue;
     if(traffic.some(function(o){return Math.hypot(o.car.x-q.x,o.car.z-q.z)<15;})) continue;
-    const kinds=['hatch','sedan','hatch','suv','mini','van','sedan'], c=new Car({kind:kinds[Math.floor(Math.random()*kinds.length)],col:COLS[Math.floor(Math.random()*COLS.length)],x:q.x,z:q.z,psi:q.h-R/2});
-    c.traffic=t; t.car=c; c.v=t.cruise*0.6; traffic.push(t); return t;}
+    const bus=rd.k!==2&&wantBus, kinds=['hatch','sedan','hatch','suv','mini','van','sedan'], c=new Car({kind:bus?'bus':kinds[Math.floor(Math.random()*kinds.length)],col:bus?0xf2f2ee:COLS[Math.floor(Math.random()*COLS.length)],x:q.x,z:q.z,psi:q.h-R/2});
+    if(bus){t.bus=true; t.cruise=7.5;} c.traffic=t; t.car=c; c.v=t.cruise*0.6; traffic.push(t); return t;}
   return null;}
 /* at the end of a stretch: on along the same street, or round the corner onto another */
 function nextSeg(t){const rd=t.rd;
   if(t.dir>0&&t.j<rd.p.length-2){t.j++; t.s=0; return turnAt(t,rd.p[t.j]);} if(t.dir<0&&t.j>0){t.j--; t.s=0; return turnAt(t,rd.p[t.j+1]);}
   const end=t.dir>0?rd.p[rd.p.length-1]:rd.p[0]; if(!turnAt(t,end,true)){t.dir=-t.dir; t.s=0;}}
 function turnAt(t,pt,must){const n=T.nodes.get(T.key(pt)); if(!n) return false; const opts=[];
-  n.roads.forEach(function(r){if(r===t.rd||drivable.indexOf(r)<0) return; const j=r.p.findIndex(function(q){return T.key(q)===T.key(pt);}); if(j<0) return; if(j<r.p.length-1) opts.push({rd:r,j:j,dir:1}); if(j>0) opts.push({rd:r,j:j-1,dir:-1});});
+  n.roads.forEach(function(r){if(r===t.rd||drivable.indexOf(r)<0||(t.bus&&r.k===2)) return;      /* the bus keeps to the main streets */ const j=r.p.findIndex(function(q){return T.key(q)===T.key(pt);}); if(j<0) return; if(j<r.p.length-1) opts.push({rd:r,j:j,dir:1}); if(j>0) opts.push({rd:r,j:j-1,dir:-1});});
   if(!opts.length||(!must&&Math.random()<0.55)) return !must;
-  const o=opts[Math.floor(Math.random()*opts.length)]; t.rd=o.rd; t.j=o.j; t.dir=o.dir; t.s=0; t.cruise=o.rd.k===2?6.5:9.5; return true;}
+  const o=opts[Math.floor(Math.random()*opts.length)]; t.rd=o.rd; t.j=o.j; t.dir=o.dir; t.s=0; t.cruise=t.bus?7.5:o.rd.k===2?6.5:9.5; return true;}
 function aheadClear(t,dist){const c=t.car, f=c.fwd(), p=SM.player;
   const check=function(x,z,lat){const dx=x-c.x, dz=z-c.z, a=dx*f[0]+dz*f[1], s=Math.abs(dx*f[1]-dz*f[0]); return a>0&&a<dist&&s<lat;};
   if(p&&!p.lvl&&!driving&&check(p.x,p.z,1.8)) return 'you';
@@ -211,7 +227,14 @@ function aheadClear(t,dist){const c=t.car, f=c.fwd(), p=SM.player;
   return null;}
 function trafficStep(t,dt){const c=t.car; if(c.held) return;
   if(t.stop>0){t.stop-=dt; c.v=Math.max(0,c.v-10*dt); c.place(); return;}
-  const blk=aheadClear(t,9+c.v*0.6), want=blk?0:t.cruise;
+  const blk=aheadClear(t,9+c.v*0.6+(t.bus?4:0)); let want=blk?0:t.cruise;
+  /* the lights at the junction ahead: red, or amber with room to stop, and it waits at the line */
+  {const rd=t.rd, q0=segPos(t), end=t.dir>0?rd.p[t.j+1]:rd.p[t.j], sig=T.signals&&T.signals.get(T.key(end));
+    if(sig){const st=T.sigState(sig.grp.has(rd)?sig.grp.get(rd):0), toLine=(q0.l-t.s)-(sig.wo+3.2)-c.dim[0]/2;
+      if(st!=='g'&&toLine>-0.5&&toLine<40&&!(st==='a'&&toLine<c.v*0.6)) want=Math.min(want,Math.max(0,Math.sqrt(2*4.5*Math.max(0,toLine))-0.5));}}
+  /* the bus pulls in at its stops and waits while people get on */
+  if(t.bus&&T.stops) for(let i=0;i<T.stops.length;i++){const s=T.stops[i]; if(s.rd!==t.rd||t.last===s) continue; const f=c.fwd(), dx=s.x-c.x, dz=s.z-c.z, ahead=dx*f[0]+dz*f[1], side=Math.abs(dx*f[1]-dz*f[0]);
+    if(side<5&&ahead<2&&ahead>-3){t.last=s; t.stop=7; if(A.busAt) A.busAt(s,c);}}
   if(blk==='you'){t.wait=(t.wait||0)+dt; if(t.wait>3&&!t.honked){t.honked=true; horn();}} else{t.wait=0; t.honked=false;}
   c.v+=(want-c.v)*Math.min(1,dt*(want<c.v?3.5:1.2));
   let step=c.v*dt; let q=segPos(t);
@@ -263,7 +286,8 @@ A.frameFns.push(function(dt){
   const p=SM.player;
   lodT-=dt; if(lodT<0){lodT=0.25; lod(); if(!p.lvl){const mx=driving?driving.x:p.x, mz=driving?driving.z:p.z;
     for(let i=traffic.length-1;i>=0;i--){const t=traffic[i]; if(Math.hypot(t.car.x-mx,t.car.z-mz)>240&&!t.car.held){t.car.remove(); traffic.splice(i,1);}}
-    if(traffic.length<MAXT&&T.inside(mx,mz)) spawnTraffic(mx,mz);}}
+    if(traffic.length<MAXT&&T.inside(mx,mz)) spawnTraffic(mx,mz);
+    else if(!traffic.some(function(o){return o.bus;})&&traffic.length){let far=null; traffic.forEach(function(o){const d=Math.hypot(o.car.x-mx,o.car.z-mz); if(!o.car.held&&(!far||d>far.d)) far={o:o,d:d};}); if(far&&far.d>70){far.o.car.remove(); traffic.splice(traffic.indexOf(far.o),1);}}}}      // make room for a bus
   for(let i=traffic.length-1;i>=0;i--){const t=traffic[i]; trafficStep(t,dt); if(t.gone){t.car.remove(); traffic.splice(i,1);}}
   if(driving){drive(driving,dt); chase(driving,dt);
     const w=T.roadNear(driving.x,driving.z); $('dWhere').textContent=w&&w.d<6&&w.r.name?w.r.name:'';
