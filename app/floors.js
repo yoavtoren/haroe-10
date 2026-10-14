@@ -46,7 +46,7 @@ function landingDoors(){
     hang('over'+f,f,LDS[0],L,0,R/2,'land'+f,['#a9aeb1','#7d6a5a','#9aa6b0'][f-1],String(NUM[f][0]),LDS[1]-LDS[0]);      // over ours, hung as ours is: it swings in toward the flat
     hang('west'+f,f,XB,LDW[1],R/2,R*0.97,'land'+f,['#8a7f72','#a9aeb1','#6f7f75'][f-1],String(NUM[f][1]),LDW[1]-LDW[0]);      // to the west
   }
-  hang('shelter',-1,XB,LDW[1],R/2,R*0.97,'land-1','#5a6a5e','מקלט',LDW[1]-LDW[0]);
+  hang('shelter',-1,XB,LDW[1],R/2,R*0.97,'land-1','#5a6a5e','מקלט',LDW[1]-LDW[0]); doors.shelter.locked=false;      // the shelter is open to all
 }
 
 /* ---------- the flat over ours: our flat's shell, built again on each floor, with its own materials and lights ---------- */
@@ -197,7 +197,7 @@ function buildWest(f){
   [['bedB',-2.6,WZ0+5.06,R/2,0,0.86],['bedA',-4.4,1.4+4.46,R/2,R,0.86],['bath',-3.2,1.4+2.06,R/2,0,0.86]].forEach(function(q){      // hinged at the far end of each doorway, swinging into the room
     const d=A.doorLeaf('w'+f+q[0],q[1],q[2],q[3],q[4],RK(q[0]),q[5]); d.p.position.y=LV[f].y; d.lvl=f; g.add(d.p); d.p.traverse(function(m){m.userData.nonav=true;});});
   /* lights */
-  [['living',-5.2,-1.4],['bedB',-1.3,-1.4],['kitchen',-6.0,2.9],['bath',-1.6,2.9],['bedA',-6.0,6.6],['foyer',-1.6,6.6],['hall2',-3.8,3.0]].forEach(function(q){K.ceilDisc(p,q[1],q[2],'L:'+RK(q[0]));});
+  [['living',-5.2,-1.4],['bedB',-1.3,-1.4],['kitchen',-6.0,2.9],['bath',-1.6,2.9],['bedA',-6.0,6.6],['foyer',-1.6,6.6],['hall2',-3.8,3.0]].forEach(function(q){A.inRoom(RK(q[0]),function(){K.ceilDisc(p,q[1],q[2],'L:'+RK(q[0]));});});
   /* the living room */
   const lv=W.living, rr=RK('living');
   against(p,rr,lv,'W',0.45,pick(rng,['kivik3','ektorp3','vimle3','landskrona3','uppland3','soderhamn3','friheten']),null,null);
@@ -279,6 +279,215 @@ function buildShelter(){
   p.traverse(function(m){m.userData.lvl=-1;});
 }
 
+/* =====================================================================
+   The neighbours, and what happens when you let yourself in
+   ===================================================================== */
+/* ---------- sounds, made here: a knock, the clicks of a pick, a kick, coins, a siren ---------- */
+let ac=null;
+function actx(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){ac=null;}} if(ac&&ac.state==='suspended') ac.resume(); return ac;}
+function thud(t,f,vol,len){const c=actx(); if(!c) return; const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.setValueAtTime(f,c.currentTime+t); o.frequency.exponentialRampToValueAtTime(f*0.5,c.currentTime+t+len);
+  g.gain.setValueAtTime(0.0001,c.currentTime+t); g.gain.exponentialRampToValueAtTime(vol,c.currentTime+t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t+len); o.connect(g).connect(c.destination); o.start(c.currentTime+t); o.stop(c.currentTime+t+len+0.02);}
+function noise(t,len,vol,hp){const c=actx(); if(!c) return; const n=Math.floor(c.sampleRate*len), b=c.createBuffer(1,n,c.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);
+  const s=c.createBufferSource(), g=c.createGain(), fl=c.createBiquadFilter(); fl.type='highpass'; fl.frequency.value=hp||800; s.buffer=b; g.gain.value=vol; s.connect(fl).connect(g).connect(c.destination); s.start(c.currentTime+t);}
+const SND={
+  knock:function(){[0,0.18,0.36].forEach(function(t){thud(t,140,0.5,0.12); noise(t,0.05,0.15,600);});},
+  pick:function(){for(let i=0;i<5;i++) noise(i*0.13+Math.random()*0.05,0.025,0.25,3000);},
+  kick:function(){thud(0,90,0.9,0.3); noise(0,0.25,0.5,200);},
+  crash:function(){thud(0,70,1,0.5); noise(0,0.6,0.6,150); noise(0.15,0.4,0.3,1200);},
+  coin:function(){[0,0.08].forEach(function(t,i){const c=actx(); if(!c) return; const o=c.createOscillator(), g=c.createGain(); o.type='triangle'; o.frequency.value=i?1568:1175; g.gain.setValueAtTime(0.18,c.currentTime+t); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t+0.35); o.connect(g).connect(c.destination); o.start(c.currentTime+t); o.stop(c.currentTime+t+0.4);});},
+  bell:function(){[0,0.35].forEach(function(t,i){const c=actx(); if(!c) return; const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=i?659:830; g.gain.setValueAtTime(0.2,c.currentTime+t); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t+0.6); o.connect(g).connect(c.destination); o.start(c.currentTime+t); o.stop(c.currentTime+t+0.7);});}
+};
+let siren=null;
+function sirenOn(on){const c=actx(); if(!c) return;
+  if(on&&!siren){const o=c.createOscillator(), lfo=c.createOscillator(), lg=c.createGain(), g=c.createGain(); o.type='sawtooth'; o.frequency.value=780; lfo.frequency.value=0.55; lg.gain.value=180;
+    lfo.connect(lg).connect(o.frequency); const fl=c.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=1800; g.gain.value=0.0001; o.connect(fl).connect(g).connect(c.destination); o.start(); lfo.start(); siren={o:o,lfo:lfo,g:g};}
+  if(siren) siren.g.gain.setTargetAtTime(on?0.05:0.0001,c.currentTime,0.6);
+  if(!on&&siren){const s=siren; siren=null; setTimeout(function(){try{s.o.stop(); s.lfo.stop();}catch(e){}},2500);}
+}
+
+/* ---------- on the stage: how wanted you are, what you have taken ---------- */
+const hud=document.createElement('div'); hud.id='gtaHud';
+hud.style.cssText='position:absolute;left:50%;top:calc(52px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:3;display:none;gap:10px;align-items:center;background:rgba(23,33,28,.82);color:#fff;font:700 14px/1 inherit;padding:7px 14px;border-radius:99px;letter-spacing:.02em;pointer-events:none';
+A.stage.appendChild(hud);
+const G={wanted:0,loot:0,heat:0,cops:[],callAt:0,since:0,safeT:0,busted:false,taken:[]};
+function drawHud(){
+  const on=A.simsOn&&(G.wanted>0||G.loot>0); hud.style.display=on?'flex':'none'; if(!on) return;
+  let s=''; if(G.wanted>0) s+='<span style="color:#f4d53a">'+'★'.repeat(G.wanted)+'<span style="opacity:.3">'+'★'.repeat(Math.max(0,3-G.wanted))+'</span></span>';
+  if(G.loot>0) s+='<span>₪ '+G.loot.toLocaleString('en')+'</span>'; if(G.cops.length) s+='<span style="color:#9fc4ff">'+(G.cops.length>1?'Police in the building':'Police on the way')+'</span>';
+  hud.innerHTML=s;
+}
+
+/* ---------- who lives where ---------- */
+const NAMES_HE=[['Ronit',1],['Moshe',0],['Dana',1],['Avi',0],['Shira',1],['Yossi',0],['Tamar',1],['Eli',0],['Noa',1],['Itzik',0],['Galit',1],['Uri',0],['Miri',1],['Benny',0]];
+const SKIN=[0xe6b592,0xdfae88,0xc99a72,0xe8bfa0,0x8a5a3c,0xd9a47f,0xf0c8a8], HAIR=[0x2a1e17,0x5a3a22,0x1b1512,0xb5803f,0x8a8a86,0x3a2a1c], TOPS=[0x9fc4d6,0xc4673f,0x26386b,0x8fbd9b,0xe8c91a,0xd9463e,0xf3ebdc,0x6f7f75,0x7d5a8a];
+function person(seed){const r=A.rng(seed), n=NAMES_HE[Math.floor(r()*NAMES_HE.length)], she=!!n[1];
+  return {id:'n'+seed,name:n[0],h:she?1.6+r()*0.1:1.72+r()*0.12,skin:SKIN[Math.floor(r()*SKIN.length)],hair:HAIR[Math.floor(r()*HAIR.length)],style:she?['curly','long'][Math.floor(r()*2)]:['short','bald','short'][Math.floor(r()*3)],
+    beard:!she&&r()<0.4?['goatee','full'][Math.floor(r()*2)]:undefined,top:TOPS[Math.floor(r()*TOPS.length)],pants:[0x2b2f38,0x3d5a80,0x6b6f76,0xf3ebdc][Math.floor(r()*4)],pj:0x9db7dd,slim:she};}
+/* each flat: its door, its rooms, who lives there, and whether they are in */
+const FLATS={};
+function flatOf(key){
+  if(FLATS[key]) return FLATS[key];
+  const f=key==='shelter'?-1:+key.slice(-1), west=key.indexOf('west')===0, rng=A.rng(key.length*31+f*7+(west?3:0));
+  const rooms=key==='shelter'?['shelter']:west?Object.keys(WROOMS).map(function(k){return 'w'+f+':'+k;}):FLAT.map(function(k){return k+'@'+f;});
+  const n=key==='shelter'?0:1+Math.floor(rng()*2), home=key!=='shelter'&&rng()<0.6;
+  const people=[]; for(let i=0;i<n;i++) people.push(person(f*100+(west?50:0)+i*7+3));
+  return FLATS[key]={key:key,f:f,west:west,rooms:rooms,people:people,home:home,folk:[],broken:false,searched:{},invited:false,door:doors[key]};
+}
+function inFlatOf(fl,a){const r=A.roomAt(a.x,a.z,a.lvl); return fl.rooms.indexOf(r)>=0;}
+function playerIn(fl){const p=A.player; return p&&p.lvl===fl.f&&!p.script&&inFlatOf(fl,p);}
+function randomSpot(fl){const k=fl.rooms[Math.floor(Math.random()*fl.rooms.length)], r=A.rooms[k].rs[0]; return [r[0]+0.5+Math.random()*Math.max(0.1,r[1]-r[0]-1),r[2]+0.5+Math.random()*Math.max(0.1,r[3]-r[2]-1)];}
+function settleIn(fl){            // the people of a flat, at home, somewhere inside
+  if(!fl.home||fl.folk.length||!A.sims) return;
+  fl.people.forEach(function(spec){const a=new A.sims.Actor(spec); a.lvl=fl.f; a.speed=1.0; const s=randomSpot(fl);
+    const c=A.sims.onLevel(fl.f,function(){return A.sims.nearestXZ(s[0],s[1]);}); if(c){a.x=c[0]; a.z=c[1];} a.next=A.t+2+Math.random()*6; a.flat=fl; fl.folk.push(a);});
+}
+function wander(a){if(a.busy||a.path.length||a.script) return; if(A.t<a.next) return; a.next=A.t+6+Math.random()*9;
+  const s=randomSpot(a.flat); a.goTo(s[0],s[1]);}
+
+/* ---------- at the door ---------- */
+const LINES_ANSWER=['Yes?','Hi! Can I help you?','Oh, hello neighbour.','Who is it?','Shalom, what is it?'];
+const LINES_CHAT=['The lift? There has never been a lift.','Did you hear the cats last night?','The committee wants 200 shekels for the stairwell again.','You are from five, right? The one with the green door.','Hot today, eh? Thirty-two.','My son lives in Haifa now.'];
+const LINES_ANGRY=['Hey! What are you doing in my flat?!','Thief! Get out!','I am calling the police!','Mishtara! Police!'];
+function doorPos(fl){return fl.west||fl.key==='shelter'?{x:XB-0.55,z:(LDW[0]+LDW[1])/2,ox:XB+0.6,oz:(LDW[0]+LDW[1])/2,h:R/2}:{x:(LDS[0]+LDS[1])/2,z:L-0.55,ox:(LDS[0]+LDS[1])/2,oz:L+0.6,h:0};}
+function answer(fl){            // someone comes to the door, opens it a little, and talks
+  const a=fl.folk[0], d=fl.door, dp=doorPos(fl); if(!a) return;
+  a.busy=true; a.goTo(dp.x,dp.z,function(){a.hT=dp.h+R; d.force=0.45; a.say(LINES_ANSWER[Math.floor(Math.random()*LINES_ANSWER.length)],2.6); fl.atDoor=A.t+14; G.answered=fl; refreshBar();});
+}
+function closeUp(fl){const d=fl.door; if(!fl.broken&&!fl.invited) d.force=null; d.target=0; const a=fl.folk[0]; if(a){a.busy=false; a.next=A.t+3;} if(G.answered===fl) G.answered=null; refreshBar();}
+function knock(fl){
+  const S=A.sims; SND.knock(); A.player.p.act='reach'; S.later(0.8,function(){A.player.p.act=null;});
+  if(fl.key==='shelter'){S.toast('Knock knock. Just the echo.'); return;}
+  if(!fl.home){S.toast('Knock knock… nobody answers.'); return;}
+  settleIn(fl); S.toast('Footsteps inside…'); S.later(1.5,function(){answer(fl);});
+}
+function ring(fl){SND.bell(); if(!fl.home){A.sims.toast('The bell rings inside. Nobody comes.'); return;} settleIn(fl); A.sims.later(1.2,function(){answer(fl);});}
+function chat(fl){const a=fl.folk[0]; if(!a) return; A.player.say(['Hi! I live downstairs.','Do you have a bit of sugar?','Nice weather, eh?','Have you seen a parcel for flat 5?'][Math.floor(Math.random()*4)],2.4);
+  A.sims.later(2.4,function(){a.say(LINES_CHAT[Math.floor(Math.random()*LINES_CHAT.length)],3.2); fl.atDoor=A.t+12;
+    if(!fl.invited&&Math.random()<0.45) A.sims.later(3.4,function(){a.say('Come in, come in! I just made coffee.',2.8); fl.invited=true; fl.door.locked=false; fl.door.force=null; A.navDirty(fl.f); a.busy=false; refreshBar();});});}
+function bye(fl){A.player.say('Sorry, wrong door!',1.8); A.sims.later(1.6,function(){closeUp(fl);});}
+
+/* ---------- letting yourself in ---------- */
+function notice(fl,how){            // somebody heard, or saw: they shout, and call the police
+  const a=fl.folk.find(function(x){return !x.gone;});
+  if(a){a.busy=true; a.say(LINES_ANGRY[Math.floor(Math.random()*LINES_ANGRY.length)],2.6); A.sims.later(2.8,function(){a.say('Hello, police? Someone is breaking into flat '+(fl.west?NUM[fl.f][1]:NUM[fl.f][0])+'!',3.2);});}
+  else A.sims.toast(how==='kick'?'A neighbour across the landing heard the crash. They are calling the police.':'Someone downstairs heard you.');
+  raise(how==='kick'?2:1);
+}
+function openUp(fl,how){
+  const d=fl.door; fl.broken=true; d.locked=false; d.force=null; A.navDirty(fl.f);
+  if(how==='kick'){d.cur=1; d.p.rotation.y=d.closed+(d.open-d.closed)*0.94; SND.crash(); d.force=1; d.p.children.forEach(function(m){if(m.isMesh) m.rotation.z=0.06;});}
+  else{d.target=1; d.force=1;}
+  A.sims.toast(how==='kick'?'The door flies open.':'Click. The lock gives.'); refreshBar();
+  if(fl.home){settleIn(fl); A.sims.later(1.2,function(){notice(fl,how);});}
+  else if(how==='kick'&&Math.random()<0.5) A.sims.later(4,function(){notice(fl,'kick');});
+}
+function pick(fl){
+  const S=A.sims, p=A.player, dp=doorPos(fl); S.stop(); S.setDoing('picking the lock');
+  p.goTo(dp.ox,dp.oz,function(){p.hT=dp.h+R; p.p.act='reachlow'; let k=0;
+    const step=function(){if(!G.picking) return; k++; SND.pick(); S.setDoing('picking the lock… '+Math.min(100,k*20)+'%');
+      if(fl.home&&Math.random()<0.12){G.picking=false; p.p.act=null; S.setDoing(''); settleIn(fl); notice(fl,'pick'); return;}
+      if(k>=5){G.picking=false; p.p.act=null; S.setDoing(''); if(Math.random()<0.8) openUp(fl,'pick'); else {S.toast('The pick slips. Try again.'); if(fl.home&&Math.random()<0.5){settleIn(fl); notice(fl,'pick');}} return;}
+      S.later(0.9,step,G);};
+    G.picking=true; S.later(0.6,step,G);});
+}
+function kick(fl){
+  const S=A.sims, p=A.player, dp=doorPos(fl); S.stop(); S.setDoing('kicking the door');
+  p.goTo(dp.ox,dp.oz,function(){p.hT=dp.h+R; let k=0;
+    const step=function(){k++; p.p.act='reach'; SND.kick(); S.later(0.35,function(){p.p.act=null;}); A.touch(2);
+      if(k<3) S.later(0.8,step); else {S.setDoing(''); openUp(fl,'kick');}};
+    step();});
+}
+/* what there is to find in a flat */
+const FINDS=[['a wad of shekel notes',[150,600]],['a gold necklace',[800,2400]],['an old iPhone',[300,700]],['a jar of coins',[40,140]],['a PlayStation',[900,1500]],['a bottle of Arak',[60,90]],
+  ['a watch',[400,1800]],['a laptop',[1500,3200]],['a passport (you put it back)',[0,0]],['nothing but socks',[0,0]],['a stack of lottery tickets',[5,40]],['a camera',[600,1400]]];
+function spots(fl){
+  const y=LV[fl.f].y; if(fl.key==='shelter') return [];
+  if(fl.west){const W=WROOMS; return [['Wardrobe','bedB',W.bedB[1]-0.9,W.bedB[2]+(W.bedB[3]-W.bedB[2])*0.68,R/2],['Wardrobe','bedA',W.bedA[0]+0.9,W.bedA[2]+(W.bedA[3]-W.bedA[2])*0.68,-R/2],
+    ['Desk drawers','bedA',W.bedA[0]+0.95,W.bedA[2]+(W.bedA[3]-W.bedA[2])*0.18,-R/2],['Kitchen drawers','kitchen',W.kitchen[0]+1.0,W.kitchen[2]+1.4,-R/2],['Bookshelf','living',W.living[0]+1.2,W.living[3]-0.9,0],['Bathroom cabinet','bath',W.bath[1]-0.9,W.bath[3]-0.9,0]];}
+  return [['Wardrobe','bed2',D.NX+0.95,-1.27,-R/2],['Desk','bed1',1.2,-2.4,R],['Kitchen drawers','kitchen',A.KL.dx,1.25,R],['TV cabinet','living',2.4,4.2,R/2],['Bedside table','bed2',3.6,-3.0,R]];
+}
+function search(fl,s){
+  const S=A.sims, p=A.player; S.stop(); S.setDoing('going through the '+s[0].toLowerCase());
+  p.goTo(s[2],s[3],function(){p.hT=s[4]; p.p.act='reachlow'; S.later(1.8,function(){p.p.act=null; S.setDoing('');
+    const k=fl.key+'|'+s[0]+'|'+s[1]; fl.searched[k]=true; const fd=FINDS[Math.floor(Math.random()*FINDS.length)], v=fd[1][0]+Math.floor(Math.random()*(fd[1][1]-fd[1][0]+1));
+    if(v>0){G.loot+=v; G.taken.push(fd[0]); SND.coin(); S.toast('You found '+fd[0]+'. ₪ '+v+'.');} else S.toast('You found '+fd[0]+'.');
+    drawHud(); refreshBar();
+    if(fl.home&&fl.folk.some(function(a){return !a.gone&&Math.hypot(a.x-p.x,a.z-p.z)<4;})&&G.wanted===0) notice(fl,'pick');});});
+}
+
+/* ---------- the police ---------- */
+const COPSPEC=function(i){return {id:'cop'+i,name:i?'Officer Levi':'Officer Cohen',h:1.78,skin:i?0xc99a72:0xe4b594,hair:0x1b1512,style:'short',top:0x1f3a6b,pants:0x1d2a44,pj:0x1f3a6b,shoes:0x111111};};
+function raise(n){
+  const was=G.wanted; G.wanted=Math.min(3,Math.max(G.wanted,n)); G.since=A.t; drawHud();
+  if(!was&&G.wanted){A.sims.toast('★ Wanted. The police are on their way.'); sirenOn(true); G.callAt=A.t+(G.wanted>1?16:24);}
+}
+function spawnCops(){
+  if(G.cops.length) return; const n=G.wanted>1?2:1;
+  for(let i=0;i<n;i++){const a=new A.sims.Actor(COPSPEC(i)); a.lvl=0; a.speed=1.55; a.x=LB.XF-0.8-i*0.5; a.z=LB.ZO; a.cop=true; a.state='hunt'; a.next=0; G.cops.push(a);}
+  A.sims.toast('The police are here. Two officers coming up the stairs.'.replace('Two officers',n>1?'Two officers':'An officer')); drawHud();
+}
+function home(p){return !p.lvl&&FLAT.indexOf(p.room)>=0;}
+function huntStep(c){
+  const p=A.player; if(c.script||c.busy) return;
+  if(A.t<c.next) return; c.next=A.t+1.2;
+  if(c.leaving){if(!c.path.length) {c.goTo(LB.XF-0.6,LB.ZO,function(){c.gone=true;});} return;}
+  const tl=p.script?p.script.lvl:p.lvl;
+  if(c.lvl!==tl){            // to the stairs, and up or down a floor
+    const pts=A.stairsPath(c.lvl,c.lvl+(tl>c.lvl?1:-1)); c.goTo(pts[0][0],pts[0][2],function(){c.climb(pts,c.lvl+(tl>c.lvl?1:-1));}); c.next=A.t+3; return;}
+  if(home(p)){                // shut in at home: they knock on our door and wait
+    const d=A.door('entrance'); c.goTo(D.entrance[0]+0.4,L+0.7,function(){c.hT=R; if(A.t>(c.shout||0)){c.shout=A.t+5; c.say(['Police! Open the door!','We know you are in there!','Open up, please.'][Math.floor(Math.random()*3)],2.6); SND.knock();}});
+    if(!G.safeT) G.safeT=A.t; if(A.t-G.safeT>24) giveUp(); return;}
+  G.safeT=0;
+  c.goTo(p.x,p.z);
+}
+function giveUp(){A.sims.toast('The police leave. You got away with it… this time.'); G.wanted=0; sirenOn(false); G.cops.forEach(function(c){c.leaving=true; c.next=0;}); drawHud();}
+function busted(){
+  if(G.busted) return; G.busted=true; const S=A.sims, p=A.player; S.stop(); sirenOn(false);
+  G.cops.forEach(function(c){c.say('Hands where I can see them!',2.4);}); p.p.act='wave';
+  S.later(2.6,function(){
+    const lost=G.loot; G.loot=0; G.wanted=0; G.taken=[]; G.busted=false; p.p.act=null;
+    G.cops.forEach(function(c){c.remove();}); G.cops=[]; drawHud();
+    p.script=null; p.path=[]; p.lvl=0; const c=S.nearestXZ(1.5,3.2)||[S.EX,S.SPAWN]; p.x=c[0]; p.z=c[1]; p.h=p.hT=R; if(S.flyToPlayer) S.flyToPlayer();      // home, in the living room
+    S.toast('Busted. A night at the station and a fine'+(lost?', and the ₪ '+lost.toLocaleString('en')+' goes back.':'.'));
+    for(const k in FLATS){const fl=FLATS[k]; if(fl.broken){fl.door.p.children.forEach(function(m){if(m.isMesh) m.rotation.z=0;});}}
+  });
+}
+
+/* ---------- every frame: the neighbours live, the police hunt ---------- */
+const tagV=new THREE.Vector3();
+A.frameFns.push(function(dt){
+  const p=A.player;
+  if(!A.simsOn||!p){for(const k in FLATS) FLATS[k].folk.forEach(function(a){a.p.g.visible=false; A.place(a.tag,tagV,false);});
+    if(G.cops.length||G.wanted){G.cops.forEach(function(c){c.remove();}); G.cops=[]; G.wanted=0; sirenOn(false);} hud.style.display='none'; return;}
+  const lv=shownLvl;
+  for(const k in FLATS){const fl=FLATS[k];
+    if(fl.atDoor&&A.t>fl.atDoor&&G.answered===fl) closeUp(fl);
+    if(fl.invited&&!playerIn(fl)&&fl.door.target===0&&A.t>(fl.atDoor||0)+30){fl.invited=false; fl.door.locked=true; A.navDirty(fl.f);}      // you left: they lock up behind you
+    fl.folk.forEach(function(a){const here=a.lvl===lv; a.p.g.visible=here;
+      if(here){wander(a); a.update(dt); if(fl.broken&&playerIn(fl)&&!a.angry&&Math.hypot(a.x-p.x,a.z-p.z)<5){a.angry=true; notice(fl,'pick');}}});
+  }
+  if(G.wanted&&!G.cops.length&&A.t>G.callAt) spawnCops();
+  if(G.wanted&&A.t-G.since>150) giveUp();                      // a long while without trouble: they stop looking
+  for(let i=G.cops.length-1;i>=0;i--){const c=G.cops[i];
+    if(c.gone){c.remove(); G.cops.splice(i,1); if(!G.cops.length) drawHud(); continue;}
+    huntStep(c); c.update(dt); c.p.g.visible=c.lvl===lv||!!c.script;
+    if(!c.leaving&&!G.busted&&c.lvl===p.lvl&&!c.script&&!p.script&&Math.hypot(c.x-p.x,c.z-p.z)<0.9) busted();}
+  [].concat(...Object.values(FLATS).map(function(fl){return fl.folk;}),G.cops).forEach(function(a){a.headPos(tagV); tagV.y+=0.28;
+    A.place(a.tag,tagV,A.state.labels&&a.p.g.visible&&!a.bubble); if(a.bubble) A.place(a.bubble,tagV,a.p.g.visible);});
+});
+
+/* ---------- the bar that pops up by things: the doors, the people, the places to search ---------- */
+let barT=0;
+function refreshBar(){barT++; if(A.life&&A.life.hud) A.life.hud();}
+function doorActs(fl){
+  if(fl.key==='shelter'){return [['Go in',function(){A.walkTo(XB-1.2,(LDW[0]+LDW[1])/2);}]];}
+  if(!fl.door.locked) return [['Go in',function(){const dp=doorPos(fl); A.walkTo(dp.x-(fl.west?0.6:0),dp.z-(fl.west?0:0.6));}]];
+  const acts=[];
+  if(G.answered===fl){acts.push(['Chat',function(){chat(fl);}]); acts.push(['Sorry, wrong door',function(){bye(fl);}]); return acts;}
+  acts.push(['Knock',function(){knock(fl);}],['Ring the bell',function(){ring(fl);}],['Pick the lock',function(){pick(fl);}],['Kick it in',function(){kick(fl);}]);
+  return acts;
+}
+
 /* ---------- which floor is drawn, and everything above it cut away ---------- */
 const clip=new THREE.Plane(new THREE.Vector3(0,-1,0),1e6);
 let clipping=false, shownLvl=0;
@@ -291,6 +500,9 @@ A.frameFns.push(function(){
   let lv=0; if(on){lv=p.lvl||0; if(p.script) lv=Math.max(lv,p.script.lvl);}
   if(lv!==shownLvl){shownLvl=lv; for(const f in lvlGroups) lvlGroups[f].visible=+f===lv;
     wantHide.forEach(function(o){o.visible=lv>=0;}); A.touch(3);}
+  /* in Sims mode the walls, the stairwell and the landings are cut at the ceiling of the floor you are on, so the flights above never stand
+     between the camera and you; out of it, the Design tab's own setting */
+  const cutAt=on?(lv?LV[lv].y:0)+H+0.05:($('cCut')&&$('cCut').checked?1.25:100); if(A.cut.constant!==cutAt){A.cut.constant=cutAt; A.touch(2);}
   if(lv){clip.constant=LV[lv].y+H+0.03; if(!clipping||A.renderer.clippingPlanes[0]!==clip){A.renderer.clippingPlanes=[clip]; clipping=true;}}
   else if(clipping){if(A.renderer.clippingPlanes[0]===clip) A.renderer.clippingPlanes=[]; clipping=false;}
   if(lv&&A.sims&&A.sims.camMode==='follow'){const c=A.camera.position;
@@ -303,7 +515,7 @@ A.frameFns.push(function(){
 function goStairs(dir){
   const p=A.player, S=A.sims; if(!p||p.script) return;
   const from=p.lvl||0, to=from+dir; if(to<-1||to>UPS) return;
-  if(LV[to]&&to>0&&!built[to]){buildOver(to); buildWest(to); A.navDirty(to);}
+  if(LV[to]&&to>0&&!built[to]){buildOver(to); buildWest(to); A.navDirty(to); ['over','west'].forEach(function(w){settleIn(flatOf(w+to));});}
   if(to===-1&&!shelterBuilt){buildShelter(); A.navDirty(-1);}
   const pts=path(from,to);
   S.stop(); S.setDoing(dir>0?'going upstairs':'going downstairs');
@@ -311,22 +523,26 @@ function goStairs(dir){
     p.climb(pts,to,function(){S.setDoing(''); S.toast(to===0?'Back on our floor.':NAMES[to]+'.'); if(A.unfightSoon) A.unfightSoon(100);});});
 }
 A.goStairs=goStairs;
-const knocks={};
-function knock(d){const S=A.sims; S.toast('Knock knock… nobody answers.'); if(A.audio&&A.audio.blip) A.audio.blip('click');}
 A.moreItems=function(out,p){
   const f=p.lvl||0, y=f?LV[f].y:0;
   const st=f===0?{x:SU-0.05,z:L+1.2,sx:SU-0.35,sz:L+1.0,h:R/2}:{x:SU-0.05,z:(zA+zB)/2,sx:SU-0.4,sz:(zA+zB)/2,h:R/2};
   const acts=[]; if(f<UPS) acts.push([f===-1?'Up to our floor':'Go upstairs',function(){goStairs(1);}]); if(f>-1) acts.push([f===1?'Down to our floor':f===0?'Down to the shelter':'Go downstairs',function(){goStairs(-1);}]);
   out.push({name:'Stairs',x:st.x,z:st.z,y:y+0.8,sx:st.sx,sz:st.sz,h:st.h,acts:acts,box:[SU-0.1,XH,y-0.05,y+1.2,ZA0,ZA1]});
   if(!f) return;
-  Object.keys(doors).forEach(function(k){const d=doors[k]; if(d.lvl!==f) return;
+  Object.keys(doors).forEach(function(k){const d=doors[k]; if(d.lvl!==f) return; const fl=flatOf(k);
     const west=k.indexOf('west')===0||k==='shelter', x=west?XB+0.02:(LDS[0]+LDS[1])/2, z=west?(LDW[0]+LDW[1])/2:L+0.02;
-    const label=k==='shelter'?'Shelter door':'Flat '+(west?NUM[f][1]:NUM[f][0]);
-    out.push({name:label,x:x,z:z,y:y+1.0,sx:west?XB+0.55:x,sz:west?z:L+0.55,h:west?-R/2:R,acts:d.locked?[['Knock',function(){knock(d);}]]:[['Go in',function(){A.walkTo(west?XB-0.6:x,west?z:L-0.6);}]],
+    const label=k==='shelter'?'Shelter':'Flat '+(west?NUM[f][1]:NUM[f][0])+(fl.broken?' (broken in)':'');
+    out.push({name:label,x:x,z:z,y:y+1.0,sx:west?XB+0.55:x,sz:west?z:L+0.55,h:west?-R/2:R,acts:doorActs(fl),
       box:west?[XB-0.05,XB+0.1,y,y+2.1,LDW[0]-0.1,LDW[1]+0.1]:[LDS[0]-0.1,LDS[1]+0.1,y,y+2.1,L-0.05,L+0.1]});});
+  for(const k in FLATS){const fl=FLATS[k]; if(fl.f!==f) continue;
+    if((fl.broken||fl.invited)&&playerIn(fl)) spots(fl).forEach(function(s){const sk=fl.key+'|'+s[0]+'|'+s[1]; if(fl.searched[sk]) return;
+      const bx=fl.west?s[2]:s[2], bz=s[3]; out.push({name:s[0],x:bx+Math.sin(s[4])*0.5,z:bz+Math.cos(s[4])*0.5,y:y+0.9,sx:bx,sz:bz,h:s[4],acts:[[fl.invited&&!fl.broken?'Have a look':'Search',function(){search(fl,s);}]]});});
+    fl.folk.forEach(function(a){if(a.gone||a.lvl!==f||Math.hypot(a.x-p.x,a.z-p.z)>3) return;
+      out.push({name:a.spec.name,x:a.x,z:a.z,y:y+1.0,sx:a.x+Math.sin(a.h)*0.8,sz:a.z+Math.cos(a.h)*0.8,h:a.h+R,acts:[['Chat',function(){a.hT=Math.atan2(p.x-a.x,p.z-a.z); a.say(LINES_CHAT[Math.floor(Math.random()*LINES_CHAT.length)],3.2);}],['Wave',function(){p.p.act='wave'; A.sims.later(1.2,function(){p.p.act=null;}); a.say('Hi!',1.4);}]]});});}
 };
 
 /* once everything is built: the doors on the landings */
-window.addEventListener('load',function(){readMats(); landingDoors(); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});});
-A.floors={LV:LV,build:buildOver,buildWest:buildWest,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,WROOMS:WROOMS,SH:SH};
+window.addEventListener('load',function(){readMats(); landingDoors(); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});
+  const was=A.sims&&A.sims.onStop; if(A.sims) A.sims.onStop=function(){G.picking=false; if(was) was();};});
+A.floors={G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildWest:buildWest,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,WROOMS:WROOMS,SH:SH};
 })();

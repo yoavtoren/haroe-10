@@ -159,13 +159,13 @@ inRoom('hall',function(){
     return {rs:rs,nose:function(x){return ly+rs+rs*(x-lx)*dir/TD;}};
   }
   function floorAt(x0,x1,z0,z1,y){const g=new THREE.PlaneGeometry(x1-x0,z1-z0), U=g.attributes.uv; for(let i=0;i<U.count;i++) U.setXY(i,U.getX(i)*(x1-x0)/0.8,U.getY(i)*(z1-z0)/0.8);
-    const t=terrazzo.clone(); t.needsUpdate=true; const m=new THREE.Mesh(g,hallM(t)); m.rotation.x=-R/2; m.position.set((x0+x1)/2,y,(z0+z1)/2); m.receiveShadow=true; m.userData.floor=true; scene.add(m); return m;}
+    const t=terrazzo.clone(); t.needsUpdate=true; const mm=hallM(t); mm.clippingPlanes=[A.cut]; const m=new THREE.Mesh(g,mm); m.rotation.x=-R/2; m.position.set((x0+x1)/2,y,(z0+z1)/2); m.receiveShadow=true; m.userData.floor=true; scene.add(m); return m;}
   const fA=flight(SU,1,0,FF/2,ZA0,ZA1), fB=flight(XH,-1,FF/2,FF,ZB0,ZB1), ups=[];
   for(let f=1;f<UPS;f++) ups.push([flight(SU,1,f*FF,(f+0.5)*FF,ZA0,ZA1),flight(XH,-1,(f+0.5)*FF,(f+1)*FF,ZB0,ZB1),f]);      // and on up, a pair of flights a floor
   const fBd=flight(XHd,-1,LO/2,0,ZB0,ZB1), fAd=flight(SU,1,LO,LO/2,ZA0,ZA1);                 // and down: from our landing to the floor below
   for(let f=0;f<UPS;f++){const y=(f+0.5)*FF; box(XE-XH,0.2,EH-L-0.02,stepM,(XH+XE)/2,y-0.1,(L+EH)/2);}      // half landings
   box(XE-XHd,0.2,EH-ZA1-0.02,stepM,(XHd+XE)/2,LO/2-0.1,(ZA1+EH)/2); box(XE-XH,0.2,ZA1-L,stepM,(XH+XE)/2,LO/2-0.1,(L+ZA1)/2);
-  for(let f=1;f<=UPS;f++) box(SU-XB,FF-H-0.006,EH-L,bright(M(0xf3f1ea),0x6e6e68),(XB+SU)/2,f*FF-(FF-H)/2+0.003,(L+EH)/2);      // the slab of each landing above, its edge over the one below
+  const slabM=bright(M(0xf3f1ea),0x6e6e68); slabM.clippingPlanes=[A.cut]; for(let f=1;f<=UPS;f++) box(SU-XB,FF-H-0.006,EH-L,slabM,(XB+SU)/2,f*FF-(FF-H)/2+0.003,(L+EH)/2);      // the slab of each landing above, its edge over the one below
   /* the landings above and below: a doorway in the wall at XB on each (to the west flat; below, the shelter), and above, a second in the wall
      at L right over our own door, into the flat over ours. floors.js hangs the doors in them and builds what lies behind. */
   const LDW=[L+0.78,L+1.62], LDS=[D.entrance[0],D.entrance[1]];          // the west doorway, along z; the south one, along x
