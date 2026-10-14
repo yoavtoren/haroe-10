@@ -11,6 +11,8 @@
 const A=window.APP, TD=A.townData, BD=A.building, det=A.det, LB=A.LB, SF=A.street, D=A.D;
 if(!TD||!BD||!det||!LB||!SF) return;
 const R=Math.PI, XF=LB.XF, ZC=LB.ZC, U=SF.U, warp=BD.warp, pt=BD.pt, scene=A.scene;
+/* the blocks and trees have a light of their own: by day the street's, in the evening darker than the street round the square with its lamps, so the windows show */
+if(!A.rooms.town) A.addRoom('town',{name:'The neighbourhood',rs:[],win:null,dl:1,node:'out',ext:true});
 const TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0, LITE=TOUCH||/[?&]lite/.test(location.search);
 const TS=1300, TX0=XF-600, TZ0=ZC-600;                       // the ground: 1.3 km square round our front
 const IS=370, IX0=XF-175, IZ0=ZC-200;                        // the square building.js draws in finer detail, left open in ours
@@ -99,9 +101,11 @@ const gcan=document.createElement('canvas'); gcan.width=gcan.height=N;
   roads.forEach(function(s){if(s.w[0]>0) stroke(s.p,s.w[0]*0.55,'rgba(80,84,88,0.5)');});                                           // worn darker down the middle
   for(let i=0;i<N*N/900;i++){const x=TX0+r()*TS, z=TZ0+r()*TS; if(!onRoad(x,z,-0.3)) continue; const c=cp(x,z); g.fillStyle=r()<0.5?'rgba(30,32,34,0.35)':'rgba(140,140,135,0.25)'; g.fillRect(c[0],c[1],(0.3+r()*1.6)*K,(0.2+r()*0.8)*K);}      // patches and stains
   roads.forEach(function(s){if(s.k===1||s.k===6||s.k===7) stroke(s.p,0.15,'#ecebe4',[3*K,5*K]); else if(s.k===2) stroke(s.p,0.1,'rgba(236,235,228,0.55)',[2*K,6*K]);});      // the dashed line down the middle
-  roads.forEach(function(s){if(s.k===1||s.k===6) [1,-1].forEach(function(sd){for(let j=1;j<s.p.length;j++){const a=s.p[j-1], b=s.p[j], l=hyp(b[0]-a[0],b[1]-a[1]); if(l<1) continue; const nx=-(b[1]-a[1])/l*sd, nz=(b[0]-a[0])/l*sd, o=s.w[0]/2-0.25;      // the kerb painted red and white where you may not park, near the junctions
-    [[0,Math.min(l,9)],[Math.max(0,l-9),l]].forEach(function(seg){for(let t=seg[0];t<seg[1]-0.5;t+=1){const c0=cp(a[0]+(b[0]-a[0])*t/l+nx*o,a[1]+(b[1]-a[1])*t/l+nz*o), c1=cp(a[0]+(b[0]-a[0])*(t+1)/l+nx*o,a[1]+(b[1]-a[1])*(t+1)/l+nz*o);
-      g.strokeStyle=Math.floor(t)%2?'#e9e8e2':'#c4473b'; g.lineWidth=0.22*K; g.beginPath(); g.moveTo(c0[0],c0[1]); g.lineTo(c1[0],c1[1]); g.stroke();}});}});});
+  const isCross=new Set(cross.filter(function(c){return c.car.length>=2;}).map(function(c){return key([c.x,c.z]);}));
+  roads.forEach(function(s){if(s.k===1||s.k===2||s.k===6) [1,-1].forEach(function(sd){for(let j=1;j<s.p.length;j++){const a=s.p[j-1], b=s.p[j], l=hyp(b[0]-a[0],b[1]-a[1]); if(l<1) continue; const nx=-(b[1]-a[1])/l*sd, nz=(b[0]-a[0])/l*sd, o=s.w[0]/2-0.15;      // the kerb painted red and white where you may not park, the last metres before a junction
+    const segs=[]; if(isCross.has(key(a))) segs.push([0,Math.min(l,12)]); if(isCross.has(key(b))) segs.push([Math.max(0,l-12),l]);
+    segs.forEach(function(seg){for(let t=seg[0];t<seg[1]-0.5;t+=1){const x0=a[0]+(b[0]-a[0])*t/l+nx*o, z0=a[1]+(b[1]-a[1])*t/l+nz*o, x1=a[0]+(b[0]-a[0])*(t+1)/l+nx*o, z1=a[1]+(b[1]-a[1])*(t+1)/l+nz*o, q=roadNear((x0+x1)/2,(z0+z1)/2,s);
+      if(q&&q.r.w[0]>0&&q.d<0.6) continue; const c0=cp(x0,z0), c1=cp(x1,z1); g.strokeStyle=Math.floor(t)%2?'#e9e8e2':'#c4473b'; g.lineWidth=0.22*K; g.beginPath(); g.moveTo(c0[0],c0[1]); g.lineTo(c1[0],c1[1]); g.stroke();}});}});});
   /* zebra crossings on every arm of a junction of streets */
   cross.forEach(function(c){if(c.car.length<2) return; c.car.forEach(function(rd){const j=rd.p.findIndex(function(q){return key(q)===key([c.x,c.z]);}); if(j<0) return;
     [j-1,j+1].forEach(function(o){if(o<0||o>=rd.p.length) return; const q=rd.p[o], dx=q[0]-c.x, dz=q[1]-c.z, l=hyp(dx,dz); if(l<8) return; const ux=dx/l, uz=dz/l;
@@ -223,21 +227,21 @@ function groundTex(kind,s,lit){return det.tex(1024,256,function(g){const r=A.rng
         g.fillStyle='#cfc7b6'; g.fillRect(X+60,256-0.88*sy,136,6);}}
     if(!lit){g.fillStyle='rgba(90,80,65,0.25)'; g.fillRect(X,256-0.3*sy,256,0.3*sy);}}      // the plinth, splashed
 },true);}
-const FAC=[0,1,2,3,4].map(function(s){const m=new THREE.MeshLambertMaterial({map:facadeTex(s,false),vertexColors:true,emissiveMap:facadeTex(s,true)}); A.reg(m,'street'); return m;});
-const GRD={res:[0,1].map(function(s){const m=new THREE.MeshLambertMaterial({map:groundTex('res',s,false),vertexColors:true,emissiveMap:groundTex('res',s,true)}); A.reg(m,'street'); return m;}),
-  shop:[0,1,2].map(function(s){const m=new THREE.MeshLambertMaterial({map:groundTex('shop',s,false),vertexColors:true,emissiveMap:groundTex('shop',s,true)}); A.reg(m,'street'); return m;}),
-  pil:[0,1].map(function(s){const m=new THREE.MeshLambertMaterial({map:groundTex('pil',s,false),vertexColors:true,emissiveMap:groundTex('pil',s,true)}); A.reg(m,'street'); return m;})};
+const FAC=[0,1,2,3,4].map(function(s){const m=new THREE.MeshLambertMaterial({map:facadeTex(s,false),vertexColors:true,emissiveMap:facadeTex(s,true)}); A.reg(m,'town'); return m;});
+const GRD={res:[0,1].map(function(s){const m=new THREE.MeshLambertMaterial({map:groundTex('res',s,false),vertexColors:true,emissiveMap:groundTex('res',s,true)}); A.reg(m,'town'); return m;}),
+  shop:[0,1,2].map(function(s){const m=new THREE.MeshLambertMaterial({map:groundTex('shop',s,false),vertexColors:true,emissiveMap:groundTex('shop',s,true)}); A.reg(m,'town'); return m;}),
+  pil:[0,1].map(function(s){const m=new THREE.MeshLambertMaterial({map:groundTex('pil',s,false),vertexColors:true,emissiveMap:groundTex('pil',s,true)}); A.reg(m,'town'); return m;})};
 const lights=FAC.concat(GRD.res,GRD.shop,GRD.pil);
 const plainT=det.tex(256,256,function(g){const r=A.rng(12); g.fillStyle='#fff'; g.fillRect(0,0,256,256); for(let i=0;i<2600;i++){g.fillStyle='rgba('+(r()<0.5?'255,255,255':'60,50,40')+','+(r()*0.06)+')'; g.fillRect(r()*256,r()*256,1+r()*2,1+r()*2);}
   for(let i=0;i<8;i++){const x=r()*256, gr=g.createLinearGradient(0,0,0,256); gr.addColorStop(0,'rgba(80,70,55,0.12)'); gr.addColorStop(1,'rgba(80,70,55,0)'); g.fillStyle=gr; g.fillRect(x,0,3+r()*5,100+r()*150);}},true);
-const PLAIN=A.reg(new THREE.MeshLambertMaterial({map:plainT,vertexColors:true}),'street');
+const PLAIN=A.reg(new THREE.MeshLambertMaterial({map:plainT,vertexColors:true}),'town');
 const roofT=det.tex(256,256,function(g){const r=A.rng(13); g.fillStyle='#efeee9'; g.fillRect(0,0,256,256);
   for(let i=0;i<40;i++){g.fillStyle=['rgba(150,145,135,0.35)','rgba(235,235,230,0.5)','rgba(110,105,95,0.25)'][i%3]; g.beginPath(); g.ellipse(r()*256,r()*256,10+r()*40,8+r()*30,r()*3,0,7); g.fill();}
   g.strokeStyle='rgba(120,115,105,0.35)'; g.lineWidth=2; for(let x=0;x<256;x+=64){g.beginPath(); g.moveTo(x,0); g.lineTo(x,256); g.stroke(); g.beginPath(); g.moveTo(0,x); g.lineTo(256,x); g.stroke();}},true);
-const ROOF=A.reg(new THREE.MeshLambertMaterial({map:roofT,vertexColors:true}),'street');
+const ROOF=A.reg(new THREE.MeshLambertMaterial({map:roofT,vertexColors:true}),'town');
 const tileT=det.tex(128,128,function(g){g.fillStyle='#b0563c'; g.fillRect(0,0,128,128); for(let y=0;y<128;y+=16){g.fillStyle='rgba(60,25,15,0.4)'; g.fillRect(0,y+13,128,3); for(let x=(y/16%2)*10;x<128;x+=20){g.fillStyle='rgba(255,200,170,0.15)'; g.fillRect(x,y,8,12); g.fillStyle='rgba(60,25,15,0.25)'; g.fillRect(x+18,y,2,13);}}},true);
-const TILE=A.reg(new THREE.MeshLambertMaterial({map:tileT,vertexColors:true}),'street');
-const PROP=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'street');
+const TILE=A.reg(new THREE.MeshLambertMaterial({map:tileT,vertexColors:true}),'town');
+const PROP=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'town');
 const WALLC=[0xefe9dc,0xe6dfcf,0xddd5c3,0xe9e3d4,0xd8d0bd,0xf2efe8,0xe2dac8,0xd9cfb9,0xece4d2,0xf4f1ea,0xe4ddd0,0xd6cdb9].map(C);
 
 /* ---------- one block ---------- */
@@ -381,8 +385,8 @@ signs.done('street');
 const leafT=det.tex(256,256,function(g){const r=A.rng(5); g.clearRect(0,0,256,256);
   for(let i=0;i<1700;i++){const x=r()*256, y=r()*256, s=4+r()*9, a=r()*R; g.fillStyle=['#3f6a2f','#4f7a37','#5f8a42','#2f5326','#6f9a4c','#46703a'][Math.floor(r()*6)]; g.beginPath(); g.ellipse(x,y,s,s*0.5,a,0,7); g.fill();
     g.fillStyle='rgba(220,240,180,0.25)'; g.beginPath(); g.ellipse(x-s*0.2,y-s*0.15,s*0.4,s*0.18,a,0,7); g.fill();}},true);
-const crownM=A.reg(new THREE.MeshLambertMaterial({map:leafT,alphaTest:0.5,side:THREE.DoubleSide,vertexColors:true}),'street');
-const barkM=A.reg(new THREE.MeshLambertMaterial({color:0x6e5e4c}),'street');
+const crownM=A.reg(new THREE.MeshLambertMaterial({map:leafT,alphaTest:0.5,side:THREE.DoubleSide,vertexColors:true}),'town');
+const barkM=A.reg(new THREE.MeshLambertMaterial({color:0x6e5e4c}),'town');
 function crownGeo(seed,lumps,flat){const r=A.rng(seed), pos=[], nor=[], col=[], uv=[], idx=[];
   for(let l=0;l<lumps;l++){const cx=l?(r()-0.5)*1.1:0, cy=l?(r()-0.3)*0.6:0, cz=l?(r()-0.5)*1.1:0, rad=l?0.55+r()*0.25:0.85, ws=8, hs=5, base=pos.length/3;
     for(let j=0;j<=hs;j++) for(let i=0;i<=ws;i++){const th=j/hs*R, ph=i/ws*2*R, dn=1+(r()-0.5)*0.22*(j>0&&j<hs?1:0), x=cx+Math.sin(th)*Math.cos(ph)*rad*dn, y=cy+Math.cos(th)*rad*dn*(flat||0.78), z=cz+Math.sin(th)*Math.sin(ph)*rad*dn;
@@ -448,7 +452,7 @@ function carGeos(){      // boxes, a few hundred triangles: a thousand of them p
   paint.forEach(function(g){g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(g.attributes.position.count*3).fill(1),3));});
   return [merge(paint),merge(dark.map(function(d){return d[0];}))];
 }
-const CARG=carGeos(), paintM=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'street'), darkM=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'street');
+const CARG=carGeos(), paintM=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'town'), darkM=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'town');
 const parked=[];
 carSpots.forEach(function(q,i){const t=tileOf(q[0],q[1]), r=A.rng(i*13+5); const c={i:parked.length,x:q[0],z:q[1],h:q[2],col:CARC[Math.floor(r()*CARC.length)],kind:['hatch','sedan','hatch','suv','mini','sedan','van'][Math.floor(r()*7)],t:t,slot:t.cars.length,hidden:false}; t.cars.push(c); parked.push(c);});
 tiles.forEach(function(t){if(!t||!t.cars.length) return; const cs=t.cars;
@@ -469,7 +473,7 @@ tiles.forEach(function(t){if(!t) return; root.add(t.g);
 const warm=new THREE.Color(1,0.84,0.58);
 let eveWas=-1;
 A.frameFns.push(function(){const e=1-A.get('day'); if(Math.abs(e-eveWas)<0.01) return; eveWas=e;
-  lights.forEach(function(m){m.emissive.copy(warm).multiplyScalar(e*0.95);}); LAMPH.emissive.setRGB(1,0.86,0.6).multiplyScalar(e*1.2);});
+  lights.forEach(function(m){m.emissive.copy(warm).multiplyScalar(e*0.95);}); LAMPH.emissive.setRGB(1,0.86,0.6).multiplyScalar(e*1.2); A.set('L:town',e>0.5?0.32:0);});
 
 /* all of it on the outside's own layer, as building.js does */
 let layered=false;
@@ -523,7 +527,7 @@ function path(x0,z0,x1,z1){
 /* a road to walk or drive along: the network, both ways, joined where the streets meet */
 const net=roads.filter(function(r){return r.w[0]>0;});
 A.town={free:free,path:path,y:function(){return U;},inside:inside,kept:kept,roads:roads,net:net,cross:cross,nodes:nodes,key:key,roadNear:roadNear,parked:parked,showParked:showParked,
-  inBuilding:inBuilding,obstacles:{at:obAt,add:addOb,grid:OB,G:OG},blds:blds,extent:[TX0,TZ0,TS],canvas:gcan,cp:cp,root:root,U:U,nearest:function(x,z){const c=nearCell(x,z); return c<0?null:cxz(c);},
+  inBuilding:inBuilding,obstacles:{at:obAt,add:addOb,grid:OB,G:OG},blds:blds,outlines:blds.concat(own.map(function(p){let cx=0,cz=0; p.forEach(function(q){cx+=q[0]; cz+=q[1];}); return {p:p,c:[cx/p.length,cz/p.length]};})),extent:[TX0,TZ0,TS],canvas:gcan,cp:cp,root:root,U:U,nearest:function(x,z){const c=nearCell(x,z); return c<0?null:cxz(c);},
   near:function(x,z,rad){return !kept(x,z)&&inside(x,z);}};
 
 /* =====================================================================

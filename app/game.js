@@ -60,7 +60,7 @@ function actorsHere(){
 }
 function animals(){const SL=A.streetLife, out=[]; if(!SL) return out;
   if(SL.cat) out.push({kind:'cat',root:SL.cat.g,name:'Cat',c:SL.cat,lvl:0}); if(SL.dog) out.push({kind:'dog',root:SL.dog.g,name:'Dog',c:SL.dog,lvl:0});
-  pets.forEach(function(pt){if(pt.root.visible!==false&&shown(pt.root)) out.push(pt);}); return out;}
+  pets.forEach(function(pt){if(pt.root.visible!==false&&shown(pt.root)) out.push(pt);}); if(A.townCats) A.townCats().forEach(function(c){if(c.root.visible) out.push(c);}); return out;}
 function shown(o){for(;o;o=o.parent){if(!o.visible) return false;} return true;}
 const TABLES=['table','dining','lift','gate','round','nest','trunk','ctable'];
 function tables(){const out=[], lv=SM.player?SM.player.lvl:0;
