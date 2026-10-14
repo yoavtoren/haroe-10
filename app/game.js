@@ -118,7 +118,8 @@ function actsFor(t){
   else if(t.kind==='table') P.push(t.root.userData.flipped?['Set it back up',function(){flip(t,false);}]:['Flip the table',function(){flip(t,true);}]);
   else if(t.kind==='bin') P.push(carryingBag?['You have the bag',function(){toast('Take it down to the green bins on the street.');}]:['Take out the rubbish',function(){trashOut();}]);
   else if(t.kind==='dumpster') P.push(carryingBag?['Throw the bag in',function(){throwBag();}]:['Look inside',function(){peek();}]);
-  else if(t.kind==='car') P.push(['Get in and drive',function(){select(null); A.drive.enter(t.car);}]);
+  else if(t.kind==='car'){P.push([t.car.traffic?'Pull the driver out':'Get in and drive',function(){select(null); A.drive.enter(t.car);}]);
+    if(!t.car.traffic) P.push(['Kick it',function(){kickCar(t);}]);}
   return P;
 }
 function renderBar(){if(!sel) return; const P=actsFor(sel); bar.innerHTML='<b>'+sel.name+'</b><span style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></span>';
@@ -308,5 +309,9 @@ A.frameFns.push(function(dt){
   }
 });
 window.addEventListener('load',function(){makeBin(); setTimeout(addPets,0);});
-A.game={select:select,punch:punch,push:push,hug:hug,talk:talk,pet:pet,flip:flip,trashOut:trashOut,throwBag:throwBag,all:all,G:G,addPets:addPets,dump:function(){return dump;}};
+/* a kick at a parked car: the alarm goes off, and whoever is around has something to say */
+function kickCar(t){const p=SM.player, c=t.car; select(null); SM.stop(); const dx=c.x-p.x, dz=c.z-p.z, d=Math.hypot(dx,dz)||1;
+  p.goTo(c.x-dx/d*1.6,c.z-dz/d*1.6,function(){p.hT=Math.atan2(dx,dz); p.p.act='reach'; hit(0.7,300); SM.later(0.4,function(){p.p.act=null; A.drive.kick(c); const w=witnesses(t,15); if(w.length){bubble(w[0],rnd(['Hey! That is not your car!','What are you doing?!','I am calling the police!']),2.4); if(Math.random()<0.5) cops(1);} else toast('WEE-OO WEE-OO. The alarm wails down the street.');});});}
+A.game={select:select,punch:punch,push:push,hug:hug,talk:talk,pet:pet,flip:flip,trashOut:trashOut,throwBag:throwBag,all:all,G:G,addPets:addPets,dump:function(){return dump;},
+  knock:knockDown,state:state,witnesses:witnesses,say:function(t,text){bubble(t,text,2.4);}};
 })();

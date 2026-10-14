@@ -55,7 +55,7 @@ let worker=null;
 if(!/[?&]nofix/.test(location.search)) try{worker=new Worker(URL.createObjectURL(new Blob(['('+WORK.toString()+')()'],{type:'text/javascript'})));}catch(e){worker=null;}
 
 /* ---------- gather: every solid surface that is drawn, in world space ---------- */
-function skipTree(o){for(;o;o=o.parent){if(o.userData&&(o.userData.live||o.userData.hl)) return true;} return false;}
+function skipTree(o){for(;o;o=o.parent){if(o.userData&&(o.userData.live||o.userData.hl||o.userData.nofight)) return true;} return false;}
 function shown(o){for(;o;o=o.parent){if(!o.visible) return false;} return true;}
 const NONE=0xffffffff;
 function usable(m){return m&&m.visible!==false&&m.blending!==THREE.AdditiveBlending&&m.depthTest!==false&&m.depthWrite!==false;}

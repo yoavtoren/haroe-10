@@ -271,17 +271,18 @@ det.car=function(kind,o){
     [K.wb/2,-K.wb/2].forEach(function(wx){const t=P.tor(r+0.05,0.05,blk,wx,r,s*(W/2-0.01),g,R,6,14); t.scale.set(1,1,0.5);});       // wheel-arch trims
   });
   /* windscreen and rear window: quads across the car between the profile's slopes */
-  function pane(a,b2){const xa=a[0], ya=a[1], xb=b2[0], yb=b2[1], len=Math.hypot(xb-xa,yb-ya), m=P.box(len,0.012,W-0.2,glass,(xa+xb)/2,(ya+yb)/2+0.02,0,g); m.rotation.z=Math.atan2(yb-ya,xb-xa);}
-  for(let i=0;i<pr.length-1;i++){const a=pr[i], b2=pr[i+1], slope=Math.abs((b2[1]-a[1])/(b2[0]-a[0]+1e-6)); if(a[1]>belt&&b2[1]>belt&&slope>0.5&&slope<8) pane(a,b2);}
+  function pane(a,b2){const xa=a[0], ya=a[1], xb=b2[0], yb=b2[1], len=Math.hypot(xb-xa,yb-ya); let nx=-(yb-ya)/len, ny=(xb-xa)/len; if(ny<0){nx=-nx; ny=-ny;}      // out through the body's bevelled shell
+    const m=P.box(len-0.08,0.012,W-0.22,glass,(xa+xb)/2+nx*0.058,(ya+yb)/2+ny*0.058,0,g); m.rotation.z=Math.atan2(yb-ya,xb-xa);}
+  for(let i=0;i<pr.length-1;i++){const a=pr[i], b2=pr[i+1], slope=Math.abs((b2[1]-a[1])/(b2[0]-a[0]+1e-6)); if(a[1]>belt-0.1&&b2[1]>belt-0.1&&slope>0.5&&slope<8) pane(a,b2);}      // the windscreen and the rear window
   /* wheels, lights, plates, bumpers */
   [K.wb/2,-K.wb/2].forEach(function(wx){[-1,1].forEach(function(s){const w=wheel(g,r,0.2,{style:'car',rim:o.rim||0xb9bdc0}); w.position.set(wx,r,s*(W/2-0.12)); w.rotation.order='YXZ'; w.rotation.y=R/2; w.userData.wheel=r;});});
   const fx=K.L/2, rx=-K.L/2;
-  [-1,1].forEach(function(s){P.rbox(0.08,0.11,0.32,o.lamp||0xe6ecee,fx-0.08,0.78,s*(W/2-0.28),g,0.03); P.rbox(0.06,0.13,0.26,o.tail||0xb0262a,rx+0.05,0.86,s*(W/2-0.22),g,0.03);   // head and tail lamps
-    P.box(0.05,0.04,0.12,0xe58a2a,fx-0.1,0.66,s*(W/2-0.12),g);});
-  P.box(0.05,0.18,W*0.45,0x1f2224,fx-0.01,0.62,0,g); for(let i=0;i<4;i++) P.box(0.055,0.012,W*0.43,0x3a3d40,fx,0.56+i*0.04,0,g);       // grille
-  P.rbox(0.12,0.16,W-0.04,blk,fx-0.03,0.38,0,g,0.04); P.rbox(0.12,0.16,W-0.04,blk,rx+0.03,0.4,0,g,0.04);                              // bumpers
-  [[fx+0.03,0.47,0],[rx-0.03,0.6,R]].forEach(function(q){const pl=P.plane(0.52,0.11,plateM(o.plate||'12-345-67'),q[0],q[1],q[2],g,R/2+q[2]);});
-  P.cyl(0.03,0.08,0x55595c,rx+0.02,0.3,W/2-0.35,g,8).rotation.z=R/2;                                                                    // exhaust
+  [-1,1].forEach(function(s){P.rbox(0.08,0.11,0.32,o.lamp||0xe6ecee,fx+0.02,0.78,s*(W/2-0.28),g,0.03); P.rbox(0.06,0.13,0.26,o.tail||0xb0262a,rx-0.01,0.86,s*(W/2-0.22),g,0.03);   // head and tail lamps, standing out of the body's bevelled shell
+    P.box(0.05,0.04,0.12,0xe58a2a,fx+0.02,0.66,s*(W/2-0.12),g);});
+  P.box(0.05,0.18,W*0.45,0x1f2224,fx+0.04,0.62,0,g); for(let i=0;i<4;i++) P.box(0.055,0.012,W*0.43,0x3a3d40,fx+0.05,0.56+i*0.04,0,g);       // grille
+  P.rbox(0.12,0.16,W-0.04,blk,fx+0.04,0.38,0,g,0.04); P.rbox(0.12,0.16,W-0.04,blk,rx-0.04,0.4,0,g,0.04);                              // bumpers
+  [[fx+0.105,0.47,0],[rx-0.105,0.6,R]].forEach(function(q){P.plane(0.52,0.11,plateM(o.plate||'12-345-67'),q[0],q[1],0,g,R/2+q[2]);});      // the plates, front and back
+  P.cyl(0.03,0.12,0x55595c,rx-0.02,0.3,W/2-0.35,g,8).rotation.z=R/2;                                                                    // exhaust
   P.box(0.4,0.03,0.02,blk,x1-0.3-(yTop-belt)*0.5,belt+0.06,0.2,g).rotation.y=0.3; P.box(0.4,0.03,0.02,blk,x1-0.3-(yTop-belt)*0.5,belt+0.06,-0.25,g).rotation.y=0.3;   // wipers
   if(kind!=='van') P.rbox(0.18,0.05,0.06,blk,x0+0.4,yTop+0.02,0,g,0.02);                                                                // aerial fin
   if(kind==='suv') [-1,1].forEach(function(s){P.box(1.6,0.03,0.04,0x9aa0a4,-0.2,yTop+0.04,s*(W/2-0.18),g);});                          // roof rails

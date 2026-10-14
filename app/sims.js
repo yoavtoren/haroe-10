@@ -30,8 +30,12 @@ function makePerson(spec){return A.makePerson(spec,actors);}
    ===================================================================== */
 const WB=(function(){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; for(const k in A.rooms) A.rooms[k].rs.forEach(function(r){x0=Math.min(x0,r[0]); x1=Math.max(x1,r[1]); z0=Math.min(z0,r[2]); z1=Math.max(z1,r[3]);}); return [x0-0.2,x1+0.2,z0-0.2,z1+0.2];})();
 const CS=0.1, GX0=WB[0], GZ0=WB[2], NX=Math.ceil((WB[1]-GX0)/CS), NZ=Math.ceil((WB[3]-GZ0)/CS), RAD=0.13, LB=A.LB;
-const gy=A.groundAt||function(){return 0;};
-const free0=new Uint8Array(NX*NZ); let free=free0;      // the grid in use: our floor's, or for a moment another floor's
+const gy0=A.groundAt||function(){return 0;};
+const free0=new Uint8Array(NX*NZ); let free=free0;
+/* known: what our own grid speaks for (the flat, the lobby, the street round the square). Anywhere else on our floor the neighbourhood's
+   map does (town.js): the streets all round, walked out onto from the ends of ours */
+const known=new Uint8Array(NX*NZ);
+function gy(x,z){if(A.town){const c=cell(x,z); if(c<0||!known[c]) return A.town.y(x,z);} return gy0(x,z);}      // the grid in use: our floor's, or for a moment another floor's
 /* other floors of the building (from floors.js): each has a grid of its own, built from its rooms and what stands on it */
 const grids={};
 function lvY(l){return l&&A.levels&&A.levels[l]?A.levels[l].y:0;}
@@ -61,6 +65,7 @@ function collect(o){
 function buildNav(){
   free=free0; free.fill(0);
   for(const k in A.rooms){if(A.rooms[k].lvl) continue; A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});}
+  known.set(free0); PASS.forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);}); for(let c=0;c<known.length;c++) if(free0[c]) known[c]=1; free0.set(known);
   scene.updateMatrixWorld(true); collect(scene);
   (A.streetBlock||[]).forEach(function(b){fillRect(b[0]-RAD,b[1]+RAD,b[2]-RAD,b[3]+RAD,0);});      // the street is drawn as merged meshes, so what stands there is listed
   PASS.forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);});
@@ -70,7 +75,17 @@ function buildNav(){
     if(i>0&&free[c-1]&&!seen[c-1]){seen[c-1]=1; q.push(c-1);} if(i<NX-1&&free[c+1]&&!seen[c+1]){seen[c+1]=1; q.push(c+1);}
     if(j>0&&free[c-NX]&&!seen[c-NX]){seen[c-NX]=1; q.push(c-NX);} if(j<NZ-1&&free[c+NX]&&!seen[c+NX]){seen[c+NX]=1; q.push(c+NX);}}
   for(let c=0;c<free.length;c++) free[c]=seen[c];
+  gates();
 }
+/* where our grid gives onto the neighbourhood's: cells at its edge with open street beyond, one every metre and a half */
+let GATES=[];
+function gates(){GATES=[]; if(!A.town) return; const seen={}, D2=3;
+  for(let j=D2;j<NZ-D2;j++) for(let i=D2;i<NX-D2;i++){const c=j*NX+i; if(!free0[c]) continue;
+    const out=[c-D2,c+D2,c-D2*NX,c+D2*NX].some(function(n){return !known[n]&&A.town.free(cx(n),cz(n),0.3);}); if(!out) continue;
+    const k=Math.floor(cx(c)/1.5)+','+Math.floor(cz(c)/1.5); if(seen[k]) continue; seen[k]=1; GATES.push([cx(c),cz(c)]);}
+}
+function inFine(x,z){const c=cell(x,z); return c>=0&&known[c]===1;}
+A.navGates=function(){return GATES;};
 /* another floor's grid: its rooms are open, what was built for that floor (marked with its lvl) stands in the way, its doorways are open,
    and only what can be reached from where the stairs come up is kept */
 function buildLevel(l){
@@ -94,7 +109,7 @@ function buildLevel(l){
   return g;
 }
 function cell(x,z){const i=Math.floor((x-GX0)/CS), j=Math.floor((z-GZ0)/CS); return (i<0||j<0||i>=NX||j>=NZ)?-1:j*NX+i;}
-function isFree(x,z){const c=cell(x,z); return c>=0&&free[c]===1;}
+function isFree(x,z){const c=cell(x,z); if(free===free0&&A.town&&(c<0||!known[c])) return A.town.free(x,z); return c>=0&&free[c]===1;}
 function cx(c){return GX0+((c%NX)+0.5)*CS;} function cz(c){return GZ0+(Math.floor(c/NX)+0.5)*CS;}
 function nearest(x,z){
   const c0=cell(Math.min(WB[1]-0.1,Math.max(GX0+0.1,x)),Math.min(WB[3]-0.1,Math.max(GZ0+0.1,z))); if(c0>=0&&free[c0]) return c0;
@@ -109,7 +124,19 @@ function nearest(x,z){
   return best;
 }
 function los(x0,z0,x1,z1){const d=Math.hypot(x1-x0,z1-z0), n=Math.ceil(d/0.04); for(let i=1;i<n;i++){const t=i/n; if(!isFree(x0+(x1-x0)*t,z0+(z1-z0)*t)) return false;} return true;}
+/* on our floor, between our grid and the neighbourhood's: through the gate that makes the shortest way */
 function findPath(x0,z0,x1,z1){
+  if(free!==free0||!A.town) return fineFind(x0,z0,x1,z1);
+  const a=inFine(x0,z0), b=inFine(x1,z1);
+  if(a&&b) return fineFind(x0,z0,x1,z1);
+  if(!a&&!b) return A.town.path(x0,z0,x1,z1);
+  const f=a?[x0,z0]:[x1,z1], t=a?[x1,z1]:[x0,z0]; let g=null, bd=1e9;
+  GATES.forEach(function(q){const d=Math.hypot(q[0]-f[0],q[1]-f[1])*1.15+Math.hypot(q[0]-t[0],q[1]-t[1]); if(d<bd){bd=d; g=q;}});
+  if(!g) return a?fineFind(x0,z0,x1,z1):[];
+  if(a) return fineFind(x0,z0,g[0],g[1]).concat(A.town.path(g[0],g[1],x1,z1));
+  return A.town.path(x0,z0,g[0],g[1]).concat(fineFind(g[0],g[1],x1,z1));
+}
+function fineFind(x0,z0,x1,z1){
   const s=nearest(x0,z0), t=nearest(x1,z1); if(s<0||t<0) return [];
   const N=NX*NZ, g=new Float32Array(N).fill(1e9), from=new Int32Array(N).fill(-1), done=new Uint8Array(N), heap=[];
   const push=function(f,c){heap.push([f,c]); let i=heap.length-1; while(i>0){const p=(i-1)>>1; if(heap[p][0]<=heap[i][0]) break; const tmp=heap[p]; heap[p]=heap[i]; heap[i]=tmp; i=p;}};
@@ -227,7 +254,7 @@ Actor.prototype.update=function(dt){
   this.h=angLerp(this.h,this.hT,Math.min(1,dt*8));
   p.moved=p.walking?Math.hypot(this.x-(this.lx==null?this.x:this.lx),this.z-(this.lz==null?this.z:this.lz)):0; this.lx=this.x; this.lz=this.z;      // ground covered this frame: the stride is measured from it
   p.g.position.set(this.x,this.lvl?lvY(this.lvl):this.seat?0:gy(this.x,this.z),this.z); p.g.rotation.y=this.h; p.update(dt);
-  const rm=A.roomAt(this.x,this.z,this.lvl)||this.room||'hall';
+  const rm=(!this.lvl&&A.town&&!this.script&&!inFine(this.x,this.z))?'street':A.roomAt(this.x,this.z,this.lvl)||this.room||'hall';      // out in the neighbourhood: the street
   if(rm!==this.room||this.ver!==A.lightVer||p.dirty){p.dirty=false; this.room=rm; this.ver=A.lightVer; p.tint(A.rooms[rm].tint);}
 };
 Actor.prototype.remove=function(){
@@ -246,7 +273,7 @@ function makePlayer(){
   if(player){x=player.x; z=player.z; h=player.h; player.remove();}
   const lvl=player?player.lvl:0;
   player=new Actor(LOOKS[who],true); player.x=x; player.z=z; player.h=player.hT=h; player.lvl=lvl;
-  const c=onLevel(lvl,function(){return nearest(x,z);}); if(c>=0){player.x=cx(c); player.z=cz(c);}
+  const out=!lvl&&A.town&&!inFine(x,z)&&A.town.free(x,z); const c=out?-1:onLevel(lvl,function(){return nearest(x,z);}); if(c>=0){player.x=cx(c); player.z=cz(c);}      // out in the streets: stay there
   if(pj.on) player.p.outfit(true);
   A.player=player;
 }
@@ -631,12 +658,15 @@ window.addEventListener('pointerup',function(e){
   walkTo(hit.x,hit.z);
 });
 function walkTo(x,z){
-  if(x<WB[0]||x>WB[1]||z<WB[2]||z>WB[3]) return;
+  const town=!player.lvl&&!!A.town&&!inFine(x,z);      // out in the neighbourhood
+  if(!town&&(x<WB[0]||x>WB[1]||z<WB[2]||z>WB[3])) return;
   if(pj.asleep) return;
   if(player.script) return;
-  stopAction(); const c=onLevel(player.lvl,function(){return nearest(x,z);}); if(c<0) return;
-  marker.position.set(cx(c),0.03+(player.lvl?lvY(player.lvl):gy(cx(c),cz(c))),cz(c)); marker.material.opacity=0.9;
-  player.goTo(cx(c),cz(c),function(){refresh();}); refresh();
+  stopAction(); let tx, tz;
+  if(town){const q=A.town.nearest(x,z); if(!q) return; tx=q[0]; tz=q[1];}
+  else{const c=onLevel(player.lvl,function(){return nearest(x,z);}); if(c<0) return; tx=cx(c); tz=cz(c);}
+  marker.position.set(tx,0.03+(player.lvl?lvY(player.lvl):gy(tx,tz)),tz); marker.material.opacity=0.9;
+  player.goTo(tx,tz,function(){refresh();}); refresh();
 }
 A.walkTo=walkTo;
 
@@ -659,7 +689,7 @@ let manSpeed=0;
 const jMove=stick($('stickMove')), jLook=stick($('stickLook')), sphc=new THREE.Spherical(), offv=new THREE.Vector3();
 A.sticks={move:jMove,look:jLook};
 function showSticks(on){on=on&&TOUCH; $('stickMove').hidden=!on; $('stickLook').hidden=!on; document.body.classList.toggle('sticks',on);}
-function driveSticks(dt){if(player.script) return; onLevel(player.lvl,function(){driveSticksOn(dt);});}
+function driveSticks(dt){if(player.script||player.driving) return; onLevel(player.lvl,function(){driveSticksOn(dt);});}
 function driveSticksOn(dt){
   const mag=Math.hypot(jMove.x,jMove.y);
   player.manual=false;
@@ -805,7 +835,7 @@ function setMode(sims){
 }
 A.setMode=setMode;
 $('tabDesign').onclick=function(){setMode(false);}; $('tabSims').onclick=function(){setMode(true);};
-A.sims={Actor:Actor,LOOKS:LOOKS,extras:extras,onLevel:onLevel,PASS:PASS,lvY:lvY,FRIENDS:FRIENDS,walkTo:walkTo,flyToPlayer:flyToPlayer,get camMode(){return camMode;},later:later,cancel:cancelTimers,toast:toast,stop:stopAction,seatBy:seatBy,firstFree:firstFree,afterLayout:afterLayout,refresh:refresh,isFree:isFree,
+A.sims={ground:gy,Actor:Actor,LOOKS:LOOKS,extras:extras,onLevel:onLevel,PASS:PASS,lvY:lvY,FRIENDS:FRIENDS,walkTo:walkTo,flyToPlayer:flyToPlayer,get camMode(){return camMode;},later:later,cancel:cancelTimers,toast:toast,stop:stopAction,seatBy:seatBy,firstFree:firstFree,afterLayout:afterLayout,refresh:refresh,isFree:isFree,
   nearestXZ:function(x,z){const c=nearest(x,z); return c<0?null:[cx(c),cz(c)];},setDoing:function(t){doing=t; refresh();},getDoing:function(){return doing;},renderRooms:renderRooms,
   view:function(){return camMode==='eye'?yaw:player.h;},EX:EX,SPAWN:SPAWN,get who(){return who;},get evening(){return evening;},
   ACT:ACT,guests:guests,pj:pj,setEvening:setEvening,setLight:setLight,setShutter:setShutter,setCam:setCam,setWho:setWho,startPJ:startPJ,lightsOut:lightsOut,morning:morning,arrive:arrive,goodbye:goodbye,roster:roster,freeSeats:freeSeats,openInvite:openInvite,openPJ:openPJ,get player(){return player;}};

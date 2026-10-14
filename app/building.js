@@ -149,6 +149,7 @@ const groundT=det.tex(N,N,function(g){
     const p0=q(13.2,27.5), p1=q(19.5,20.5), p2=q(17.5,11.5); g.strokeStyle='#b9ad93'; g.lineWidth=1.6*K; g.beginPath(); g.moveTo(p0[0],p0[1]); g.quadraticCurveTo(p1[0],p1[1],p2[0],p2[1]); g.stroke();})();
   for(let i=0;i<6000;i++){g.fillStyle='rgba(0,0,0,'+(r()*0.05)+')'; g.fillRect(r()*N,r()*N,1,1);}
 });
+let groundMesh=null;
 (function(){
   const hole=[[-14,-22.4],[LBH,-22.4],[LBH,NXY-XF],[12.4,NXY-XF],[12.4,GZs],[SQ,GZs],[SQ,16+D8],[50,16+D8],[50,29.05+D8],[-19,29.05+D8],[-19,GZs],[0,GZs],[0,0],[-14,0]];   // in the street's frame: our building, the yard and the gap by Beit HaChayal, the alley and the garden, the square and Haroe St as the street draws them
   const sh=new THREE.Shape(); sh.moveTo(GZ0,GX0); sh.lineTo(GZ0+GS,GX0); sh.lineTo(GZ0+GS,GX0+GS); sh.lineTo(GZ0,GX0+GS); sh.lineTo(GZ0,GX0);
@@ -156,7 +157,7 @@ const groundT=det.tex(N,N,function(g){
   const g=new THREE.ShapeGeometry(sh), Pp=g.attributes.position, uv=g.attributes.uv, ix=g.index;
   for(let i=0;i<Pp.count;i++){const z=Pp.getX(i), x=Pp.getY(i); Pp.setXYZ(i,x,U-0.003,z); uv.setXY(i,(z-GZ0)/GS,(x-GX0)/GS);}
   g.computeVertexNormals();      // drawn in (z, x), counter-clockwise there is facing up here
-  const m=new THREE.Mesh(g,A.reg(new THREE.MeshLambertMaterial({map:groundT}),'street')); m.receiveShadow=true; root.add(m);
+  const m=new THREE.Mesh(g,A.reg(new THREE.MeshLambertMaterial({map:groundT}),'street')); m.receiveShadow=true; root.add(m); groundMesh=m;
 })();
 
 /* ---------- the blocks round us: whole, with their fronts, where they are near; plain volumes with windows farther off ---------- */
@@ -444,7 +445,7 @@ const fog=A.scene.fog=new THREE.Fog(0xe9ece7,190,520);
 A.frameFns.push(function(){
   const w=!!(A.bldWhole&&A.bldWhole());
   if(w!==whole){whole=w; up.visible=skin.visible=w; A.touch(3);}
-  const b=A.state.scope==='building', far=b?700:100; ctl.maxDistance=b?260:50;      // in the flat the old short view keeps the depth fine
+  const b=A.state.scope==='building', far=b?700:(A.farOut&&A.farOut())||100; ctl.maxDistance=b?260:50;      // in the flat the old short view keeps the depth fine
   if(cam.far!==far){cam.far=far; cam.updateProjectionMatrix();}
   A.renderer.getClearColor(fog.color);
 });
@@ -452,5 +453,5 @@ A.frameFns.push(function(){
    taken for the lobby and cut with it */
 let layered=false;
 A.frameFns.push(function(){if(layered||A.LAYER_OUT==null) return; layered=true; [root].concat(shade).forEach(function(o){o.traverse(function(m){m.layers.set(A.LAYER_OUT);});});});
-A.building={covers:function(p){return p.x>XS&&p.x<XN+0.25&&p.z>ZW&&p.z<ZE&&p.y<ROOF;},warp:warp,pt:pt,XS:XS,ZW:ZW,ZE:ZE,ROOF:ROOF,centre:new THREE.Vector3((XS+XN)/2,0,(ZW+ZE)/2)};
+A.building={covers:function(p){return p.x>XS&&p.x<XN+0.25&&p.z>ZW&&p.z<ZE&&p.y<ROOF;},warp:warp,pt:pt,XS:XS,ZW:ZW,ZE:ZE,ROOF:ROOF,centre:new THREE.Vector3((XS+XN)/2,0,(ZW+ZE)/2),ground:groundMesh};
 })();
