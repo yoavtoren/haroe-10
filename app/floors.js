@@ -329,7 +329,7 @@ function flatOf(key){
   if(FLATS[key]) return FLATS[key];
   const f=key==='shelter'?-1:+key.slice(-1), west=key.indexOf('west')===0, rng=A.rng(key.length*31+f*7+(west?3:0));
   const rooms=key==='shelter'?['shelter']:west?Object.keys(WROOMS).map(function(k){return 'w'+f+':'+k;}):FLAT.map(function(k){return k+'@'+f;});
-  const n=key==='shelter'?0:1+Math.floor(rng()*2), home=key!=='shelter'&&rng()<0.6;
+  const n=key==='shelter'?0:1+Math.floor(rng()*2), home=key!=='shelter'&&rng()<0.85;
   const people=[]; for(let i=0;i<n;i++) people.push(person(f*100+(west?50:0)+i*7+3));
   return FLATS[key]={key:key,f:f,west:west,rooms:rooms,people:people,home:home,folk:[],broken:false,searched:{},invited:false,door:doors[key]};
 }
@@ -339,9 +339,16 @@ function randomSpot(fl){const k=fl.rooms[Math.floor(Math.random()*fl.rooms.lengt
 function settleIn(fl){            // the people of a flat, at home, somewhere inside
   if(!fl.home||fl.folk.length||!A.sims) return;
   fl.people.forEach(function(spec){const a=new A.sims.Actor(spec); a.lvl=fl.f; a.speed=1.0; const s=randomSpot(fl);
-    const c=A.sims.onLevel(fl.f,function(){return A.sims.nearestXZ(s[0],s[1]);}); if(c){a.x=c[0]; a.z=c[1];} a.next=A.t+2+Math.random()*6; a.flat=fl; fl.folk.push(a);});
+    const c=A.sims.onLevel(fl.f,function(){return A.sims.nearestXZ(s[0],s[1]);}); if(c){a.x=c[0]; a.z=c[1];} a.next=A.t+2+Math.random()*6; a.flat=fl; fl.folk.push(a);
+    const st=Math.random()<0.55?seatFor(fl,fl.folk.length-1):null;      // on the sofa or in an armchair: reading, a drink, the laptop, the television
+    if(st){a.x=st.x; a.z=st.z; a.h=a.hT=st.h; a.p.seatY=st.y; a.p.sitT=a.p.sit=1; a.sitting=true; a.p.act=['read',null,'drink','type',null][Math.floor(Math.random()*5)];}});
 }
-function wander(a){if(a.busy||a.path.length||a.script) return; if(A.t<a.next) return; a.next=A.t+6+Math.random()*9;
+function seatFor(fl,i){
+  const f=fl.f; if(f<1) return null;
+  if(!fl.west){const ss=(A.liveSeats?A.liveSeats():[]).filter(function(s){return s.type==='sit'&&['living','kitchen','bed1','bed2'].indexOf(A.roomAt(s.x,s.z,0))>=0;}); const s=ss[(i*3+f)%Math.max(1,ss.length)]; return s?{x:s.x,z:s.z,h:s.h,y:s.y}:null;}      // over ours: the same furniture where ours stands
+  const out=[], v=new THREE.Vector3(); if(lvlGroups[f]) lvlGroups[f].traverse(function(o){if(o.userData&&(o.userData.cat==='arm'||o.userData.cat==='chair')){o.getWorldPosition(v); if(fl.rooms.indexOf(A.roomAt(v.x,v.z,f))>=0) out.push({x:v.x,z:v.z,h:o.rotation.y+R/2,y:0.45});}});
+  return out.length?out[i%out.length]:null;}
+function wander(a){if(a.busy||a.path.length||a.script||(a.sitting&&a.p.sitT>0)) return; if(A.t<a.next) return; a.next=A.t+6+Math.random()*9;
   const s=randomSpot(a.flat); a.goTo(s[0],s[1]);}
 
 /* ---------- at the door ---------- */
@@ -464,7 +471,7 @@ A.frameFns.push(function(dt){
     if(fl.atDoor&&A.t>fl.atDoor&&G.answered===fl) closeUp(fl);
     if(fl.invited&&!playerIn(fl)&&fl.door.target===0&&A.t>(fl.atDoor||0)+30){fl.invited=false; fl.door.locked=true; A.navDirty(fl.f);}      // you left: they lock up behind you
     fl.folk.forEach(function(a){const here=a.lvl===lv; a.p.g.visible=here;
-      if(here){wander(a); a.update(dt); if(fl.broken&&playerIn(fl)&&!a.angry&&Math.hypot(a.x-p.x,a.z-p.z)<5){a.angry=true; notice(fl,'pick');}}});
+      if(here){wander(a); a.update(dt); if(fl.broken&&playerIn(fl)&&!a.angry&&Math.hypot(a.x-p.x,a.z-p.z)<(a.sitting?7:5)){a.angry=true; if(a.sitting){a.sitting=false; a.p.sitT=0; a.p.act=null;} a.hT=Math.atan2(p.x-a.x,p.z-a.z); notice(fl,'pick');}}});
   }
   if(G.wanted&&!G.cops.length&&A.t>G.callAt) spawnCops();
   if(G.wanted&&A.t-G.since>150) giveUp();                      // a long while without trouble: they stop looking

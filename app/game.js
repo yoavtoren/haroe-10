@@ -70,7 +70,8 @@ function tables(){const out=[], lv=SM.player?SM.player.lvl:0;
   return out;}
 function things(){const out=[]; if(binProxy&&!(SM.player&&SM.player.lvl)) out.push({kind:'bin',root:binProxy,name:'Kitchen bin',lvl:0}); if(dump) out.push({kind:'dumpster',root:dump.g,name:'Rubbish bin',lvl:0});
   if(A.drive) A.drive.cars().forEach(function(c){out.push({kind:'car',root:c.g,name:c.name,car:c,lvl:0});}); return out;}
-function all(){return streetFolk().concat(actorsHere(),animals(),tables(),things());}
+function townFolk(){return (A.townFolk?A.townFolk():[]).map(function(a){return {kind:'person',sub:'street',a:a,p:a.p,root:a.p.g,name:a.spec.name,lvl:0};});}      // out in the neighbourhood (townlife.js)
+function all(){return streetFolk().concat(townFolk(),actorsHere(),animals(),tables(),things());}
 function posOf(t,out){out=out||new THREE.Vector3(); if(t.a) return out.set(t.a.x,t.a.p.g.position.y,t.a.z); t.root.getWorldPosition(out); return out;}
 
 /* ---------- lighting up what you picked: each of its parts drawn again a little larger, back faces only, in yellow ---------- */
