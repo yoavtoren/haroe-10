@@ -257,7 +257,7 @@ function copStep(dt){
   const c=cop, dx=me.x-c.x, dz=me.z-c.z, d=Math.hypot(dx,dz);
   if(d>160){c.remove(); cop=null; return;}
   /* the way to you: the walking map's route, refreshed every second; straight at you when close */
-  if(A.t>c.rt){c.rt=A.t+1.0; c.route=d>14?T.path(c.x,c.z,me.x,me.z):null;}
+  if(A.t>c.rt){c.rt=A.t+1.0; c.route=d>14?T.path(c.x,c.z,me.x,me.z,true):null;}
   let tx=me.x, tz=me.z; if(c.route&&c.route.length){while(c.route.length>1&&Math.hypot(c.route[0][0]-c.x,c.route[0][1]-c.z)<5) c.route.shift(); tx=c.route[0][0]; tz=c.route[0][1];}
   const want2=Math.atan2(-(tz-c.z),tx-c.x), da=wrap(want2-c.psi), sp=d<8?Math.max(0,Math.abs(me.v)+1):Math.min(17,6+d*0.25);
   c.steer=Math.max(-0.6,Math.min(0.6,da*1.5)); c.v+=(sp*(Math.abs(da)>1.2?0.45:1)-c.v)*Math.min(1,dt*1.5);

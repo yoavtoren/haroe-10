@@ -5,7 +5,7 @@
 'use strict';
 const A=window.APP, T=A.town, SM=A.sims, R=Math.PI;
 if(!T||!SM) return;
-const MAX=('ontouchstart' in window)||navigator.maxTouchPoints>0?8:16;
+const MAX=('ontouchstart' in window)||navigator.maxTouchPoints>0?9:18;
 const NAMES=[['Ronit',1],['Moshe',0],['Dana',1],['Avi',0],['Shira',1],['Yossi',0],['Tamar',1],['Eli',0],['Noa',1],['Itzik',0],['Galit',1],['Uri',0],['Miri',1],['Benny',0],['Sarit',1],['Kobi',0],['Orly',1],['Dudu',0],['Yael',1],['Amir',0],['Liat',1],['Shlomo',0],['Hila',1],['Ofer',0]];
 const SKIN=[0xf1c9a5,0xe0ac85,0xc68e66,0x9c6a48,0x6e4a32,0xf3d2b6,0xe6b592], HAIR=[0x1b1512,0x2e1c14,0x5a3a22,0x8a6a48,0xd8c08a,0x3a2a20,0x2a1e17];
 const TOPS=[0xd84a4a,0x2f6f52,0xf2f2ee,0x26386b,0xe8b81e,0x9fc4d6,0x6b4a8a,0x2b2d30,0xe58ab0,0xc8a27a,0x8fbd9b,0xc4673f], PANTS=[0x2b2f38,0x3d5a80,0x6b6f76,0xd8c9a6,0x1d1f21,0x4a5a3a,0xf3ebdc];
@@ -28,6 +28,10 @@ function spawnWaiter(px,pz){const st=(T.stops||[]).filter(function(s){const d=Ma
 A.busAt=function(s,bus){const f=bus.fwd(); folk.forEach(function(a){if(a.stop!==s||!a.waiting) return; a.waiting=false; a.busy=false; a.p.act=null;
   const dx=bus.x+f[0]*(bus.dim[0]/2-0.8)-a.x, dz=bus.z+f[1]*(bus.dim[0]/2-0.8)-a.z, d=Math.hypot(dx,dz)||1;
   a.goTo(a.x+dx*(1-1.4/d),a.z+dz*(1-1.4/d),function(){a.boarded=true;}); a.busy=true;});};      // to the front door, and in
+/* at a café's table on the pavement, over a coffee */
+function spawnCafe(px,pz){const cs=(T.cafes||[]).filter(function(s){const d=Math.hypot(s.x-px,s.z-pz); return d<75&&!folk.some(function(a){return a.cafe===s;});}); if(!cs.length) return false;
+  const s=cs[Math.floor(Math.random()*cs.length)], a=new SM.Actor(spec()); a.lvl=0; a.x=a.lx=s.x; a.z=a.lz=s.z; a.h=a.hT=s.h; a.p.seatY=0.47; a.p.sitT=a.p.sit=1; a.cafe=s; a.busy=true; a.town=true;
+  a.p.act=['drink','drink','eat',null][Math.floor(Math.random()*4)]; folk.push(a); return true;}
 function walkOn(a){if(a.busy||a.path.length||a.slide) return; if(A.t<a.next) return;
   const hurt=a._g&&a._g.hp<100; if(hurt&&!a.fled){a.fled=true; a.speed=2.4; a.p.act=null;}      // hurt: they hurry away from you
   const p=SM.player, q=pave(hurt?p.x:a.x,hurt?p.z:a.z,hurt?60:30,hurt?140:110); if(!q){a.next=A.t+2; return;}
@@ -54,14 +58,15 @@ A.frameFns.push(function(dt){
   if(A.simsOn&&p&&!p.lvl&&cats.length<6&&T.inside(p.x,p.z)&&Math.random()<0.05) spawnCat(p.x,p.z);
   if(!A.simsOn||!p||p.lvl){folk.forEach(function(a){a.p.g.visible=false; A.place(a.tag,tv,false); if(a.bubble) A.place(a.bubble,tv,false);}); if(!A.simsOn&&folk.length){folk.forEach(function(a){a.remove();}); folk.length=0;} return;}
   const me=A.drive&&A.drive.on()?A.drive.pos():p, mx=me.x, mz=me.z;
-  for(let i=folk.length-1;i>=0;i--){const a=folk[i]; a.p.g.visible=true;
+  const rm=A.rooms[p.room], indoors=!(A.drive&&A.drive.on())&&!(rm&&rm.ext);      // at home or in the lobby the streets are out of sight: nobody drawn, nobody new
+  for(let i=folk.length-1;i>=0;i--){const a=folk[i]; a.p.g.visible=!indoors; if(indoors) continue;
     if(Math.hypot(a.x-mx,a.z-mz)>150&&!(a._g&&(a._g.down||a._g.fight))){a.remove(); folk.splice(i,1); continue;}
     if(a._g&&a._g.down&&a.p.lieT>0){a.update(dt); continue;}
     if(a.boarded){a.remove(); folk.splice(i,1); continue;}
-    if(a.waiting&&a._g&&a._g.hp<100){a.waiting=false; a.stop=null; a.p.sitT=0;}      // hit on the bench: no more waiting
+    if((a.waiting||a.cafe)&&a._g&&a._g.hp<100){a.waiting=false; a.stop=null; a.cafe=null; a.p.sitT=0; a.busy=false;}      // hit at the table or on the bench: they get up
     if(a.busy&&a._hold&&A.t>a._hold&&!(a._g&&(a._g.down||a._g.fight))){a.busy=false; a._hold=0;}
     walkOn(a); a.update(dt);}
-  if(folk.length<MAX&&T.inside(mx,mz)&&Math.random()<0.25){if(!(Math.random()<0.25&&spawnWaiter(mx,mz))) spawn(mx,mz);}
+  if(!indoors&&folk.length<MAX&&T.inside(mx,mz)&&Math.random()<0.25){const k=Math.random(); if(!(k<0.22&&spawnWaiter(mx,mz))&&!(k>=0.22&&k<0.42&&spawnCafe(mx,mz))) spawn(mx,mz);}
   chatter();
 });
 A.labelFns.push(function(){folk.forEach(function(a){if(!a.p.g.visible) return; a.headPos(tv); tv.y+=0.28; A.place(a.tag,tv,A.simsOn&&A.state.labels&&!a.bubble&&Math.hypot(a.x-SM.player.x,a.z-SM.player.z)<25); if(a.bubble) A.place(a.bubble,tv,A.simsOn);});});
