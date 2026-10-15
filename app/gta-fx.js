@@ -206,5 +206,20 @@ if(A.det&&A.det.leafM){const lm=A.det.leafM, prev=lm.onBeforeCompile;
 /* the sun's shadows out in the streets cover a wide square and much of the town: drawn every other frame there, they still follow what moves */
 let odd=false;
 A.shadowSkip=function(){if(!A.simsOn||!SM.player) return false; const r=A.rooms[SM.player.room]; if(!(SM.player.driving||(r&&r.ext&&!SM.player.lvl))) return false; odd=!odd; return odd;};
+/* draw distance, as GTA's: the town's trees stand in small squares, and the squares far off are not drawn. On High that is only past
+   where the haze has already hidden them; on Medium and Low the haze thickens to where they end, so none of them is seen to go. Only
+   down in the streets with the GTA camera */
+const DD={medium:420,low:280}, bs=new THREE.Sphere();
+let blocks=null, ddOn=0, fog0=null, ddT=0;
+function townBlocks(){if(blocks) return blocks; blocks=[]; const T=A.town; if(!T||!T.root) return blocks; T.root.updateMatrixWorld(true);
+  T.root.children.forEach(function(k){if(!k.isGroup) return; let x0=1e9, x1=-1e9, z0=1e9, z1=-1e9, n=0;      /* from what each mesh is drawn over: a tree's instances, not the one tree */
+    k.traverse(function(m){const g=m.geometry; if(!g) return; if(!g.boundingSphere) g.computeBoundingSphere(); bs.copy(g.boundingSphere).applyMatrix4(m.matrixWorld); x0=Math.min(x0,bs.center.x-bs.radius); x1=Math.max(x1,bs.center.x+bs.radius); z0=Math.min(z0,bs.center.z-bs.radius); z1=Math.max(z1,bs.center.z+bs.radius); n++;});
+    const r=Math.hypot(x1-x0,z1-z0)/2; if(!n||r>200) return; blocks.push({o:k,x:(x0+x1)/2,z:(z0+z1)/2,r:r,off:false});}); return blocks;}
+function drawDist(dt){const c=camera.position, F=scene.fog, q=quality(), on=(A.gtaCam&&A.gtaCam()&&c.y<60&&F)?(DD[q]||(fog0?fog0[1]:F.far)):0;
+  if(on!==ddOn){ddOn=on; ddT=0; if(F){if(!fog0) fog0=[F.near,F.far]; if(on&&DD[q]){F.near=on*0.45; F.far=on;} else{F.near=fog0[0]; F.far=fog0[1];}}
+    if(!on) townBlocks().forEach(function(t){if(t.off){t.off=false; t.o.visible=true;}});}
+  if(!on||(ddT-=dt)>0) return; ddT=0.25;
+  townBlocks().forEach(function(t){const off=Math.hypot(t.x-c.x,t.z-c.z)-t.r>on; if(off!==t.off){t.off=off; t.o.visible=!off;}});}
+A.frameFns.push(drawDist);
 A.gtaFx={now:NOW,sun:SUN};
 })();
