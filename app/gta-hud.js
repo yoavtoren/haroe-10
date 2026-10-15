@@ -84,7 +84,13 @@ function area(dt){const p=SM.player, c=A.drive&&A.drive.on()?A.drive.pos():null,
   carT=Math.max(0,carT-dt); $('gCarName').style.opacity=carT>0?Math.min(1,carT,(3.4-carT)*3):0;}
 /* ---------- a word in the corner: what a key does here ---------- */
 let helpKey='';
-function help(){let t='';
+/* the first time in Sims mode, a few words on how to play, one after another, as GTA starts you off */
+const INTRO=TOUCH?['Walk with the left stick, look round with the right one or a drag.','The round buttons: run, jump, punch, take a car.','Tap the radar for the map, and a waypoint to go to.','Do something the police see, and the stars go up.']
+  :['Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>. Click the view to look round with the mouse; <kbd>Esc</kbd> lets it go.','<kbd>Shift</kbd> runs, <kbd>Space</kbd> jumps, <kbd>F</kbd> gets you into a car.','<kbd>E</kbd> and the number keys do what is on offer next to things.','<kbd>M</kbd> opens the map: click it for a waypoint. Settings and keys are there too.','Do something the police see, and the stars go up.'];
+let intro=-1, introT=0;
+try{if(!localStorage.getItem('haroe-gta-intro')) intro=0;}catch(e){}
+function introStep(){if(intro<0||!on()) return ''; if(!introT) introT=A.t+1.5; if(A.t<introT) return ''; const i=Math.floor((A.t-introT)/6); if(i>=INTRO.length){intro=-1; try{localStorage.setItem('haroe-gta-intro','1');}catch(e){} return '';} return INTRO[i];}
+function help(){let t=introStep(); if(t){if(t!==helpKey){helpKey=t; $('gHelp').innerHTML=t; $('gHelp').hidden=false;} return;}
   const p=SM.player, c=A.drive&&A.drive.on()&&A.drive.pos();
   if(!c&&!p.lvl&&A.drive&&!SM.getDoing()){let best=null, bd=3.2; A.drive.cars().forEach(function(k){const d=hyp(k.x-p.x,k.z-p.z)-k.dim[0]/2; if(d<bd){bd=d; best=k;}});
     if(best) t=TOUCH?'Tap <b>CAR</b> to get in.':'Press <kbd>F</kbd> to '+(best.traffic?'pull the driver out':'get in the '+best.name)+'.';}
