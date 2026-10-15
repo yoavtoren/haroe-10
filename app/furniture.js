@@ -598,7 +598,10 @@ function wantFlat(){return (S.scope==='flat'||!!(A.ed&&A.ed.iso()))&&plain();}
 function wantFloor(){return S.scope==='floor'&&plain()&&!(A.ed&&A.ed.iso());}
 function wantCut(){return S.scope==='building'&&S.inside&&plain()&&!(A.ed&&A.ed.iso());}
 A.thinTrees=wantCut;
-A.bldWhole=function(){return S.scope==='building'&&!S.inside&&!A.simsOn&&$('pClimate').hidden;};      // the floors above and the outside of our own, in building.js
+/* in Sims you are in our building on any floor but ours, and on ours inside its walls: the lobby, our flat, the five round it */
+A.inOurBuilding=function(){const p=A.player; if(!A.simsOn||!p) return false; if(p.lvl||p.script) return true; return !!(A.building&&A.building.covers({x:p.x,y:0,z:p.z}));};
+/* the floors above and the outside of our own, in building.js: in Building view, and in Sims whenever you are out of the building; inside it they are cut away from above */
+A.bldWhole=function(){return $('pClimate').hidden&&(A.simsOn?!A.inOurBuilding():S.scope==='building'&&!S.inside);};
 function applyScope(){
   const f=wantFlat(), fl=wantFloor(), c=wantCut(); if(f===flatNow&&fl===floorNow&&c===cutNow) return; flatNow=f; floorNow=fl; cutNow=c;
   if(!sorted) sortOut();

@@ -314,7 +314,7 @@ inRoom('out',function(){
   strip(D.BXB-X7,(X7+D.BXB)/2,GY+1.4,AZ-0.405,R,2.4);
 
   /* ---------- the neighbour's back, across the yard ---------- */
-  const nb=G(o), blocks=[{g:nb,axis:'x',face:NX}];
+  const nb=G(o);
   const stain=canvasTex(512,512,function(g){const r=A.rng(70); g.fillStyle='#d9c3a3'; g.fillRect(0,0,512,512);
     for(let i=0;i<60;i++){const x=r()*512, y=r()*512, w=20+r()*90, h=30+r()*160, gr=g.createLinearGradient(x,y,x,y+h); const c=r()<0.5?'150,120,85':'235,220,195';
       gr.addColorStop(0,'rgba('+c+',0)'); gr.addColorStop(0.5,'rgba('+c+','+(0.15+r()*0.25)+')'); gr.addColorStop(1,'rgba('+c+',0)'); g.fillStyle=gr; g.fillRect(x,y,w,h);}
@@ -373,10 +373,7 @@ inRoom('out',function(){
   bushy(6.4,-2.8,1.3); bushy(6.2,-7.2,1.5); bushy(9.0,-3.6,1.1);
   [[8.4,-3.0,4.4,1.0],[8.7,-7.4,5.0,1.15]].forEach(function(q){T.cyl(0.16*q[3],q[2],0x6b5a44,q[0],GY+q[2]/2,q[1],8,0.11*q[3]); for(let i=0;i<5;i++){const a=i*1.3; C2.sph(1.3*q[3],[0x3e5f3a,0x4f7146,0x34522f][i%3],q[0]+Math.sin(a)*1.1*q[3],GY+q[2]+0.5+(i%2)*0.6,q[1]+Math.cos(a)*1.1*q[3],1,0.75,1);}});
   T.done(); C2.done();
-  /* the blocks beyond the yard, Beit HaChayal first, are in building.js, placed from the satellite view */
-  A.frameFns.push(function(){                      // a neighbour is hidden while the camera is behind or inside it, so it never blocks the view
-    const c=A.camera.position, whole=A.bldWhole&&A.bldWhole(); blocks.forEach(function(b){b.g.visible=A.sunReal||whole||(b.axis==='x'?c.x<b.face-0.5:c.z>b.face+1.5);});      // Building view shows it whole, as it stands
-  });
+  /* the blocks beyond the yard, Beit HaChayal first, are in building.js, placed from the satellite view. The neighbours always stand, wherever the camera is */
 });
 
 /* ================= the street side =================
@@ -402,7 +399,7 @@ inRoom('street',function(){
      D8: how much farther out the square, the café and the street stand than first drawn, to make room for all of that, less the four
      metres flat 6 stands out from our own front, where this frame begins: the square, the café and the street stay where they were. */
   const BX=[ZC-ZO];    // the bridge, along the front
-  const st=G(), can=G(st), fac=G(st), far=[];          // everything; the tree crowns; our own street front; the other buildings
+  const st=G(), can=G(st), fac=G(st);                  // everything; the tree crowns; our own street front
   st.userData.nc=true; st.rotation.y=R/2; st.position.set(XS,0,ZC); st.updateMatrixWorld(true);
   const det=A.det, leafC=det.leafM.clone(); leafC.userData={};
   const B=batch(st), C=batch(can,0,{map:function(k){return k===det.leafM?leafC:k;}}), F=batch(fac,0x3c3d3b), DP=det.P;
@@ -740,13 +737,13 @@ inRoom('street',function(){
   B.bake(det.sign([['stop',0.75]]),4.4,U,KZ+RW+0.45,0); B.bake(det.sign([{t:hro,w:0.8,h:0.3}],{h:2.85}),-2.1,U,KZ+RW+0.45,R); B.bake(det.sign([{t:msh,w:0.8,h:0.3}],{h:2.5}),-2.1,U,KZ+RW+0.45,R/2);      // across the road: a stop sign where Moshe Sharet St comes out, the two names on the corner
 
   /* ---------- the buildings round the square ---------- */
-  function house(x0,x1,z0,z1,o,hide){                 // a neighbouring block, built whole: o.front ('+z' or '-z') faces the street, o.faces as det.block names them
+  function house(x0,x1,z0,z1,o){                      // a neighbouring block, built whole and always standing: o.front ('+z' or '-z') faces the street, o.faces as det.block names them
     const g=G(st), b=batch(g), sx=x1-x0, sz=z1-z0;
-    B.box(sx,U+0.03-GY,sz,0xcfc8b6,(x0+x1)/2,(GY+U+0.03)/2,(z0+z1)/2);      // the footing stays when the block itself is hidden
+    B.box(sx,U+0.03-GY,sz,0xcfc8b6,(x0+x1)/2,(GY+U+0.03)/2,(z0+z1)/2);      // the footing, from the yard up to the street
     b.bake(det.block(Object.assign({sx:sx,sz:sz,floors:4,ground:3.2,fh:3.0},o)),o.front==='-z'?x1:x0,U,o.front==='-z'?z0:z1,o.front==='-z'?R:0);
-    far.push({g:g,hide:hide}); return {g:g,b:b};
+    return {g:g,b:b};
   }
-  const n12=house(-12,0,0,16.05+D8,{seed:12,floors:5,wall:0xe2dac8,faces:{front:{ground:'shops',shops:['flowers','cafe','cafe','cafe'],awnings:false,cables:true},right:{minFloor:2,pipes:2,holes:[[0.35,5.55,2.75]]}}},function(c){return c.x<1.5||c.z<0.4;});      // number 12 and the wing behind it close the left side of the square; seen only from the street side
+  const n12=house(-12,0,0,16.05+D8,{seed:12,floors:5,wall:0xe2dac8,faces:{front:{ground:'shops',shops:['flowers','cafe','cafe','cafe'],awnings:false,cables:true},right:{minFloor:2,pipes:2,holes:[[0.35,5.55,2.75]]}}});      // number 12 and the wing behind it close the left side of the square
   (function(){const b=n12.b, g=n12.g;
     const aw=tex(16,8,function(c){c.fillStyle='#f4f2ea'; c.fillRect(0,0,16,8); c.fillStyle='#2c5a43'; c.fillRect(0,0,8,8);},true); aw.repeat.set(14,1);
     b.geo(new THREE.BoxGeometry(6.8,0.03,2.0),A.MT(aw,null,true),-4.1,U+2.85,17+D8,0,0.35); b.box(6.8,0.2,0.02,0xf4f2ea,-4.1,U+2.42,17.95+D8);      // striped awning over the café front
@@ -878,10 +875,9 @@ inRoom('street',function(){
   const lc=new THREE.Vector3(); let crowns=true;
   A.frameFns.push(function(){
     const c=st.worldToLocal(lc.copy(A.camera.position)), low=c.y<5.2;      // where the camera is, in the street's own frame
-    fac.visible=low&&c.z>0.4&&!(A.simsOn&&!A.eyeView());
-    const solid=(low||c.z<0)&&!(A.thinTrees&&A.thinTrees());      // the tree crowns thin to a ghost when the camera is above the square, or in Building view, so they never hide it
+    fac.visible=low&&c.z>0.4&&!(A.simsOn&&!A.eyeView()&&A.inOurBuilding());      // in Sims, inside our building, the camera looks down past where it stands
+    const solid=!(A.thinTrees&&A.thinTrees());      // the tree crowns thin to a ghost only while you look inside our building, cut open; from outside they stand as they are
     if(solid!==crowns){crowns=solid; can.children.forEach(function(m){const mt=m.material; mt.transparent=!solid; mt.opacity=solid?1:0.22; mt.depthWrite=solid; if(mt===leafC){mt.alphaTest=solid?0.42:0.04; mt.needsUpdate=true;}});}
-    far.forEach(function(b){b.g.visible=!b.hide(c);});
     const eve=A.goal('day')<0.5?0.6:0; if(A.goal('L:street')!==eve) A.set('L:street',eve);      // street lamps and the café's bulbs come on in the evening
   });
 });
