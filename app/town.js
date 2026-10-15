@@ -771,10 +771,11 @@ function path(x0,z0,x1,z1,car){
   const pop=function(){const c=heap[1], lf=heap[heap.length-2], lc=heap[heap.length-1]; heap.length-=2; if(heap.length){heap[0]=lf; heap[1]=lc; let i=0; const n=heap.length/2; for(;;){const l=2*i+1, r=l+1; let m=i; if(l<n&&heap[2*l]<heap[2*m]) m=l; if(r<n&&heap[2*r]<heap[2*m]) m=r; if(m===i) break; let tmp=heap[2*m]; heap[2*m]=heap[2*i]; heap[2*i]=tmp; tmp=heap[2*m+1]; heap[2*m+1]=heap[2*i+1]; heap[2*i+1]=tmp; i=m;}} return c;};
   const ti=t%GN, tj=(t-ti)/GN, hh=function(c){const i=c%GN, j=(c-i)/GN, dx=Math.abs(i-ti), dz=Math.abs(j-tj); return (dx+dz)+(Math.SQRT2-2)*Math.min(dx,dz);};
   const G=function(c){return seenS[c]===stamp?gS[c]:1e9;};
-  seenS[s]=stamp; gS[s]=0; fromS[s]=-1; push(hh(s),s); let found=false, n=0;
-  while(heap.length&&n<900000){const c=pop(); n++; if(c===t){found=true; break;} const gc=gS[c], i=c%GN, j=(c-i)/GN;
+  const quick=A.town&&A.town.quick, Wh=quick?1.7:1, cap=quick?45000:900000;      // a passer-by's errand: a quicker, rougher search that gives up early (townlife.js)
+  seenS[s]=stamp; gS[s]=0; fromS[s]=-1; push(hh(s)*Wh,s); let found=false, n=0;
+  while(heap.length&&n<cap){const c=pop(); n++; if(c===t){found=true; break;} const gc=gS[c], i=c%GN, j=(c-i)/GN;
     for(let dj=-1;dj<=1;dj++) for(let di=-1;di<=1;di++){if(!di&&!dj) continue; const ni=i+di, nj=j+dj; if(ni<0||nj<0||ni>=GN||nj>=GN) continue; const k=nj*GN+ni; if(!cells[k]) continue;
-      if(di&&dj&&(!cells[c+di]||!cells[c+dj*GN])) continue; const ng=gc+(di&&dj?Math.SQRT2:1)*(car?1:cost[k]); if(ng<G(k)){seenS[k]=stamp; gS[k]=ng; fromS[k]=c; push(ng+hh(k),k);}}}
+      if(di&&dj&&(!cells[c+di]||!cells[c+dj*GN])) continue; const ng=gc+(di&&dj?Math.SQRT2:1)*(car?1:cost[k]); if(ng<G(k)){seenS[k]=stamp; gS[k]=ng; fromS[k]=c; push(ng+hh(k)*Wh,k);}}}
   if(!found) return [];
   const cs=[]; for(let c=t;c>=0&&cs.length<100000;c=c===s?-1:fromS[c]) cs.push(c); cs.reverse();
   const pts=[[x0,z0]].concat(cs.slice(1,-1).map(cxz)); const end=free(x1,z1)?[x1,z1]:cxz(t); pts.push(end);

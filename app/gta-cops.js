@@ -186,7 +186,7 @@ function footStep(o,dt){
 function busted(o,car){if(G.busted) return; o.a.say(rnd(ARREST),2.4); o.a.p.act='reach'; if(car&&D.on()) D.exit(true); SM.player.p.act='surrender'; if(A.floors.busted) A.floors.busted();}
 
 /* ---------- the helicopter ---------- */
-function heliModel(){const g=new THREE.Group(), m=function(c){return new THREE.MeshLambertMaterial({color:c});}, P=function(geo,mat,x,y,z){const o=new THREE.Mesh(geo,mat); o.position.set(x,y,z); o.castShadow=true; g.add(o); return o;};
+function heliModel(){const g=new THREE.Group(), m=function(c){return new THREE.MeshLambertMaterial({color:c});}, P=function(geo,mat,x,y,z){const o=new THREE.Mesh(geo,mat); o.position.set(x,y,z); g.add(o); return o;};      // no shadow: the spinning rotor smeared one into a dark disc over the street
   const body=m(0x1d2a44), white=m(0xf0f0ec), glass=new THREE.MeshPhongMaterial({color:0x22303a,specular:0x99aabb,shininess:80}), dark=m(0x15171a);
   P(new THREE.SphereGeometry(1,20,14),body,0,0,0).scale.set(2.1,1.15,1.15);
   P(new THREE.SphereGeometry(1,20,14),glass,0.85,0.18,0).scale.set(1.3,0.85,1.0);

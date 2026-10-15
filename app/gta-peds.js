@@ -54,7 +54,7 @@ A.gtaPanic=function(x,z,r,sev){const G=A.floors&&A.floors.G, cops=A.gtaCops&&A.g
     a._flee=A.t+12; SM.later(lag,function(){flee(a,x,z);},a); if(Math.random()<0.45) a.say(rnd(SCREAM),1.8);});
   if(A.gtaSound&&A.gtaSound.scream&&Math.random()<0.8) A.gtaSound.scream(x,z);};
 function flee(a,x,z){const dx=a.x-x, dz=a.z-z, d=hyp(dx,dz)||1, T=A.town; let tx=a.x+dx/d*32, tz=a.z+dz/d*32; const q=T&&T.nearest?T.nearest(tx,tz):null; if(q){tx=q[0]; tz=q[1];}
-  a._flee=A.t+12; a.busy=true; a.release(); a.speed=3.3+Math.random()*0.8; a.p.act=null; a.goTo(tx,tz,function(){a.busy=false; a.speed=a._role==='jog'?2.9:1.1;}); SM.later(14,function(){if(a._flee&&A.t>a._flee){a.busy=false;}},a);}
+  a._flee=A.t+12; a.busy=true; a.release(); a.speed=3.3+Math.random()*0.8; a.p.act=null; if(T) T.quick=true; try{a.goTo(tx,tz,function(){a.busy=false; a.speed=a._role==='jog'?2.9:1.1;});} finally{if(T) T.quick=false;} SM.later(14,function(){if(a._flee&&A.t>a._flee){a.busy=false;}},a);}
 function call(a){a.busy=true; a.path=[]; a.cb=null; a.p.act='phone'; const m=SM.player; a.hT=Math.atan2(m.x-a.x,m.z-a.z); a._flee=A.t+8;
   SM.later(1.2,function(){if(a.gone||(a._g&&a._g.down)) return; a.say(rnd(CALL)+street(a.x,a.z)+'!',3.2);},a);
   SM.later(5,function(){a.busy=false; a.p.act=null; if(a.gone||(a._g&&a._g.down)) return; const G=A.floors&&A.floors.G; if(G&&!G.wanted&&A.floors.raise){A.floors.raise(1); if(SM.toast) SM.toast('Someone called the police.');} flee(a,m.x,m.z);},a);}

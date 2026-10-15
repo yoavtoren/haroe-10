@@ -457,7 +457,7 @@ function frame(now){
     const nr=Math.min(0.6,Math.max(0.1,camera.position.distanceTo(controls.target)*0.03));        // a farther near plane when zoomed out keeps distant surfaces from shimmering
     if(Math.abs(nr-camera.near)>0.02){camera.near=nr; camera.updateProjectionMatrix();}
   }
-  if(A.shadowFrames>0){A.shadowFrames--; renderer.shadowMap.needsUpdate=true;}
+  if(A.shadowFrames>0&&!(A.shadowSkip&&A.shadowSkip())){A.shadowFrames--; renderer.shadowMap.needsUpdate=true;}      // gta-fx.js may let the wide outdoor shadows go every other frame
   if(!(A.renderHook&&A.renderHook())) renderer.render(scene,camera);      // gta-fx.js finishes the picture in Sims mode
   for(let i=0;i<A.labelFns.length;i++) A.labelFns[i]();
 }

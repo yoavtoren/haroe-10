@@ -32,10 +32,11 @@ A.busAt=function(s,bus){const f=bus.fwd(); folk.forEach(function(a){if(a.stop!==
 function spawnCafe(px,pz){const cs=(T.cafes||[]).filter(function(s){const d=Math.hypot(s.x-px,s.z-pz); return d<75&&!folk.some(function(a){return a.cafe===s;});}); if(!cs.length) return false;
   const s=cs[Math.floor(Math.random()*cs.length)], a=new SM.Actor(spec()); a.lvl=0; a.x=a.lx=s.x; a.z=a.lz=s.z; a.h=a.hT=s.h; a.p.seatY=0.47; a.p.sitT=a.p.sit=1; a.cafe=s; a.busy=true; a.town=true;
   a.p.act=['drink','drink','eat',null][Math.floor(Math.random()*4)]; folk.push(a); return true;}
-function walkOn(a){if(a.busy||a.path.length||a.slide) return; if(A.t<a.next) return;
+let planned=-1, tick=0;      // one passer-by works out a new way per frame, so a crowd never stalls the picture
+function walkOn(a){if(a.busy||a.path.length||a.slide) return; if(A.t<a.next) return; if(planned===tick) return; planned=tick;
   const hurt=a._g&&a._g.hp<100; if(hurt&&!a.fled){a.fled=true; a.speed=2.4; a.p.act=null;}      // hurt: they hurry away from you
-  const p=SM.player, q=pave(hurt?p.x:a.x,hurt?p.z:a.z,hurt?60:30,hurt?140:110); if(!q){a.next=A.t+2; return;}
-  a.goTo(q[0],q[1]); a.next=A.t+2+Math.random()*3; if(!a.path.length) a.next=A.t+1;}
+  const p=SM.player, q=pave(hurt?p.x:a.x,hurt?p.z:a.z,hurt?60:22,hurt?140:70); if(!q){a.next=A.t+2; return;}
+  T.quick=true; try{a.goTo(q[0],q[1]);} finally{T.quick=false;} a.next=A.t+2+Math.random()*3; if(!a.path.length) a.next=A.t+1;}
 const LINES=[['Ma nishma?','Beseder, baruch hashem.'],['Did you see the parking on Herzl?','Impossible. I went round three times.'],['Hot today.','Thirty-two, they said.'],['How is your mother?','Better, thanks. Home already.'],['Going to the market?','Later. First coffee.']];
 function chatter(){      // two who meet on the pavement stop for a word
   for(let i=0;i<folk.length;i++){const a=folk[i]; if(a.busy||a.fled||!a.path.length||Math.random()>0.02) continue;
@@ -53,7 +54,7 @@ function spawnCat(px,pz){if(!A.det) return; const near=T.outlines.filter(functio
 A.townCats=function(){return cats.map(function(c){return {kind:'cat',root:c.g,name:'Cat',c:c.c,lvl:0};});};
 const tv=new THREE.Vector3();
 A.frameFns.push(function(dt){
-  const p=SM.player;
+  const p=SM.player; tick++;
   for(let i=cats.length-1;i>=0;i--){const c=cats[i]; c.g.visible=!!(A.simsOn&&p&&!p.lvl); if(!A.simsOn||(p&&Math.hypot(c.x-p.x,c.z-p.z)>120)){A.scene.remove(c.g); cats.splice(i,1);}}
   if(A.simsOn&&p&&!p.lvl&&cats.length<6&&T.inside(p.x,p.z)&&Math.random()<0.05) spawnCat(p.x,p.z);
   if(!A.simsOn||!p||p.lvl){folk.forEach(function(a){a.p.g.visible=false; A.place(a.tag,tv,false); if(a.bubble) A.place(a.bubble,tv,false);}); if(!A.simsOn&&folk.length){folk.forEach(function(a){a.remove();}); folk.length=0;} return;}

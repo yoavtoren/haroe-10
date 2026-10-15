@@ -191,5 +191,8 @@ A.frameFns.push(function(dt){
   if(A.simsOn&&SM.player) tick(dt);
   light(dt); headlights(); gloss();
 });
+/* the sun's shadows out in the streets cover a wide square and much of the town: drawn every other frame there, they still follow what moves */
+let odd=false;
+A.shadowSkip=function(){if(!A.simsOn||!SM.player) return false; const r=A.rooms[SM.player.room]; if(!(SM.player.driving||(r&&r.ext&&!SM.player.lvl))) return false; odd=!odd; return odd;};
 A.gtaFx={now:NOW,sun:SUN};
 })();
