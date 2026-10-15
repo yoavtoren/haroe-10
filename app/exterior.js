@@ -15,8 +15,8 @@ const R=Math.PI, GY=-2.9;          // the yard is one floor down
    vent screens high on the left. At its end, on the left, the wide stone-clad pillar that stands opposite our door; past it
    the landing: flat 3 on its left wall, flat 4 and our door, flat 5, side by side on the far wall. On the right the
    stairwell: a flight up along the wall beside our door, a flight down beside it behind a white railing with a white pole.
-   A second bridge further along the front leads into a small hall of its own, for flats 1 and 6. */
-const LB=A.LB, XL=LB.XL, CX0=LB.CX0, CX1=LB.CX1, RZ=LB.RZ, SD=LB.SD, SU=LB.SU, D4=LB.D4, VW=LB.VW, EH=LB.EH, BZ=LB.BZ, ZE=LB.ZE, ZC=LB.ZC, XF=LB.XF, XE=LB.XE, ZO=LB.ZO, Z2=LB.Z2, Z2N=Z2+1.15;
+   Flats 2 and 6 open off the corridor, one on each side; flat 1 has its own door outside, at the east end (the plan in plan.js). */
+const LB=A.LB, XL=LB.XL, CX0=LB.CX0, CX1=LB.CX1, RZ=LB.RZ, SD=LB.SD, SU=LB.SU, D4=LB.D4, VW=LB.VW, EH=LB.EH, BZ=LB.BZ, ZE=LB.ZE, ZC=LB.ZC, XF=LB.XF, XE=LB.XE, ZO=LB.ZO, Z2=LB.Z2, Z2N=Z2+1.15, XS=A.PLAN.front, PZ=17.25;      // XS: the street front, flat 6's face; PZ: the passage's side along flat 6
 const CL=1.47;                                                   // height of the stone cladding
 const PX0=CX0-0.35, PX1=CX0+0.28, PZ0=RZ-0.12, PZ1=RZ+0.5;          // the pillar: it stands out into the corridor's mouth and toward the landing
 /* the stairs: two flights a floor, each 8 treads of 27 cm, half landings against the far wall */
@@ -60,29 +60,33 @@ const stepT=canvasTex(128,64,function(g){             // the treads: worn beige 
   for(let i=0;i<500;i++){g.fillStyle=r()>0.5?'rgba(150,130,95,0.25)':'rgba(255,250,235,0.35)'; g.fillRect(r()*128,r()*64,1+r()*2,1);}
   g.fillStyle='rgba(120,100,70,0.18)'; g.fillRect(0,26,128,12);});
 const hallM=function(t){const m=new THREE.MeshLambertMaterial({map:t,emissive:0x4a4944}); m.emissiveMap=t; return A.reg(m,'hall');};      // lit a little from within, like the flat's walls, so the white reads as white
-[[XL,SU,L,ZB0-0.02],[XL,SD,ZB0-0.02,RZ],[CX0,SD,RZ,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[VW,XF,EH,Z2N]].forEach(function(q){A.floorQuad(q[0],q[1],q[2],q[3],terrazzo,0.8,'hall');});      // no floor over the flight down
+[[XL,SU,L,ZB0-0.02],[XL,SD,ZB0-0.02,RZ],[CX0,SD,RZ,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){A.floorQuad(q[0],q[1],q[2],q[3],terrazzo,0.8,'hall');});      // no floor over the flight down
 function bright(m,glow){m.emissive.setHex(glow); A.rooms.hall.mats.forEach(function(e){if(e.m===m) e.e=new THREE.Color(glow);}); return m;}      // a ceiling lit from below reads as the white it is
-[[XL,SU,L,RZ],[CX0,SU,RZ,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[VW,XF,EH,Z2N]].forEach(function(q){bright(A.ceil('hall',q[0],q[1],q[2],q[3]).material,0x8e8e88);});
+[[XL,SU,L,RZ],[CX0,SU,RZ,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){bright(A.ceil('hall',q[0],q[1],q[2],q[3]).material,0x8e8e88);});
 const en=D.entrance, XP=en[0]-0.1;                                                         // XP: our door frame's left edge
 /* from the photos at the doors: flat 4's door is in a wall D4 in front of ours, so ours is set back in a recess that runs up to the ceiling,
    and the end of flat 4's wall, between the two doors, is the clad pier with the yellow notice */
-wall('h_s4',[XL,L+D4],[XP,L+D4],[0,1],'hall');                                           // flat 4's door
+/* the doors of the flats round ours, as the plan has them (plan.js); floors.js hangs their leaves */
+const DOOR4=[-1.23-XL,-0.37-XL], DOOR3=[6.96-(L+D4),7.82-(L+D4)], DOOR2=[15.73-(RZ+0.5),16.59-(RZ+0.5)], DOOR6=[9.9-EH,10.76-EH];
+wall('h_s4',[XL,L+D4],[XP,L+D4],[0,1],'hall',{holes:[DOOR4]});                           // flat 4's door
 wall('h_s4r',[XP,L+D4],[XP,L],[1,0],'hall');                                              // the side of the recess
 wall('h_s',[XP,L],[SU,L],[0,1],'hall',{holes:[[en[0]-XP,en[1]-XP]]});                     // our door, flat 5
 wall('h_ss',[SU,L],[XE,L],[0,1],'hall',{h:TOPW});                                        // the stairwell rises to the top floor: the flights up and down run along here
-wall('h_l3',[XL,L+D4],[XL,RZ],[1,0],'hall');                                                // flat 3
+wall('h_l3',[XL,L+D4],[XL,RZ],[1,0],'hall',{holes:[DOOR3]});                              // flat 3
 wall('h_rz',[XL,RZ],[PX0,RZ],[0,-1],'hall');                                             // the back of the landing, up to the pillar
-wall('h_cl',[CX0,PZ1],[CX0,ZC],[1,0],'hall');                                            // corridor, left: vent screens; then the square hall: flat 2, the barred window
-wall('h_n',[CX0,ZC],[XF,ZC],[0,-1],'hall');                                              // the letter boxes and the meter cupboards
-wall('h_f',[XF,ZE],[XF,ZC],[-1,0],'hall',{holes:[[ZO-0.65-ZE,ZO+0.65-ZE,2.5]]});         // the street front, with the open doorway to our bridge
+wall('h_cl',[CX0,PZ1],[CX0,ZC],[1,0],'hall',{holes:[DOOR2]});                           // corridor, left: vent screens; then the square hall: flat 2, the barred window
+const GATE=A.LB.sideGate=[XF+0.35,XF+1.25];      // a side door out of the passage into the yard behind number 12, the way round to flat 1's own door on our floor
+wall('h_n',[CX0,ZC],[XS,ZC],[0,-1],'hall',{holes:[[GATE[0]-CX0,GATE[1]-CX0]]});      // the letter boxes and the meter cupboards, and on along the passage: number 12's side
+wall('h_f',[XF,ZE],[XF,ZC],[-1,0],'hall',{holes:[[PZ-ZE,ZC-ZE-0.002,H]]});              // the hall's front, open into the passage out to the street
+wall('h_ps',[XF,PZ],[XS,PZ],[0,1],'hall');                                               // the passage's other side, along flat 6
+wall('h_pf',[XS,PZ],[XS,ZC],[-1,0],'hall',{holes:[[ZO-0.65-PZ,ZO+0.65-PZ,2.5]]});       // and its end: the street front, with the open doorway to our bridge
 wall('h_bn',[CX1,ZE],[XF,ZE],[0,1],'hall');                                              // the hall's side toward the corridor
-wall('h_br',[CX1,EH],[CX1,ZE],[-1,0],'hall');                                            // corridor, right: it ends in a pier beside the railing
+wall('h_br',[CX1,EH],[CX1,ZE],[-1,0],'hall',{holes:[DOOR6]});                           // corridor, right: flat 6's door; it ends in a pier beside the railing
 wall('h_cf',[XE,L],[XE,EH],[-1,0],'hall',{h:TOPW});                                      // the stairwell's far wall
 wall('h_se',[XE,EH],[CX1,EH],[0,-1],'hall',{h:TOPW});                                    // and its side, behind the corridor's right wall
-wall('v_s',[VW,BZ],[XF,BZ],[0,1],'hall'); wall('v_n',[VW,Z2N],[XF,Z2N],[0,-1],'hall'); wall('v_w',[VW,BZ],[VW,Z2N],[1,0],'hall');   // the second entrance: flats 1 and 6
-wall('v_f',[XF,BZ],[XF,Z2N],[-1,0],'hall',{holes:[[Z2-0.65-BZ,Z2+0.65-BZ,2.5]]});
-A.doorFrame('h_s',en[0]-XP,en[1]-XP);
-const HW=['h_s','h_s4','h_s4r','h_l3','h_rz','h_cl','h_n','h_f','h_bn','h_br','v_s','v_n','v_w','v_f'];
+A.doorFrame('h_s',en[0]-XP,en[1]-XP); A.doorFrame('h_s4',DOOR4[0],DOOR4[1]); A.doorFrame('h_l3',DOOR3[0],DOOR3[1]); A.doorFrame('h_cl',DOOR2[0],DOOR2[1]); A.doorFrame('h_br',DOOR6[0],DOOR6[1]); A.doorFrame('h_n',GATE[0]-CX0,GATE[1]-CX0);
+const HW=['h_s','h_s4','h_s4r','h_l3','h_rz','h_cl','h_n','h_f','h_ps','h_pf','h_bn','h_br'];
+A.rooms.hall.rs.push([XF-0.2,XS+0.02,PZ+0.02,ZC-0.02]);      // the passage is part of the lobby
 function clad(k,u0,u1,y0,y1){const t=ashlar.clone(); t.needsUpdate=true; t.repeat.set((u1-u0)/1.2,(y1-y0)/CL); t.offset.x=(u0*0.37)%1; return rect(k,u0,u1,y0,y1,hallM(t),0.005);}
 function plas(k,u0,u1,y0,y1){const p=plaster.clone(); p.needsUpdate=true; p.repeat.set((u1-u0)/2.4,(y1-y0)/(H-CL)); p.offset.x=(u0*0.53)%1; return rect(k,u0,u1,y0,y1,hallM(p),0.004);}
 HW.forEach(function(k){A.spans(k).forEach(function(s){clad(k,s[0],s[1],0,CL); plas(k,s[0],s[1],CL,H);});});
@@ -116,7 +120,7 @@ function flatDoor(k,u,no){
   rect(k,u-0.5,u+0.5,0,2.17,0xf3f2ee,0.008); rect(k,u-0.43,u+0.43,0,2.07,hallM(tex),0.01);
   rect(k,u+0.6,u+0.68,1.38,1.48,0xeeeeea,0.009);
 }
-flatDoor('h_s4',-0.8-XL,'4'); flatDoor('h_l3',0.78,'3'); flatDoor('h_cl',ZC-2.65-PZ1,'2'); flatDoor('v_s',1.0,'1'); flatDoor('v_n',XF-VW-1.0,'6');
+[['h_s4',DOOR4],['h_l3',DOOR3],['h_cl',DOOR2],['h_br',DOOR6]].forEach(function(q){rect(q[0],q[1][1]+0.12,q[1][1]+0.2,1.38,1.48,0xeeeeea,0.009);});      // the bells by the doors
 rect('h_s',en[1]-XP+0.2,en[1]-XP+0.28,1.38,1.48,0xeeeeea,0.009);                 // our light switch
 inRoom('hall',function(){                                                                    // the pier between flat 4's door and ours: it stands out from the wall, stone to the height of the cladding, white above,
   const xc=(-0.3+XP)/2, d=D4;
@@ -136,7 +140,7 @@ for(let i=0;i<7;i++){const u=ZC-1.75-PZ1-0.33+i*0.11; rect('h_cl',u-0.01,u+0.01,
 rect('h_br',ZE-0.7-EH-0.3,ZE-0.7-EH+0.3,1.85,2.35,0x6b4a2f,0.009); rect('h_br',ZE-0.7-EH-0.26,ZE-0.7-EH+0.26,1.89,2.31,0xc9a46e,0.010);   // an empty cork board
 inRoom('hall',function(){
   function bulb(x,y,z,drop){const yb=y-(drop||0.28); box(0.01,y-yb,0.01,0x2a2c2e,x,(y+yb)/2,z).castShadow=false; cyl(0.03,0.05,0xe9e6dc,x,yb+0.02,z,null,10); sph(0.045,A.lampMat('L:hall',0xf6f1e2,0xfff0c8,1.1),x,yb-0.04,z); A.pool('L:hall',0xffe2b0,x,y-H+0.02,z,2.4,null,0.3);}
-  bulb(0.45,H,L+1.6); bulb((CX0+CX1)/2,H,L+5.6); bulb(2.9,H,ZE+1.8); bulb(3.9,H,Z2,0.2); for(let f=0;f<UPS;f++) bulb(XE-0.6,f*FF+FF/2+2.4,L+0.7,0.3); for(let f=1;f<=UPS;f++) bulb(XB+0.6,f*FF+H,L+1.2,0.25); bulb(XB+0.6,LO+H,L+1.2,0.25);
+  bulb(0.45,H,L+1.6); bulb((CX0+CX1)/2,H,L+5.6); bulb(2.9,H,ZE+1.8); bulb((XF+XS)/2,H,(PZ+ZC)/2,0.2); for(let f=0;f<UPS;f++) bulb(XE-0.6,f*FF+FF/2+2.4,L+0.7,0.3); for(let f=1;f<=UPS;f++) bulb(XB+0.6,f*FF+H,L+1.2,0.25); bulb(XB+0.6,LO+H,L+1.2,0.25);
   box(0.12,0.03,0.12,0xeeeeea,CX0+0.1,2.32,ZE-2.9); sph(0.05,A.lampMat('L:hall',0xf6f1e2,0xfff0c8,1.1),CX0+0.16,2.3,ZE-2.9);      // a bare bulb on the wall in the corridor
   box(0.03,0.025,ZC-PZ1,0xf1f1ee,CX0+0.06,H-0.03,(PZ1+ZC)/2).castShadow=false;           // white trunking along the corridor ceiling
   box(0.13,0.05,0.13,0xf4f4f1,0.5,H-0.025,L+0.2); sph(0.055,0x2a2d30,0.5,H-0.06,L+0.2,null,1,0.8,1); box(SU+1.2-0.5,0.012,0.012,0xf1f1ee,(0.5+SU+1.2)/2,H-0.01,L+0.12);   // the dome camera over our door, its cable off along the ceiling to the stairs
@@ -178,10 +182,10 @@ inRoom('hall',function(){
   [LO].concat([1,2,3].slice(0,UPS).map(function(f){return f*FF;})).forEach(function(y){
     floorAt(XB,SU,L,EH,y+0.002);
     const wm=(function(){const m=hallM(plaster); m.clippingPlanes=[A.cut]; return m;})();
-    const bk=new THREE.Group(); bk.position.set(XB+0.005,y,EH); bk.rotation.y=R/2; scene.add(bk);      // the wall at XB, its u running from EH toward L
+    if(y<0){const bk=new THREE.Group(); bk.position.set(XB+0.005,y,EH); bk.rotation.y=R/2; scene.add(bk);      // the wall at XB, its u running from EH toward L: below, the shelter's
     const hw=[EH-LDW[1],EH-LDW[0],0,2.05];
-    bk.add(holed(EH-L,H,[hw],wm)); const cb=holed(EH-L,CL,[hw],hallM(ashlar)); cb.position.z=0.003; bk.add(cb); frame(bk,hw[0],hw[1]);
-    [[L,0],[EH,R]].forEach(function(e){
+    bk.add(holed(EH-L,H,[hw],wm)); const cb=holed(EH-L,CL,[hw],hallM(ashlar)); cb.position.z=0.003; bk.add(cb); frame(bk,hw[0],hw[1]);}
+    [[L,0],[EH,R]].forEach(function(e){if(y>0&&e[1]) return;      // upstairs the landing runs on into the corridor
       const g=new THREE.Group(); g.position.set(e[1]?SU:XB,y,e[0]+(e[1]?-0.005:0.005)); g.rotation.y=e[1]; scene.add(g);
       const holes=(y>0&&!e[1])?[[LDS[0]-XB,LDS[1]-XB,0,2.05]]:[];
       g.add(holed(SU-XB,H,holes,hallM(plaster))); if(holes.length) frame(g,holes[0][0],holes[0][1]);});
@@ -299,17 +303,18 @@ inRoom('out',function(){
   cyl(0.32,0.03,0x8e8a82,8.9,GY+0.04,1.95,o,24); A.torus(0.3,0.015,0x77736b,8.9,GY+0.055,1.95,o).rotation.x=R/2;     // a manhole cover, in front of the gas bottles
   // the building under and beside us: the floor below opens onto the yard. The stairwell's shaft is left open in it.
   const facade=0xe9e3d3, X7=-7, ZC=LB.ZC, EH=LB.EH, XE=LB.XE, hh=-GY-0.01, yc=GY/2-0.005;
-  [[X7,XF,AZ-0.4,L],[X7,XB,L,EH],[XE,XF,L,EH],[X7,XF,EH,ZC]].forEach(function(q,i){const m=box(q[1]-q[0],hh,q[3]-q[2],facade,(q[0]+q[1])/2,yc,(q[2]+q[3])/2,o); if(i===1||i===3) m.userData.hideBelow=true;});      // the two round the shelter step aside when you are down there
+  const XS=A.PLAN.front, W6=6.5;      // flat 6's face to the street, and its side toward the yard
+  [[X7,XF,AZ-0.4,L],[X7,XB,L,EH],[XE,XF,L,EH],[X7,XF,EH,ZC],[XF,XS,W6,ZC]].forEach(function(q,i){const m=box(q[1]-q[0],hh,q[3]-q[2],facade,(q[0]+q[1])/2,yc,(q[2]+q[3])/2,o); if(i===1||i===3) m.userData.hideBelow=true;});      // the two round the shelter step aside when you are down there
   box(D.BXB-XF+0.02,hh,-AZ+0.4,facade,(XF+D.BXB+0.02)/2,yc,(AZ-0.4)/2,o);
   box(XF-3.94,H,L-A.BA.z1-0.04,0xe4ddcc,(3.92+XF)/2,H/2,(A.BA.z1+0.02+L-0.02)/2,o);        // a block of shafts between our bathroom and the stairs
   const winTex=canvasTex(128,128,function(g){g.fillStyle='#e9e3d3'; g.fillRect(0,0,128,128); g.fillStyle='#8fb0bb'; g.fillRect(30,22,68,70); g.fillStyle='#f6f3ea'; g.fillRect(62,22,4,70); g.fillStyle='#cfc8b6'; g.fillRect(24,94,80,6);});
   winTex.wrapS=THREE.RepeatWrapping;
   function strip(len,x,y,z,rotY,hh){const t=winTex.clone(); t.needsUpdate=true; t.repeat.set(Math.round(len/2.6),1); const m=new THREE.Mesh(new THREE.PlaneGeometry(len,hh||2.6),A.MT(t)); m.position.set(x,y,z); m.rotation.y=rotY; o.add(m);}
-  strip(L,XF+0.005,GY+1.4,L/2,R/2,2.4); strip(-AZ,D.BXB+0.025,GY+1.4,AZ/2,R/2,2.4); strip(ZC-L,XF+0.005,GY+1.4,(L+ZC)/2,R/2,2.4);      // the yard fronts, and the one down in the sunken strip
+  strip(L,XF+0.005,GY+1.4,L/2,R/2,2.4); strip(-AZ,D.BXB+0.025,GY+1.4,AZ/2,R/2,2.4); strip(ZC-W6,XS+0.005,GY+1.4,(W6+ZC)/2,R/2,2.4); strip(XS-XF,(XF+XS)/2,GY+1.4,W6-0.005,R,2.4);      // the yard fronts; under flat 6, the one down in the sunken strip and its side onto the yard
   strip(D.BXB-X7,(X7+D.BXB)/2,GY+1.4,AZ-0.405,R,2.4);
 
   /* ---------- the neighbour's back, across the yard ---------- */
-  const nb=G(o), blocks=[{g:nb,axis:'x',face:NX}], WZ0=2.75;      // WZ0: where the neighbours' wing juts out toward us
+  const nb=G(o), blocks=[{g:nb,axis:'x',face:NX}];
   const stain=canvasTex(512,512,function(g){const r=A.rng(70); g.fillStyle='#d9c3a3'; g.fillRect(0,0,512,512);
     for(let i=0;i<60;i++){const x=r()*512, y=r()*512, w=20+r()*90, h=30+r()*160, gr=g.createLinearGradient(x,y,x,y+h); const c=r()<0.5?'150,120,85':'235,220,195';
       gr.addColorStop(0,'rgba('+c+',0)'); gr.addColorStop(0.5,'rgba('+c+','+(0.15+r()*0.25)+')'); gr.addColorStop(1,'rgba('+c+',0)'); g.fillStyle=gr; g.fillRect(x,y,w,h);}
@@ -340,7 +345,7 @@ inRoom('out',function(){
   [[0.4,1.15,1],[2.7,1.6,0],[-2.4,2.0,1],[1.6,3.9,0],[-0.6,4.8,1],[3.9,4.2,0],[-3.4,6.9,0],[2.2,7.2,1],[0.8,10.1,0],[-5.8,3.95,1]].forEach(function(q){ac(q[0],q[1],q[2]);});
   [[2.45,0x9b9e9c,0.055],[-0.25,0x6f7275,0.05],[2.62,0x1d1f21,0.03],[0.05,0xf0f0ec,0.03]].forEach(function(q){NB.cyl(q[2],TOPN-GY,q[1],NX-0.12,(GY+TOPN)/2,q[0],8);});     // drain pipes and conduits down the wall
   NB.box(0.5,0.04,0.7,0xd9dcdf,NX-0.6,4.55,2.0,0,0.35); for(let i=0;i<6;i++) NB.box(0.52,0.02,0.02,0xc4c7ca,NX-0.6,4.56+i*0.012,1.7+i*0.12,0,0.35);   // a corrugated plastic awning
-  (function(){const pts=[]; [[GY+0.55],[GY+0.62],[0.2],[0.28]].forEach(function(q,k){const line=[]; for(let i=0;i<=24;i++){const z=NZ0+0.5+i*(WZ0-0.05-NZ0-0.5)/24; line.push(new THREE.Vector3(NX-0.09,q[0]-0.06*Math.sin(i*0.9+k),z));}
+  (function(){const pts=[]; [[GY+0.55],[GY+0.62],[0.2],[0.28]].forEach(function(q,k){const line=[]; for(let i=0;i<=24;i++){const z=NZ0+0.5+i*(NZ1-0.3-NZ0-0.5)/24; line.push(new THREE.Vector3(NX-0.09,q[0]-0.06*Math.sin(i*0.9+k),z));}
       nb.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(line),new THREE.LineBasicMaterial({color:0x1b1c1d})));});})();      // black cables strung along it
   /* at its foot: a white cabinet, gas bottles under a hood, the water meters */
   NB.box(0.26,0.85,0.55,0xeeeeea,NX-0.15,GY+0.43,0.75); NB.box(0.005,0.8,0.5,0xd8d8d4,NX-0.282,GY+0.43,0.75);
@@ -348,35 +353,8 @@ inRoom('out',function(){
   for(let i=0;i<6;i++){NB.box(0.08,0.07,0.12,0x2f6fd6,NX-0.13,GY+0.45+i*0.2,2.05); NB.cyl(0.012,0.2,0x9aa0a4,NX-0.1,GY+0.55+i*0.2,2.05,6);}      // a column of blue water meters on the supply pipe
   NB.cyl(0.02,1.6,0x9aa0a4,NX-0.07,GY+0.9,2.0,6);
   NB.box(0.3,0.25,0.4,0xc9c4ba,NX-0.3,GY+0.12,1.0); NB.cyl(0.14,0.14,0xbab5aa,NX-0.33,GY+0.32,1.0,12,null,0,R/2);      // an old concrete trough
-  /* ---------- the neighbours' wing, from the photo out of the kitchen window to the right: it juts out toward us and closes the yard on
-     that side. Its face toward the yard is whiter plaster: a ground-floor window behind a white diamond lattice, an Electra unit over it, a
-     Haier unit higher up under a window with a white louvred shutter tilted out, white corrugated conduit and an iron bracket near our wall. ---------- */
-  const WX=6.4, WZ1=NZ1+1.6, wf=0xe8e4dc;
-  NB.box(NX-WX,TOPN-GY,WZ1-WZ0,0xddd7cb,(WX+NX)/2,(GY+TOPN)/2,(WZ0+WZ1)/2);
-  const wface=new THREE.Mesh(new THREE.PlaneGeometry(NX-WX,TOPN-GY),(function(){const t=stain.clone(); t.needsUpdate=true; t.repeat.set((NX-WX)/5,(TOPN-GY)/5); const m=A.MT(t,'out',true); m.color.setHex(0xfffcf6); return m;})());
-  wface.position.set((WX+NX)/2,(GY+TOPN)/2,WZ0-0.005); wface.rotation.y=R; nb.add(wface);
-  function wwin(x,y0,w,h,kind){                          // a window in the wing's face toward the yard
-    NB.box(w+0.1,h+0.1,0.06,0xeeebe4,x,y0+h/2,WZ0-0.03); NB.box(w,h,0.04,0x2a3236,x,y0+h/2,WZ0-0.05); NB.box(w+0.16,0.04,0.1,0xcfc6b4,x,y0-0.02,WZ0-0.05);
-    if(kind==='lattice'){const n=Math.round(w/0.16), m=Math.round(h/0.16);
-      for(let i=0;i<n;i++) for(let j=0;j<m;j++){const cx=x-w/2+(i+0.5)*w/n, cy=y0+(j+0.5)*h/m, a=Math.atan2(w/n,h/m), l=Math.hypot(w/n,h/m)/2;
-        [[-1,1,a],[1,1,-a],[-1,-1,-a],[1,-1,a]].forEach(function(q){NB.geo(new THREE.BoxGeometry(0.016,l,0.016).rotateZ(q[2]),0xf1f0ec,cx+q[0]*w/n/4,cy+q[1]*h/m/4,WZ0-0.11);});}
-      NB.box(w+0.14,h+0.14,0.03,0xf1f0ec,x,y0+h/2,WZ0-0.12);}
-    else if(kind==='louvre'){for(let k=0;k<Math.round(h/0.07);k++) NB.box(w,0.06,0.012,0xf4f3ef,x,y0+0.04+k*0.07,WZ0-0.16-k*0.004,0,0.35);      // white slats, the whole shutter tilted out at its foot
-      NB.box(w+0.08,0.08,0.18,0xeeebe4,x,y0+h+0.04,WZ0-0.09);}
-    else if(kind==='bars'){for(let i=0;i<=Math.round(w/0.12);i++) NB.box(0.018,h+0.06,0.018,0xeeeeea,x-w/2+i*w/Math.round(w/0.12),y0+h/2,WZ0-0.14); [0.35,0.75].forEach(function(f){NB.box(w+0.06,0.025,0.02,0xeeeeea,x,y0+h*f,WZ0-0.14);});}
-    else{const t=shut.clone(); t.needsUpdate=true; t.repeat.set(1,h*0.6/0.6); const sm=new THREE.Mesh(new THREE.PlaneGeometry(w,h*0.6),A.MT(t,'out',true)); sm.position.set(x,y0+h*0.7,WZ0-0.075); sm.rotation.y=R; nb.add(sm); NB.box(w+0.12,0.16,0.14,0xe6e2d8,x,y0+h+0.08,WZ0-0.07);}
-  }
-  wwin(8.1,GY+0.6,0.95,1.45,'lattice');
-  wwin(8.45,0.55,1.25,1.6,'louvre'); wwin(6.95,0.7,0.6,1.1,'bars');
-  [3.6,6.7,9.8].forEach(function(y,f){wwin(8.45,y,1.25,1.55,f%2?'louvre':'shut'); wwin(6.95,y+0.15,0.6,1.1,'bars');});
-  function wac(x,y,brand){const u=B2.at(x,y,WZ0-0.25,R);             // an air conditioner on the wing, on a rusty bracket
-    u.box(0.82,0.58,0.3,0xf1f1ee,0,0,0); u.cyl(0.21,0.02,0x3e4245,0.1,0,0.15,18,null,0,R/2); u.box(0.2,0.08,0.005,brand,-0.27,0.18,0.152);
-    [[-0.3],[0.3]].forEach(function(q){u.box(0.04,0.04,0.4,0x6b4a33,q[0],-0.31,0.05); u.box(0.04,0.4,0.04,0x6b4a33,q[0],-0.12,-0.13,0,0.8);});}
-  wac(8.15,GY+2.45,0xe8762a); wac(8.9,-0.25,0x1d4ea0); wac(9.2,3.1,0xe8762a); wac(7.4,6.3,0x1d4ea0);      // Electra over the lattice, Haier under the louvred shutter, and more up the wing
-  for(let y=GY+0.4;y<TOPN-0.4;y+=0.45) NB.cyl(0.03,0.04,0xe6e6e2,WX+0.18,y,WZ0-0.05,8);      // its ribs
-  NB.cyl(0.02,TOPN-GY-0.6,0xf3f3f0,WX+0.18,(GY+TOPN)/2,WZ0-0.05,8); NB.cyl(0.02,TOPN-GY-0.6,0xf3f3f0,WX+0.26,(GY+TOPN)/2,WZ0-0.06,8);      // white corrugated conduit, two runs
-  NB.box(0.04,0.04,0.32,0x7a7d80,WX+0.42,0.25,WZ0-0.16); NB.box(0.04,0.3,0.04,0x7a7d80,WX+0.42,0.12,WZ0-0.04,0,0.7);      // an empty iron bracket
-  NB.cyl(0.05,TOPN-GY,0x1d1f21,WX+0.06,(GY+TOPN)/2,WZ0+0.3,8);                                // a black drain pipe down its front, toward our wall
+  /* to the right out of the kitchen window, the wing that juts out toward us and closes the yard on that side is flat 6: building.js draws
+     its outside, the floor below it is drawn above */
   NB.done(); B2.done();
   /* trees: the eucalyptus leaning up past the kitchen window, and dense ones further along */
   const C2=batch(o), T=batch(o), bark=0xb9b0a0, leafE=[0x7e9a72,0x93ad84,0x6b8a62,0xa4b78f];
@@ -404,27 +382,28 @@ inRoom('out',function(){
 /* ================= the street side =================
    From the photos of the walk in: Haroe St, the café of number 12 under its umbrellas on a small paved square, a path past
    the café and a fenced garden with a round memorial stone, a few steps down to a lower terrace along the building, and the
-   bridge across the sunken strip into the doorway in the corner where number 12's wing meets our front. Inside, the
-   corridor turns right toward our door, so this front faces the same way as our kitchen window. The floor below takes
-   its light from the sunken strip, full of air-conditioner units. A second bridge further along leads to flats 1 and 6.
-   All of this is laid out in a frame of its own, as you see it from the street: x runs to the right along our front,
-   starting at that corner; z comes out toward you; y=0 is the lobby floor. The whole is then turned into place. */
+   bridge across the sunken strip into the doorway in the corner where number 12's wing meets the front. The front here is flat 6's
+   (plan.js), which stands four metres out from ours toward the street; the doorway opens into a short passage beside it, then the
+   hall, where the corridor turns right toward our door, so this front faces the same way as our kitchen window. The floor below
+   takes its light from the sunken strip, full of air-conditioner units.
+   All of this is laid out in a frame of its own, as you see it from the street: x runs to the right along the front, starting at
+   that corner; z comes out toward you; y=0 is the lobby floor. The whole is then turned into place. */
 
 /* It is built from a great many small parts, so parts of one colour (or one texture) are merged into a single mesh: A.batch, in detail.js. */
 function batch(parent,lift,opt){return A.batch(parent,lift,opt);}
 
 inRoom('street',function(){
-  const WELL=1.6, BS=WELL+0.25, LZ=4.2, SZ=LZ+0.32, D8=16, GZ=10.4+D8, AW=3.4, U=0.17, LA=-0.15, RY=U-0.13, KZ=18.55+D8, RW=7, ZF=42+D8, FW=ZC-L, TOP=12.6, BRW=1.3, SQ=19.5;
+  const WELL=1.6, D8=16-(XS-XF), GZ=10.4+D8, AW=3.4, U=0.17, LA=-0.15, RY=U-0.13, KZ=18.55+D8, RW=7, ZF=42+D8, FW=ZC-L, TOP=12.6, BRW=1.3, SQ=19.5;
   const BL=2.2, SE=1.0, FZ=BL+0.45+6.0, AL=FZ+0.45;
-  /* WELL: width of the sunken strip along our front; BS, LZ..SZ: the second bridge, the paved patch in front of it (LA, a step below the
-     lobby) and two steps up from there to its path through the garden; GZ: where the garden meets the square; AW: width of the alley; U: the
+  /* WELL: width of the sunken strip along the front; LA: a step below the lobby; GZ: where the garden meets the square; AW: width of the alley; U: the
      level of the alley, the café and the street; RY: the road; KZ: the kerb; RW: width of the road; ZF: far edge; FW and TOP: length and
      height of our front. Our own way in, from the photos of the walk: a bridge BL long over the sunken strip; two low steps down from it to
      a forecourt of old slabs (LA) reaching to FZ, where two broad steps go up to the alley at AL. SE: how far the strip reaches out beside it.
-     D8: how much farther out the square, the café and the street stand than first drawn, to make room for all of that. */
-  const BX=[ZC-ZO,ZC-Z2], P2=[BX[1]-0.8,BX[1]+0.8];    // the two bridges, along the front; the path through the garden to the second one
+     D8: how much farther out the square, the café and the street stand than first drawn, to make room for all of that, less the four
+     metres flat 6 stands out from our own front, where this frame begins: the square, the café and the street stay where they were. */
+  const BX=[ZC-ZO];    // the bridge, along the front
   const st=G(), can=G(st), fac=G(st), far=[];          // everything; the tree crowns; our own street front; the other buildings
-  st.userData.nc=true; st.rotation.y=R/2; st.position.set(XF,0,ZC); st.updateMatrixWorld(true);
+  st.userData.nc=true; st.rotation.y=R/2; st.position.set(XS,0,ZC); st.updateMatrixWorld(true);
   const det=A.det, leafC=det.leafM.clone(); leafC.userData={};
   const B=batch(st), C=batch(can,0,{map:function(k){return k===det.leafM?leafC:k;}}), F=batch(fac,0x3c3d3b), DP=det.P;
   const iron=0x2b2f2c, green=0x23402f, stone=0xd8d2c4, leaf=[0x3f7d4a,0x4a8a58,0x2f6b45], rnd=A.rng(10);
@@ -439,8 +418,7 @@ inRoom('street',function(){
   function panel(w,h,mat,x,y,z,ry,parent){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat); m.position.set(x,y,z); m.rotation.y=ry||0; (parent||st).add(m); return m;}
 
   /* ---------- ground. From the square a paved alley runs to our front along number 12's side, a fenced garden on its right. At its end two
-     broad steps go down to a forecourt, and from there our bridge crosses the sunken ground to the doorway. A path through the garden leads
-     the same way, more shortly, to the second bridge. ---------- */
+     broad steps go down to a forecourt, and from there our bridge crosses the sunken ground to the doorway. ---------- */
   function wear(g,S,seed,o){                                // what years of use leave on a surface: gum, stains, cracks, fallen leaves, butts, sand in the joints
     const r=A.rng(seed);
     for(let i=0;i<(o.stains||10);i++){const x=r()*S, y=r()*S, q=S*(0.02+r()*0.07), gr=g.createRadialGradient(x,y,0,x,y,q); gr.addColorStop(0,'rgba(40,32,26,'+(0.08+r()*0.12)+')'); gr.addColorStop(1,'rgba(40,32,26,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}
@@ -493,11 +471,7 @@ inRoom('street',function(){
   (function(){const ym=(LA+U)/2;                                                                    // two broad steps up to the alley, of the same worn slabs
     B.box(AW,ym-GY,AL-FZ,0xcbc4b3,AW/2,(ym+GY)/2,(FZ+AL)/2); flat(0,AW,FZ,AL,ym+0.004,slabM,1.6); B.box(AW,0.025,0.05,0xb3ac9b,AW/2,ym-0.012,FZ+0.025);
     B.box(AW,U-GY,GZ-AL,stone,AW/2,(GY+U)/2,(AL+GZ)/2); flat(0,AW,AL,GZ,U+0.004,slabM,1.6); B.box(AW,0.025,0.05,0xb3ac9b,AW/2,U-0.012,AL+0.025);})();
-  (function(){const x0=P2[0], x1=P2[1], w=x1-x0, xc=(x0+x1)/2;                                     // the second bridge's way: a paved patch, two steps up, a path through the garden
-    B.box(w,LA-GY,LZ-WELL,stone,xc,(GY+LA)/2,(WELL+LZ)/2); flat(x0,x1,WELL,LZ,LA+0.004,concM,2.4);
-    const ym=(LA+U)/2; B.box(w,ym-GY,0.33,0xcbc4b3,xc,(ym+GY)/2,LZ+0.165); B.box(w,0.025,0.05,0xb3ac9b,xc,ym-0.012,LZ+0.025);
-    B.box(w,U-GY,GZ-SZ,stone,xc,(GY+U)/2,(SZ+GZ)/2); flat(x0,x1,SZ,GZ,U+0.004,slabM,1.6); B.box(w,0.025,0.05,0xb3ac9b,xc,U-0.012,SZ+0.025);})();
-  [[AW,P2[0]],[P2[1],FW]].forEach(function(q){const w=q[1]-q[0], xc=(q[0]+q[1])/2;                                  // the garden, raised to street level
+  [[AW,FW]].forEach(function(q){const w=q[1]-q[0], xc=(q[0]+q[1])/2;                                  // the garden, raised to street level
     B.box(w,U-GY,GZ-WELL,stone,xc,(GY+U)/2,(WELL+GZ)/2); B.box(w-0.16,0.02,GZ-WELL-0.16,soil,xc,U+0.01,(WELL+GZ)/2);
     B.box(0.12,0.22,GZ-WELL,kerb,q[0]+0.06,U+0.11,(WELL+GZ)/2); B.box(0.12,0.22,GZ-WELL,kerb,q[1]-0.06,U+0.11,(WELL+GZ)/2); B.box(w,0.22,0.12,kerb,xc,U+0.11,WELL+0.06);});
   B.box(SQ+19,U-GY,KZ-GZ,stone,(SQ-19)/2,(GY+U)/2,(GZ+KZ)/2); flat(-19,SQ,GZ,KZ-0.16,U+0.004,paveM,1.6);       // the square, at street level
@@ -522,16 +496,7 @@ inRoom('street',function(){
   const shadeM=new THREE.MeshBasicMaterial({map:shade,transparent:true,depthWrite:false});
   flat(0,AW,AL,GZ,U+0.02,shadeM,18).renderOrder=1; flat(0,AW,BL,FZ,LA+0.02,shadeM,18).renderOrder=1; flat(0,20,GZ,KZ-0.16,U+0.02,shadeM,18).renderOrder=1;
 
-  /* ---------- the second entrance: a short bridge over the strip to an open doorway ---------- */
   const wrail=0xefefea;
-  (function(){const bx=BX[1];
-    B.box(BRW,0.22,BS+0.05,0xc9c4b8,bx,-0.107,BS/2-0.025); flat(bx-BRW/2+0.12,bx+BRW/2-0.12,-0.05,BS,0.004,chipM,0.6);      // a narrow concrete slab with kerbs and tiles, white zig-zag railings,
-    B.box(BRW,0.04,0.05,0xb3ac9b,bx,-0.02,BS-0.025);                                                                         // ending in a step down to the paved patch
-    [-1,1].forEach(function(s){const x=bx+s*(BRW/2-0.06);
-      B.box(0.12,0.14,WELL+0.1,0xc9c4b8,x,0.07,WELL/2);
-      B.box(0.045,0.045,WELL,wrail,x,1.02,WELL/2); B.box(0.035,0.035,WELL,wrail,x,0.2,WELL/2);
-      for(let z=0.05,k=0;z<WELL+0.01;z+=0.2,k++){B.box(0.02,0.82,0.02,wrail,x,0.61,z); if(z+0.2<WELL+0.05) B.box(0.016,0.85,0.016,wrail,x,0.61,z+0.1,0,(k%2?1:-1)*0.235);}});
-  })();
 
   /* ---------- our bridge, from the photos of the walk in. Our doorway is in the corner with number 12's wing. A short slab of old concrete,
      tiled in 25 cm terrazzo, crosses the sunken strip to it, a heavy kerb along each side. Its left side runs straight out from the middle of
@@ -584,9 +549,8 @@ inRoom('street',function(){
     f.box(0.05,h+0.06,0.05,c,0,(h+0.06)/2,0); f.box(0.05,h+0.06,0.05,c,0,(h+0.06)/2,len);
     if(hoops) for(let d=0.4;d<len-0.3;d+=0.8) B.geo(new THREE.TorusGeometry(0.2,0.012,4,10,R),c,x0+Math.sin(a)*d,y+h,z0+Math.cos(a)*d,a+R/2);
   }
-  fence(AW,WELL+0.04,P2[0],WELL+0.04,U+0.22,0.8,wrail); fence(P2[1],WELL+0.04,FW-0.1,WELL+0.04,U+0.22,0.8,wrail);      // along the edge of the sunken strip
-  [[AW,AW],[P2[0],P2[0]],[P2[1],P2[1]]].forEach(function(q){fence(q[0]+0.06,WELL+0.12,q[0]+0.06,GZ-0.1,U+0.22,0.62,green);});                                                     // low green fences on the garden's kerbs
-  fence(P2[1]-0.06,WELL+0.12,P2[1]-0.06,GZ-0.1,U+0.22,0.62,green); fence(AW+0.1,GZ-0.08,P2[0]-0.1,GZ-0.08,U+0.22,0.62,green); fence(P2[1]+0.1,GZ-0.08,FW-0.1,GZ-0.08,U+0.22,0.62,green);
+  fence(AW,WELL+0.04,FW-0.1,WELL+0.04,U+0.22,0.8,wrail);      // along the edge of the sunken strip
+  fence(AW+0.06,WELL+0.12,AW+0.06,GZ-0.1,U+0.22,0.62,green); fence(AW+0.1,GZ-0.08,FW-0.1,GZ-0.08,U+0.22,0.62,green);      // low green fences on the garden's kerbs
   fence(FW-0.1,WELL+0.12,FW-0.1,GZ-0.1,U+0.22,0.8,iron); fence(FW,GZ+0.08,SQ-0.1,GZ+0.08,U,0.95,iron); fence(SQ-0.1,GZ+0.08,SQ-0.1,11.4+D8,U,0.95,iron);      // where the garden and the square stand over the yard
 
   /* ---------- number 12's side of the alley, from the photos: green grilles on the ground floor, air conditioners, and an outside
@@ -627,7 +591,7 @@ inRoom('street',function(){
   function yucca(x,z,h,s,y0){const t=det.tree('yucca',{h:h/s,s:s,a0:x*3+z,seed:Math.floor(x*11+z*5)}); B.bake(t.wood,x,y0,z,0); B.bake(t.crown,x,y0,z,0);}      // a spiky yucca: a few trunks, each with a burst of stiff, striped leaves
   function tree(x,z,s,a0){const t=det.tree('broad',{s:s,a0:a0,seed:Math.floor(x*17+z*3)}); B.bake(t.wood,x,U,z,0); C.bake(t.crown,x,U,z,0);}      // a broad old tree: trunk, limbs, and a low crown spreading over the alley
   function clump(bt,x,y,z,rx,ry,rz,n,o){o=o||{}; const g=new THREE.Group(); det.crown(Object.assign({c:[0,0,0],r:[rx,ry,rz],n:n,size:0.5,seed:Math.floor(x*13+y*7+z*3),cell:'broad'},o),g); bt.bake(g,x,y,z,0);}      // a mass of leaves on its own
-  const rg=A.rng(23), inPath=function(x){return x>P2[0]-0.45&&x<P2[1]+0.45;};
+  const rg=A.rng(23);
   const GS=function(z){return WELL+(z-WELL)*(GZ-WELL)/(10.4-WELL);};      // the garden reaches farther out than first drawn: spread what grows in it to match
   tree(5.3,GS(5.4),1.1,4.2); tree(5.2,GS(9.0),0.9,3.6); tree(10.6,GS(5.9),1.0,1.6); tree(12.0,GS(2.6),0.8,0.4); tree(4.8,GS(3.4),1.0,2.6); tree(8.4,GS(8.0),1.0,5.0);      // the old trees that roof the alley and the garden
   for(let z=BL+0.4;z<GZ-0.6;z+=1.3) clump(C,AW-0.2,U+2.75+Math.sin(z*3)*0.2,z,0.6,0.75,0.75,60,{droop:0.5,shell:0.4});                 // branches hanging low over the alley
@@ -635,8 +599,8 @@ inRoom('street',function(){
   palm(5.0,GS(3.4),0.7,0.9,U); palm(11.9,GS(4.6),1.2,0.8,U);
   for(let z=WELL+0.6;z<GZ-0.6;z+=1.6) clump(B,AW+1.2,U+1.25+rg()*0.2,z,0.85,1.05,0.95,150,{cell:'bush',size:0.55,shell:0.35,tint:rg()<0.4?0xc8d8b8:0xffffff});      // a wall of green along the fence
   for(let z=WELL+1.2;z<GZ-1;z+=3.1) clump(B,AW+0.7,U+1.8,z,0.6,0.7,0.9,90,{cell:'bougain',size:0.4,shell:0.6});      // and bougainvillea climbing through it
-  for(let i=0;i<64;i++){const x=AW+0.35+rg()*(FW-AW-0.7), z=WELL+0.35+rg()*(GZ-WELL-0.7); if(inPath(x)) continue; shrub(x,z,0.35+rg()*0.45,i%4===3?0x2a5a3a:leaf[i%3],U);}      // and everything else is green
-  for(let i=0;i<26;i++){const x=AW+0.3+rg()*(FW-AW-0.6), z=WELL+0.3+rg()*(GZ-WELL-0.6); if(inPath(x)) continue; const t=det.tree('grass',{w:0.35,d:0.35,n:16,seed:i}); B.bake(t.crown,x,U+0.02,z,0);}      // weeds between
+  for(let i=0;i<64;i++){const x=AW+0.35+rg()*(FW-AW-0.7), z=WELL+0.35+rg()*(GZ-WELL-0.7); shrub(x,z,0.35+rg()*0.45,i%4===3?0x2a5a3a:leaf[i%3],U);}      // and everything else is green
+  for(let i=0;i<26;i++){const x=AW+0.3+rg()*(FW-AW-0.6), z=WELL+0.3+rg()*(GZ-WELL-0.6); const t=det.tree('grass',{w:0.35,d:0.35,n:16,seed:i}); B.bake(t.crown,x,U+0.02,z,0);}      // weeds between
   for(let i=0;i<9;i++){const z=BL+0.4+i*(GZ-BL-0.8)/8; clump(B,AW+0.35,U+0.85+rg()*0.4,z,0.5,0.35,0.5,40,{cell:'broad',size:0.5,droop:0.3,tint:0xd0e0c0});}           // big leaves leaning over the fence into the alley
   ficus(17.4,14.15+D8,0.95,2.0,U);
 
@@ -741,7 +705,7 @@ inRoom('street',function(){
   function cabinet(x,z,o){const c=B.at(x,U,z,o); c.box(0.85,0.12,0.34,0x8f9492,0,0.06,0); c.box(0.85,1.3,0.32,0xb9bdbc,0,0.77,0); c.box(0.01,1.2,0.01,0x7d8280,0,0.77,0.162);}      // grey utility cabinet
   cabinet(12,17.9,0);
   const glow=A.lampMat('L:street',0xeeebe0,0xffe7bd,0.95), bulb=A.lampMat('L:street',0xf3eedc,0xffd28a,1);
-  [[AW-0.25,10.6,U],[P2[1]+0.25,10.6,U],[12.2,10.5,U]].forEach(function(q){                                               // globe lamps on green poles
+  [[AW-0.25,10.6,U],[9.4,10.6,U],[12.2,10.5,U]].forEach(function(q){                                               // globe lamps on green poles
     B.cyl(0.045,3.0,green,q[0],q[2]+1.5,q[1],8); B.sph(0.2,glow,q[0],q[2]+3.15,q[1]); A.pool('L:street',0xffd9a0,q[0],q[2]+0.03,q[1]+B.oz,4.2,st,0.42);});
   UMB.forEach(function(q){A.pool('L:street',0xffb070,q[0],U+0.03,q[1]+B.oz,2.4,st,0.35);});      // each heater warms the ground under its parasol
 
@@ -863,8 +827,7 @@ inRoom('street',function(){
     g.fillStyle='#e6e8e6'; g.fillRect(194,168,48,30); g.fillStyle='#b9bdbb'; g.fillRect(200,174,36,18);
   },true); ft.repeat.set(FW/3.2,3);
   panel(FW,TOP-H,A.MT(ft),FW/2,(H+TOP)/2,0.03,0,fac);
-  const sw=tex(64,128,function(g){g.fillStyle='#fbfaf6'; g.fillRect(0,0,64,128); g.fillStyle='#5b6b73'; for(let i=0;i<3;i++) for(let j=0;j<2;j++) g.fillRect(4+i*20,4+j*62,16,56);},true); sw.repeat.set(1,5);
-  const swM=A.MT(sw), p10=A.MT(plate('10')), lantern=A.lampMat('L:street',0xdfe6dc,0xffe7bd,1);
+  const p10=A.MT(plate('10'));
   const hs=tex(128,48,function(g){g.fillStyle='#c9a35a'; g.fillRect(0,0,128,48); g.strokeStyle='#7a5a2a'; g.lineWidth=3; g.strokeRect(2,2,124,44);
     g.fillStyle='#3b2a14'; g.textAlign='center'; g.font='bold 22px sans-serif'; g.fillText('הראה',64,24); g.font='bold 16px sans-serif'; g.fillText('10',64,42);});
   BX.forEach(function(bx,i){                                                                // plain openings in the front, no doors
@@ -882,33 +845,34 @@ inRoom('street',function(){
       for(let k=0;k<6;k++){const pts=[]; for(let i=0;i<=16;i++){const t=i/16; pts.push([0.3+t*(2.9+k*0.3),2.62-0.55*Math.sin(t*R)*(0.4+k*0.12)-0.05*k,0.12+t*0.25]);} ln(pts);}      // and loops of it hanging over the doorway
       const fr=0x262828; [3.5,4.1].forEach(function(y){F.box(FW-1.4,0.04,0.04,fr,(1.2+FW)/2,y,0.42);}); for(let x=1.2;x<FW;x+=1.6){F.box(0.04,0.04,0.42,fr,x,3.5,0.21); F.box(0.04,0.64,0.04,fr,x,3.8,0.42);}      // the iron frame across the first floor
       for(let x=1.25;x<FW-0.2;x+=0.25) F.box(0.006,0.6,0.006,0x3a3c3c,x,3.8,0.42);}
-    else F.box(0.12,0.2,0.1,lantern,bx+0.75,2.05,0.2);
   });
-  panel(1.5,TOP-0.8-3.0,swM,ZC-(L+EH)/2,(3.0+TOP-0.8)/2,0.05,0,fac);                       // glazing up the front where the stairs are
   B.done(); C.done(); F.done();
-  A.street={st:st,U:U,RY:RY,LA:LA,KZ:KZ,RW:RW,D8:D8,AW:AW,GZ:GZ,SQ:SQ,BL:BL,FZ:FZ,AL:AL,seats:seats,cafe:CAFE.map(function(q){return [q[0],q[1]+D8];}),inside:A.street_cafe};
+  A.street={st:st,X0:XS,fac:fac,U:U,RY:RY,LA:LA,KZ:KZ,RW:RW,D8:D8,AW:AW,GZ:GZ,SQ:SQ,BL:BL,FZ:FZ,AL:AL,seats:seats,cafe:CAFE.map(function(q){return [q[0],q[1]+D8];}),inside:A.street_cafe};
   A.streetView=[st.localToWorld(new THREE.Vector3(2.3,U+1.62,12.2+D8)),st.localToWorld(new THREE.Vector3(1.1,1.1,0.4))];      // standing at the café, looking down the alley to our bridge
   /* Sims mode can walk out here: where the ground is (in this frame, turned into the model's), what stands in the way,
      and how high the ground is: the bridges at the lobby's level, the forecourt and the patch a step below, the steps, the square, the road */
-  const wr=function(q){return [XF+q[2],XF+q[3],ZC-q[1],ZC-q[0]];};
+  const wr=function(q){return [XS+q[2],XS+q[3],ZC-q[1],ZC-q[0]];};
   A.rooms.street.rs=[[DL+0.05,DR-0.06,-0.2,LD0+0.02],[WX0+0.04,1.78,0.2,0.85],[WX0+0.04,2.08,0.5,1.12],[WX0+0.04,WX1-0.04,0.8,BL+0.5],      // our bridge, in steps along its slanting side; each overlaps the next, as each loses a body's width at its edges
-    [BX[1]-0.5,BX[1]+0.5,-0.2,BS+0.45],[0.12,AW-0.12,BL+0.2,GZ+0.3],[P2[0]+0.12,P2[1]-0.12,WELL+0.05,GZ+0.3],
+    [0.12,AW-0.12,BL+0.2,GZ+0.3],
     [0.15,SQ-0.2,GZ-0.3,KZ-0.2],[-3.5,0.4,16.2+D8,KZ-0.2],[SQ-0.6,30,15.9+D8,KZ-0.2],[5.5,8.7,KZ-0.6,KZ+RW+0.6],[3.9,26,KZ+RW+0.1,28.8+D8]].map(wr);
   const tb=CAFE.map(function(q){return [q[0]-0.72,q[0]+0.72,q[1]-0.72+D8,q[1]+0.72+D8];}).concat(UMB.map(function(q){return [q[0]-0.3,q[0]+0.3,q[1]-0.3+D8,q[1]+0.3+D8];}));
   A.streetBlock=[[0,1.08,LT,SB],[0,0.5,2.2,3.7],[0.35,1.15,2.15,3.05],[1.05,1.65,SB-0.2,SB+1.4],[2.6,3.4,14.2,17.9],[2.55,3.4,BL+0.7,BL+2.3],[0,0.45,SB+0.7,SB+1.7],[3.0,3.4,AL+0.3,AL+1.1]].concat(tb,
-    [[0.05,0.85,10.45,11.25],[0,0.36,11.3,15.9],[3.55,5.3,10.35,11.85],[P2[1]+0.1,P2[1]+0.4,10.45,10.75],[0.3,4.4,17.3,17.8],[0.3,0.9,16.45,17.05],[11.55,12.45,17.7,18.1],[9.7,10.8,14.6,15.2],[10.75,11.65,14.85,16.15],
+    [[0.05,0.85,10.45,11.25],[0,0.36,11.3,15.9],[3.55,5.3,10.35,11.85],[9.25,9.55,10.45,10.75],[0.3,4.4,17.3,17.8],[0.3,0.9,16.45,17.05],[11.55,12.45,17.7,18.1],[9.7,10.8,14.6,15.2],[10.75,11.65,14.85,16.15],
     [10.3,10.5,13.65,13.85],[2.1,2.3,17.95,18.15],[4.5,4.7,17.9,18.1],[5.15,5.45,18.0,18.3],[8.75,9.05,18.0,18.3],[10.15,10.45,18.0,18.3],[10.8,11.4,17.35,17.95],
     [11.7,12.2,14.55,16.35],[12.05,12.35,10.35,10.65],[12.4,19.0,11.45,17.95],[17.9,19.3,17.75,17.95]].map(function(b){return [b[0],b[1],b[2]+D8,b[3]+D8];}),
     [[-3.95,-1.25,17.25+D8,18.1+D8],[12.7,13.1,17.8+D8,18.2+D8],[8.8,9.1,18.1+D8,18.4+D8],[22.05,22.35,18.05+D8,18.35+D8],[3.25,3.85,10.1+D8,10.9+D8],[4.2,4.6,KZ+RW+0.3,KZ+RW+0.6],[-2.25,-1.95,KZ+RW+0.3,KZ+RW+0.6],[1.15,1.65,3.65,4.15]]).map(wr);      // and what the detail added: bins, the hydrant, sign poles, the chalk board, a sleeping cat
-  A.streetPass=[[XF-0.4,XF+0.4,ZO-0.45,ZO+0.45],[XF-0.4,XF+0.4,Z2-0.45,Z2+0.45]];
+  /* behind number 12, the yard along flat 1's front and its east side, to flat 1's door on our floor (plan.js): at the street's level */
+  const SIDE=[[3.8,XS-0.1,ZC+0.1,25.3],[-4.7,4.4,24.3,25.3],[-5.1,-2.9,23.1,24.9]];      // each overlapping the next, as each loses a body's width at its edges
+  A.rooms.street.rs=A.rooms.street.rs.concat(SIDE);
+  A.streetPass=[[XS-0.4,XS+0.4,ZO-0.45,ZO+0.45],[A.LB.sideGate[0]+0.12,A.LB.sideGate[1]-0.12,ZC-0.35,ZC+0.35]];      // from the passage out onto the bridge, and into the yard behind number 12
   A.groundAt=function(x,z){
-    if(x<XF-0.05) return 0; const q=x-XF, p=ZC-z;      // q: out from our front; p: along it from number 12's corner
+    if(x<XS-0.05){for(let i=0;i<SIDE.length;i++){const r=SIDE[i]; if(x>r[0]-0.05&&x<r[1]+0.05&&z>r[2]-0.05&&z<r[3]+0.05) return U;} return 0;}
+    const q=x-XS;      // q: out from the front
     if(q>=GZ) return q<KZ?U:q<KZ+RW?RY:U;
-    if(p>P2[0]-0.6&&p<P2[1]+0.6){if(q<BS) return 0; if(q<BS+0.15) return LA*(q-BS)/0.15; if(q<LZ) return LA; if(q<SZ) return LA+(U-LA)*(q-LZ)/(SZ-LZ); return U;}      // the way to the second bridge
     if(q<BL) return 0; if(q<BL+0.45) return LA*(q-BL)/0.45; if(q<FZ) return LA; if(q<AL) return LA+(U-LA)*(q-FZ)/(AL-FZ); return U;      // ours
   };
   const tags=[['Bridge to the street'
-,1.6,1.5,BL/2],['Second bridge',BX[1],1.5,WELL/2],['Steps down to the forecourt',AW/2,U+1.3,FZ+0.2],['Number 12',0.3,U+3.4,13],['Café',4,U+3.4,13.5+D8],['Haroe St',12,U+0.6,KZ+3.5]]
+,1.6,1.5,BL/2],['Steps down to the forecourt',AW/2,U+1.3,FZ+0.2],['Number 12',0.3,U+3.4,13],['Café',4,U+3.4,13.5+D8],['Haroe St',12,U+0.6,KZ+3.5]]
     .map(function(q){return {el:A.tag(q[0]),pos:st.localToWorld(new THREE.Vector3(q[1],q[2],q[3]))};});
   A.labelFns.push(function(){const show=A.state.labels&&!A.simsOn; tags.forEach(function(t){A.place(t.el,t.pos,show);});});
   const lc=new THREE.Vector3(); let crowns=true;

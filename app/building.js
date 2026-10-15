@@ -2,12 +2,13 @@
    Laid out from the satellite view and OpenStreetMap. Every outline below is a real building or street, in metres, in a frame of
    our own front (which turns 4.6° north of east): u runs along the front from the corner of number 12's wing, west toward Mirkin St
    (negative) and east past number 12 (positive); v runs out from the front, north toward Haroe St, and back toward David St
-   (negative). In the model that is z = ZC + u and x = XF + v, the same frame the street is drawn in.
+   (negative). In the model that is z = ZC + u and x = XF + v; the street draws itself from flat 6's front, four metres farther out.
    The flat and the lobby, from the tape and the photos, run 6.6 m longer along the front than the satellite leaves between number
    12's wing and Beit HaChayal. So everything south of Haroe St and west of our building stands 6.6 m farther west, and what lies
    along our front in between is spread to fit: Beit HaChayal keeps its real 3.9 m from our west wall.
-   Our own building is drawn round the flat: the semi-basement, our floor and three above (the floors above repeat our windows),
-   37 m along the front and 22 m deep. "Look inside" takes away the floors above and the outside of our own. */
+   Our own building is drawn from the architect's plan (plan.js): six flats a floor round the stairwell, on a semi-basement, our floor
+   and three above. Where the satellite outline made the block bigger than that, there is ground. "Look inside" takes away the floors
+   above and the outside of our own. */
 (function(){
 'use strict';
 const A=window.APP, D=A.D, LB=A.LB, det=A.det, P=det.P, R=Math.PI, H=D.H, L=D.L, AZ=A.AZ, XF=LB.XF, ZC=LB.ZC, $=function(id){return document.getElementById(id);};
@@ -151,9 +152,10 @@ const groundT=det.tex(N,N,function(g){
 });
 let groundMesh=null;
 (function(){
-  const hole=[[-14,-22.4],[LBH,-22.4],[LBH,NXY-XF],[12.4,NXY-XF],[12.4,GZs],[SQ,GZs],[SQ,16+D8],[50,16+D8],[50,29.05+D8],[-19,29.05+D8],[-19,GZs],[0,GZs],[0,0],[-14,0]];   // in the street's frame: our building, the yard and the gap by Beit HaChayal, the alley and the garden, the square and Haroe St as the street draws them
+  const W=function(lx,lz){return [XF+lz,ZC-lx];}, S=function(lx,lz){return [SF.X0+lz,ZC-lx];};      // from our front, or from the street's (flat 6's, where the street frame begins)
+  const hole=[W(-14,-22.4),W(LBH,-22.4),W(LBH,NXY-XF),W(12.4,NXY-XF),S(12.4,GZs),S(SQ,GZs),S(SQ,16+D8),S(50,16+D8),S(50,29.05+D8),S(-19,29.05+D8),S(-19,GZs),S(0,GZs),S(0,0),W(0,0),W(-14,0)];   // our building, the yard and the gap by Beit HaChayal, the alley and the garden, the square and Haroe St as the street draws them
   const sh=new THREE.Shape(); sh.moveTo(GZ0,GX0); sh.lineTo(GZ0+GS,GX0); sh.lineTo(GZ0+GS,GX0+GS); sh.lineTo(GZ0,GX0+GS); sh.lineTo(GZ0,GX0);
-  const ho=new THREE.Path(); hole.forEach(function(q,i){const x=XF+q[1], z=ZC-q[0]; if(i) ho.lineTo(z,x); else ho.moveTo(z,x);}); ho.closePath(); sh.holes.push(ho);
+  const ho=new THREE.Path(); hole.forEach(function(q,i){const x=q[0], z=q[1]; if(i) ho.lineTo(z,x); else ho.moveTo(z,x);}); ho.closePath(); sh.holes.push(ho);
   const g=new THREE.ShapeGeometry(sh), Pp=g.attributes.position, uv=g.attributes.uv, ix=g.index;
   for(let i=0;i<Pp.count;i++){const z=Pp.getX(i), x=Pp.getY(i); Pp.setXYZ(i,x,U-0.003,z); uv.setXY(i,(z-GZ0)/GS,(x-GX0)/GS);}
   g.computeVertexNormals();      // drawn in (z, x), counter-clockwise there is facing up here
@@ -271,67 +273,107 @@ const garden=[];
   for(let k=0;k<3;k++){const hg=P.grp(NX+1.6+k*1.6,T,Z0+3+k*4.2,null,R/2); det.solar(hg,A.rng(k)); town.bake(hg);}
 })();
 
-/* ---------- our building, number 10 ---------- */
-const XS=XF-22.4, ZW=AZ-0.2, ZE=ZC+14, XN=D.BXB+0.2;      // its back wall; its west wall, the flat's outer face; its east end, behind number 12's wing; the front where bedroom 2 stands out
+/* ---------- our building, number 10, as the architect's plan has it (plan.js): our flat, the five round it and the common parts, over a
+   semi-basement, three floors over ours and the roof. Its outline is read off the plan: every room and the lobby laid on a fine grid,
+   closed over the walls between them, and traced round. Each flat's windows are where its rooms meet the open air, as inside. ---------- */
+const PL=A.PLAN, ZW=AZ-0.2, XN=D.BXB+0.2, X0=SF.X0;      // our west wall, the flat's outer face; the front where bedroom 2 stands out; the street front, flat 6's
 const bld=new THREE.Group(); bld.userData.nc=true; root.add(bld);
-const low=new THREE.Group(), up=new THREE.Group(), skin=new THREE.Group(); bld.add(low,up,skin);
-const BLo=A.batch(low), BUp=A.batch(up), BSk=A.batch(skin);
-
-/* a face of the building: a group at its origin, x along the face, +z out of it */
-function faceG(side,a){return side==='n'?P.grp(0,0,a,null,R/2):side==='w'?P.grp(a,0,ZW,null,R):side==='s'?P.grp(XS,0,a,null,-R/2):P.grp(a,0,ZE,null,0);}
-function facePos(side,a,xf){const g=faceG(side,a); if(side==='n') g.position.x=xf; return g;}
+const low=new THREE.Group(), up=new THREE.Group(), skin=new THREE.Group(), sfr=new THREE.Group(); bld.add(low,up,skin,sfr);
+const BLo=A.batch(low), BUp=A.batch(up), BSk=A.batch(skin), BSf=A.batch(sfr);
+const FL=['living','kitchen','bed1','bed2','bath','wc'];
 function wall(fg,s0,s1,y0,y1,holes,m){                 // a stretch of wall from s0 to s1, with openings [s0,s1,y0,y1]
   const sh=new THREE.Shape(); sh.moveTo(s0,y0); sh.lineTo(s1,y0); sh.lineTo(s1,y1); sh.lineTo(s0,y1); sh.lineTo(s0,y0);
   (holes||[]).forEach(function(h){const p=new THREE.Path(); p.moveTo(h[0],h[2]); p.lineTo(h[0],h[3]); p.lineTo(h[1],h[3]); p.lineTo(h[1],h[2]); p.lineTo(h[0],h[2]); sh.holes.push(p);});
   const g=new THREE.ShapeGeometry(sh), uv=g.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)/3,uv.getY(i)/3);
   P.geo(g,m||wallM,0,0,0,fg);}
 function win(fg,s,y,w,h,o){det.window(fg,s,y,w,h,Object.assign({rng:RR,wall:wallHex},o||{}));}
-/* the flat's outside walls, read from the flat itself, so the floors above repeat its windows where they are */
-const FL=['living','kitchen','bed1','bed2','bath','wc'], north=[], west=[];
+/* the rooms: the plan's flats and common parts; ours out to its outer walls, with the block of shafts between our bathroom and the stairs */
+const OURS=[]; FL.forEach(function(k){A.rooms[k].rs.forEach(function(r){OURS.push([r[0]-0.22,r[1]+0.22,r[2]-0.22,r[3]+0.22]);});}); OURS.push([3.9,XF,4.85,L+0.02]);
+const PR=[]; for(const n in PL.flats) PL.flats[n].rooms.forEach(function(q){PR.push([q[3],q[4],q[5],q[6]]);}); PL.core.forEach(function(r){PR.push(r);});
+const ALL=PR.concat(OURS);
+function inOurs(x,z){for(let i=0;i<OURS.length;i++){const r=OURS[i]; if(x>r[0]&&x<r[1]&&z>r[2]&&z<r[3]) return true;} return false;}
+/* the grid: 5 cm cells over the old block of the satellite outline and round the plan, filled, closed over gaps up to half a metre */
+const CS=0.05, BX0=Math.min(XF-22.6,ALL.reduce(function(a,r){return Math.min(a,r[0]);},0)-0.6), BX1=ALL.reduce(function(a,r){return Math.max(a,r[1]);},0)+0.6;
+const BZ0=Math.min(ZW-0.6,ALL.reduce(function(a,r){return Math.min(a,r[2]);},0)-0.6), BZ1=Math.max(ZC+14.6,ALL.reduce(function(a,r){return Math.max(a,r[3]);},0)+0.6);
+const NI=Math.ceil((BX1-BX0)/CS), NJ=Math.ceil((BZ1-BZ0)/CS), occ=new Uint8Array(NI*NJ);
+ALL.forEach(function(r){const i0=Math.max(0,Math.round((r[0]-BX0)/CS)), i1=Math.min(NI,Math.round((r[1]-BX0)/CS)), j0=Math.max(0,Math.round((r[2]-BZ0)/CS)), j1=Math.min(NJ,Math.round((r[3]-BZ0)/CS));
+  for(let i=i0;i<i1;i++) for(let j=j0;j<j1;j++) occ[i*NJ+j]=1;});
+(function(){const K=5, tmp=new Uint8Array(NI*NJ);
+  function pass(src,dst,alongI,keep){      // a run of 2K+1 cells along one axis: any set (keep 0), or all set (keep 1)
+    const n=alongI?NI:NJ, m=alongI?NJ:NI, w=2*K+1;
+    for(let b=0;b<m;b++){let s=0; const at=function(a){return alongI?a*NJ+b:b*NJ+a;};
+      for(let a=-K;a<n+K;a++){if(a+K<n) s+=src[at(a+K)]; if(a-K-1>=0) s-=src[at(a-K-1)]; if(a>=0&&a<n){const lo=Math.max(0,a-K), hi=Math.min(n-1,a+K); dst[at(a)]=keep?(s===w&&hi-lo+1===w?1:0):(s>0?1:0);}}}}
+  pass(occ,tmp,true,0); pass(tmp,occ,false,0); pass(occ,tmp,true,1); pass(tmp,occ,false,1);})();
+function filled(x,z){const i=Math.floor((x-BX0)/CS), j=Math.floor((z-BZ0)/CS); return i>=0&&j>=0&&i<NI&&j<NJ&&occ[i*NJ+j]===1;}
+/* the outline, traced along the grid lines and laid back on the plan's own edges */
+const XV=[], ZV=[]; ALL.forEach(function(r){XV.push(r[0],r[1]); ZV.push(r[2],r[3]);});
+function snap(v,vs){let b=v, d=0.06; vs.forEach(function(q){const e=Math.abs(q-v); if(e<d){d=e; b=q;}}); return b;}
+const SEG=[];
+(function(){
+  for(let i=1;i<NI;i++){let run=null; for(let j=0;j<=NJ;j++){const a=j<NJ?occ[(i-1)*NJ+j]:0, b=j<NJ?occ[i*NJ+j]:0, o=a===b?0:a?1:-1;
+    if(run&&run.out!==o){SEG.push({axis:'x',c:BX0+i*CS,s0:BZ0+run.j*CS,s1:BZ0+j*CS,out:run.out}); run=null;} if(!run&&o) run={j:j,out:o};}}
+  for(let j=1;j<NJ;j++){let run=null; for(let i=0;i<=NI;i++){const a=i<NI?occ[i*NJ+j-1]:0, b=i<NI?occ[i*NJ+j]:0, o=a===b?0:a?1:-1;
+    if(run&&run.out!==o){SEG.push({axis:'z',c:BZ0+j*CS,s0:BX0+run.i*CS,s1:BX0+i*CS,out:run.out}); run=null;} if(!run&&o) run={i:i,out:o};}}
+  SEG.forEach(function(s){const cv=s.axis==='x'?XV:ZV, sv=s.axis==='x'?ZV:XV; s.c=snap(s.c,cv); s.s0=snap(s.s0,sv); s.s1=snap(s.s1,sv);});
+})();
+/* each stretch of it: ours (drawn from our own walls, below) or the others' */
+const FACES=[];
+SEG.forEach(function(s){const pt=function(u){return s.axis==='x'?[s.c-s.out*0.3,u]:[u,s.c-s.out*0.3];};
+  let u0=s.s0, cur=null; const sv=s.axis==='x'?ZV:XV;
+  for(let u=s.s0+0.01;u<=s.s1+0.011;u+=0.02){const p=pt(Math.min(u,s.s1-0.01)), o=inOurs(p[0],p[1]);
+    if(cur===null) cur=o; else if(o!==cur){const cut=snap(u-0.01,sv); if(!cur) FACES.push(Object.assign({},s,{s0:u0,s1:cut})); u0=cut; cur=o;}}
+  if(!cur&&s.s1-u0>0.05) FACES.push(Object.assign({},s,{s0:u0,s1:s.s1}));});
+/* a face's own frame: x along it from its start, +z out of it */
+function faceAt(f,y){const o=0.012, g=P.grp();
+  if(f.axis==='x'){g.position.set(f.c+f.out*o,y||0,f.out>0?f.s1+o:f.s0-o); g.rotation.y=f.out>0?R/2:-R/2;}
+  else{g.position.set(f.out>0?f.s0-o:f.s1+o,y||0,f.c+f.out*o); g.rotation.y=f.out>0?0:R;}
+  return g;}
+function at(f,u){return 0.012+(f.axis==='x'?(f.out>0?f.s1-u:u-f.s0):(f.out>0?u-f.s0:f.s1-u));}
+function on(f,axis,c,out,u){return f.axis===axis&&f.out===out&&Math.abs(f.c-c)<0.08&&u>f.s0-0.01&&u<f.s1+0.01;}
+/* the windows, as buildFlat (floors.js) cuts them: [face, u, width, y0, y1, floor-from, kind] */
+const WINS=[];
+for(const n in PL.flats){const an=PL.analyse(+n), d0=PL.doorOf(+n,0);
+  an.edges.forEach(function(e){if(e.kind!=='out') return; const rm=an.rooms[e.room], len=e.s1-e.s0, wet=rm.type==='bath'||rm.type==='wc'; if(len<=1.3) return;
+    const ww=wet?0.6:Math.min(rm.type==='living'?2.0:1.5,len-0.7), m=(e.s0+e.s1)/2, side=e.axis+(e.out>0?'+':'-');
+    const door0=rm.id===d0[0]&&side===d0[1]&&d0[3]>m-ww/2&&d0[2]<m+ww/2;      // on our floor flat 1's own door is in that wall, and no window
+    const f=FACES.find(function(q){return on(q,e.axis,e.c,e.out,m);}); if(!f) return;
+    WINS.push({f:f,u:m,w:ww,y0:wet?1.5:0.9,y1:wet?2.1:2.2,from:door0?1:0,type:rm.type});
+    if(door0) WINS.push({f:f,u:(d0[2]+d0[3])/2,w:d0[3]-d0[2],y0:0,y1:2.05,from:0,only:0,door:true});});}
+(function(){const f=FACES.find(function(q){return on(q,'x',X0,1,LB.ZO);}); if(f) WINS.push({f:f,u:LB.ZO,w:1.3,y0:0,y1:2.5,from:0,only:0,door:true});      // the doorway from the street,
+  const g=LB.sideGate, m=g&&(g[0]+g[1])/2, h=g&&FACES.find(function(q){return on(q,'z',ZC,1,m);}); if(h) WINS.push({f:h,u:m,w:g[1]-g[0],y0:0,y1:2.05,from:0,only:0,door:true});})();      // and the side door out of the passage
+/* the faces: our floor (hidden to look inside), the floors above and the parapet, the floor below; the street front apart, as the street
+   draws its own at eye level */
+const TOPP=ROOF+1.0;
+FACES.forEach(function(f,k){
+  const len=f.s1-f.s0+0.024, street=f.axis==='x'&&f.out>0&&Math.abs(f.c-X0)<0.05, underL=f.axis==='z'?(f.s0>XF-0.1&&f.c>6.3):(f.c>XF-0.1&&f.s0>6.3), ws=WINS.filter(function(w){return w.f===f;});
+  [[0,FF,[0]],[FF,TOPP,[1,2,3]]].forEach(function(band){
+    const fg=faceAt(f,0), holes=[];
+    band[2].forEach(function(fl){const y=fl*FF; ws.forEach(function(w){if(fl<w.from||(w.only!=null&&w.only!==fl)) return; const s=at(f,w.u); holes.push([s-w.w/2,s+w.w/2,y+w.y0,y+w.y1]);
+      if(w.door){P.box(0.06,w.y1-w.y0+0.06,0.1,0xf1efe8,s-w.w/2-0.03,y+(w.y0+w.y1)/2,0.03,fg); P.box(0.06,w.y1-w.y0+0.06,0.1,0xf1efe8,s+w.w/2+0.03,y+(w.y0+w.y1)/2,0.03,fg); P.box(w.w+0.12,0.08,0.1,0xf1efe8,s,y+w.y1+0.04,0.03,fg); return;}
+      win(fg,s,y+w.y0,w.w,w.y1-w.y0,{bars:fl===0&&w.type!=='bath'&&w.type!=='wc',ac:w.w>1.2&&(k+fl)%3===0,curtain:w.type!=='bath'&&w.type!=='wc'});});});
+    wall(fg,0,len,band[0],band[1],holes);
+    (street?BSf:band[0]?BUp:BSk).bake(fg);});
+  if(street||underL) return;      // the floor below along the street and the yard is the street's and the yard's own drawing
+  const fb=faceAt(f,0); wall(fb,0,len,GY,0); for(let s=1.4;s<len-1.0;s+=3.2) win(fb,s,GY+1.0,0.9,0.7,{down:0.6,bars:true,curtain:false,lit:0}); BLo.bake(fb);});
+/* the flat's own outside walls, read from the flat itself, so the floors above repeat its windows where they are */
+const north=[], west=[];
 for(const k in A.walls){const w=A.walls[k]; if(FL.indexOf(w.room)<0) continue;
   if(w.n[0]<-0.99&&w.a[0]>5) north.push({x:w.a[0]+0.2,z0:Math.min(w.a[1],w.b[1]),z1:Math.max(w.a[1],w.b[1]),wins:w.wins.map(function(q){const za=w.a[1]+w.d[1]*q[0], zb=w.a[1]+w.d[1]*q[1]; return [Math.min(za,zb),Math.max(za,zb),q[2],q[3]];})});
   if(w.n[1]>0.99&&Math.abs(w.a[1]-AZ)<0.01) west.push({x0:Math.min(w.a[0],w.b[0]),x1:Math.max(w.a[0],w.b[0]),wins:w.wins.map(function(q){const xa=w.a[0]+w.d[0]*q[0], xb=w.a[0]+w.d[0]*q[1]; return [Math.min(xa,xb),Math.max(xa,xb),q[2],q[3]];})});}
 north.sort(function(a,b){return a.z0-b.z0;});
-const runs=[];                                           // the front along the flat, z from the west wall to the lobby, as runs of one depth
+const runs=[];                                           // the front along the flat, z from the west wall to the stairwell, as runs of one depth
 north.forEach(function(s,i){const z0=i===0?ZW:Math.max(s.z0,runs[runs.length-1].z1), z1=i===north.length-1?L:s.z1; runs.push({x:s.x,z0:z0,z1:z1,wins:s.wins});});
 for(let i=0;i<runs.length-1;i++){if(runs[i+1].z0>runs[i].z1+0.001){runs[i].z1=runs[i+1].z0;}}
-runs.push({x:XF+0.2,z0:L,z1:ZC,wins:[],lobby:true});
-/* along one run of the front, from y0 to y1, with these openings; and the steps between runs */
+/* a face of the flat: a group at its origin, x along the face, +z out of it */
+function faceG(side,a){return side==='n'?P.grp(0,0,a,null,R/2):P.grp(a,0,ZW,null,R);}
+function facePos(side,a,xf){const g=faceG(side,a); if(side==='n') g.position.x=xf; return g;}
 function frontRun(B,rn,y0,y1,holes){const fg=facePos('n',rn.z1,rn.x); wall(fg,0,rn.z1-rn.z0,y0,y1,(holes||[]).map(function(h){return [rn.z1-h[1],rn.z1-h[0],h[2],h[3]];})); B.bake(fg); return fg;}
 function jogs(B,y0,y1){for(let i=0;i<runs.length-1;i++){const a=runs[i], b=runs[i+1]; if(Math.abs(a.x-b.x)<0.01) continue;
   const fg=a.x>b.x?P.grp(b.x,0,a.z1,null,0):P.grp(a.x,0,a.z1,null,R); wall(fg,0,Math.abs(a.x-b.x),y0,y1); B.bake(fg);}}
-/* ---- the outside of our own floor, round the flat and the lobby: shown with the whole building, taken away to look inside ---- */
-runs.forEach(function(rn){
-  if(rn.lobby){const fg=facePos('n',rn.z1,rn.x-0.19), DW=[[0.2,1.5],[ZC-LB.Z2-0.65,ZC-LB.Z2+0.65]];      // the lobby's front, just behind the street's own drawing of it, open at the two doorways
-    wall(fg,0,rn.z1-rn.z0,0,H,DW.map(function(d){return [d[0],d[1],0,2.5];}));
-    [[2.7,1.1,0.15,2.3],[4.55,2.2,0.5,1.9],[6.65,1.4,0.5,1.9],[9.7,1.1,0.15,2.3],[11.3,1.7,0.5,1.9]].forEach(function(q){win(fg,q[0],q[2],q[1],q[3],{down:1,bars:q[1]>1.3,lit:0,curtain:false});});
-    BSk.bake(fg); return;}
-  frontRun(BSk,rn,0,H,rn.wins.map(function(q){return [q[0],q[1],q[2],q[3]];}));});
+runs.forEach(function(rn){frontRun(BSk,rn,0,H,rn.wins.map(function(q){return [q[0],q[1],q[2],q[3]];}));});
 jogs(BSk,0,H);
-(function(){const fg=faceG('w',XN); wall(fg,0,XN+0.12,0,H,west.map(function(w){return w.wins.map(function(q){return [XN-q[1],XN-q[0],q[2],q[3]];});}).reduce(function(a,b){return a.concat(b);},[])); BSk.bake(fg);})();
-/* ---- the rest of our floor, flats 1 to 4 and 6, and the semi-basement: always. The other flats are a low slab, their footprint at
-   floor level: our own walls are seen through from outside, so nothing of theirs may stand between the camera and our rooms ---- */
-(function(){
-  const cut=0xc4c8c2, side=0xe6e2d8, SL=0.12;
-  [[XS+0.25,LB.XL-0.22,ZW+0.25,ZE-0.25],[LB.XL-0.22,-0.22,ZW+0.25,L-0.22],[LB.XL-0.22,LB.CX0-0.22,LB.RZ+0.55,ZC-0.22],[LB.XL-0.22,XF-0.05,ZC+0.22,ZE-0.25],[LB.CX1+0.22,XF-0.05,LB.Z2+1.37,LB.ZE-0.22]].forEach(function(q){      // kept clear of the lobby's and the flat's walls
-    BLo.box(q[1]-q[0],SL,q[3]-q[2],side,(q[0]+q[1])/2,SL/2,(q[2]+q[3])/2); BLo.box(q[1]-q[0]-0.02,0.012,q[3]-q[2]-0.02,cut,(q[0]+q[1])/2,SL+0.006,(q[2]+q[3])/2);});
-  [[XS+0.2,-7.01,ZW+0.2,ZE-0.2],[-6.99,XF-0.05,ZC+0.01,ZE-0.2]].forEach(function(q){BLo.box(q[1]-q[0],-GY-0.02,q[3]-q[2],0xe2dccd,(q[0]+q[1])/2,GY/2-0.01,(q[2]+q[3])/2);});      // the semi-basement where the yard's own drawing of it stops
-})();
-/* the west wall: the stretch past the flat on our floor, and the semi-basement where it opens onto the gap by Beit HaChayal */
-(function(){const fg=faceG('w',-0.12); wall(fg,0,-0.12-XS,0,H);
-  for(let s=1.6;s<-0.12-XS-0.8;s+=3.4){win(fg,s,0.95,1.2,1.3,{bars:true}); win(fg,s+1.5,1.45,0.5,0.6,{down:0,curtain:false});}
-  const fb=faceG('w',XN); wall(fb,0,XN-XS,GY,0); for(let s=XN+8.2;s<XN-XS-0.8;s+=3.0) win(fb,s,GY+1.0,0.9,0.7,{down:0.6,bars:true,curtain:false});      // under the flat the yard's own drawing of the floor below stands in front
-  BLo.bake(fg); BLo.bake(fb);})();
-/* the back, toward the buildings on David St, and the east end: plaster down to the floor below, our floor's windows */
-const BACK=[];                                            // the bays along the back: kind, width
-(function(){let s=0.6; const r=A.rng(41); while(s<ZE-ZW-2.5){const k=r(), w=k<0.35?3.0:k<0.7?1.5:1.1; BACK.push([s,w,k<0.35?'balc':k<0.7?'win':'small']); s+=w+(k<0.35?0.9:1.4);}})();
-function backFloor(fg,y,lowFloor){BACK.forEach(function(b,i){
-  if(b[2]==='balc'){if(lowFloor) win(fg,b[0]+b[1]/2,y+0.9,b[1]*0.8,1.4,{bars:true}); else balcony(fg,b[0],b[0]+b[1],y,1.1,(i+Math.round(y))%3?'closed':'open');}
-  else if(b[2]==='win') win(fg,b[0]+b[1]/2,y+0.95,b[1],1.35,{ac:(i+Math.round(y))%3===0,bars:lowFloor});
-  else win(fg,b[0]+b[1]/2,y+1.45,b[1]*0.6,0.62,{down:0,curtain:false});});}
-(function(){const fg=faceG('s',ZW); wall(fg,0,ZE-ZW,GY,H); backFloor(fg,0,true); BLo.bake(fg);
-  const fe=faceG('e',XS); wall(fe,0,XN-XS,GY,H); for(let s=2;s<XF-XS-2;s+=4.2) win(fe,s,0.95,1.3,1.3,{bars:true}); BLo.bake(fe);})();
-/* ---- the floors above: three of them, then the roof. Only with the whole building ---- */
+(function(){const fg=faceG('w',XN); wall(fg,0,XN+0.12,0,H,west.map(function(w){return w.wins.map(function(q){return [XN-q[1],XN-q[0],q[2],q[3]];});}).reduce(function(a,b){return a.concat(b);},[])); BSk.bake(fg);
+  const fb=faceG('w',XN); wall(fb,0,XN+0.12,GY,0); BLo.bake(fb);})();      // under the flat, the gap by Beit HaChayal; the yard's own drawing of the floor below stands in front
 function balcony(fg,s0,s1,y,d,kind){                   // a balcony on its slab, open with a railing or closed in with sliding panes and shutters
   const w=s1-s0, xc=(s0+s1)/2; P.box(w,0.16,d,0xe2dccd,xc,y-0.08,d/2,fg); P.box(w,0.05,0.04,0xc9c2b1,xc,y-0.16,d,fg);
   P.box(w,1.0,0.08,wallHex,xc,y+0.5,d-0.04,fg); P.box(0.1,1.0,d,wallHex,s0+0.05,y+0.5,d/2,fg); P.box(0.1,1.0,d,wallHex,s1-0.05,y+0.5,d/2,fg); P.box(w,0.06,0.12,0xcfc8b6,xc,y+1.02,d-0.04,fg);
@@ -342,51 +384,61 @@ function balcony(fg,s0,s1,y,d,kind){                   // a balcony on its slab,
     for(let k=0;k<np;k++){const px=s0+pw*(k+0.5); P.box(0.04,ph,0.06,0xd9dbdc,px-pw/2+0.02,y+1.06+ph/2,d-0.06,fg);
       P.geo(new THREE.PlaneGeometry(pw-0.05,ph-0.05),k%2?0x3c4850:0xeeece6,px,y+1.06+ph/2,d-0.05,fg);}
     P.box(w+0.04,0.06,d+0.08,0xcfc8b6,xc,y+FF-0.15,d/2,fg);}}
+/* ---- the floors above over the flat, and the roof. Only with the whole building ---- */
 (function(){
-  const top=ROOF+1.0;
-  /* the front over the flat: its runs, its steps, and its windows on every floor */
+  /* the front over the flat: its runs, its steps, and its windows on every floor; the west wall, toward Beit HaChayal */
   runs.forEach(function(rn,ri){
-    const fg=facePos('n',rn.z1,rn.x); wall(fg,0,rn.z1-rn.z0,H,top);
+    const fg=facePos('n',rn.z1,rn.x); wall(fg,0,rn.z1-rn.z0,H,TOPP);
     for(let f=1;f<=3;f++){const y=f*FF;
       rn.wins.forEach(function(q){const w=q[1]-q[0], h=q[3]-q[2], s=rn.z1-(q[0]+q[1])/2; win(fg,s,y+q[2],w,h,{ac:false});
-        if(h>1.0&&w>1.2&&ri<2) {const a=det.ac({brand:['electra','tadiran','haier'][f%3],bracket:true,up:0.3,drain:0.8}); a.position.set(s,y+q[3]+0.45,0); fg.add(a);}});      // an air conditioner over the bedroom window, as over ours
-      if(rn.lobby){                                                                        // over the lobby: the stairwell's window at each half landing, then two flats a floor
-        const s=(rn.z1-(LB.EH+L)/2); win(fg,s,y-0.4,1.1,1.4,{down:0,curtain:false,lit:0});
-        balcony(fg,ZC-12.6,ZC-9.2,y,1.2,f===1?'open':'closed');
-        win(fg,ZC-14.6+0.75,y+0.95,1.5,1.35,{ac:true}); win(fg,ZC-16.4+0.8,y+0.95,1.6,1.35,{}); win(fg,ZC-18.0+0.3,y+1.5,0.5,0.6,{down:0,curtain:false});}}
-    if(rn.lobby) win(fg,rn.z1-(LB.EH+L)/2,ROOF-0.4,1.1,1.4,{down:0,curtain:false,lit:0});
+        if(h>1.0&&w>1.2&&ri<2) {const a=det.ac({brand:['electra','tadiran','haier'][f%3],bracket:true,up:0.3,drain:0.8}); a.position.set(s,y+q[3]+0.45,0); fg.add(a);}});}      // an air conditioner over the bedroom window, as over ours
     BUp.bake(fg);});
-  jogs(BUp,H,top);
-  /* the west wall, toward Beit HaChayal: the bedrooms' windows on every floor, and the flats behind them */
-  (function(){const fg=faceG('w',XN); wall(fg,0,XN-XS,H,top);
-    for(let f=1;f<=3;f++){const y=f*FF;
-      west.forEach(function(w){w.wins.forEach(function(q){win(fg,XN-(q[0]+q[1])/2,y+q[2],q[1]-q[0],q[3]-q[2],{});});});
-      for(let s=XN+0.12+1.6;s<XN-XS-0.8;s+=3.4){win(fg,s,y+0.95,1.2,1.3,{}); win(fg,s+1.5,y+1.45,0.5,0.6,{down:0,curtain:false});}}
-    for(let k=0;k<2;k++) P.cyl(0.05,top-GY,0x9aa0a2,XN-XS-3-k*9,(top+GY)/2,0.08,fg,8);
+  jogs(BUp,H,TOPP);
+  (function(){const fg=faceG('w',XN); wall(fg,0,XN+0.12,H,TOPP);
+    for(let f=1;f<=3;f++){const y=f*FF; west.forEach(function(w){w.wins.forEach(function(q){win(fg,XN-(q[0]+q[1])/2,y+q[2],q[1]-q[0],q[3]-q[2],{});});});}
+    P.cyl(0.05,TOPP-GY,0x9aa0a2,XN-1.0,(TOPP+GY)/2,0.08,fg,8);
     BUp.bake(fg);})();
-  /* the back and the east end */
-  (function(){const fg=faceG('s',ZW); wall(fg,0,ZE-ZW,H,top); for(let f=1;f<=3;f++) backFloor(fg,f*FF,false);
-    for(let k=0;k<4;k++) P.cyl(0.05,top-GY,0x9aa0a2,4+k*9.5,(top+GY)/2,0.1,fg,8);
-    BUp.bake(fg);
-    const fe=faceG('e',XS); wall(fe,0,XN-XS,H,top); for(let f=1;f<=3;f++) for(let s=2;s<XF-XS-2;s+=4.2) win(fe,s,f*FF+0.95,1.3,1.3,{ac:f===2}); BUp.bake(fe);
-    const fn=facePos('n',ZE,XF+0.2); wall(fn,0,ZE-ZC,H,top); BUp.bake(fn);})();      // where it stands behind number 12's wing
-  /* the roof: the slab, a parapet round it, the stair hut over our stairwell, water heaters, aerials, a dish */
+  /* the roof: the slab over the outline, a parapet round it, the stair hut over our stairwell, water heaters, aerials, a dish */
   const RG=P.grp(0,0,0);
-  P.box(XN-XS,0.3,ZE-ZW,0xa8a296,(XS+XN)/2,ROOF-0.15,(ZW+ZE)/2,RG);
-  P.box(XN-XS,1.0,0.14,wallHex,(XS+XN)/2,ROOF+0.5,ZW+0.07,RG); P.box(XN-XS,1.0,0.14,wallHex,(XS+XN)/2,ROOF+0.5,ZE-0.07,RG);
-  P.box(0.14,1.0,ZE-ZW,wallHex,XS+0.07,ROOF+0.5,(ZW+ZE)/2,RG); P.box(0.14,1.0,ZE-ZW,wallHex,XF+0.13,ROOF+0.5,(ZW+ZE)/2,RG);
-  P.box(XN-XS+0.1,0.08,0.24,0xcfc8b6,(XS+XN)/2,ROOF+1.04,ZW+0.07,RG); P.box(XN-XS+0.1,0.08,0.24,0xcfc8b6,(XS+XN)/2,ROOF+1.04,ZE-0.07,RG);
-  P.box(0.24,0.08,ZE-ZW,0xcfc8b6,XS+0.07,ROOF+1.04,(ZW+ZE)/2,RG); P.box(0.24,0.08,ZE-ZW,0xcfc8b6,XF+0.13,ROOF+1.04,(ZW+ZE)/2,RG);
+  for(let i=0;i<NI;){let j=0; const runsI=[]; while(j<NJ){if(occ[i*NJ+j]){const j0=j; while(j<NJ&&occ[i*NJ+j]) j++; runsI.push([j0,j]);} else j++;}
+    let i1=i+1; const same=function(ii){let jj=0, k=0; while(jj<NJ){if(occ[ii*NJ+jj]){const a=jj; while(jj<NJ&&occ[ii*NJ+jj]) jj++; if(!runsI[k]||runsI[k][0]!==a||runsI[k][1]!==jj) return false; k++;} else jj++;} return k===runsI.length;};
+    while(i1<NI&&runsI.length&&same(i1)) i1++;
+    runsI.forEach(function(r){const x0=snap(BX0+i*CS,XV), x1=snap(BX0+i1*CS,XV), z0=snap(BZ0+r[0]*CS,ZV), z1=snap(BZ0+r[1]*CS,ZV); P.box(x1-x0,0.3,z1-z0,0xa8a296,(x0+x1)/2,ROOF-0.15,(z0+z1)/2,RG);});
+    i=runsI.length?i1:i+1;}
+  SEG.forEach(function(s){const len=s.s1-s.s0, m=(s.s0+s.s1)/2, c=s.c-s.out*0.07;
+    if(s.axis==='x'){P.box(0.14,1.0,len,wallHex,c,ROOF+0.5,m,RG); P.box(0.24,0.08,len+0.1,0xcfc8b6,c,ROOF+1.04,m,RG);}
+    else{P.box(len,1.0,0.14,wallHex,m,ROOF+0.5,c,RG); P.box(len+0.1,0.08,0.24,0xcfc8b6,m,ROOF+1.04,c,RG);}});
   P.box(LB.XE-LB.SU+0.4,2.5,LB.EH-L+0.4,wallHex,(LB.SU+LB.XE)/2,ROOF+1.25,(L+LB.EH)/2,RG); P.box(0.9,2.05,0.04,0x6a6f72,(LB.SU+LB.XE)/2,ROOF+1.03,L-0.19,RG);
   P.box(LB.XE-LB.SU+0.6,0.1,LB.EH-L+0.6,0xcfc8b6,(LB.SU+LB.XE)/2,ROOF+2.55,(L+LB.EH)/2,RG);
-  const rh=A.rng(7); let n=0;
-  for(let x=XS+2.2;x<XN-3;x+=3.6) for(let z=ZW+2.0;z<ZE-1.5;z+=2.8){if(x>LB.SU-1.5&&x<LB.XE+1.5&&z>L-1.6&&z<LB.EH+1.6) continue; if(rh()<0.42) continue; n++;
-    const hg=P.grp(x,ROOF,z,RG,R/2+(rh()-0.5)*0.15); det.solar(hg,rh);}                                                       // one heater for each flat, turned to the sun
-  for(let i=0;i<4;i++){const ax=XS+3+rh()*(XN-XS-6), az=ZW+2+rh()*(ZE-ZW-4); P.cyl(0.02,2.6,0x9aa0a2,ax,ROOF+1.3,az,RG,6); for(let k=0;k<6;k++) P.box(k%2?0.9:0.7,0.012,0.012,0xa9aeb2,ax,ROOF+2.1+k*0.07,az+(k-3)*0.12,RG);}
-  const dish=P.grp(XS+1.5,ROOF,ZE-3,RG,0.6); P.cyl(0.03,0.6,0x9aa0a2,0,0.3,0,dish,6); P.sph(0.4,0xe9e9e4,0,0.75,0.05,dish,1,1,0.32,16,8).rotation.x=0.5;
+  const inside=function(x,z,m){return filled(x-m,z-m)&&filled(x+m,z-m)&&filled(x-m,z+m)&&filled(x+m,z+m);};
+  const rh=A.rng(7);
+  for(let x=BX0+2.2;x<BX1-1.5;x+=3.6) for(let z=BZ0+2.0;z<BZ1-1.5;z+=2.8){if(!inside(x,z,1.3)) continue; if(x>LB.SU-1.5&&x<LB.XE+1.5&&z>L-1.6&&z<LB.EH+1.6) continue; if(rh()<0.3) continue;
+    const hg=P.grp(x,ROOF,z,RG,R/2+(rh()-0.5)*0.15); det.solar(hg,rh);}                                                       // a heater for each flat, turned to the sun
+  for(let i=0,n=0;i<40&&n<4;i++){const ax=BX0+rh()*(BX1-BX0), az=BZ0+rh()*(BZ1-BZ0); if(!inside(ax,az,0.6)) continue; n++;
+    P.cyl(0.02,2.6,0x9aa0a2,ax,ROOF+1.3,az,RG,6); for(let k=0;k<6;k++) P.box(k%2?0.9:0.7,0.012,0.012,0xa9aeb2,ax,ROOF+2.1+k*0.07,az+(k-3)*0.12,RG);}
+  for(let i=0;i<40;i++){const dx=BX0+rh()*(BX1-BX0), dz=BZ0+rh()*(BZ1-BZ0); if(!inside(dx,dz,0.8)) continue;
+    const dish=P.grp(dx,ROOF,dz,RG,0.6); P.cyl(0.03,0.6,0x9aa0a2,0,0.3,0,dish,6); P.sph(0.4,0xe9e9e4,0,0.75,0.05,dish,1,1,0.32,16,8).rotation.x=0.5; break;}
   BUp.bake(RG);
 })();
-BLo.done('street'); BUp.done('street'); BSk.done('street');
+/* the ground where the satellite outline drew our block wider than the plan: earth up to the street's level, the yard's and the gap's
+   sides a retaining wall, its top the ground's own drawing */
+(function(){
+  const EX1=XF, EZ0=ZW, earth=[];
+  for(let i=Math.max(0,Math.floor((XF-22.4-BX0)/CS));i<NI;){const x=BX0+i*CS; if(x+CS>EX1+0.001) break;
+    const row=function(ii){const out=[]; let j=Math.max(0,Math.ceil((EZ0-BZ0)/CS)); const jm=Math.min(NJ,Math.floor((ZC+14-BZ0)/CS));
+      while(j<jm){if(!occ[ii*NJ+j]){const a=j; while(j<jm&&!occ[ii*NJ+j]) j++; out.push([a,j]);} else j++;} return out;};
+    const r0=row(i), key=JSON.stringify(r0); let i1=i+1; while(BX0+(i1+1)*CS<=EX1+0.001&&JSON.stringify(row(i1))===key) i1++;
+    r0.forEach(function(r){earth.push([snap(BX0+i*CS,XV),snap(BX0+i1*CS,XV),snap(BZ0+r[0]*CS,ZV),snap(BZ0+r[1]*CS,ZV)]);});
+    i=i1;}
+  const pos=[], uv=[];
+  earth.forEach(function(r){BLo.box(r[1]-r[0],U-0.004-GY,r[3]-r[2],0xd3cab6,(r[0]+r[1])/2,(GY+U-0.004)/2,(r[2]+r[3])/2);
+    [[r[0],r[2]],[r[0],r[3]],[r[1],r[3]],[r[0],r[2]],[r[1],r[3]],[r[1],r[2]]].forEach(function(q){pos.push(q[0],U-0.003,q[1]); uv.push((q[1]-GZ0)/GS,(q[0]-GX0)/GS);});});
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.computeVertexNormals();
+  const m=new THREE.Mesh(g,groundMesh.material); m.receiveShadow=true; root.add(m);
+})();
+BLo.done('street'); BUp.done('street'); BSk.done('street'); BSf.done('street');
+const FOOT=[];                                           // the outline as rectangles, for the map
+(function(){for(let i=0;i<NI;i+=4){let j=0; while(j<NJ){if(occ[i*NJ+j]){const a=j; while(j<NJ&&occ[i*NJ+j]) j++; FOOT.push([BX0+i*CS,BX0+Math.min(NI,i+4)*CS,BZ0+a*CS,BZ0+j*CS]);} else j++;}}})();
 
 /* ---------- the pole transformer on the pavement at number 12's corner: a lattice mast, two transformers on a platform, insulators on cross-arms ---------- */
 (function(){
@@ -408,7 +460,7 @@ BLo.done('street'); BUp.done('street'); BSk.done('street');
   [8.4,9.4,10.4].forEach(function(y,i){P.box(i===2?2.0:2.8,0.08,0.1,dk,0,y,0,g);                              // cross-arms, each with its insulators
     [-1,0,1].forEach(function(s){const x=s*(i===2?0.85:1.25); for(let k=0;k<4;k++) P.cyl(0.07,0.06,0x5a3a26,x,y+0.08+k*0.08,0,g,10); P.bar([x,y+0.4,0],[x+s*0.4,y+0.2,1.6],0.008,0x2b2d2f,g,3);});});
   for(let k=0;k<4;k++) P.bar([0.15,6.1,0],[1.1,4.6+k*0.4,-3-k*1.2],0.01,0x1d1f21,g,3);                         // cables down to the café's front
-  const px=XF+SF.KZ-1.25, pz=ZC+0.75; town.bake(g,px,U,pz,0);      // between number 12's corner column, the planters and the bins
+  const px=SF.X0+SF.KZ-1.25, pz=ZC+0.75; town.bake(g,px,U,pz,0);      // between number 12's corner column, the planters and the bins
   proxy(px-0.5,px+0.5,pz-0.5,pz+0.5,U+10.6); if(A.streetBlock) A.streetBlock.push([px-0.55,px+0.55,pz-0.55,pz+0.55]);
 })();
 
@@ -435,7 +487,7 @@ function fig(x,z,s,seed){                                // an old street fig: i
 town.done('street'); crowns.done('street');
 
 /* ---------- names on the map ---------- */
-const tags=[['Number 10, our building',XF-10,ROOF+3,ZC+4],['Beit HaChayal, number 8',XF+2,18,ZC-38],['Mirkin St',XF-20,U+1,ZC-58],['David St',XF-55,U+1,ZC+2],['Moshe Sharet St',XF+60,U+1,ZC+3],['Natan St',XF-10,U+1,ZC+49]]
+const tags=[['Number 10, our building',(BX0+BX1)/2,ROOF+3,10],['Beit HaChayal, number 8',XF+2,18,ZC-38],['Mirkin St',XF-20,U+1,ZC-58],['David St',XF-55,U+1,ZC+2],['Moshe Sharet St',XF+60,U+1,ZC+3],['Natan St',XF-10,U+1,ZC+49]]
   .map(function(q){return {el:A.tag(q[0]),pos:new THREE.Vector3(q[1],q[2],q[3])};});
 A.labelFns.push(function(){const show=A.state.labels&&!A.simsOn&&A.state.scope==='building'; tags.forEach(function(t){A.place(t.el,t.pos,show);});});
 
@@ -445,6 +497,7 @@ const fog=A.scene.fog=new THREE.Fog(0xe9ece7,190,520);
 A.frameFns.push(function(){
   const w=!!(A.bldWhole&&A.bldWhole());
   if(w!==whole){whole=w; up.visible=skin.visible=w; A.touch(3);}
+  sfr.visible=w&&!(SF.fac&&SF.fac.visible);      // the street front: the street's own drawing of it at eye level
   const b=A.state.scope==='building', far=b?700:(A.farOut&&A.farOut())||100; ctl.maxDistance=b?260:50;      // in the flat the old short view keeps the depth fine
   if(cam.far!==far){cam.far=far; cam.updateProjectionMatrix();}
   A.renderer.getClearColor(fog.color);
@@ -453,5 +506,5 @@ A.frameFns.push(function(){
    taken for the lobby and cut with it */
 let layered=false;
 A.frameFns.push(function(){if(layered||A.LAYER_OUT==null) return; layered=true; [root].concat(shade).forEach(function(o){o.traverse(function(m){m.layers.set(A.LAYER_OUT);});});});
-A.building={covers:function(p){return p.x>XS&&p.x<XN+0.25&&p.z>ZW&&p.z<ZE&&p.y<ROOF;},warp:warp,pt:pt,XS:XS,ZW:ZW,ZE:ZE,ROOF:ROOF,centre:new THREE.Vector3((XS+XN)/2,0,(ZW+ZE)/2),ground:groundMesh};
+A.building={covers:function(p){return p.y<TOPP&&filled(p.x,p.z);},warp:warp,pt:pt,foot:FOOT,ROOF:ROOF,ground:groundMesh};
 })();

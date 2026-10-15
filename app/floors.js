@@ -14,9 +14,16 @@ const LV=A.levels={};
 const NAMES={'-1':'Shelter',1:'First floor',2:'Second floor',3:'Third floor'};
 const DESIGN={1:'c',2:'j',3:'k'};                          // how the flat over ours is furnished, floor by floor
 LV[-1]={y:LO,spawn:[SU-0.35,zA],pass:[],block:[]};
+LV[0]={y:0,spawn:[0.9,L+0.6],pass:[],block:[]};      // our own floor: the flats round ours, behind their doors
 for(let f=1;f<=UPS;f++) LV[f]={y:f*FF,spawn:[SU-0.35,zB],pass:[],block:[]};
 /* the landing on each floor, and the shelter's own, are lobby rooms of their own */
-[-1].concat([1,2,3].slice(0,UPS)).forEach(function(f){A.addRoom('land'+f,{name:f<0?'Stairs down':'Landing, '+NAMES[f].toLowerCase(),rs:[[XB,SU,L,EH]],win:null,dl:0.85,node:'hall',on:true,ext:true,lvl:f});});      // part of the stairwell: the lobby's light is theirs
+[-1].concat([1,2,3].slice(0,UPS)).forEach(function(f){A.addRoom('land'+f,{name:f<0?'Stairs down':'Landing, '+NAMES[f].toLowerCase(),rs:f<0?[[XB,SU,L,EH]]:[[XB,SU,L,EH],[LB.XL,SU,L+LB.D4,LB.RZ],[LB.CX0,LB.CX1,LB.RZ,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC]],win:null,dl:0.85,node:'hall',on:true,ext:true,lvl:f});});      // part of the stairwell: the lobby's light is theirs. Upstairs the landing is as wide as ours, and the corridor and the hall over the entrance go on as on our floor
+/* the flats of the plan (plan.js) on every floor, ours too: their rooms */
+const PL=A.PLAN, PF=[1,2,3,4,6];
+function pkey(n,f){return 'f'+n+'@'+f;}
+function proom(n,f,id){return 'p'+f+'.'+n+':'+id;}
+for(let f=0;f<=UPS;f++) PF.forEach(function(n){PL.analyse(n).rooms.forEach(function(rm){A.addRoom(proom(n,f,rm.id),{name:rm.name,rs:[rm.r],win:null,dl:0.9,node:'flat'+n+'@'+f,on:true,ext:true,lvl:f||undefined,
+  navIf:function(){const d=doors[pkey(n,f)]; return !d||!d.locked;}});});});      // on our floor, walked into only once its door is open
 /* the flat over ours, on each floor: our rooms' outlines, its own lights */
 for(let f=1;f<=UPS;f++) FLAT.forEach(function(k){const r=A.rooms[k]; A.addRoom(k+'@'+f,{name:r.name,rs:r.rs.map(function(q){return q.slice();}),win:null,dl:r.dl,node:'up'+f,on:true,ext:true,lvl:f,of:k});});
 
@@ -39,19 +46,27 @@ function hang(key,f,hx,hz,closed,open,room,col,no,w){
   face.position.set(w/2,1.02,0.0215); face.scale.x=(w-0.02)/0.8; d.p.add(face); doors[key]=d; return d;
 }
 const LDW=LB.landDoors.west, LDS=LB.landDoors.south;
-/* flat numbers: ours is 5 on the floor over the semi-basement; each floor above has the next ones */
-const NUM={1:[9,10],2:[13,14],3:[17,18]};
+/* flat numbers, from the plan: 1 to 6 on our floor (ours is 5), 7 to 12 on the next, and so on */
+function NUMOF(n,f){return f*6+n;}
+const NUM={1:[11],2:[17],3:[23]};
+/* where a flat's front door is: the side of its room it is in, the doorway along it, the plane the leaf hangs in (on our floor, the lobby's
+   wall in front of it), and which way it swings */
+function doorSpec(n,f){const d=PL.doorOf(n,f), rm=PL.analyse(n).rooms.find(function(q){return q.id===d[0];}), r=rm.r, side=d[1];
+  const c={'x+':r[1],'x-':r[0],'z+':r[3],'z-':r[2]}[side], sg=side[1]==='+'?1:-1, off=f===0&&!(n===1)?0.1:0.06, plane=c+sg*off;
+  const along=side[0]==='x'?'z':'x', hx=along==='z'?plane:d[2], hz=along==='z'?d[2]:plane;
+  const closed=along==='z'?-R/2:0, open=along==='z'?(sg>0?-R*0.97:-0.03):(sg>0?R/2:-R/2);
+  const mid=(d[2]+d[3])/2, ix=side[0]==='x'?c-sg*0.6:mid, iz=side[0]==='x'?mid:c-sg*0.6, ox=side[0]==='x'?plane+sg*0.6:mid, oz=side[0]==='x'?mid:plane+sg*0.6;
+  return {room:rm, side:side, c:c, sg:sg, plane:plane, u0:d[2], u1:d[3], hx:hx, hz:hz, closed:closed, open:open, ix:ix, iz:iz, ox:ox, oz:oz, h:Math.atan2(ox-ix,oz-iz)};}
+const DOORC=['#a9aeb1','#8a7f72','#9aa6b0','#7d6a5a','#6f7f75','#b9b2a6'];
 function landingDoors(){
-  for(let f=1;f<=UPS;f++){
-    hang('over'+f,f,LDS[0],L,0,R/2,'land'+f,['#a9aeb1','#7d6a5a','#9aa6b0'][f-1],String(NUM[f][0]),LDS[1]-LDS[0]);      // over ours, hung as ours is: it swings in toward the flat
-    hang('west'+f,f,XB,LDW[1],R/2,R*0.97,'land'+f,['#8a7f72','#a9aeb1','#6f7f75'][f-1],String(NUM[f][1]),LDW[1]-LDW[0]);      // to the west
-  }
+  for(let f=1;f<=UPS;f++) hang('over'+f,f,LDS[0],L,0,R/2,'land'+f,['#a9aeb1','#7d6a5a','#9aa6b0'][f-1],String(NUM[f][0]),LDS[1]-LDS[0]);      // over ours, hung as ours is: it swings in toward the flat
+  for(let f=0;f<=UPS;f++) PF.forEach(function(n){const s=doorSpec(n,f); hang(pkey(n,f),f,s.hx,s.hz,s.closed,s.open,f?'land'+f:'hall',DOORC[(n+f)%DOORC.length],String(NUMOF(n,f)),s.u1-s.u0);});
   hang('shelter',-1,XB,LDW[1],R/2,R*0.97,'land-1','#5a6a5e','מקלט',LDW[1]-LDW[0]); doors.shelter.locked=false;      // the shelter is open to all
 }
 
 /* ---------- the flat over ours: our flat's shell, built again on each floor, with its own materials and lights ---------- */
 const lvlGroups={};          // floor -> group of what was built for it
-function groupFor(f){if(!lvlGroups[f]){const g=new THREE.Group(); g.visible=false; g.userData.lvlRoot=f; scene.add(g); lvlGroups[f]=g;} return lvlGroups[f];}
+function groupFor(f){if(!lvlGroups[f]){const g=new THREE.Group(); g.visible=+f===0; g.userData.lvlRoot=f; scene.add(g); lvlGroups[f]=g;} return lvlGroups[f];}
 const matRoom=new Map();     // our materials -> [room, lighting entry]
 function readMats(){matRoom.clear(); for(const k in A.rooms){if(A.rooms[k].lvl) continue; A.rooms[k].mats.forEach(function(e){matRoom.set(e.m,[k,e]);});}}
 function inFlat(b){return b.min.x>-0.35&&b.max.x<D.BXB+0.35&&b.min.z>A.AZ-0.4&&b.max.z<L+0.07&&b.min.y>-0.4&&b.max.y<H+0.4;}
@@ -110,14 +125,7 @@ function buildOver(f){
   g.traverse(function(m){if(m.isMesh&&m.userData.lvl==null) m.userData.lvl=f;});
 }
 
-/* ---------- the flat to the west on each floor, and the shelter: built room by room ---------- */
-/* the west flat: on the building's back wall (z=ZW), so its living room and second bedroom get the windows. Entrance hall by the landing,
-   a corridor down the middle, kitchen open to the living room, bathroom, two bedrooms. x runs from the landing (0) west; z from the back wall. */
-const WZ0=A.AZ-0.2+0.12, WX0=-7.6;
-const WROOMS={            // [x0,x1,z0,z1]
-  living:[WX0,-2.6,WZ0,1.4], bedB:[-2.6,0,WZ0,1.4], kitchen:[WX0,-4.4,1.4,4.4], hall2:[-4.4,-3.2,1.4,EH], bath:[-3.2,0,1.4,4.4], bedA:[WX0,-4.4,4.4,EH], foyer:[-3.2,0,4.4,EH]};
-const WNAMES={living:'Living room',bedB:'Bedroom',kitchen:'Kitchen',hall2:'Corridor',bath:'Bathroom',bedA:'Bedroom',foyer:'Entrance'};
-for(let f=1;f<=UPS;f++) for(const k in WROOMS){const r=WROOMS[k]; A.addRoom('w'+f+':'+k,{name:WNAMES[k],rs:[r],win:null,dl:0.9,node:'west'+f,on:true,ext:true,lvl:f});}
+/* ---------- the shelter, under the lobby ---------- */
 const SH=[-6.5,0,L+0.05,EH+3.0];             // the shelter, under the lobby
 A.addRoom('shelter',{name:'Shelter',rs:[SH],win:null,dl:0.7,node:'shelter',on:true,ext:true,lvl:-1});
 
@@ -163,99 +171,112 @@ function against(p,room,r,side,t,type,ci,cfg,gap){const s=size(type), g0=gap||0.
   if(side==='N') return put(p,room,type,ci,r[0]+(r[1]-r[0])*t,r[3]-s.d/2-g0,0,-1,0,cfg);
   if(side==='W') return put(p,room,type,ci,r[0]+s.d/2+g0,r[2]+(r[3]-r[2])*t,1,0,0,cfg);
   return put(p,room,type,ci,r[1]-s.d/2-g0,r[2]+(r[3]-r[2])*t,-1,0,0,cfg);}
-function pick(rng,list){return list[Math.floor(rng()*list.length)];}
+function choose(rng,list){return list[Math.floor(rng()*list.length)];}
 function colOf(rng,type){const d=A.CAT[type]; return d?Math.floor(rng()*d.col.length):0;}
 
-const westWalls={}, westBuilt={};
-function buildWest(f){
-  if(westBuilt[f]) return; westBuilt[f]=true;
-  const g=groupFor(f), p=new THREE.Group(); p.position.y=LV[f].y; g.add(p);
-  const rng=A.rng(100+f*17), K=A.kit, RK=function(k){return 'w'+f+':'+k;}, W=WROOMS, list=westWalls[f]=[], pass=LV[f].pass;
-  const wallC=[0xf1eee6,0xeef0ec,0xf3ece2][f-1], accent=[0xa9c4ad,0xcfd9e6,0xe8d5c0][f-1];
+/* ---------- a flat of the plan, built room by room: floors, ceilings, walls with their doorways and windows, the front door's doorway,
+   lights, and furniture for what each room is ---------- */
+const planWalls={}, planBuilt={}, ground0=[];      // ground0: the flats round ours, on our floor
+const WALLC=[0xf1eee6,0xeef0ec,0xf3ece2,0xefe9df,0xeceee9,0xf2efe8];
+function buildFlat(n,f){
+  const key=pkey(n,f); if(planBuilt[key]) return; planBuilt[key]=true;
+  const g=groupFor(f), p=new THREE.Group(); p.position.y=LV[f].y; g.add(p); if(!f) ground0.push(p);
+  const an=PL.analyse(n), rs=an.rooms, rng=A.rng(n*31+f*7+3), K=A.kit, RK=function(id){return proom(n,f,id);}, list=planWalls[f]=planWalls[f]||[], pass=LV[f].pass;
+  const wallC=WALLC[(n+f)%WALLC.length], ds=doorSpec(n,f), T=0.1;
   /* floors and ceilings */
-  ['living','bedB','bedA','hall2','foyer'].forEach(function(k){const r=W[k]; floorPlane(p,r[0],r[1],r[2],r[3],tex('parq',256,256,parquet,[(r[1]-r[0])/1.6,(r[3]-r[2])/1.6]),RK(k)); ceilPlane(p,r[0],r[1],r[2],r[3],RK(k));});
-  [['kitchen',tiles('#e9e4da','#bdb6a6',4),0.6],['bath',tiles('#dfe7ea','#9fb0b6',6),0.5]].forEach(function(q){const r=W[q[0]]; floorPlane(p,r[0],r[1],r[2],r[3],tex(q[0]+'t',128,128,q[1],[(r[1]-r[0])/q[2],(r[3]-r[2])/q[2]]),RK(q[0])); ceilPlane(p,r[0],r[1],r[2],r[3],RK(q[0]));});
-  /* walls: the outer ones, then the ones between rooms, each with its doorways */
-  const DOOR=[0,0.86,2.05], dw=function(u){return [u,u+0.86,2.05,H];};
-  wallRun(p,f,WX0,WZ0,0,WZ0,wallC,RK('living'),[[1.0,2.6,0.9,2.2],[5.6,6.8,0.9,2.2]],list);      // the back wall: windows over the yard
-  wallRun(p,f,WX0,WZ0,WX0,EH,wallC,RK('living'),[],list);                                      // the party wall, toward the next flat
-  wallRun(p,f,WX0,EH,0,EH,wallC,RK('bedA'),[],list);
-  wallRun(p,f,-0.06,WZ0,-0.06,L-0.02,wallC,RK('bedB'),[],list);                                   // against the flat over ours
-  wallRun(p,f,-0.07,L,-0.07,EH,wallC,RK('foyer'),[[LDW[0]-L,LDW[1]-L,0,2.05]],list);                // the landing's wall, from inside, with the front door in it
-  wallRun(p,f,WX0,1.4,-2.6,1.4,wallC,RK('kitchen'),[[0.3,2.9,0,2.3],[3.3,4.3,0,2.3]],list);      // kitchen open to the living room; the corridor's arch
-  wallRun(p,f,-2.6,WZ0,-2.6,1.4,wallC,RK('bedB'),[[4.2,5.06,0,2.05]],list);                     // the second bedroom's door from the living room
-  wallRun(p,f,-2.6,1.4,0,1.4,wallC,RK('bath'),[],list);
-  wallRun(p,f,-4.4,1.4,-4.4,EH,wallC,RK('kitchen'),[[3.6,4.46,0,2.05]],list);                   // the bedroom's door off the corridor
-  wallRun(p,f,-3.2,1.4,-3.2,4.4,wallC,RK('bath'),[[1.2,2.06,0,2.05]],list);                     // the bathroom's door
-  wallRun(p,f,WX0,4.4,-4.4,4.4,wallC,RK('bedA'),[],list);
-  wallRun(p,f,-3.2,4.4,0,4.4,wallC,RK('foyer'),[],list);
-  wallRun(p,f,-3.2,4.4,-3.2,EH,wallC,RK('foyer'),[[0.8,2.0,0,2.3]],list);                       // the corridor opens into the entrance hall
-  windowIn(p,WX0+1.8,WZ0+0.03,1.6,0.9,2.2,true,RK('living')); windowIn(p,WX0+6.2,WZ0+0.03,1.2,0.9,2.2,true,RK('bedB'));
-  [[WX0,1.4,-2.6,1.4,0.3,2.9],[WX0,1.4,-2.6,1.4,3.3,4.3],[-2.6,WZ0,-2.6,1.4,4.2,5.06],[-4.4,1.4,-4.4,EH,3.6,4.46],[-3.2,1.4,-3.2,4.4,1.2,2.06],[-3.2,4.4,-3.2,EH,0.8,2.0]].forEach(function(q){opening(pass,q[0],q[1],q[2],q[3],q[4],q[5]);});
-  pass.push([-0.45,0.35,LDW[0]+0.12,LDW[1]-0.12]); pass[pass.length-1].shut=function(){return doors['west'+f].locked;};      // the front door, open only when it is
-  /* inner doors */
-  [['bedB',-2.6,WZ0+5.06,R/2,0,0.86],['bedA',-4.4,1.4+4.46,R/2,R,0.86],['bath',-3.2,1.4+2.06,R/2,0,0.86]].forEach(function(q){      // hinged at the far end of each doorway, swinging into the room
-    const d=A.doorLeaf('w'+f+q[0],q[1],q[2],q[3],q[4],RK(q[0]),q[5]); d.p.position.y=LV[f].y; d.lvl=f; g.add(d.p); d.p.traverse(function(m){m.userData.nonav=true;});});
+  rs.forEach(function(rm){const r=rm.r, k=RK(rm.id), wet=rm.type==='bath'||rm.type==='wc', kit=rm.type==='kitchen';
+    floorPlane(p,r[0],r[1],r[2],r[3],wet?tex('btile',128,128,tiles('#dfe7ea','#9fb0b6',6),[(r[1]-r[0])/0.5,(r[3]-r[2])/0.5]):kit?tex('ktile',128,128,tiles('#e9e4da','#bdb6a6',4),[(r[1]-r[0])/0.6,(r[3]-r[2])/0.6]):tex('parq',256,256,parquet,[(r[1]-r[0])/1.6,(r[3]-r[2])/1.6]),k);
+    ceilPlane(p,r[0],r[1],r[2],r[3],k);});
+  /* walls: each piece inside its own room's edge, so two flats' walls stand back to back and never in one plane */
+  const sides={};      // room -> side -> what is on it: doors, windows
+  function note(rm,side,u0,u1,what){const k=rm.id+side; (sides[k]=sides[k]||[]).push([u0,u1,what]);}
+  function run(axis,c,s0,s1,inward,room,holes){      // a wall along the edge at c (x=c when axis is 'x'), from s0 to s1, set back inward by half its thickness
+    const cc=c+inward*T/2, a=axis==='x'?[cc,s0]:[s0,cc], b=axis==='x'?[cc,s1]:[s1,cc];
+    wallRun(p,f,a[0],a[1],b[0],b[1],wallC,room,holes.map(function(h){return [h[0]-s0,h[1]-s0,h[2],h[3]];}),list);}
+  /* between rooms */
+  an.inner.forEach(function(w){const ra=rs[w.a], rb=rs[w.b], holes=w.open?[[w.open[0],w.open[1],0,w.open[2]]]:[];
+    run(w.axis,w.c,w.s0,w.s1,0,RK(ra.id),holes);
+    if(w.open){opening(pass,w.axis==='x'?w.c:w.open[0],w.axis==='x'?w.open[0]:w.c,w.axis==='x'?w.c:w.open[1],w.axis==='x'?w.open[1]:w.c,0,w.open[1]-w.open[0]);
+      const sa=(w.axis==='x'?(ra.r[1]<=rb.r[0]+0.3?'x+':'x-'):(ra.r[3]<=rb.r[2]+0.3?'z+':'z-')), sb=sa[0]+(sa[1]==='+'?'-':'+'); note(ra,sa,w.open[0],w.open[1],'door'); note(rb,sb,w.open[0],w.open[1],'door');}});
+  /* round the outside of the flat: against a neighbour, a party wall; onto the open air, windows */
+  an.edges.forEach(function(e){const rm=rs[e.room], side=e.axis+(e.out>0?'+':'-'), holes=[], room=RK(rm.id);
+    if(rm.id===ds.room.id&&side===ds.side){const u0=Math.max(e.s0,ds.u0), u1=Math.min(e.s1,ds.u1); if(u1-u0>0.3){holes.push([u0,u1,0,2.05]); note(rm,side,u0,u1,'door');}}
+    if(e.kind==='out'){const len=e.s1-e.s0, wet=rm.type==='bath'||rm.type==='wc';
+      if(len>1.3){const ww=wet?0.6:Math.min(rm.type==='living'?2.0:1.5,len-0.7), m=(e.s0+e.s1)/2, y0=wet?1.5:0.9, y1=wet?2.1:2.2;
+        if(!holes.some(function(h){return h[1]>m-ww/2&&h[0]<m+ww/2;})){holes.push([m-ww/2,m+ww/2,y0,y1]); note(rm,side,m-ww/2,m+ww/2,'window');
+          const wx=e.axis==='x'?e.c-e.out*0.06:m, wz=e.axis==='x'?m:e.c-e.out*0.06; windowIn(p,wx,wz,ww,y0,y1,e.axis==='z',room);}}}
+    run(e.axis,e.c,e.s0,e.s1,-e.out,room,holes);});
+  pass.push([Math.min(ds.ix,ds.ox)-(ds.side[0]==='x'?0:0.32),Math.max(ds.ix,ds.ox)+(ds.side[0]==='x'?0:0.32),Math.min(ds.iz,ds.oz)-(ds.side[0]==='z'?0:0.32),Math.max(ds.iz,ds.oz)+(ds.side[0]==='z'?0:0.32)]);
+  pass[pass.length-1].shut=function(){return doors[key].locked;};      // the front door: open only when it is
   /* lights */
-  [['living',-5.2,-1.4],['bedB',-1.3,-1.4],['kitchen',-6.0,2.9],['bath',-1.6,2.9],['bedA',-6.0,6.6],['foyer',-1.6,6.6],['hall2',-3.8,3.0]].forEach(function(q){A.inRoom(RK(q[0]),function(){K.ceilDisc(p,q[1],q[2],'L:'+RK(q[0]));});});
-  /* the living room */
-  const lv=W.living, rr=RK('living');
-  against(p,rr,lv,'W',0.45,pick(rng,['kivik3','ektorp3','vimle3','landskrona3','uppland3','soderhamn3','friheten']),null,null);
-  const tvT=pick(rng,['bestaTV','hemnesTV','lackTV','brimnesTV','idanasTV']);
-  const tb=against(p,rr,lv,'E',0.45,tvT,colOf(rng,tvT)); if(tb) put(tb,rr,'tv55',0,0,0,1,0,size(tvT).h);
-  put(p,rr,pick(rng,['rugWool','rugStripe','rugKilim','stoense','langsted','vindum']),0,(lv[0]+lv[1])/2-0.2,lv[2]+(lv[3]-lv[2])*0.45,1,0);
-  const ct=pick(rng,['lackCT','listerby','borgeby','hemnesCT','roundOak','vittsjoCT']); put(p,rr,ct,colOf(rng,ct),lv[0]+1.65,lv[2]+(lv[3]-lv[2])*0.45,1,0);
-  const ac=pick(rng,['strandmon','poang','ekenaset','koarp','vedbo']); put(p,rr,ac,colOf(rng,ac),lv[0]+1.7,lv[2]+0.7,0,1);
-  against(p,rr,lv,'S',0.92,pick(rng,['monstera','fiddle','olive','strelitzia','rubberPlant']),colOf(rng,'monstera'));
-  against(p,rr,lv,'S',0.08,pick(rng,['arcLamp','floorLamp','hektar','tagarp']),0);
-  const sh=pick(rng,['billy','kallax4x2','hemnesBook','ivar','vittsjoShelf']); against(p,rr,lv,'N',0.15,sh,colOf(rng,sh));
-  const dt=pick(rng,['ingatorp','lisabo','melltorp','ekedalen']), ch=pick(rng,['ingolf','terje','lisaboChair','stefan','adde']), dx=lv[0]+3.6, dz=lv[3]-0.95;
-  put(p,rr,dt,colOf(rng,dt),dx,dz,1,0); const cc=colOf(rng,ch); [[-0.75,0,1,0],[0.75,0,-1,0],[0,-0.6,0,1],[0,0.6,0,-1]].forEach(function(q){put(p,rr,ch,cc,dx+q[0],dz+q[1],q[2],q[3]);});
-  put(p,rr,'frameTrio',0,lv[0]+0.03,1.45,1,0,0,null); const ft=p.children[p.children.length-1]; if(ft){ft.position.set(lv[0]+0.07,1.35,lv[2]+(lv[3]-lv[2])*0.45);}
-  /* the bedrooms */
-  [['bedB',W.bedB,'S'],['bedA',W.bedA,'N']].forEach(function(b){const r=b[1], k=RK(b[0]), side=b[2];
-    const bt=pick(rng,['malmBed160','hemnesBed160','tarvaBed160','idanasBed160','songesandBed160','slattum160','kleppstad160']);
-    const bed=b[0]==='bedB'?put(p,k,bt,colOf(rng,bt),(r[0]+r[1])/2,r[2]+size(bt).d/2+0.02,0,1):put(p,k,bt,colOf(rng,bt),(r[0]+r[1])/2+0.2,r[3]-size(bt).d/2-0.02,0,-1);
-    const nt=pick(rng,['hemnesNight','malm2','tarvaNight','kullen2']); const bw=size(bt).w/2+0.3, bz=b[0]==='bedB'?r[2]+0.3:r[3]-0.3, bx=b[0]==='bedB'?(r[0]+r[1])/2:(r[0]+r[1])/2+0.2;
-    [-1,1].forEach(function(s){const n=put(p,k,nt,colOf(rng,nt),bx+s*bw,bz,0,b[0]==='bedB'?1:-1); if(n) put(n,k,'tableLamp',0,0,0,1,0,size(nt).h);});
-    const wd=pick(rng,['pax150','hemnesWard','kleppstad3','brimnesWard3','songesand2']); against(p,k,r,b[0]==='bedB'?'E':'W',0.68,wd,colOf(rng,wd));
-    if(b[0]==='bedA'){against(p,k,r,'W',0.18,'micke',colOf(rng,'micke')); put(p,k,'officeChair',0,r[0]+0.75,r[2]+(r[3]-r[2])*0.18,-1,0);}
-    else put(p,k,pick(rng,['roundRug','runner','adum']),0,(r[0]+r[1])/2,r[2]+2.4,0,1);
-    against(p,k,r,side==='S'?'N':'S',0.12,pick(rng,['snake','zzPlant','satsumas']),0);});
-  /* the kitchen: a run of units along the party wall, sink and hob, a fridge, cupboards over */
-  (function(){const r=W.kitchen, k=RK('kitchen'), front=[0x3a4a5a,0xe9e4da,0x6f8f7f][f-1], top=[0xd8d2c4,0x2a2c2e,0xe8e2d4][f-1];
-    A.inRoom(k,function(){
-      const x=r[0]+0.31, z0=r[2]+0.1, z1=r[3]-0.75;
-      A.box(0.6,0.86,z1-z0,front,x,0.43,(z0+z1)/2,p); A.box(0.64,0.04,z1-z0+0.02,top,x+0.01,0.88,(z0+z1)/2,p);
-      for(let z=z0+0.6;z<z1;z+=0.6) A.box(0.004,0.8,0.006,0x1d1f21,x+0.302,0.45,z,p);
-      A.box(0.4,0.02,0.5,0xc4c8ca,x+0.04,0.905,z0+1.1,p); A.box(0.03,0.28,0.03,0xc9cdd0,x-0.18,1.05,z0+1.1,p);      // the sink and its tap
-      A.box(0.52,0.012,0.52,0x111213,x+0.03,0.907,z0+2.0,p);                                                         // the hob
-      A.box(0.66,1.85,0.68,0xeceeed,x+0.02,0.925,z1+0.36,p);                                                         // the fridge
-      A.box(0.35,0.7,z1-z0,front,r[0]+0.18,1.85,(z0+z1)/2,p);                                                        // cupboards over
-      A.box(0.02,0.55,z1-z0,0xf2efe8,r[0]+0.02,1.18,(z0+z1)/2,p);                                                    // tiles between
-    });
-    put(p,k,'fruitBowl',0,r[0]+0.4,r[2]+0.5,1,0,0.9); put(p,k,'pothosPot',0,r[0]+0.4,r[3]-1.2,1,0,0.9);})();
-  /* the bathroom: a bath along the back, a basin, a toilet */
-  (function(){const r=W.bath, k=RK('bath');
-    A.inRoom(k,function(){
-      A.box(1.6,0.56,0.72,0xf4f4f2,r[1]-0.82,0.28,r[2]+0.38,p); A.box(1.5,0.02,0.6,0xd8e6ea,r[1]-0.82,0.55,r[2]+0.38,p);      // the bath
-      A.box(0.04,1.4,1.0,0xdfe9ec,r[1]-1.62,1.3,r[2]+0.5,p).material.transparent=true;
-      const tz=r[3]-0.45; A.box(0.38,0.4,0.5,0xf8f8f6,r[1]-0.3,0.2,tz,p); A.box(0.4,0.04,0.44,0xffffff,r[1]-0.3,0.42,tz+0.02,p); A.box(0.4,0.42,0.16,0xf8f8f6,r[1]-0.09,0.62,tz,p);      // the toilet
-      A.box(0.6,0.75,0.12,0xf2f2f0,r[1]-0.06,1.35,r[2]+(r[3]-r[2])*0.55,p);
-    });
-    const wb=pick(rng,['hemnesWash','enhetWash']); against(p,k,r,'N',0.25,wb,colOf(rng,wb)); against(p,k,r,'N',0.25,'godmorgonMirror',0,null,0.02);
-    const mr=p.children[p.children.length-1]; if(mr) mr.position.y=1.35;})();
-  /* the entrance hall */
-  (function(){const r=W.foyer, k=RK('foyer'); const sc=pick(rng,['hemnesShoe','bissa','shoeCab','tjusig']); against(p,k,r,'N',0.55,sc,colOf(rng,sc));
-    put(p,k,'doormat',0,-0.45,(LDW[0]+LDW[1])/2,-1,0); against(p,k,r,'N',0.2,'coatStand',0);})();
+  rs.forEach(function(rm){const r=rm.r; A.inRoom(RK(rm.id),function(){K.ceilDisc(p,(r[0]+r[1])/2,(r[2]+r[3])/2,'L:'+RK(rm.id));});});
+  /* what is on each side of a room, to put things against: the longest stretch of wall free of doors and windows */
+  function freeSide(rm,prefer){const r=rm.r, out=[];
+    [['S','z-',r[0],r[1]],['N','z+',r[0],r[1]],['W','x-',r[2],r[3]],['E','x+',r[2],r[3]]].forEach(function(q){const len=q[3]-q[2], bad=sides[rm.id+q[1]]||[];
+      let best=0, bt=0.5; const cuts=[q[2]].concat(...bad.map(function(b){return [b[0]-0.15,b[1]+0.15];})).concat([q[3]]).sort(function(a,b){return a-b;});
+      for(let i=0;i+1<cuts.length;i+=2){const a=Math.max(q[2],cuts[i]), b=Math.min(q[3],cuts[i+1]); if(b-a>best){best=b-a; bt=((a+b)/2-q[2])/len;}}
+      const win=bad.some(function(b){return b[2]==='window';}); out.push({side:q[0],free:best,t:bt,win:win,len:len});});
+    out.sort(function(a,b){return (b.free-(b.win&&prefer!=='win'?0.6:0))-(a.free-(a.win&&prefer!=='win'?0.6:0));}); return out;}
+  const opp={S:'N',N:'S',W:'E',E:'W'};
+  rs.forEach(function(rm){const r=rm.r, k=RK(rm.id), fs=freeSide(rm), s0=fs[0];
+    if(rm.type==='living'){
+      const sofa=choose(rng,['kivik3','ektorp3','vimle3','landskrona3','uppland3','soderhamn3','friheten']); if(s0.free>2.3) against(p,k,r,s0.side,s0.t,sofa,colOf(rng,sofa));
+      const o=fs.find(function(q){return q.side===opp[s0.side];}); if(o&&o.free>1.3){const tvT=choose(rng,['bestaTV','hemnesTV','lackTV','brimnesTV']); const tb=against(p,k,r,o.side,o.t,tvT,colOf(rng,tvT)); if(tb) put(tb,k,'tv55',0,0,0,1,0,size(tvT).h);}
+      if(r[1]-r[0]>2.6&&r[3]-r[2]>2.6){put(p,k,choose(rng,['rugWool','rugStripe','rugKilim','stoense','langsted']),0,(r[0]+r[1])/2,(r[2]+r[3])/2,1,0); const ct=choose(rng,['lackCT','listerby','borgeby','hemnesCT','roundOak']); put(p,k,ct,colOf(rng,ct),(r[0]+r[1])/2,(r[2]+r[3])/2,1,0);}
+      const s1=fs[1]; if(s1&&s1.free>0.9){const ac=choose(rng,['strandmon','poang','ekenaset','koarp']); against(p,k,r,s1.side,s1.t,ac,colOf(rng,ac),null,0.1);}
+      const s2=fs[2]; if(s2&&s2.free>0.8) against(p,k,r,s2.side,Math.min(0.9,s2.t+0.2),choose(rng,['monstera','fiddle','olive','strelitzia']),0);}
+    else if(rm.type==='bed'){
+      const bt=choose(rng,['malmBed160','hemnesBed160','tarvaBed160','idanasBed160','slattum160','kleppstad160','malmBed90']), sz=size(bt);
+      if(s0.free>sz.w+0.1&&Math.min(r[1]-r[0],r[3]-r[2])>sz.d+0.6){const bed=against(p,k,r,s0.side,s0.t,bt,colOf(rng,bt));
+        const nt=choose(rng,['hemnesNight','malm2','tarvaNight','kullen2']); if(bed&&s0.free>sz.w+1.1) [-1,1].forEach(function(sd){const along=s0.side==='S'||s0.side==='N', bp=bed.position;
+          const n2=put(p,k,nt,colOf(rng,nt),bp.x+(along?sd*(sz.w/2+0.3):0)-(s0.side==='W'?sz.d/2-0.25:s0.side==='E'?-(sz.d/2-0.25):0),bp.z+(along?0:sd*(sz.w/2+0.3))-(s0.side==='S'?sz.d/2-0.25:s0.side==='N'?-(sz.d/2-0.25):0),s0.side==='W'?1:s0.side==='E'?-1:0,s0.side==='S'?1:s0.side==='N'?-1:0);
+          if(n2) put(n2,k,'tableLamp',0,0,0,1,0,size(nt).h);});}
+      else if(rm.id.indexOf('study')===0||s0.free<2){against(p,k,r,s0.side,s0.t,'micke',colOf(rng,'micke'));}
+      const s1=fs.find(function(q){return q.side!==s0.side&&q.side!==opp[s0.side];})||fs[1]; if(s1&&s1.free>1.1){const wd=choose(rng,['pax150','hemnesWard','kleppstad3','brimnesWard3','songesand2']); if(s1.free>size(wd).w+0.1) against(p,k,r,s1.side,s1.t,wd,colOf(rng,wd));}}
+    else if(rm.type==='kitchen'){
+      const front=[0x3a4a5a,0xe9e4da,0x6f8f7f,0xb8c6cc,0xd8c9a6][(n+f)%5], top=[0xd8d2c4,0x2a2c2e,0xe8e2d4][(n+f)%3], sd=s0.side, len=sd==='S'||sd==='N'?r[1]-r[0]:r[3]-r[2], L2=Math.min(s0.free,len-0.2);
+      A.inRoom(k,function(){const along=sd==='S'||sd==='N', c0=(along?r[0]:r[2])+0.1, cx=along?(sd==='S'?r[2]+0.31:r[3]-0.31):(sd==='W'?r[0]+0.31:r[1]-0.31), u0=c0+(s0.t*len-L2/2), u1=u0+L2;
+        const B=function(w,h,d,col,u,y,o){if(along) A.box(w,h,d,col,u,y,cx+o,p); else A.box(d,h,w,col,cx+o,y,u,p);}, sgn=(sd==='S'||sd==='W')?1:-1;
+        B(L2,0.86,0.6,front,(u0+u1)/2,0.43,0); B(L2+0.02,0.04,0.64,top,(u0+u1)/2,0.88,0.01*sgn);
+        B(0.5,0.02,0.4,0xc4c8ca,u0+L2*0.35,0.905,0.04*sgn); B(0.52,0.012,0.52,0x111213,u0+L2*0.72,0.907,0.03*sgn);
+        if(L2>1.8) B(0.66,1.85,0.68,0xeceeed,u1-0.36,0.925,0.02*sgn);
+        B(L2,0.7,0.35,front,(u0+u1)/2,1.85,-0.13*sgn);});
+      put(p,k,'fruitBowl',0,(r[0]+r[1])/2,(r[2]+r[3])/2,1,0,0);}
+    else if(rm.type==='bath'||rm.type==='wc'){
+      A.inRoom(k,function(){const cx=(r[0]+r[1])/2, cz=(r[2]+r[3])/2, wx=r[1]-r[0], wz=r[3]-r[2];
+        if(rm.type==='bath'&&Math.max(wx,wz)>1.7){if(wx>=wz){A.box(1.6,0.56,0.72,0xf4f4f2,r[0]+0.85,0.28,r[2]+0.4,p); A.box(1.5,0.02,0.6,0xd8e6ea,r[0]+0.85,0.55,r[2]+0.4,p);}
+          else{A.box(0.72,0.56,1.6,0xf4f4f2,r[0]+0.4,0.28,r[2]+0.85,p); A.box(0.6,0.02,1.5,0xd8e6ea,r[0]+0.4,0.55,r[2]+0.85,p);}}
+        const tx=r[1]-0.32, tz=r[3]-0.4; A.box(0.38,0.4,0.5,0xf8f8f6,tx,0.2,tz,p); A.box(0.4,0.04,0.44,0xffffff,tx,0.42,tz,p); A.box(0.16,0.42,0.4,0xf8f8f6,tx+0.15,0.62,tz,p);      // the toilet
+        A.box(0.5,0.16,0.4,0xf8f8f6,r[1]-0.25,0.82,r[2]+Math.min(wz*0.5,1.0),p); A.box(0.03,0.6,0.5,0xdfe9ec,r[1]-0.03,1.45,r[2]+Math.min(wz*0.5,1.0),p);});}      // the basin and its mirror
+    else if(rm.type==='hall'){if(s0.free>0.9){const sc=choose(rng,['hemnesShoe','bissa','shoeCab','tjusig']); against(p,k,r,s0.side,s0.t,sc,colOf(rng,sc));} if(rm.id===ds.room.id) put(p,k,'doormat',0,ds.ix,ds.iz,1,0);}
+  });
+  p.traverse(function(m){m.userData.lvl=f; if(m.isMesh&&!f&&m.material&&!Array.isArray(m.material)&&!m.userData.floor) m.material.clippingPlanes=[A.cut];});      // on our floor, cut with the rest when the walls are cut low
+}
+/* the common parts upstairs: the landing as wide as ours, the corridor and the hall over the entrance: floors, ceilings, the landing's walls
+   (the flats' own walls stand along the rest) */
+const coreBuilt={};
+function buildCore(f){
+  if(coreBuilt[f]||f<1) return; coreBuilt[f]=true;
+  const g=groupFor(f), p=new THREE.Group(); p.position.y=LV[f].y; g.add(p); const k='land'+f, list=planWalls[f]=planWalls[f]||[], wc=0xf3f1ea, XL=LB.XL, D4=LB.D4, RZ=LB.RZ, CX0=LB.CX0, CX1=LB.CX1, ZE=LB.ZE, ZC=LB.ZC, XF=LB.XF;
+  const terr=tex('terr',128,128,tiles('#e2d6b8','#b3a37f',4),[1,1]);
+  [[XL,XB,L+D4,RZ],[CX0,CX1,RZ,ZE],[CX0,XF,ZE,ZC]].forEach(function(r){floorPlane(p,r[0],r[1],r[2],r[3],tex('terr',128,128,tiles('#e2d6b8','#b3a37f',4),[(r[1]-r[0])/0.8,(r[3]-r[2])/0.8]),k); ceilPlane(p,r[0],r[1],r[2],r[3],k);});
+  const d3=doorSpec(3,f), d4=doorSpec(4,f), d2=doorSpec(2,f), d6=doorSpec(6,f), d1=doorSpec(1,f);
+  wallRun(p,f,XL,L+D4,XL,RZ,wc,k,[[d3.u0-(L+D4),d3.u1-(L+D4),0,2.05]],list);                         // flat 3's door, on the landing's back wall
+  wallRun(p,f,XL,L+D4,XB+0.08,L+D4,wc,k,[[d4.u0-XL,d4.u1-XL,0,2.05]],list); wallRun(p,f,XB+0.08,L+D4,XB+0.08,L,wc,k,[],list);      // flat 4's beside ours, a little in front of it
+  wallRun(p,f,XL,RZ,CX0,RZ,wc,k,[],list);
+  wallRun(p,f,CX0,RZ,CX0,ZC,wc,k,[[d2.u0-RZ,d2.u1-RZ,0,2.05]],list);                                  // the corridor's left: flat 2's door
+  wallRun(p,f,CX1,EH,CX1,ZE,wc,k,[[d6.u0-EH,d6.u1-EH,0,2.05]],list);                                  // its right: flat 6's
+  wallRun(p,f,CX0,ZC,XF,ZC,wc,k,[[d1.u0-CX0,d1.u1-CX0,0,2.05]],list);                                 // the hall's end: flat 1's
+  wallRun(p,f,CX1,ZE,XF-0.06,ZE,wc,k,[],list);
+  wallRun(p,f,XF,ZE,XF,ZC,wc,k,[],list);      // its front: over the passage below, between flat 6 and number 12, there is nothing to look out at
+  A.inRoom(k,function(){A.kit.ceilDisc(p,(CX0+CX1)/2,(RZ+ZE)/2,'L:'+k); A.kit.ceilDisc(p,(CX0+XF)/2,(ZE+ZC)/2,'L:'+k);});
   p.traverse(function(m){m.userData.lvl=f;});
 }
-
 /* the shelter, under the lobby: concrete, a steel door, bunks, benches, the ventilation unit, water and tins */
 let shelterBuilt=false;
 function buildShelter(){
   if(shelterBuilt) return; shelterBuilt=true;
-  const g=groupFor(-1), p=new THREE.Group(); p.position.y=LO; g.add(p); const k='shelter', r=SH, list=westWalls[-1]=[];
+  const g=groupFor(-1), p=new THREE.Group(); p.position.y=LO; g.add(p); const k='shelter', r=SH, list=planWalls[-1]=[];
   const conc=tex('conc',128,128,function(c){const q=A.rng(9); c.fillStyle='#b9b6ae'; c.fillRect(0,0,128,128); for(let i=0;i<500;i++){c.fillStyle='rgba('+(q()<0.5?'90,88,82':'230,228,220')+','+(0.05+q()*0.1)+')'; c.fillRect(q()*128,q()*128,1+q()*3,1+q()*2);}},[ (r[1]-r[0])/1.5,(r[3]-r[2])/1.5]);
   floorPlane(p,r[0],r[1],r[2],r[3],conc,k); ceilPlane(p,r[0],r[1],r[2],r[3],k);
   wallRun(p,-1,r[0],r[2],r[1],r[2],0xd9d6cc,k,[],list); wallRun(p,-1,r[0],r[2],r[0],r[3],0xd9d6cc,k,[],list); wallRun(p,-1,r[0],r[3],r[1],r[3],0xd9d6cc,k,[],list);
@@ -325,13 +346,14 @@ function person(seed){const r=A.rng(seed), n=NAMES_HE[Math.floor(r()*NAMES_HE.le
     beard:!she&&r()<0.4?['goatee','full'][Math.floor(r()*2)]:undefined,top:TOPS[Math.floor(r()*TOPS.length)],pants:[0x2b2f38,0x3d5a80,0x6b6f76,0xf3ebdc][Math.floor(r()*4)],pj:0x9db7dd,slim:she};}
 /* each flat: its door, its rooms, who lives there, and whether they are in */
 const FLATS={};
+/* a flat's key: 'over'+f, the flat over ours (5 on each floor); 'f'+n+'@'+f, flat n of the plan on floor f; 'shelter' */
 function flatOf(key){
   if(FLATS[key]) return FLATS[key];
-  const f=key==='shelter'?-1:+key.slice(-1), west=key.indexOf('west')===0, rng=A.rng(key.length*31+f*7+(west?3:0));
-  const rooms=key==='shelter'?['shelter']:west?Object.keys(WROOMS).map(function(k){return 'w'+f+':'+k;}):FLAT.map(function(k){return k+'@'+f;});
-  const n=key==='shelter'?0:1+Math.floor(rng()*2), home=key!=='shelter'&&rng()<0.85;
-  const people=[]; for(let i=0;i<n;i++) people.push(person(f*100+(west?50:0)+i*7+3));
-  return FLATS[key]={key:key,f:f,west:west,rooms:rooms,people:people,home:home,folk:[],broken:false,searched:{},invited:false,door:doors[key]};
+  const plan=key[0]==='f', pn=plan?+key.slice(1,key.indexOf('@')):5, f=key==='shelter'?-1:plan?+key.slice(key.indexOf('@')+1):+key.slice(-1), rng=A.rng(key.length*31+f*7+pn*13);
+  const rooms=key==='shelter'?['shelter']:plan?PL.analyse(pn).rooms.map(function(q){return proom(pn,f,q.id);}):FLAT.map(function(k){return k+'@'+f;});
+  const n=key==='shelter'?0:1+Math.floor(rng()*(pn===1||pn===2||pn===3||pn===6?3:2)), home=key!=='shelter'&&rng()<0.85;
+  const people=[]; for(let i=0;i<n;i++) people.push(person(f*100+pn*17+i*7+3));
+  return FLATS[key]={key:key,f:f,n:pn,plan:plan,num:key==='shelter'?0:NUMOF(pn,f),rooms:rooms,people:people,home:home,folk:[],broken:false,searched:{},invited:false,door:doors[key]};
 }
 function inFlatOf(fl,a){const r=A.roomAt(a.x,a.z,a.lvl); return fl.rooms.indexOf(r)>=0;}
 function playerIn(fl){const p=A.player; return p&&p.lvl===fl.f&&!p.script&&inFlatOf(fl,p);}
@@ -344,8 +366,8 @@ function settleIn(fl){            // the people of a flat, at home, somewhere in
     if(st){a.x=st.x; a.z=st.z; a.h=a.hT=st.h; a.p.seatY=st.y; a.p.sitT=a.p.sit=1; a.sitting=true; a.p.act=['read',null,'drink','type',null][Math.floor(Math.random()*5)];}});
 }
 function seatFor(fl,i){
-  const f=fl.f; if(f<1) return null;
-  if(!fl.west){const ss=(A.liveSeats?A.liveSeats():[]).filter(function(s){return s.type==='sit'&&['living','kitchen','bed1','bed2'].indexOf(A.roomAt(s.x,s.z,0))>=0;}); const s=ss[(i*3+f)%Math.max(1,ss.length)]; return s?{x:s.x,z:s.z,h:s.h,y:s.y}:null;}      // over ours: the same furniture where ours stands
+  const f=fl.f; if(f<0||(f<1&&!fl.plan)) return null;
+  if(!fl.plan){const ss=(A.liveSeats?A.liveSeats():[]).filter(function(s){return s.type==='sit'&&['living','kitchen','bed1','bed2'].indexOf(A.roomAt(s.x,s.z,0))>=0;}); const s=ss[(i*3+f)%Math.max(1,ss.length)]; return s?{x:s.x,z:s.z,h:s.h,y:s.y}:null;}      // over ours: the same furniture where ours stands
   const out=[], v=new THREE.Vector3(); if(lvlGroups[f]) lvlGroups[f].traverse(function(o){if(o.userData&&(o.userData.cat==='arm'||o.userData.cat==='chair')){o.getWorldPosition(v); if(fl.rooms.indexOf(A.roomAt(v.x,v.z,f))>=0) out.push({x:v.x,z:v.z,h:o.rotation.y+R/2,y:0.45});}});
   return out.length?out[i%out.length]:null;}
 function wander(a){if(a.busy||a.path.length||a.script||(a.sitting&&a.p.sitT>0)) return; if(A.t<a.next) return; a.next=A.t+6+Math.random()*9;
@@ -355,7 +377,8 @@ function wander(a){if(a.busy||a.path.length||a.script||(a.sitting&&a.p.sitT>0)) 
 const LINES_ANSWER=['Yes?','Hi! Can I help you?','Oh, hello neighbour.','Who is it?','Shalom, what is it?'];
 const LINES_CHAT=['The lift? There has never been a lift.','Did you hear the cats last night?','The committee wants 200 shekels for the stairwell again.','You are from five, right? The one with the green door.','Hot today, eh? Thirty-two.','My son lives in Haifa now.'];
 const LINES_ANGRY=['Hey! What are you doing in my flat?!','Thief! Get out!','I am calling the police!','Mishtara! Police!'];
-function doorPos(fl){return fl.west||fl.key==='shelter'?{x:XB-0.55,z:(LDW[0]+LDW[1])/2,ox:XB+0.6,oz:(LDW[0]+LDW[1])/2,h:R/2}:{x:(LDS[0]+LDS[1])/2,z:L-0.55,ox:(LDS[0]+LDS[1])/2,oz:L+0.6,h:0};}
+function doorPos(fl){if(fl.plan){const s=doorSpec(fl.n,fl.f); return {x:s.ix,z:s.iz,ox:s.ox,oz:s.oz,h:s.h};}      // inside, outside, and facing out
+  return fl.key==='shelter'?{x:XB-0.55,z:(LDW[0]+LDW[1])/2,ox:XB+0.6,oz:(LDW[0]+LDW[1])/2,h:R/2}:{x:(LDS[0]+LDS[1])/2,z:L-0.55,ox:(LDS[0]+LDS[1])/2,oz:L+0.6,h:0};}
 function answer(fl){            // someone comes to the door, opens it a little, and talks
   const a=fl.folk[0], d=fl.door, dp=doorPos(fl); if(!a) return;
   a.busy=true; a.goTo(dp.x,dp.z,function(){a.hT=dp.h+R; d.force=0.45; a.say(LINES_ANSWER[Math.floor(Math.random()*LINES_ANSWER.length)],2.6); fl.atDoor=A.t+14; G.answered=fl; refreshBar();});
@@ -376,7 +399,7 @@ function bye(fl){A.player.say('Sorry, wrong door!',1.8); A.sims.later(1.6,functi
 /* ---------- letting yourself in ---------- */
 function notice(fl,how){            // somebody heard, or saw: they shout, and call the police
   const a=fl.folk.find(function(x){return !x.gone;});
-  if(a){a.busy=true; a.say(LINES_ANGRY[Math.floor(Math.random()*LINES_ANGRY.length)],2.6); A.sims.later(2.8,function(){a.say('Hello, police? Someone is breaking into flat '+(fl.west?NUM[fl.f][1]:NUM[fl.f][0])+'!',3.2);});}
+  if(a){a.busy=true; a.say(LINES_ANGRY[Math.floor(Math.random()*LINES_ANGRY.length)],2.6); A.sims.later(2.8,function(){a.say('Hello, police? Someone is breaking into flat '+fl.num+'!',3.2);});}
   else A.sims.toast(how==='kick'?'A neighbour across the landing heard the crash. They are calling the police.':'Someone downstairs heard you.');
   raise(how==='kick'?2:1);
 }
@@ -409,8 +432,9 @@ const FINDS=[['a wad of shekel notes',[150,600]],['a gold necklace',[800,2400]],
   ['a watch',[400,1800]],['a laptop',[1500,3200]],['a passport (you put it back)',[0,0]],['nothing but socks',[0,0]],['a stack of lottery tickets',[5,40]],['a camera',[600,1400]]];
 function spots(fl){
   const y=LV[fl.f].y; if(fl.key==='shelter') return [];
-  if(fl.west){const W=WROOMS; return [['Wardrobe','bedB',W.bedB[1]-0.9,W.bedB[2]+(W.bedB[3]-W.bedB[2])*0.68,R/2],['Wardrobe','bedA',W.bedA[0]+0.9,W.bedA[2]+(W.bedA[3]-W.bedA[2])*0.68,-R/2],
-    ['Desk drawers','bedA',W.bedA[0]+0.95,W.bedA[2]+(W.bedA[3]-W.bedA[2])*0.18,-R/2],['Kitchen drawers','kitchen',W.kitchen[0]+1.0,W.kitchen[2]+1.4,-R/2],['Bookshelf','living',W.living[0]+1.2,W.living[3]-0.9,0],['Bathroom cabinet','bath',W.bath[1]-0.9,W.bath[3]-0.9,0]];}
+  if(fl.plan){const out=[], NM={bed:'Wardrobe',kitchen:'Kitchen drawers',living:'Shelves',bath:'Bathroom cabinet',hall:'Shoe cabinet'};      // in each room, the place you would look
+    PL.analyse(fl.n).rooms.forEach(function(q){const nm=NM[q.type]; if(!nm) return; const r=q.r, cx=(r[0]+r[1])/2, cz=(r[2]+r[3])/2, wide=r[1]-r[0]>r[3]-r[2];
+      out.push([nm+(q.type==='bed'&&out.some(function(o){return o[0]===nm;})?' ':''),q.id,wide?cx:r[0]+0.75,wide?r[2]+0.75:cz,wide?R:-R/2]);}); return out;}
   return [['Wardrobe','bed2',D.NX+0.95,-1.27,-R/2],['Desk','bed1',1.2,-2.4,R],['Kitchen drawers','kitchen',A.KL.dx,1.25,R],['TV cabinet','living',2.4,4.2,R/2],['Bedside table','bed2',3.6,-3.0,R]];
 }
 function search(fl,s){
@@ -461,12 +485,13 @@ function busted(){
 }
 
 /* ---------- every frame: the neighbours live, the police hunt ---------- */
-const tagV=new THREE.Vector3();
+const tagV=new THREE.Vector3(); let settled0=false;
 A.frameFns.push(function(dt){
   const p=A.player;
   if(!A.simsOn||!p){for(const k in FLATS) FLATS[k].folk.forEach(function(a){a.p.g.visible=false; A.place(a.tag,tagV,false);});
     if(G.cops.length||G.wanted){G.cops.forEach(function(c){c.remove();}); G.cops=[]; G.wanted=0; sirenOn(false);} hud.style.display='none'; return;}
   const lv=shownLvl;
+  if(!settled0){settled0=true; PF.forEach(function(n){settleIn(flatOf(pkey(n,0)));});}      // the neighbours on our floor, at home
   for(const k in FLATS){const fl=FLATS[k];
     if(fl.atDoor&&A.t>fl.atDoor&&G.answered===fl) closeUp(fl);
     if(fl.invited&&!playerIn(fl)&&fl.door.target===0&&A.t>(fl.atDoor||0)+30){fl.invited=false; fl.door.locked=true; A.navDirty(fl.f);}      // you left: they lock up behind you
@@ -488,7 +513,7 @@ let barT=0;
 function refreshBar(){barT++; if(A.life&&A.life.hud) A.life.hud();}
 function doorActs(fl){
   if(fl.key==='shelter'){return [['Go in',function(){A.walkTo(XB-1.2,(LDW[0]+LDW[1])/2);}]];}
-  if(!fl.door.locked) return [['Go in',function(){const dp=doorPos(fl); A.walkTo(dp.x-(fl.west?0.6:0),dp.z-(fl.west?0:0.6));}]];
+  if(!fl.door.locked) return [['Go in',function(){const dp=doorPos(fl); A.walkTo(dp.x,dp.z);}]];
   const acts=[];
   if(G.answered===fl){acts.push(['Chat',function(){chat(fl);}]); acts.push(['Sorry, wrong door',function(){bye(fl);}]); return acts;}
   acts.push(['Knock',function(){knock(fl);}],['Ring the bell',function(){ring(fl);}],['Pick the lock',function(){pick(fl);}],['Kick it in',function(){kick(fl);}]);
@@ -502,6 +527,9 @@ const segHit=function(ax,az,bx,bz,cx_,cz_,dx,dz){const r1=bx-ax, r2=bz-az, s1=dx
   const t=((cx_-ax)*s2-(cz_-az)*s1)/den, u=((cx_-ax)*r2-(cz_-az)*r1)/den; return t>0.02&&t<0.98&&u>=0&&u<=1;};
 const wantHide=[];           // what stands in the way when you are down in the shelter
 A.hideBelow=function(o){wantHide.push(o);};
+let shut0=false;
+A.frameFns.push(function(){      // the whole building seen from outside hides the flats round ours behind its walls: they are not drawn then
+  const w=!!(A.bldWhole&&A.bldWhole()); if(w!==shut0){shut0=w; ground0.forEach(function(p){p.visible=!w;});}});
 A.frameFns.push(function(){
   const p=A.player, on=A.simsOn&&p;
   let lv=0; if(on){lv=p.lvl||0; if(p.script) lv=Math.max(lv,p.script.lvl);}
@@ -514,15 +542,15 @@ A.frameFns.push(function(){
   else if(clipping){if(A.renderer.clippingPlanes[0]===clip) A.renderer.clippingPlanes=[]; clipping=false;}
   if(lv&&A.sims&&A.sims.camMode==='follow'){const c=A.camera.position;
     (upWalls[lv]||[]).forEach(function(w){const front=(c.x-w.a[0])*w.n[0]+(c.z-w.a[1])*w.n[1]>0; w.g.visible=!(front&&segHit(c.x,c.z,p.x,p.z,w.a[0],w.a[1],w.b[0],w.b[1]));});
-    (westWalls[lv]||[]).forEach(function(w){const hide=segHit(c.x,c.z,p.x,p.z,w.a[0],w.a[1],w.b[0],w.b[1]); for(let i=0;i<w.parts.length;i++) w.parts[i].visible=!hide;});}
-  else if(lv&&A.sims&&A.sims.camMode==='eye'){(upWalls[lv]||[]).forEach(function(w){w.g.visible=true;}); (westWalls[lv]||[]).forEach(function(w){w.parts.forEach(function(m){m.visible=true;});});}
+    (planWalls[lv]||[]).forEach(function(w){const hide=segHit(c.x,c.z,p.x,p.z,w.a[0],w.a[1],w.b[0],w.b[1]); for(let i=0;i<w.parts.length;i++) w.parts[i].visible=!hide;});}
+  else if(lv&&A.sims&&A.sims.camMode==='eye'){(upWalls[lv]||[]).forEach(function(w){w.g.visible=true;}); (planWalls[lv]||[]).forEach(function(w){w.parts.forEach(function(m){m.visible=true;});});}
 });
 
 /* ---------- what you can do on the stairs and at the doors (the bar that pops up by things in Sims mode) ---------- */
 function goStairs(dir){
   const p=A.player, S=A.sims; if(!p||p.script) return;
   const from=p.lvl||0, to=from+dir; if(to<-1||to>UPS) return;
-  if(LV[to]&&to>0&&!built[to]){buildOver(to); buildWest(to); A.navDirty(to); ['over','west'].forEach(function(w){settleIn(flatOf(w+to));});}
+  if(LV[to]&&to>0&&!built[to]){buildOver(to); buildCore(to); PF.forEach(function(n){buildFlat(n,to);}); A.navDirty(to); settleIn(flatOf('over'+to)); PF.forEach(function(n){settleIn(flatOf(pkey(n,to)));});}
   if(to===-1&&!shelterBuilt){buildShelter(); A.navDirty(-1);}
   const pts=path(from,to);
   S.stop(); S.setDoing(dir>0?'going upstairs':'going downstairs');
@@ -535,21 +563,24 @@ A.moreItems=function(out,p){
   const st=f===0?{x:SU-0.05,z:L+1.2,sx:SU-0.35,sz:L+1.0,h:R/2}:{x:SU-0.05,z:(zA+zB)/2,sx:SU-0.4,sz:(zA+zB)/2,h:R/2};
   const acts=[]; if(f<UPS) acts.push([f===-1?'Up to our floor':'Go upstairs',function(){goStairs(1);}]); if(f>-1) acts.push([f===1?'Down to our floor':f===0?'Down to the shelter':'Go downstairs',function(){goStairs(-1);}]);
   out.push({name:'Stairs',x:st.x,z:st.z,y:y+0.8,sx:st.sx,sz:st.sz,h:st.h,acts:acts,box:[SU-0.1,XH,y-0.05,y+1.2,ZA0,ZA1]});
-  if(!f) return;
   Object.keys(doors).forEach(function(k){const d=doors[k]; if(d.lvl!==f) return; const fl=flatOf(k);
-    const west=k.indexOf('west')===0||k==='shelter', x=west?XB+0.02:(LDS[0]+LDS[1])/2, z=west?(LDW[0]+LDW[1])/2:L+0.02;
-    const label=k==='shelter'?'Shelter':'Flat '+(west?NUM[f][1]:NUM[f][0])+(fl.broken?' (broken in)':'');
-    out.push({name:label,x:x,z:z,y:y+1.0,sx:west?XB+0.55:x,sz:west?z:L+0.55,h:west?-R/2:R,acts:doorActs(fl),
-      box:west?[XB-0.05,XB+0.1,y,y+2.1,LDW[0]-0.1,LDW[1]+0.1]:[LDS[0]-0.1,LDS[1]+0.1,y,y+2.1,L-0.05,L+0.1]});});
+    if(Math.hypot(d.cx-p.x,d.cz-p.z)>4.5) return;      // only the doors close by
+    let x,z,sx,sz,h,box;
+    if(fl.plan){const s=doorSpec(fl.n,f), m=(s.u0+s.u1)/2; x=s.side[0]==='x'?s.plane:m; z=s.side[0]==='x'?m:s.plane; sx=s.ox; sz=s.oz; h=s.h+R;
+      box=s.side[0]==='x'?[s.plane-0.08,s.plane+0.08,y,y+2.1,s.u0-0.1,s.u1+0.1]:[s.u0-0.1,s.u1+0.1,y,y+2.1,s.plane-0.08,s.plane+0.08];}
+    else{const west=k==='shelter'; x=west?XB+0.02:(LDS[0]+LDS[1])/2; z=west?(LDW[0]+LDW[1])/2:L+0.02; sx=west?XB+0.55:x; sz=west?z:L+0.55; h=west?-R/2:R;
+      box=west?[XB-0.05,XB+0.1,y,y+2.1,LDW[0]-0.1,LDW[1]+0.1]:[LDS[0]-0.1,LDS[1]+0.1,y,y+2.1,L-0.05,L+0.1];}
+    const label=k==='shelter'?'Shelter':'Flat '+fl.num+(fl.broken?' (broken in)':'');
+    out.push({name:label,x:x,z:z,y:y+1.0,sx:sx,sz:sz,h:h,acts:doorActs(fl),box:box});});
   for(const k in FLATS){const fl=FLATS[k]; if(fl.f!==f) continue;
     if((fl.broken||fl.invited)&&playerIn(fl)) spots(fl).forEach(function(s){const sk=fl.key+'|'+s[0]+'|'+s[1]; if(fl.searched[sk]) return;
-      const bx=fl.west?s[2]:s[2], bz=s[3]; out.push({name:s[0],x:bx+Math.sin(s[4])*0.5,z:bz+Math.cos(s[4])*0.5,y:y+0.9,sx:bx,sz:bz,h:s[4],acts:[[fl.invited&&!fl.broken?'Have a look':'Search',function(){search(fl,s);}]]});});
+      const bx=s[2], bz=s[3]; out.push({name:s[0],x:bx+Math.sin(s[4])*0.5,z:bz+Math.cos(s[4])*0.5,y:y+0.9,sx:bx,sz:bz,h:s[4],acts:[[fl.invited&&!fl.broken?'Have a look':'Search',function(){search(fl,s);}]]});});
     fl.folk.forEach(function(a){if(a.gone||a.lvl!==f||Math.hypot(a.x-p.x,a.z-p.z)>3) return;
       out.push({name:a.spec.name,x:a.x,z:a.z,y:y+1.0,sx:a.x+Math.sin(a.h)*0.8,sz:a.z+Math.cos(a.h)*0.8,h:a.h+R,acts:[['Chat',function(){a.hT=Math.atan2(p.x-a.x,p.z-a.z); a.say(LINES_CHAT[Math.floor(Math.random()*LINES_CHAT.length)],3.2);}],['Wave',function(){p.p.act='wave'; A.sims.later(1.2,function(){p.p.act=null;}); a.say('Hi!',1.4);}]]});});}
 };
 
 /* once everything is built: the doors on the landings */
-window.addEventListener('load',function(){readMats(); landingDoors(); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});
+window.addEventListener('load',function(){readMats(); landingDoors(); PF.forEach(function(n){buildFlat(n,0);}); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});      // the flats round ours are there from the start
   const was=A.sims&&A.sims.onStop; if(A.sims) A.sims.onStop=function(){G.picking=false; if(was) was();};});
-A.floors={coin:SND.coin,drawHud:drawHud,G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildWest:buildWest,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,WROOMS:WROOMS,SH:SH,busted:busted};
+A.floors={coin:SND.coin,drawHud:drawHud,G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildFlat:buildFlat,buildCore:buildCore,pkey:pkey,NUMOF:NUMOF,doorSpec:doorSpec,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,SH:SH,busted:busted};
 })();

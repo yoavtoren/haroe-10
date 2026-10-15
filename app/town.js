@@ -36,7 +36,7 @@ const blds=TD.B.map(function(b,i){const p=outline(b[3]); let cx=0, cz=0; p.forEa
   .filter(function(b){return b.p.length>=3&&b.area>4;});
 /* where building.js and the street draw their own: our building and number 12, the yard a floor down, the forecourts and bridges */
 const LBH=-warp(-20.4,0), GZs=SF.GZ;
-const KEEP=[[XF-23.2,XF+GZs-0.1,ZC-LBH-0.6,ZC+19.5]];        // x0,x1,z0,z1: nothing of ours here, and not walked by this map
+const KEEP=[[XF-23.2,SF.X0+GZs-0.1,ZC-LBH-0.6,ZC+19.5]];        // x0,x1,z0,z1: nothing of ours here, and not walked by this map
 const own=TD.X.map(function(x){return outline(x[1],x[0]===798);}).concat([[[12.05,14.2],[55.2,14.2],[55.2,31.2],[12.05,31.2]],[[12.05,0.05],[17.6,0.05],[17.6,14.15],[12.05,14.15]],[[25.93,-10.78],[38.46,-15.14],[49.35,14],[35.3,14]]]
   .map(function(q){const o=q.map(function(p){return [XF+p[1],ZC+p[0]];}); let a2=0; for(let i=0;i<o.length;i++){const a=o[i], b=o[(i+1)%o.length]; a2+=a[0]*b[1]-b[0]*a[1];} return a2>0?o.reverse():o;}));      // number 12, along Haroe St, its wing and its back wing
 function nearHome(x,z){return x>XF-30&&x<XF+50&&z>ZC-56&&z<ZC+24;}
@@ -797,7 +797,7 @@ const MN=1024, mcan=document.createElement('canvas'); mcan.width=mcan.height=MN;
   g.fillStyle='#dcd6c4'; g.fillRect(0,0,MN,MN);
   TD.G.forEach(function(a){const p=outline(a[2],true); g.fillStyle=a[0]==='playground'?'#d7c08f':'#a9c08a'; g.beginPath(); p.forEach(function(q,i){const c=mp(q[0],q[1]); if(i) g.lineTo(c[0],c[1]); else g.moveTo(c[0],c[1]);}); g.closePath(); g.fill();});
   g.fillStyle='#b9b2a3'; blds.concat(own.map(function(p){return {p:p};})).forEach(function(b){g.beginPath(); b.p.forEach(function(q,i){const c=mp(q[0],q[1]); if(i) g.lineTo(c[0],c[1]); else g.moveTo(c[0],c[1]);}); g.closePath(); g.fill();});
-  g.fillStyle='#e9a23b'; g.beginPath(); [[BD.XS,BD.ZW],[XF,BD.ZW],[XF,BD.ZE],[BD.XS,BD.ZE]].forEach(function(q,i){const c=mp(q[0],q[1]); if(i) g.lineTo(c[0],c[1]); else g.moveTo(c[0],c[1]);}); g.closePath(); g.fill();      // home
+  g.fillStyle='#e9a23b'; (BD.foot||[]).forEach(function(r){const a=mp(r[1],r[2]), b=mp(r[0],r[3]); g.fillRect(Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.abs(b[0]-a[0])+0.5,Math.abs(b[1]-a[1])+0.5);});      // home, as the plan has it
   g.lineCap=g.lineJoin='round';
   roads.forEach(function(s){g.strokeStyle=s.w[0]?(s.k===1||s.k===6||s.k===7?'#f7d774':'#ffffff'):'#ece6d6'; g.lineWidth=Math.max(1.5,(s.w[0]||s.w[1])*k*1.2); g.beginPath(); s.p.forEach(function(q,i){const c=mp(q[0],q[1]); if(i) g.lineTo(c[0],c[1]); else g.moveTo(c[0],c[1]);}); g.stroke();});
   const named={}; roads.forEach(function(s){if(!s.name||!s.w[0]) return; let best=null; for(let j=1;j<s.p.length;j++){const a=s.p[j-1], b=s.p[j], l=hyp(b[0]-a[0],b[1]-a[1]); if(!best||l>best.l) best={l:l,a:a,b:b};} if(!best||best.l<30) return; if(named[s.name]&&named[s.name]>best.l) return; named[s.name]=best.l; s.lab=best;});

@@ -235,7 +235,8 @@ function pet(t){const p=SM.player, c=t.c||{}; SM.stop(); const q=posOf(t,v1).clo
 function heart(q){const el=A.tag('♥','say'); el.style.color='#e0473c'; const h=q.clone(); h.y+=0.5; let k=0; const f=function(){k++; h.y+=0.006; A.place(el,h,A.simsOn); if(k<110) requestAnimationFrame(f); else el.remove();}; f();}
 /* a cat in two of the flats upstairs, asleep on the floor or sitting up */
 function addPets(){if(!A.det||!A.floors) return; const F=A.floors;
-  [[1,'w',-5.6,-0.8,0x2b2d30,true],[2,'o',2.2,2.6,0xd98a3a,false],[3,'w',-1.4,6.2,0xb9b2a8,false]].forEach(function(q){const lv=q[0], grp=F.groups[lv]; if(!grp||grp.userData.cat) return; grp.userData.cat=true;
+  /* in flat 10's living room, over ours on the second floor, in flat 21's living room */
+  [[1,'w',-2.0,1.4,0x2b2d30,true],[2,'o',2.2,2.6,0xd98a3a,false],[3,'w',-1.6,9.9,0xb9b2a8,false]].forEach(function(q){const lv=q[0], grp=F.groups[lv]; if(!grp||grp.userData.cat) return; grp.userData.cat=true;
     const c=A.det.solid(A.det.cat(q[4],{lie:q[5]}),'land'+lv); c.position.set(q[2],F.LV[lv].y,q[3]); c.rotation.y=Math.random()*6; c.traverse(function(m){m.userData.lvl=lv; m.userData.nonav=true;}); grp.add(c);
     pets.push({kind:'cat',root:c,name:'Cat',lvl:lv,c:{}});});}
 
@@ -286,7 +287,7 @@ function makeDumpster(){        // the city's green bins, in the alley by the ga
   const lx=2.95, lz=S.AL+3.4, w=S.st.localToWorld(new THREE.Vector3(lx,S.U,lz)); g.position.copy(w); g.rotation.y=R/2+R/2; scene.add(g);
   const st=S.st.localToWorld(new THREE.Vector3(lx-1.05,0,lz));
   dump={g:g,lid:lid,stand:{x:st.x,z:st.z,h:Math.atan2(w.x-st.x,w.z-st.z)}};
-  if(A.streetBlock) A.streetBlock.push([A.LB.XF+lz-0.55,A.LB.XF+lz+0.55,A.LB.ZC-lx-0.7,A.LB.ZC-lx+0.7]);
+  if(A.streetBlock) A.streetBlock.push([S.X0+lz-0.55,S.X0+lz+0.55,A.LB.ZC-lx-0.7,A.LB.ZC-lx+0.7]);
 }
 makeDumpster();
 

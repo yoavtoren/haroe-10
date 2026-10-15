@@ -41,7 +41,7 @@ const grids={};
 function lvY(l){return l&&A.levels&&A.levels[l]?A.levels[l].y:0;}
 function gridOf(l){if(!l) return free0; if(!grids[l]) grids[l]=buildLevel(l); return grids[l];}
 function onLevel(l,fn){const keep=free; free=gridOf(l); try{return fn();} finally{free=keep;}}
-A.navDirty=function(l){if(l) delete grids[l];};
+A.navDirty=function(l){if(l) delete grids[l]; else setTimeout(buildNav,0);};      // our floor: a door opened or shut, walk the map again
 const EX=(D.entrance[0]+D.entrance[1])/2, SPAWN=L-0.45, HALLZ=L+1.0, LOBBY=[(A.LB.CX0+A.LB.CX1)/2,L+5.0];      // centre of the front door; where people stand just inside it; on the landing; up the corridor
 const PASS=[[D.door1[0]+0.1,D.door1[1]-0.1,-0.35,0.35],[D.door2[0]+0.1,D.door2[1]-0.1,-0.35,0.35],
   [W-0.35,W+0.35,D.bathDoor[0]+0.1,D.bathDoor[1]-0.1],[D.wcDoor[0]+0.1,D.wcDoor[1]-0.1,ZW-0.45,ZW+0.35],
@@ -64,11 +64,12 @@ function collect(o){
 }
 function buildNav(){
   free=free0; free.fill(0);
-  for(const k in A.rooms){if(A.rooms[k].lvl) continue; A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});}
-  known.set(free0); PASS.forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);}); for(let c=0;c<known.length;c++) if(free0[c]) known[c]=1; free0.set(known);
+  for(const k in A.rooms){if(A.rooms[k].lvl||(A.rooms[k].navIf&&!A.rooms[k].navIf())) continue; A.rooms[k].rs.forEach(function(r){fillRect(r[0]+RAD,r[1]-RAD,r[2]+RAD,r[3]-RAD,1);});}      // a neighbour's flat only while its door is open
+  const pass0=((A.levels&&A.levels[0]&&A.levels[0].pass)||[]).filter(function(p){return !p.shut||!p.shut();});
+  known.set(free0); PASS.concat(pass0).forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);}); for(let c=0;c<known.length;c++) if(free0[c]) known[c]=1; free0.set(known);
   scene.updateMatrixWorld(true); collect(scene);
   (A.streetBlock||[]).forEach(function(b){fillRect(b[0]-RAD,b[1]+RAD,b[2]-RAD,b[3]+RAD,0);});      // the street is drawn as merged meshes, so what stands there is listed
-  PASS.forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);});
+  PASS.concat(pass0).forEach(function(p){fillRect(p[0],p[1],p[2],p[3],1);});
   // keep only what can be reached from just inside the front door
   const start=cell(EX,SPAWN), seen=new Uint8Array(NX*NZ), q=[start]; if(start<0||!free[start]) return; seen[start]=1;
   while(q.length){const c=q.pop(), i=c%NX, j=(c-i)/NX;

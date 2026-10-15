@@ -130,7 +130,7 @@ A.moreItems=function(out,p){
 };
 
 /* ---------- the road is yours too ---------- */
-const wr=function(q){return [LBX(q[2]),LBX(q[3]),LBZ(q[1]),LBZ(q[0])];}, LBX=function(z){return A.LB.XF+z;}, LBZ=function(x){return A.LB.ZC-x;};
+const wr=function(q){return [LBX(q[2]),LBX(q[3]),LBZ(q[1]),LBZ(q[0])];}, LBX=function(z){return S.X0+z;}, LBZ=function(x){return A.LB.ZC-x;};
 if(A.rooms.street) A.rooms.street.rs.push(wr([-17,48,KZ+0.15,KZ+RW-0.15]));
 
 /* ---------- every frame ---------- */

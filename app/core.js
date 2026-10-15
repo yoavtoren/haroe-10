@@ -84,7 +84,7 @@ const rooms=A.rooms={
   bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0],[D.BX,D.BXB,AZ,AZ+2.0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
-  hall:{name:'Lobby', rs:[[LB.XL,LB.SU,L+LB.D4,L+1.34],[LB.XL,LB.SD,L+0.9,LB.RZ],[LB.CX0+0.3,LB.SD,LB.RZ-0.3,LB.EH+0.45],[LB.CX0,LB.CX1,LB.EH,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC],[LB.VW,LB.XF,LB.EH,LB.Z2+1.15]], win:null, dl:0.85, node:'hall', on:true},      // the landing before the doors, its part by flat 3, the way past the pillar, corridor, the square hall by the bridge, the second entrance
+  hall:{name:'Lobby', rs:[[LB.XL,LB.SU,L+LB.D4,L+1.34],[LB.XL,LB.SD,L+0.9,LB.RZ],[LB.CX0+0.3,LB.SD,LB.RZ-0.3,LB.EH+0.45],[LB.CX0,LB.CX1,LB.EH,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC]], win:null, dl:0.85, node:'hall', on:true},      // the landing before the doors, its part by flat 3, the way past the pillar, corridor, the square hall by the bridge, the second entrance
   out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true},      // the yard and the neighbouring building
   street:{name:'Street', rs:[], win:null, dl:1, node:'out', ext:true}     // the bridges, the garden, the square and Haroe St, lit by their own lamps in the evening; its walkable areas are added in exterior.js
 };
