@@ -190,10 +190,11 @@ function drawHp(){const on=A.simsOn&&G.hp<100; hud.style.display=on?'flex':'none
   hud.innerHTML='♥ <span style="display:inline-block;width:90px;height:8px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden"><i style="display:block;height:100%;width:'+G.hp+'%;background:'+(G.hp>40?'#63c398':'#e0473c')+'"></i></span>';}
 function hurtMe(n){const p=SM.player; G.hp=Math.max(0,G.hp-n); G.regen=A.t+6; p.p.act='hurt'; SM.later(0.45,function(){if(!G.down) p.p.act=null;}); drawHp(); if(G.hp<=0) wasted();}
 function wasted(){
-  if(G.down) return; G.down=true; const p=SM.player; SM.stop(); p.p.lieY=0; p.p.lieT=1; big.textContent='WASTED'; big.style.display='flex';
+  if(G.down) return; G.down=true; const p=SM.player, out=!!(A.drive&&A.drive.on&&A.drive.on())||(!p.lvl&&(p.room==='street'||p.room==='town'||p.room==='out')); G.outside=out; if(A.drive&&A.drive.on&&A.drive.on()) A.drive.exit(true); SM.stop(); p.p.lieY=0; p.p.lieT=1; big.textContent='WASTED'; big.style.display='flex';
   fighters.forEach(function(t){state(t).fight=0; t.p.act=null;}); fighters.length=0;
   SM.later(3.2,function(){big.style.display='none'; p.p.lieT=0; G.down=false; G.hp=100; drawHp();
-    p.script=null; p.path=[]; p.lvl=0; const c=SM.nearestXZ(1.5,3.2)||[SM.EX,SM.SPAWN]; p.x=c[0]; p.z=c[1]; p.h=p.hT=R; if(SM.flyToPlayer) SM.flyToPlayer();
+    p.script=null; p.path=[]; if(A.gtaRespawn&&A.gtaRespawn(out)) return;      /* out in the streets you wake up at the clinic (gta-hud.js), as GTA sends you to hospital */
+    p.lvl=0; const c=SM.nearestXZ(1.5,3.2)||[SM.EX,SM.SPAWN]; p.x=c[0]; p.z=c[1]; p.h=p.hT=R; if(SM.flyToPlayer) SM.flyToPlayer();
     if(A.floors){const g=A.floors.G; const lost=g.loot; g.loot=0; if(g.wanted) {g.wanted=0;} if(A.floors.drawHud) A.floors.drawHud(); toast('You wake up at home, aching.'+(lost?' The ₪ '+lost+' is gone.':''));} else toast('You wake up at home, aching.');});
 }
 

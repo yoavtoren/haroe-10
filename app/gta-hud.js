@@ -101,7 +101,7 @@ function bigShow(kind,sub){if(big===kind) return; big=kind; $('gBigT').textConte
   if(A.gtaStats){if(kind==='wasted') A.gtaStats.wasted++; else A.gtaStats.busted++;} if(A.gtaSound&&A.gtaSound.sting) A.gtaSound.sting(kind);}
 function bigHide(){if(!big) return; big=null; $('gBig').hidden=true; hud.classList.remove('dead'); A.timeScale=1;}
 function deaths(){const G=A.game&&A.game.G, F=A.floors&&A.floors.G;
-  if(G&&G.down) bigShow('wasted','You wake up at home.'); else if(F&&F.busted) bigShow('busted','A night at the station and a fine.'); else bigHide();}
+  if(G&&G.down) bigShow('wasted',G.outside?'You come to at the clinic.':'You wake up at home.'); else if(F&&F.busted) bigShow('busted','A night at the station and a fine.'); else bigHide();}
 
 /* ---------- each frame ---------- */
 let rt=0, was=false;
@@ -125,5 +125,10 @@ let passT=null;
 function passed(name,reward,title){if(!on()) return; const el=$('gPass'); el.firstChild.textContent=title||'task complete'; $('gPassN').textContent=name; $('gPassR').innerHTML=reward?'+ <small>₪</small>'+reward:'';
   el.hidden=false; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; clearTimeout(passT); passT=setTimeout(function(){el.hidden=true;},4200);
   if(reward&&A.floors&&A.floors.G){A.floors.G.loot+=reward;} if(A.gtaSound&&A.gtaSound.passed) A.gtaSound.passed();}
+/* wasted out in the streets: you come to outside the clinic, and pay for it */
+A.gtaRespawn=function(out){if(!out||!T) return false; const cl=(A.gtaPOI||[]).find(function(q){return q.k==='clinic';}); if(!cl) return false; const q=T.nearest(cl.x,cl.z); if(!q) return false;
+  const p=SM.player; p.lvl=0; p.x=p.lx=q[0]; p.z=p.lz=q[1]; p.h=p.hT=Math.atan2(cl.x-q[0],cl.z-q[1]); p.room='street';      /* facing the clinic, the camera behind you in the street */ if(SM.flyToPlayer) SM.flyToPlayer();
+  const F=A.floors&&A.floors.G, bill=F?Math.min(F.loot,300):0; if(F){F.loot-=bill; F.wanted=0; if(A.floors.drawHud) A.floors.drawHud();}
+  SM.toast('You come to outside the Maccabi clinic.'+(bill?' The bill: ₪ '+bill+'.':'')); return true;};
 A.gtaHud={on:on,big:bigShow,passed:passed};
 })();

@@ -53,7 +53,7 @@ function spots(){
   const parks=T.mapData.parks.filter(function(q){return q.kind!=='playground'&&q.p.length>3;}).map(function(q){let cx=0,cz=0; q.p.forEach(function(v){cx+=v[0]; cz+=v[1];}); return {x:cx/q.p.length,z:cz/q.p.length,name:q.name};})
     .filter(function(q){return T.free(q.x,q.z,0.4);}).sort(function(a,b){return hyp(a.x-A.LB.XF,a.z-A.LB.ZC)-hyp(b.x-A.LB.XF,b.z-A.LB.ZC);});
   if(parks[0]) place('pistol',parks[0].x,parks[0].z); if(parks[2]) place('armour',parks[2].x,parks[2].z); if(parks[4]) place('pistol',parks[4].x,parks[4].z);
-  const cl=(A.gtaPOI||[]).find(function(q){return q.k==='clinic';}); if(cl){const q=T.nearest(cl.x,cl.z); if(q) place('health',q[0],q[1]);}}
+  const cl=(A.gtaPOI||[]).find(function(q){return q.k==='clinic';}); if(cl){const q0=T.nearest(cl.x,cl.z), q=q0&&T.nearest(q0[0]+5,q0[1]+3); if(q) place('health',q[0],q[1]);}}      /* a few steps from where you come to after being wasted (gta-hud.js) */
 function take(p){const S=SM.toast; p.back=A.t+(p.once?1e9:120); p.g.visible=false;
   if(p.kind==='bat'){const had=W.has.bat; W.has.bat=true; if(!had||W.cur==='fists') W.cur='bat'; S&&S('Baseball bat. Tab changes weapon.');}
   else if(p.kind==='pistol'){W.has.pistol=true; W.ammo+=24; if(!W.clip){W.clip=Math.min(12,W.ammo); W.ammo-=W.clip;} W.cur='pistol'; S&&S(TOUCH?'Pistol. The punch button shoots.':'Pistol. Hold the right mouse button to aim, click to fire. Tab changes weapon.');}
