@@ -57,7 +57,7 @@ A.skyVer=function(){return skyVer;};
 A.sunDir=null;      // set while the clock runs: streetplay.js points the sun's shadows along it
 
 /* ---------- stars, the moon and a glow round the sun, on the sky ---------- */
-const sky=new THREE.Group(); sky.userData.nc=true; sky.userData.live=true; sky.frustumCulled=false; scene.add(sky);
+const sky=new THREE.Group(); sky.userData.nc=true; sky.userData.live=true; sky.frustumCulled=false; sky.visible=false; scene.add(sky);      // only in Sims mode, never over the Design tab's flat
 const starG=new THREE.BufferGeometry(), SN=900, sp=new Float32Array(SN*3), rr=A.rng(4242);
 for(let i=0;i<SN;i++){const u=rr()*2-1, a=rr()*2*R, y=Math.abs(u)*0.95+0.05, r=Math.sqrt(1-y*y); sp[i*3]=Math.cos(a)*r*80; sp[i*3+1]=y*80; sp[i*3+2]=Math.sin(a)*r*80;}
 starG.setAttribute('position',new THREE.BufferAttribute(sp,3));

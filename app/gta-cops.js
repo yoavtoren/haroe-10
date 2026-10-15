@@ -241,6 +241,7 @@ function sight(dt){const m=me(), hidden=!outside();
     FOOT.forEach(function(o){const a=o.a, d=hyp(m.x-a.x,m.z-a.z); if(o.state==='down'||o.state==='back') return; if(d<42){if(fresh) o.los=los(a.x,a.z,m.x,m.z); if(o.los) seen=true;} else o.los=false;});
     if(heli&&G.wanted>=4&&hyp(heli.x-m.x,heli.z-m.z)<65) seen=true;}
   if(A.t<Z.grace&&!hidden) seen=true;
+  const p=SM.player; (G.cops||[]).forEach(function(c){if(!c.gone&&c.lvl===p.lvl&&hyp(c.x-p.x,c.z-p.z)<14) seen=true;});      // the officers on the stairs (floors.js) see you too
   Z.seen=seen;
   if(seen){Z.x=m.x; Z.z=m.z; Z.t=A.t; Z.lose=0;}
   else if(!hidden){const r=radius(); if(hyp(m.x-Z.x,m.z-Z.z)>r){Z.lose+=dt; if(Z.lose>6) lost();} else Z.lose=Math.max(0,Z.lose-dt*0.3);}}
