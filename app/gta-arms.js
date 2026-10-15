@@ -110,11 +110,11 @@ if(hurt0) A.game.hurt=function(n){if(A.gtaArmor>0){const took=Math.min(A.gtaArmo
 A.gtaAttack=function(){if(W.cur==='pistol') fire(); else if(A.game.punchNearest) A.game.punchNearest();};
 
 /* ---------- aiming with the right mouse button ---------- */
-cv.addEventListener('mousedown',function(e){if(!A.simsOn||!SM.player) return; if(e.button===2&&W.cur==='pistol'){W.aim=true; e.preventDefault();} else if(e.button===0&&W.aim){fire(); e.preventDefault(); e.stopImmediatePropagation();}},true);
+cv.addEventListener('mousedown',function(e){if(!A.simsOn||!SM.player||A.paused) return; if(e.button===2&&W.cur==='pistol'&&A.gtaCam&&A.gtaCam()){W.aim=true; e.preventDefault();} else if(e.button===0&&W.aim){fire(); e.preventDefault(); e.stopImmediatePropagation();}},true);
 window.addEventListener('mouseup',function(e){if(e.button===2) W.aim=false;});
 window.addEventListener('blur',function(){W.aim=false;});
-window.addEventListener('keydown',function(e){if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if(e.key==='Tab'){e.preventDefault(); if(!e.repeat) cycle(e.shiftKey?-1:1);}});
-A.gtaAiming=function(){return W.aim&&W.cur==='pistol'&&A.simsOn&&!!SM.player&&!SM.player.driving;};
+window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||(e.target.closest&&e.target.closest('#panel,#gtaMenu,#modal'))) return; if(e.key==='Tab'){e.preventDefault(); if(!e.repeat) cycle(e.shiftKey?-1:1);}});
+A.gtaAiming=function(){return W.aim&&W.cur==='pistol'&&A.simsOn&&!!SM.player&&!SM.player.driving&&!!(A.gtaCam&&A.gtaCam());};
 
 /* ---------- on screen: the weapon and its rounds, the crosshair ---------- */
 const box=document.createElement('div'); box.id='gWeap'; box.style.cssText='pointer-events:none;text-align:right;color:#fff;opacity:0;transition:opacity .4s;font:700 15px/1.2 "Barlow Condensed",sans-serif;text-shadow:0 1px 4px rgba(0,0,0,.85);margin-top:4px';      // under the money, in the display's top-right stack

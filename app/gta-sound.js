@@ -62,7 +62,7 @@ const V=[];      // engine voices for the cars nearest you
 function voice(){const c=shared(), o=c.createOscillator(), o2=c.createOscillator(), n=nsrc(), nf=c.createBiquadFilter(), f=c.createBiquadFilter(), g=c.createGain(), p=c.createStereoPanner?c.createStereoPanner():null;
   o.type='sawtooth'; o2.type='square'; o.frequency.value=45; o2.frequency.value=22; nf.type='bandpass'; nf.frequency.value=420; nf.Q.value=0.6; f.type='lowpass'; f.frequency.value=420; g.gain.value=0;
   const g2=c.createGain(); g2.gain.value=0.3; o.connect(f); o2.connect(g2).connect(f); n.connect(nf).connect(f); f.connect(g); if(p){g.connect(p); p.connect(B.out);} else g.connect(B.out);
-  o.start(); o2.start(); n.start(); return {o:o,o2:o2,f:f,g:g,p:p,car:null};}
+  o.start(); o2.start(); n.start(); return {o:o,o2:o2,n:n,f:f,g:g,p:p,car:null};}
 const cf=new THREE.Vector3();
 function traffic(){const D=A.drive, SM=A.sims; if(!D||!D.live||!SM||!SM.player) return; const c=shared(), t=c.currentTime, cam=A.camera;
   if(!V.length) for(let i=0;i<4;i++) V.push(voice());
@@ -77,7 +77,7 @@ function traffic(){const D=A.drive, SM=A.sims; if(!D||!D.live||!SM||!SM.player) 
 let hum=null, evT=0;
 function city(dt){const SM=A.sims, p=SM&&SM.player, c=shared(); if(!p) return; const t=c.currentTime, on=A.simsOn&&!A.paused, out=outside(), night=A.gtaFx?A.gtaFx.now.night:0;
   if(!hum&&on){const s=nsrc(), f=c.createBiquadFilter(), f2=c.createBiquadFilter(), g=c.createGain(), l=c.createOscillator(), lg=c.createGain(); f.type='bandpass'; f.frequency.value=320; f.Q.value=0.4; f2.type='lowpass'; f2.frequency.value=900;
-    l.frequency.value=0.07; lg.gain.value=0.012; g.gain.value=0; l.connect(lg).connect(g.gain); s.connect(f).connect(f2).connect(g).connect(B.out); s.start(); l.start(); hum={g:g};}
+    l.frequency.value=0.07; lg.gain.value=0.012; g.gain.value=0; l.connect(lg).connect(g.gain); s.connect(f).connect(f2).connect(g).connect(B.out); s.start(); l.start(); hum={g:g,s:s,l:l};}
   if(hum) hum.g.gain.setTargetAtTime(on?(out?0.028:0.012)*(1-0.55*night):0,t,0.8);
   /* indoors the street comes through the walls, dull and quiet */
   B.outF.frequency.setTargetAtTime(out?18000:520,t,0.25); B.out.gain.setTargetAtTime(on?(out?1:0.45):0,t,0.3);
@@ -178,7 +178,7 @@ const tag=document.createElement('div'); tag.id='gRadio'; tag.style.cssText='pos
 function show(){if(!A.stage) return; if(!tag.parentNode) A.stage.appendChild(tag); const s=STATIONS[RD.st];
   tag.innerHTML=RD.off||!s?'<b style="font:italic 700 26px/1 \'Barlow Condensed\',sans-serif">Radio off</b>':'<b style="font:italic 700 28px/1 \'Barlow Condensed\',sans-serif">'+s.name+' '+s.fm+'</b><br><span style="font:600 15px/1.4 \'Barlow Condensed\',sans-serif;opacity:.85">'+s.tag+'</span>';
   tag.style.opacity=1; clearTimeout(show.h); show.h=setTimeout(function(){tag.style.opacity=0;},2600);}
-window.addEventListener('keydown',function(e){if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); if(k==='q'&&!e.repeat&&A.drive&&A.drive.on&&A.drive.on()) station(e.shiftKey?-1:1);});
+window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); if(k==='q'&&!e.repeat&&A.drive&&A.drive.on&&A.drive.on()) station(e.shiftKey?-1:1);});
 let inCar=false;
 function radio(){const d=!!(A.simsOn&&A.drive&&A.drive.on&&A.drive.on()&&!A.paused); if(d!==inCar){inCar=d; if(d){if(!RD.off) radioOn(true); else show();} else radioOn(false);}}
 
@@ -216,9 +216,12 @@ function passed(){const c=shared(), t=c.currentTime, g=c.createGain(), f=c.creat
 function blip(){const c=shared(), t=c.currentTime; tone(B.sfx,'sine',880,1320,0.08,0.06,t);}
 function pause(on){paused=on; const c=shared(); if(on){if(window.speechSynthesis) window.speechSynthesis.cancel(); c.suspend();} else c.resume(); burst(B.master,0.25,'bandpass',on?600:1200,0.8,0.04);}
 
+/* out of Sims mode: the voices that hum on underneath are stopped, and made again when you come back */
+function hush(){if(!V.length&&!hum) return; const t=ctx.currentTime; V.forEach(function(v){v.g.gain.setTargetAtTime(0,t,0.1); const n=v; setTimeout(function(){try{n.o.stop(); n.o2.stop(); n.n.stop();}catch(e){}},600);}); V.length=0;
+  if(hum){const h=hum; hum=null; h.g.gain.setTargetAtTime(0,t,0.1); setTimeout(function(){try{h.s.stop(); h.l.stop();}catch(e){}},600);}}
 /* ---------- every frame ---------- */
 A.frameFns.push(function(dt){if(!ctx){if(!A.simsOn) return; shared();}
-  if(A.simsOn){steps(); traffic(); city(dt);} else if(B){B.out.gain.setTargetAtTime(0,ctx.currentTime,0.3);}
+  if(A.simsOn){steps(); traffic(); city(dt);} else if(B){B.out.gain.setTargetAtTime(0,ctx.currentTime,0.3); hush();}
   radio();});
 window.addEventListener('load',function(){if(A.gtaSet) A.gtaSet.on(function(k){if(k==='master'||k==='radio'||k==='sfx') volumes();});});
 A.gtaSound={ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,shot:shot,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,passed:passed,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};

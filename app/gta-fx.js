@@ -78,7 +78,7 @@ const DEF={si:A.sun.intensity,sc:A.sun.color.clone(),hi:A.hemi.intensity,hc:A.he
 let ruled=false, dayWas=-1, sunWas=new THREE.Vector3();
 function light(dt){
   const out=A.simsOn&&SM.player;
-  if(!out){if(ruled){ruled=false; A.sun.intensity=DEF.si; A.sun.color.copy(DEF.sc); A.hemi.intensity=DEF.hi; A.hemi.color.copy(DEF.hc); A.hemi.groundColor.copy(DEF.hg); A.sunDir=null; dayWas=-1; sky.visible=false; A.touch(3);} return;}
+  if(!out){if(ruled){ruled=false; const pc=document.getElementById('pClimate'); if(!pc||pc.hidden){A.sun.intensity=DEF.si; A.sun.color.copy(DEF.sc); A.hemi.intensity=DEF.hi; A.hemi.color.copy(DEF.hc); A.hemi.groundColor.copy(DEF.hg);} A.sunDir=null; dayWas=-1; sky.visible=false; A.touch(3);} return;}      /* the Sun & air tab sets its own sun: left as it is */
   ruled=true; sky.visible=true;
   const el=sunAt(CK.h,SUN), eDeg=el*180/R; colours(eDeg);
   /* the moon, across the sky from the sun */

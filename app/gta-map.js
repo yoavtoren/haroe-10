@@ -13,7 +13,7 @@ const $=function(id){return document.getElementById(id);};
 function hyp(a,b){return Math.hypot(a,b);}
 
 /* ---------- settings, kept in this browser ---------- */
-const DEF={master:0.8,radio:0.6,sfx:0.9,voices:true,quality:TOUCH?'low':'high',sens:1,invert:false,hud:true,clock:'game',dist:1};
+const DEF={master:0.8,radio:0.6,sfx:0.9,voices:true,quality:TOUCH?'low':'high',sens:0.5,invert:false,hud:true,clock:'game',dist:1};
 const SET=Object.assign({},DEF);
 try{const s=JSON.parse(localStorage.getItem('haroe-gta')||'{}'); for(const k in DEF) if(s[k]!=null&&typeof s[k]===typeof DEF[k]) SET[k]=s[k];}catch(e){}
 function save(){try{localStorage.setItem('haroe-gta',JSON.stringify(SET));}catch(e){}}
@@ -251,5 +251,6 @@ A.frameFns.push(function(dt){
 /* the menu draws itself again while it is open, so the blips blink */
 setInterval(function(){if(!menu.hidden&&tab==='map'){drawMap();}},250);
 showTab('map');
+['tabDesign','tabClimate'].forEach(function(id){const b=$(id); if(b) b.addEventListener('click',function(){if(!menu.hidden) open(false);},true);});      /* leaving Sims mode from the panel closes the menu first */
 A.gtaMapBase={canvas:base,PX:PX,TX0:TX0,TZ0:TZ0,TS:TS,COL:COL};
 })();

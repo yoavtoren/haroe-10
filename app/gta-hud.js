@@ -113,6 +113,10 @@ A.frameFns.push(function(dt){
   $('gFloor').hidden=!SM.player.lvl; if(SM.player.lvl) $('gFloor').textContent=FLOOR[SM.player.lvl]||'';
 });
 $('gRadar').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true);});
+let simsWas=false;
+A.frameFns.push(function(){if(simsWas&&!A.simsOn){const G=A.game&&A.game.G, F=A.floors&&A.floors.G, p=SM.player;      /* out of Sims mode while wasted or busted: the timers that would end it were dropped with the rest */
+    if(G&&G.down){G.down=false; G.hp=100;} if(F&&F.busted){F.busted=false; F.wanted=0;} if(p){p.p.lieT=0; p.p.act=null;} bigHide(); A.timeScale=1;}
+  simsWas=A.simsOn;});
 /* M opens the pause map; the round map's own M is set aside while this display is on */
 window.addEventListener('keydown',function(e){if(!on()||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase();
   if(k==='m'&&A.gtaMap&&!A.gtaMap.on){A.gtaMap.open(true); e.preventDefault(); e.stopImmediatePropagation();}},true);

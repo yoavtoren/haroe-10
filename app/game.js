@@ -29,7 +29,7 @@ function bark(){[0,0.28].forEach(function(t){const c=actx(); if(!c) return; cons
 /* ---------- keys: WASD or arrows walk (Shift runs), E does the first thing on offer, F punches ---------- */
 const keys={}; let kbOn=false;
 window.addEventListener('keydown',function(e){
-  if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true; A.running=!!keys.shift;
+  if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true; A.running=!!keys.shift;      /* nothing while the GTA pause menu is open */
   if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k)>=0) e.preventDefault();
   if(k==='e'&&!e.repeat){if(A.drive&&A.drive.key&&A.drive.key('e')) return; doFirst();}
   if(k==='f'&&!e.repeat){if(A.gtaCar&&A.gtaCar()) return; if(A.drive&&A.drive.on&&A.drive.on()) return; punchNearest();}      // F: in or out of a car close by, as in GTA; with none near, a punch
@@ -98,7 +98,7 @@ A.stage.appendChild(bar);
 const hud=document.createElement('div'); hud.id='hpHud';
 hud.style.cssText='position:absolute;left:12px;bottom:calc(30px + env(safe-area-inset-bottom,0px));z-index:3;display:none;align-items:center;gap:8px;background:rgba(23,33,28,.8);color:#fff;font:700 12px/1 inherit;padding:6px 10px;border-radius:99px;pointer-events:none';
 A.stage.appendChild(hud);
-const big=document.createElement('div');
+const big=document.createElement('div'); big.id='gameBig';      /* hidden while the GTA display (gta-hud.js) has its own */
 big.style.cssText='position:absolute;inset:0;z-index:8;display:none;align-items:center;justify-content:center;font:800 64px/1 inherit;letter-spacing:.06em;color:#e0473c;text-shadow:0 4px 24px rgba(0,0,0,.6);background:rgba(0,0,0,.35);pointer-events:none';
 A.stage.appendChild(big);
 let sel=null;
@@ -205,7 +205,7 @@ function talk(t){const p=SM.player; approach(t,0.9,function(){const k=t.sub==='s
 function punch(t){
   const p=SM.player, s=state(t); if(s.down){toast('They are already down.'); return;}
   approach(t,0.7,function(){p.p.act=A.gtaMelee?A.gtaMelee.act:'punch'; whoosh(); SM.later(0.3,function(){
-    hit(0.8); t.p.act='hurt'; s.hp-=(t.sub==='cop'?20:34)*(A.gtaMelee?A.gtaMelee.k:1);      // a bat (gta-arms.js) hits harder bubble(t,rnd(['Ow!','Ouch!','Hey!!','Argh!']),1.4);
+    hit(0.8); t.p.act='hurt'; s.hp-=(t.sub==='cop'?20:34)*(A.gtaMelee?A.gtaMelee.k:1); bubble(t,rnd(['Ow!','Ouch!','Hey!!','Argh!']),1.4);      // a bat (gta-arms.js) hits harder
     SM.later(0.5,function(){p.p.act='guard'; SM.later(1.2,function(){if(p.p.act==='guard') p.p.act=null;}); if(t.p.act==='hurt') t.p.act=null;});
     const w=witnesses(t,14);
     if(t.sub==='cop'){cops(3); if(!state(t).fight) fightBack(t);}

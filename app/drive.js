@@ -120,7 +120,7 @@ function enter(c){
   setTimeout(function(){if(getting&&!driving){getting=false; c.held=false; p.speed=1.4;}},20000);
 }
 function exit(quiet){
-  const c=driving, p=SM.player; if(!c) return; driving=null; engine(false); hud.style.display='none'; p.driving=null; c.v=Math.abs(c.v)<0.5?0:c.v*0.3; c.steer=0;
+  const c=driving, p=SM.player; if(!c) return; driving=null; engine(false); c.roll=c.pitch=0; c.vdir=c.psi; c.place();      /* it settles level when you leave it */ hud.style.display='none'; p.driving=null; c.v=Math.abs(c.v)<0.5?0:c.v*0.3; c.steer=0;
   const f=c.fwd(), W=c.dim[1]/2+0.6, spots=[[c.x+f[1]*W,c.z-f[0]*W],[c.x-f[1]*W,c.z+f[0]*W],[c.x-f[0]*(c.dim[0]/2+0.8),c.z-f[1]*(c.dim[0]/2+0.8)],[c.x+f[0]*(c.dim[0]/2+0.8),c.z+f[1]*(c.dim[0]/2+0.8)]];
   let s=spots.find(function(q){return A.nav.isFree(q[0],q[1]);})||spots[0];
   p.x=s[0]; p.z=s[1]; p.h=p.hT=c.psi+R/2; p.p.g.visible=true; p.p.sitT=0; p.lx=p.x; p.lz=p.z; SM.setDoing(''); if(!quiet){doorSound(); SM.flyToPlayer();}
@@ -300,6 +300,7 @@ A.frameFns.push(function(dt){
     for(let i=traffic.length-1;i>=0;i--){const t=traffic[i]; if(Math.hypot(t.car.x-mx,t.car.z-mz)>240&&!t.car.held){t.car.remove(); traffic.splice(i,1);}}
     if(traffic.length<MAXT&&T.inside(mx,mz)) spawnTraffic(mx,mz);
     else if(!traffic.some(function(o){return o.bus;})&&traffic.length){let far=null; traffic.forEach(function(o){const d=Math.hypot(o.car.x-mx,o.car.z-mz); if(!o.car.held&&(!far||d>far.d)) far={o:o,d:d};}); if(far&&far.d>70){far.o.car.remove(); traffic.splice(traffic.indexOf(far.o),1);}}}}      // make room for a bus
+  if(getting&&!driving&&!p.path.length&&!p.cb){getting=false; p.speed=1.4; live.forEach(function(c){if(c.held&&!c.traffic) c.held=false;});}      /* the way to the car's door was called off */
   for(let i=traffic.length-1;i>=0;i--){const t=traffic[i]; trafficStep(t,dt); if(t.gone){t.car.remove(); traffic.splice(i,1);}}
   if(driving){drive(driving,dt); if(!(A.gtaCam&&A.gtaCam())) chase(driving,dt); else if(shake>0){if(A.gtaShake) A.gtaShake(shake); shake=0;}
     const w=T.roadNear(driving.x,driving.z); $('dWhere').textContent=w&&w.d<6&&w.r.name?w.r.name:'';

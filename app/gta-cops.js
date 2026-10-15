@@ -158,6 +158,7 @@ function footStep(o,dt){
   if(o.state==='down') o.state='chase';
   if(s&&s.fight&&A.t<s.fight){a.gun.visible=false; a.update(dt); return true;}      // throwing punches with you (game.js)
   if(G.busted){a.path=[]; a.cb=null; a.gun.visible=false; if(a.p.act==='aim') a.p.act=null; a.update(dt); return true;}      // the arrest: they stand over you
+  if(!outside()&&!D.on()){a.p.act=null; a.gun.visible=G.wanted>=3; o.arrest=0; o.los=false; if(A.t>o.next){o.next=A.t+2; if(hyp(Z.x-a.x,Z.z-a.z)>3) a.goTo(Z.x+(Math.random()-0.5)*4,Z.z+(Math.random()-0.5)*4);} a.update(dt); return true;}      // you are indoors or upstairs: they wait about where they last saw you
   const d=hyp(m.x-a.x,m.z-a.z);
   if(!G.wanted&&o.state!=='back'&&o.state!=='walk') o.state='back';
   if(o.state==='back'||o.state==='walk'){a.p.act=null; a.gun.visible=false; a.speed=o.state==='back'?3.2:1.4;
@@ -183,7 +184,7 @@ function footStep(o,dt){
   if(sees&&d<9){a.release(); a.path=[[tx,tz]]; a.cb=null;}
   else if(A.t>o.next){o.next=A.t+1.3; if(hyp(tx-a.x,tz-a.z)<70&&A.nav.isFree(tx,tz)) a.goTo(tx,tz); else a.goTo(a.x+(tx-a.x)*0.3,a.z+(tz-a.z)*0.3);}
   a.update(dt); return true;}
-function busted(o,car){if(G.busted) return; o.a.say(rnd(ARREST),2.4); o.a.p.act='reach'; if(car&&D.on()) D.exit(true); SM.player.p.act='surrender'; if(A.floors.busted) A.floors.busted();}
+function busted(o,car){if(G.busted) return; o.a.say(rnd(ARREST),2.4); o.a.p.act='reach'; if(car&&D.on()) D.exit(true); if(A.floors.busted) A.floors.busted(); SM.player.p.act='surrender';}      // after floors.js, which would have you wave
 
 /* ---------- the helicopter ---------- */
 function heliModel(){const g=new THREE.Group(), m=function(c){return new THREE.MeshLambertMaterial({color:c});}, P=function(geo,mat,x,y,z){const o=new THREE.Mesh(geo,mat); o.position.set(x,y,z); g.add(o); return o;};      // no shadow: the spinning rotor smeared one into a dark disc over the street
@@ -227,7 +228,7 @@ function heliStep(dt){const m=me();
       const s=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain(), am=c.createGain(), lfo=c.createOscillator(), lg=c.createGain(); s.buffer=b; s.loop=true; f.type='lowpass'; f.frequency.value=260; lfo.frequency.value=13; lg.gain.value=0.5; am.gain.value=0.5; lfo.connect(lg).connect(am.gain);
       g.gain.value=0; s.connect(f).connect(am).connect(g).connect(out(c)); s.start(); lfo.start(); rotorSnd={s:s,lfo:lfo,g:g};}
     rotorSnd.g.gain.setTargetAtTime(clamp(1.2/(1+d*0.04),0,0.5),c.currentTime,0.3);}
-  if(leaving&&hyp(heli.x-m.x,heli.z-m.z)>220){[heli.g,heli.beam,heli.spot].forEach(function(o){scene.remove(o);}); heli=null; if(rotorSnd){const r=rotorSnd; rotorSnd=null; r.g.gain.setTargetAtTime(0,actx().currentTime,0.4); setTimeout(function(){try{r.s.stop(); r.lfo.stop();}catch(e){}},1500);}}}
+  if(leaving&&hyp(heli.x-m.x,heli.z-m.z)>220){dropHeli(); if(rotorSnd){const r=rotorSnd; rotorSnd=null; r.g.gain.setTargetAtTime(0,actx().currentTime,0.4); setTimeout(function(){try{r.s.stop(); r.lfo.stop();}catch(e){}},1500);}}}
 
 /* =====================================================================
    Seeing you, losing you, and stars for what they see you do
@@ -245,7 +246,7 @@ function sight(dt){const m=me(), hidden=!outside();
   Z.seen=seen;
   if(seen){Z.x=m.x; Z.z=m.z; Z.t=A.t; Z.lose=0;}
   else if(!hidden){const r=radius(); if(hyp(m.x-Z.x,m.z-Z.z)>r){Z.lose+=dt; if(Z.lose>6) lost();} else Z.lose=Math.max(0,Z.lose-dt*0.3);}}
-function lost(){G.wanted=0; Z.lose=0; if(A.floors.drawHud) A.floors.drawHud(); if(A.floors.siren) A.floors.siren(false); SM.toast('You lost the police.'); if(A.gtaSound&&A.gtaSound.lost) A.gtaSound.lost();}
+function lost(){G.wanted=0; Z.lose=0; (G.cops||[]).forEach(function(c){c.leaving=true; c.next=0;}); if(A.floors.drawHud) A.floors.drawHud(); if(A.floors.siren) A.floors.siren(false); SM.toast('You lost the police.'); if(A.gtaSound&&A.gtaSound.lost) A.gtaSound.lost();}
 /* a crime they see while you are wanted: a star more (at most one every few seconds) */
 const raise0=A.floors.raise;
 A.floors.raise=function(n){const was=G.wanted; if(was>0&&n>0&&Z.seen&&outside()&&A.t-Z.bump>6){n=Math.max(n,was+1); Z.bump=A.t;} raise0(Math.min(5,n));};
@@ -254,7 +255,8 @@ A.floors.raise=function(n){const was=G.wanted; if(was>0&&n>0&&Z.seen&&outside()&
    Every frame
    ===================================================================== */
 let spawnT=0, wasW=0, active=false;
-function clear(){UNITS.slice().forEach(dropCar); FOOT.forEach(function(o){o.a.remove();}); FOOT.length=0; if(heli){[heli.g,heli.beam,heli.spot].forEach(function(o){scene.remove(o);}); heli=null;} sirenLevel(0); if(rotorSnd){try{rotorSnd.s.stop(); rotorSnd.lfo.stop();}catch(e){} rotorSnd=null;}}
+function clear(){UNITS.slice().forEach(dropCar); FOOT.forEach(function(o){o.a.remove();}); FOOT.length=0; if(heli) dropHeli(); if(siren){const s=siren; siren=null; s.g.gain.setTargetAtTime(0,actx().currentTime,0.1); setTimeout(function(){try{s.o.stop(); s.l.stop();}catch(e){}},500);} if(rotorSnd){try{rotorSnd.s.stop(); rotorSnd.lfo.stop();}catch(e){} rotorSnd=null;}}
+function dropHeli(){[heli.g,heli.beam,heli.spot].forEach(function(o){scene.remove(o); o.traverse(function(m){if(m.geometry) m.geometry.dispose(); if(m.material&&m.material!==flashM) m.material.dispose();});}); heli=null;}
 A.frameFns.push(function(dt){
   for(let i=fx.length-1;i>=0;i--){const f=fx[i]; if(A.t>f.until){scene.remove(f.o); if(f.geo) f.geo.dispose(); fx.splice(i,1);}}
   if(!A.simsOn||!SM.player){if(active){active=false; clear();} return;}
@@ -267,7 +269,9 @@ A.frameFns.push(function(dt){
   /* more cars while there are fewer than the stars call for */
   const live=UNITS.filter(function(u){return u.state!=='leave';}).length;
   spawnT-=dt; if(G.wanted>0&&outside()&&live<want()&&spawnT<=0){spawnT=2.5; spawnCar();}
-  for(let i=UNITS.length-1;i>=0;i--){const u=UNITS[i]; if(D.live.indexOf(u.car)<0){UNITS.splice(i,1); continue;} carStep(u,dt); const d=hyp(u.car.x-m.x,u.car.z-m.z); if(d>260&&!inView(u.car.x,u.car.z)) dropCar(u);}
+  for(let i=UNITS.length-1;i>=0;i--){const u=UNITS[i]; if(D.live.indexOf(u.car)<0){UNITS.splice(i,1); continue;}
+    if(u.car===D.pos()){UNITS.splice(i,1); u.crew.forEach(function(o){o.u=null; if(o.state==='back') o.state='chase';}); continue;}      /* you took it: it is yours now, and its officers come after you on foot */
+    carStep(u,dt); const d=hyp(u.car.x-m.x,u.car.z-m.z); if(d>260&&!inView(u.car.x,u.car.z)) dropCar(u);}
   for(let i=FOOT.length-1;i>=0;i--){const o=FOOT[i]; if(!footStep(o,dt)||o.gone){o.a.remove(); FOOT.splice(i,1); if(o.u){const k=o.u.crew.indexOf(o); if(k>=0) o.u.crew.splice(k,1);}}}
   heliStep(dt);
   /* lights going on every car, the siren as loud as the nearest one is close */

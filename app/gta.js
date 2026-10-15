@@ -61,12 +61,12 @@ window.addEventListener('pointerup',function(e){if(drag&&e.pointerId===drag.id) 
 window.addEventListener('pointercancel',function(){drag=null;});
 cv.addEventListener('contextmenu',function(e){if(active()) e.preventDefault();});
 cv.addEventListener('wheel',function(e){if(!active()) return; e.preventDefault(); C.zoom=clamp(C.zoom+(e.deltaY>0?0.12:-0.12),0.55,1.7);},{passive:false});
-function turn(dx,dy,s){C.yaw-=dx*s; C.pitch=clamp(C.pitch-dy*s,-1.25,0.55); C.look=A.t;}
+function turn(dx,dy,s){const S=A.gtaSet, k=S?Math.pow(3,(S.get('sens')-0.5)*2):1, inv=S&&S.get('invert')?-1:1; C.yaw-=dx*s*k; C.pitch=clamp(C.pitch-dy*s*k*inv,-1.25,0.55); C.look=A.t;}      /* mouse speed and up-and-down from the settings (gta-map.js) */
 
 /* ---------- keys ---------- */
 const keys={};
 window.addEventListener('keydown',function(e){
-  if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true;
+  if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true;
   if(e.repeat) return;
   if(k===' '&&!car()){jump(); e.preventDefault();}
   else if(k==='v') cycle();
@@ -114,8 +114,8 @@ A.walkSpeed=function(run){const out=outdoors(); return run?(out?5.6:3.1):(out?1.
 const UP=new THREE.Vector3(0,1,0);
 function frame(dt){
   const on=active();
-  if(!on){if(hid.length) unhide(); if(C.headHid&&SM.player&&SM.camMode!=='eye'){C.headHid=false; SM.player.p.hideHead(false);} if(C.was){C.was=false; ctl.enabled=true; if(locked()) document.exitPointerLock(); if(SM.camMode!=='eye'){cam.fov=40; cam.updateProjectionMatrix();}} return;}
-  if(!C.was){C.was=true; C.snap=true; const p=SM.player; C.yaw=(car()?A.drive.heading():p.h); C.pitch=outdoors()||car()?-0.2:-0.4;}
+  if(!on){if(hid.length) unhide(); if(C.headHid&&SM.player&&SM.camMode!=='eye'){C.headHid=false; SM.player.p.hideHead(false);} if(C.was){C.was=false; if(SM.camMode!=='eye') ctl.enabled=true; if(locked()) document.exitPointerLock(); if(SM.camMode!=='eye'){cam.fov=40; cam.updateProjectionMatrix();}} return;}
+  if(!C.was){C.was=true; C.snap=true; const p=SM.player; C.yaw=(car()?A.drive.heading():p.h); C.pitch=outdoors()||car()?-0.2:-0.4; if(A.gtaSet) C.zoom=A.gtaSet.get('dist');}
   ctl.enabled=false; if(A.flying()) A.stopFly();
   const p=SM.player, c=car(), out=c?true:outdoors(), lvl=p.lvl||0, ls=A.sticks&&A.sticks.look;
   if(ls&&Math.hypot(ls.x,ls.y)>0.15){C.yaw-=ls.x*Math.abs(ls.x)*dt*2.6; C.pitch=clamp(C.pitch-ls.y*Math.abs(ls.y)*dt*1.4,-1.25,0.55); C.look=A.t;}      // the right stick
@@ -209,5 +209,6 @@ A.frameFns.push(function(dt){
   if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bRadio.hidden=!c; bCar.classList.toggle('on',c);
     const W=A.gtaWeapon; bWeap.hidden=c||!W||!(W.has.bat||W.has.pistol); const gun=W&&W.cur==='pistol'; if(bHit.dataset.gun!==String(gun)){bHit.dataset.gun=gun; bHit.lastChild.textContent=gun?'Shoot':'Punch';}}
 });
+if(A.gtaSet) A.gtaSet.on(function(k,v){if(k==='dist') C.zoom=v;});
 A.gta=Object.assign(A.gta||{},{cam:C,active:active,cycle:cycle,jump:jump,punch:punch,enterNear:enterNear,pressCams:pressCams});
 })();
