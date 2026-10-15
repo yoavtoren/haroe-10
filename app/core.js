@@ -437,10 +437,12 @@ function resize(){
 }
 new ResizeObserver(resize).observe(stage);
 A.frameFns=[]; A.labelFns=[]; A.t=0;
-let last=0;
+let last=0, held=0;
+A.paused=false; A.timeScale=1;
 function frame(now){
   requestAnimationFrame(frame);
-  const dt=Math.min(0.1,Math.max(0.001,(now-last)/1000)); last=now; A.t=now/1000;
+  if(A.paused){held+=now-last; last=now; return;}      // the pause menu (gta-map.js): nothing moves, the clock A.t stands still
+  const dt=Math.min(0.1,Math.max(0.001,(now-last)/1000))*A.timeScale; last=now; A.t=(now-held)/1000;
   if(stepChans(dt)||A.dirty){A.dirty=false; applyShutters(); relight(); A.touch();}
   for(let i=0;i<doors.length;i++){const d=doors[i], tg=d.force!=null?d.force:d.target;
     if(d.cur!==tg){const s=3.2*dt, df=tg-d.cur; d.cur=Math.abs(df)<=s?tg:d.cur+Math.sign(df)*s; d.p.rotation.y=d.closed+(d.open-d.closed)*d.cur*0.94; A.touch();}}

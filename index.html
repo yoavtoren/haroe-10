@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Haroe 10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,600;1,700&family=Passion+One&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#E9ECE7; --panel:#FFFFFF; --ink:#17211C; --muted:#5C6861; --line:#D3D8D1;
@@ -237,6 +237,96 @@ select{font:inherit; padding:7px 8px; border-radius:8px; border:1px solid var(--
 .gtaBtn.on{background:rgba(232,201,26,.85); color:#1d1f21; border-color:#fff}
 .gtaBtn[hidden]{display:none !important}
 body.gtaLock #stage canvas{cursor:none}
+/* GTA display (gta-hud.js): the radar with health and armour under it, stars and money, the street, messages over the radar */
+#gtaHUD{position:absolute; inset:0; pointer-events:none; z-index:3; font-family:"Barlow Condensed",system-ui,sans-serif; color:#fff}
+#gtaHUD[hidden]{display:none !important}
+#gRadar{position:absolute; left:calc(18px + env(safe-area-inset-left,0px)); bottom:calc(20px + env(safe-area-inset-bottom,0px)); pointer-events:auto; cursor:pointer}
+#gRadarC{display:block; border-radius:3px; box-shadow:0 0 0 2px rgba(0,0,0,.6),0 4px 18px rgba(0,0,0,.35)}
+.gBars{display:flex; gap:4px; margin-top:5px}
+.gBars i{flex:1; height:7px; background:rgba(22,40,24,.8); box-shadow:0 0 0 1.5px rgba(0,0,0,.6); border-radius:1px; overflow:hidden; display:block}
+.gBars #gAr{background:rgba(18,30,44,.8)}
+.gBars b{display:block; height:100%; width:100%; background:#4fae4f; transition:width .3s}
+.gBars #gAr b{background:#3d8fd6; width:0}
+#gFloor{position:absolute; left:6px; top:6px; font:700 13px/1 "Barlow Condensed",sans-serif; background:rgba(0,0,0,.65); padding:3px 7px; border-radius:2px}
+#gTR{position:absolute; right:calc(18px + env(safe-area-inset-right,0px)); top:calc(52px + env(safe-area-inset-top,0px)); display:flex; flex-direction:column; align-items:flex-end; gap:3px}
+#gStars{display:flex; gap:1px; min-height:4px}
+#gStars i{display:block; width:26px; height:26px}
+#gStars i.on svg{fill:#fff; filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+#gStars i.dim svg{fill:#7d7d7d}
+#gStars i.off svg{fill:rgba(40,40,40,.55)}
+#gCash{font:400 34px/1 "Passion One",sans-serif; letter-spacing:.02em; -webkit-text-stroke:1.3px #000; text-shadow:0 2px 5px rgba(0,0,0,.55)}
+#gCash small, #gDelta small{font:700 .8em/1 Arial,sans-serif; -webkit-text-stroke:.9px #000; margin-right:2px; vertical-align:.04em}
+#gDelta{font:400 24px/1 "Passion One",sans-serif; -webkit-text-stroke:1px #000; opacity:0}
+#gDelta.up{color:#76db76} #gDelta.down{color:#e35d5d}
+#gClock{font:700 16px/1 "Barlow Condensed",sans-serif; text-shadow:0 1px 3px #000; opacity:.92}
+#gArea{position:absolute; right:calc(24px + env(safe-area-inset-right,0px)); bottom:calc(24px + env(safe-area-inset-bottom,0px)); text-align:right; opacity:0; text-shadow:0 2px 5px rgba(0,0,0,.85),0 0 1px #000}
+#gArea b{display:block; font:italic 700 31px/1.05 "Barlow Condensed",sans-serif}
+#gArea span{display:block; font:600 18px/1.15 "Barlow Condensed",sans-serif; opacity:.85}
+#gCarName{position:absolute; right:calc(24px + env(safe-area-inset-right,0px)); bottom:calc(96px + env(safe-area-inset-bottom,0px)); font:italic 700 36px/1 "Barlow Condensed",sans-serif; opacity:0; text-shadow:0 2px 6px rgba(0,0,0,.85)}
+#gHelp{position:absolute; left:calc(16px + env(safe-area-inset-left,0px)); top:calc(56px + env(safe-area-inset-top,0px)); max-width:330px; background:rgba(4,6,8,.8); padding:10px 14px; border-radius:2px; font:500 18px/1.3 "Barlow Condensed",sans-serif}
+#gHelp kbd{display:inline-block; min-width:20px; padding:0 6px; border-radius:2px; background:#fff; color:#111; font:700 15px/1.35 "Barlow Condensed",sans-serif; text-align:center}
+#gBig{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; -webkit-backdrop-filter:grayscale(1) brightness(.72) contrast(1.15); backdrop-filter:grayscale(1) brightness(.72) contrast(1.15); animation:gFade 1.2s ease-out}
+#gBig[hidden]{display:none !important}
+.gBand{width:100%; background:linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.72) 22%,rgba(0,0,0,.72) 78%,rgba(0,0,0,0)); padding:12px 0 18px; text-align:center}
+#gBigT{display:block; font:400 108px/1 "Passion One",sans-serif; color:#c42d2a; -webkit-text-stroke:2.5px #000; letter-spacing:.015em; animation:gPop 1.4s ease-out}
+#gBigS{display:block; font:600 20px/1.2 "Barlow Condensed",sans-serif; margin-top:4px; opacity:.9}
+@keyframes gFade{from{-webkit-backdrop-filter:none; backdrop-filter:none}}
+@keyframes gPop{0%{opacity:0; transform:scale(1.25)} 40%{opacity:1} 100%{transform:scale(1)}}
+#gtaHUD.dead #gRadar, #gtaHUD.dead #gTR, #gtaHUD.dead #gArea, #gtaHUD.dead #gHelp{visibility:hidden}
+body.gta #hpHud, body.gta #gtaHud, body.gta #driveHud, body.gta #miniMap, body.gta #bigMap, body.gta #hint{display:none !important}
+body.gta #toast{left:calc(18px + env(safe-area-inset-left,0px)); right:auto; top:auto; bottom:calc(196px + env(safe-area-inset-bottom,0px)); transform:none; max-width:310px; background:rgba(4,6,8,.84); border-radius:3px; text-align:left; font:500 17px/1.3 "Barlow Condensed",sans-serif; padding:9px 13px}
+body.gta #useBar, body.gta #tgtBar{background:rgba(4,6,8,.84) !important; border:0 !important; border-radius:3px !important; color:#fff !important; box-shadow:0 4px 18px rgba(0,0,0,.45) !important; font-family:"Barlow Condensed",sans-serif; padding:8px 10px !important}
+body.gta #useBar b, body.gta #tgtBar b{font:700 18px/1.1 "Barlow Condensed",sans-serif; letter-spacing:.02em}
+body.gta #useBtns .fab, body.gta #tgtBar .fab{background:rgba(255,255,255,.1) !important; color:#fff !important; border:1px solid rgba(255,255,255,.22) !important; border-radius:3px !important; font:600 16px/1 "Barlow Condensed",sans-serif !important; padding:6px 10px !important}
+body.gta #useBtns .fab:hover, body.gta #tgtBar .fab:hover{background:rgba(255,255,255,.24) !important}
+body.gta:not(.touch) #useBtns, body.gta:not(.touch) #tgtBar > span{counter-reset:k}
+body.gta:not(.touch) #useBtns .fab::before, body.gta:not(.touch) #tgtBar .fab::before{counter-increment:k; content:counter(k); display:inline-block; min-width:9px; margin-right:6px; padding:1px 4px; border-radius:2px; background:#fff; color:#111; font:700 12px/1.25 "Barlow Condensed",sans-serif; text-align:center}
+body.gta:not(.touch) #useBtns .fab:first-child::before, body.gta:not(.touch) #tgtBar .fab:first-child::before{content:"E"}
+body.gta.touch #gRadar{top:calc(54px + env(safe-area-inset-top,0px)); bottom:auto; left:calc(12px + env(safe-area-inset-left,0px))}
+body.gta.touch #toast{top:calc(196px + env(safe-area-inset-top,0px)); bottom:auto; left:calc(12px + env(safe-area-inset-left,0px)); max-width:260px; font-size:15px}
+body.gta.touch #gArea{left:50%; right:auto; transform:translateX(-50%); top:calc(10px + env(safe-area-inset-top,0px)); bottom:auto; text-align:center}
+body.gta.touch #gArea b{font-size:22px} body.gta.touch #gArea span{font-size:14px}
+body.gta.touch #gCarName{left:50%; right:auto; transform:translateX(-50%); top:calc(64px + env(safe-area-inset-top,0px)); bottom:auto; font-size:26px}
+body.gta.touch #gHelp{left:50%; transform:translateX(-50%); top:calc(110px + env(safe-area-inset-top,0px)); font-size:16px}
+body.gta.touch #gTR{top:calc(96px + env(safe-area-inset-top,0px))}
+body.gta.touch #gCash{font-size:28px}
+@media (orientation:landscape){#gtaPad{right:calc(144px + env(safe-area-inset-right,0px)); bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+@media (orientation:portrait){body.gta.touch #gArea{left:auto; right:calc(12px + env(safe-area-inset-right,0px)); transform:none; top:calc(176px + env(safe-area-inset-top,0px)); text-align:right} body.gta.touch #gCarName{left:auto; right:calc(12px + env(safe-area-inset-right,0px)); transform:none; top:calc(236px + env(safe-area-inset-top,0px))}}
+/* the pause menu (gta-map.js) */
+#gtaMenu{position:absolute; inset:0; z-index:9; background:rgba(7,9,11,.94); color:#fff; font-family:"Barlow Condensed",system-ui,sans-serif; display:flex; flex-direction:column}
+#gtaMenu[hidden]{display:none !important}
+.gmTop{display:flex; align-items:center; gap:18px; padding:14px 22px 10px; border-bottom:1px solid rgba(255,255,255,.12); flex-wrap:wrap}
+.gmName{font:400 34px/1 "Passion One",sans-serif; letter-spacing:.02em}
+.gmTabs{display:flex; gap:4px; flex:1}
+.gmTabs button{font:600 17px/1 "Barlow Condensed",sans-serif; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.72); background:rgba(255,255,255,.06); border:0; padding:9px 16px; border-radius:2px; cursor:pointer}
+.gmTabs button[aria-selected="true"]{background:#fff; color:#0b0d0f}
+.gmInfo{display:flex; gap:16px; font:600 19px/1 "Barlow Condensed",sans-serif}
+.gmBody{flex:1; min-height:0; display:flex}
+.gmPane{flex:1; display:flex; min-height:0}
+.gmPane[hidden]{display:none}
+.gmMapWrap{flex:1; position:relative; min-width:0}
+#gmMap{position:absolute; inset:0; width:100%; height:100%; display:block; cursor:crosshair; touch-action:none}
+.gmZoom{position:absolute; right:12px; bottom:12px; display:flex; flex-direction:column; gap:6px}
+.gmZoom button{width:38px; height:38px; border-radius:3px; border:0; background:rgba(0,0,0,.72); color:#fff; font:700 22px/1 sans-serif; cursor:pointer}
+.gmLegend{width:236px; padding:8px 18px 16px; overflow:auto; border-left:1px solid rgba(255,255,255,.12)}
+.gmLegend h4, .gmList h4{margin:16px 0 8px; font:700 13px/1 "Barlow Condensed",sans-serif; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.55)}
+.gmL{display:flex; align-items:center; gap:10px; font:500 17px/1 "Barlow Condensed",sans-serif; margin:5px 0}
+#gtaMenu .gmL canvas{width:22px; height:22px; display:block}
+.gmBtn{display:block; width:100%; margin-top:8px; font:600 16px/1 "Barlow Condensed",sans-serif; color:#fff; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); padding:9px 10px; border-radius:2px; cursor:pointer; text-align:left}
+.gmBtn:hover{background:rgba(255,255,255,.2)}
+.gmWay{font:600 21px/1 "Barlow Condensed",sans-serif; margin:0}
+.gmHint{color:rgba(255,255,255,.6); font-size:16px; margin:0}
+.gmList{max-width:660px; width:100%; margin:0 auto; padding:6px 22px 30px; overflow:auto}
+.gmRow{display:flex; justify-content:space-between; align-items:center; gap:16px; padding:10px 2px; border-bottom:1px solid rgba(255,255,255,.08); font:500 19px/1.2 "Barlow Condensed",sans-serif}
+.gmRow input[type=range]{width:210px; accent-color:#fff}
+.gmSeg{display:flex; gap:3px; flex-wrap:wrap; justify-content:flex-end}
+.gmSeg button{font:600 16px/1 "Barlow Condensed",sans-serif; color:#fff; background:rgba(255,255,255,.08); border:0; padding:8px 11px; border-radius:2px; cursor:pointer}
+.gmSeg button[aria-pressed="true"]{background:#fff; color:#0b0d0f}
+.gmKey{min-width:150px} .gmRow.gmK{justify-content:flex-start} .gmRow.gmK span{flex:1; color:rgba(255,255,255,.85)}
+.gmFoot{display:flex; gap:18px; align-items:center; padding:10px 22px calc(12px + env(safe-area-inset-bottom,0px)); border-top:1px solid rgba(255,255,255,.12); font:500 16px/1 "Barlow Condensed",sans-serif; color:rgba(255,255,255,.75); flex-wrap:wrap}
+.gmFoot b{color:#fff; background:rgba(255,255,255,.16); padding:2px 6px; border-radius:2px; margin-right:4px}
+.gmBack{margin-left:auto; font:700 15px/1 "Barlow Condensed",sans-serif; letter-spacing:.06em; text-transform:uppercase; background:#fff; color:#0b0d0f; border:0; padding:10px 16px; border-radius:2px; cursor:pointer}
+@media (max-width:700px){.gmLegend{display:none} .gmName{display:none} .gmTabs button{padding:8px 10px; font-size:15px} .gmInfo{font-size:16px}}
 </style>
 </head>
 <body>
@@ -454,6 +544,8 @@ body.gtaLock #stage canvas{cursor:none}
 <script src="app/drive.js"></script>
 <script src="app/townlife.js"></script>
 <script src="app/gta.js"></script>
+<script src="app/gta-map.js"></script>
+<script src="app/gta-hud.js"></script>
 <script src="app/unfight.js"></script>
 </body>
 </html>

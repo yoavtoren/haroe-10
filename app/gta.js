@@ -22,11 +22,13 @@ A.gtaCam=active;
 function outdoors(){const p=SM.player; return !!(p&&!p.lvl&&(p.room==='street'||p.room==='out'||p.room==='town'));}      // the neighbours' flats and the landings are marked ext too, for their light; they are indoors
 function car(){return A.drive&&A.drive.on&&A.drive.on()?A.drive.pos():null;}
 
-/* the camera may not go through a block in the streets, nor out of the room you are in (the living room and the kitchen are one) */
-let node=null;
+/* the camera may not go through a block in the streets, nor out of the room you are in (the living room and the kitchen are one), except
+   through a door standing open */
+const LINKS=[['lk','hall','entrance'],['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['lk','bath','bath']];
+let nodes={};
 function blocked(x,z,y,lvl,out){
   if(out){const T=A.town; return !!(T&&T.inBuilding&&T.inBuilding(x,z,0.35));}
-  for(const k in A.rooms){const rm=A.rooms[k]; if((rm.lvl||0)!==lvl||(rm.node||k)!==node) continue; const rs=rm.rs;
+  for(const k in A.rooms){const rm=A.rooms[k]; if((rm.lvl||0)!==lvl||!nodes[rm.node||k]) continue; const rs=rm.rs;
     for(let i=0;i<rs.length;i++){const q=rs[i]; if(x>q[0]-0.12&&x<q[1]+0.12&&z>q[2]-0.12&&z<q[3]+0.12) return false;}}
   return true;
 }
@@ -120,9 +122,10 @@ function frame(dt){
   want.copy(pv).addScaledVector(dir,-C.dist);
   if(!out){const top=(lvl&&A.levels&&A.levels[lvl]?A.levels[lvl].y:0)+A.D.H-0.18; if(want.y>top) want.y=top;}
   const gy=(SM.ground?SM.ground(want.x,want.z):0)+0.35; if(out&&want.y<gy) want.y=gy;
-  const rm=A.rooms[p.room]; node=rm?(rm.node||p.room):null;
+  const rm=A.rooms[p.room], nd=rm?(rm.node||p.room):null; nodes={}; nodes[nd]=1;
+  if(!lvl) LINKS.forEach(function(l){const d=A.door(l[2]); if(!d||d.cur<0.35) return; if(l[0]===nd) nodes[l[1]]=1; else if(l[1]===nd) nodes[l[0]]=1;});
   const k=collide(pv,want,lvl,out); want.lerpVectors(pv,want,Math.max(k,0.08));
-  const hd=Math.hypot(want.x-pv.x,want.z-pv.z); if(!c&&hd<1.4){want.y+=(1.4-hd)*0.95; if(!out){const top=(lvl&&A.levels&&A.levels[lvl]?A.levels[lvl].y:0)+A.D.H-0.12; if(want.y>top) want.y=top;}}      // squeezed against a wall: up, to look down over your head
+  const hd=Math.hypot(want.x-pv.x,want.z-pv.z); if(!c&&hd<1.4){want.y+=Math.min(0.55,(1.4-hd)*0.6); if(!out){const top=(lvl&&A.levels&&A.levels[lvl]?A.levels[lvl].y:0)+A.D.H-0.12; if(want.y>top) want.y=top;}}      // squeezed against a wall: up, to look down over your head
   /* glide there; pulled in by a wall, at once */
   const d0=C.pos.distanceTo(pv), d1=want.distanceTo(pv);
   if(C.snap||C.pos.distanceTo(want)>12){C.pos.copy(want); C.snap=false;}
