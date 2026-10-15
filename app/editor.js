@@ -111,13 +111,26 @@ function houseThings(){
     if(c.userData.decor){c.userData.bkey=posKey('h#',c); house.push(c);} else{if(c.userData.shop){c.userData.bkey=posKey('s#',c); house.push(c);} walk(c);}}})(scene);
   return house;
 }
+/* a fitting you removed or swapped is known by where it stood. When the flat is re-measured it moves a little, its key matches nothing,
+   and it would come back beside what took its place: such a key goes to the nearest fitting at the same height within 60 cm */
+function goneHouse(gone){
+  const hs=houseThings(), have={}, out={};
+  hs.forEach(function(o){have[o.userData.bkey]=1;});
+  for(const k in gone){if(k[1]!=='#') continue; if(have[k]){out[k]=1; continue;}
+    const m=/^s#(-?\d+),(-?\d+),(-?\d+)$/.exec(k); if(!m) continue;
+    let best=null, bd=60;
+    hs.forEach(function(o){const b=o.userData.bkey, q=b.slice(2).split(',').map(Number); if(b[0]!=='s'||gone[b]||Math.abs(q[1]-m[2])>12) return;
+      const d=Math.hypot(q[0]-m[1],q[2]-m[3]); if(d<bd){bd=d; best=b;}});
+    if(best) out[best]=1;}
+  return out;
+}
 function applyGone(){
   const gone=(A.EDITS[S.design]||{}).gone||{};
   for(const id in P){const p=P[id]; if(p.to[3]<1&&p.cur[3]<0.02) continue; bakedOf(p).forEach(function(g){g.visible=!gone[g.userData.bkey];});}
-  if(house||Object.keys(gone).some(function(k){return k[1]==='#';})) houseThings().forEach(function(o){
-    if(gone[o.userData.bkey]){o.visible=false; o.userData.goneHid=true;}
+  if(house||Object.keys(gone).some(function(k){return k[1]==='#';})){const off=goneHouse(gone); houseThings().forEach(function(o){
+    if(off[o.userData.bkey]){o.visible=false; o.userData.goneHid=true;}
     else if(o.userData.goneHid){o.userData.goneHid=false; if(!o.userData.only) o.visible=true;}
-  });
+  });}
 }
 A.beforeLayout=syncItems;
 A.onLayout=function(){syncAttached(); applyGone(); if(A.paint) A.paint.apply(); if(sel&&!selObj()) deselect(); if(iso) isoBuild();};
