@@ -11,6 +11,26 @@ function hyp(a,b){return Math.hypot(a,b);}
 function rnd(a){return a[Math.floor(Math.random()*a.length)];}
 function folk(){return A.townFolk?A.townFolk():[];}
 
+/* ---------- a stranger's body in fewer pieces: the still parts that share a joint and a cloth become one mesh ----------
+   A person is about ninety meshes (fingers, eyes, lashes, buttons), which is most of what the street costs to draw. For people whose
+   clothes never change (passers-by, the police, the neighbours) the parts under each joint are merged by material; what moves on its own
+   (the mouth, the limbs, the blinking eyes as a whole) stays as it is. */
+const mv=new THREE.Vector3(), mn=new THREE.Matrix3();
+function mergeGeos(list){let nv=0, ni=0; list.forEach(function(m){const g=m.geometry; nv+=g.attributes.position.count; ni+=g.index?g.index.count:g.attributes.position.count;});
+  const pos=new Float32Array(nv*3), nor=new Float32Array(nv*3), uv=new Float32Array(nv*2), idx=new (nv>65535?Uint32Array:Uint16Array)(ni); let vo=0, io=0;
+  list.forEach(function(m){m.updateMatrix(); const g=m.geometry, P=g.attributes.position, N=g.attributes.normal, U=g.attributes.uv, flip=m.matrix.determinant()<0; mn.getNormalMatrix(m.matrix);
+    for(let i=0;i<P.count;i++){mv.fromBufferAttribute(P,i).applyMatrix4(m.matrix); pos[(vo+i)*3]=mv.x; pos[(vo+i)*3+1]=mv.y; pos[(vo+i)*3+2]=mv.z;
+      if(N){mv.fromBufferAttribute(N,i).applyMatrix3(mn).normalize(); nor[(vo+i)*3]=mv.x; nor[(vo+i)*3+1]=mv.y; nor[(vo+i)*3+2]=mv.z;} if(U){uv[(vo+i)*2]=U.getX(i); uv[(vo+i)*2+1]=U.getY(i);}}
+    const n=g.index?g.index.count:P.count; for(let i=0;i<n;i+=3){const a=g.index?g.index.getX(i):i, b=g.index?g.index.getX(i+1):i+1, c=g.index?g.index.getX(i+2):i+2; idx[io++]=a+vo; idx[io++]=(flip?c:b)+vo; idx[io++]=(flip?b:c)+vo;}
+    vo+=P.count;});
+  const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('normal',new THREE.BufferAttribute(nor,3)); geo.setAttribute('uv',new THREE.BufferAttribute(uv,2)); geo.setIndex(new THREE.BufferAttribute(idx,1)); geo.computeBoundingSphere(); return geo;}
+function mergeUnder(par){const by=new Map();
+  par.children.forEach(function(m){if(!m.isMesh||m.isInstancedMesh||!m.visible||m.children.length||m.userData.live||Array.isArray(m.material)||m.material.transparent) return; const k=m.material.uuid+(m.castShadow?'s':''); let l=by.get(k); if(!l) by.set(k,l=[]); l.push(m);});
+  by.forEach(function(l){if(l.length<2) return; const mm=new THREE.Mesh(mergeGeos(l),l[0].material); mm.castShadow=l[0].castShadow; mm.receiveShadow=l[0].receiveShadow; mm.layers.mask=l[0].layers.mask; l.forEach(function(m){par.remove(m);}); par.add(mm);});
+  par.children.slice().forEach(function(c){if(!c.isMesh&&c.children&&c.children.length) mergeUnder(c);});}
+function slim(a){if(!a||!a.p||a.p._merged) return; a.p._merged=true; a.p._small=null; mergeUnder(a.p.g);}
+function slimAll(){folk().forEach(slim); if(A.gtaCops) A.gtaCops.list().forEach(slim); if(A.floors&&A.floors.FLATS) for(const k in A.floors.FLATS) A.floors.FLATS[k].folk.forEach(slim);}
+
 /* ---------- the small parts of a person, hidden from far off ---------- */
 const NEAR=24;
 function small(p){if(p._small) return p._small; const out=[]; p.g.traverse(function(m){if(!m.isMesh||m.isInstancedMesh) return; const g=m.geometry; if(!g.boundingSphere) g.computeBoundingSphere();
@@ -63,6 +83,6 @@ function hurts(){folk().forEach(function(a){const s=a._g; if(!s) return; const h
 
 A.frameFns.push(function(dt){
   if(!A.simsOn||!SM.player) return;
-  tagPeople(); lod(dt); roles(); bumps(); hurts();
+  slimAll(); tagPeople(); lod(dt); roles(); bumps(); hurts();
 });
 })();

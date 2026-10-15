@@ -9,7 +9,7 @@
 const A=window.APP, SM=A.sims, R=Math.PI;
 if(!SM) return;
 const cam=A.camera, ctl=A.controls, cv=A.renderer.domElement, $=function(id){return document.getElementById(id);};
-const TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const TOUCH=!!(window.matchMedia&&(matchMedia('(pointer: coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(any-pointer: fine)').matches)));      /* a phone or a tablet; a laptop with a touch screen and a mouse plays as a computer */
 function clamp(v,a,b){return v<a?a:v>b?b:v;}
 function wrap(d){while(d>R) d-=2*R; while(d<-R) d+=2*R; return d;}
 
@@ -26,8 +26,13 @@ function car(){return A.drive&&A.drive.on&&A.drive.on()?A.drive.pos():null;}
    through a door standing open */
 const LINKS=[['lk','hall','entrance'],['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['lk','bath','bath']];
 let nodes={};
-function blocked(x,z,y,lvl,out){
-  if(out){const T=A.town; return !!(T&&T.inBuilding&&T.inBuilding(x,z,0.35));}
+function blocked(x,z,y,lvl,out,walls){
+  if(out){const T=A.town; if(T&&T.inBuilding&&T.inBuilding(x,z,0.35)) return true;
+    if(walls) return false;
+    const OB=T&&T.obstacles, gy0=(SM.ground?SM.ground(x,z):0);
+    if(OB&&OB.grid&&y-gy0<2.7){const g=OB.G, l=OB.grid.get(Math.floor(x/g)+','+Math.floor(z/g)); if(l) for(let i=0;i<l.length;i++){const o=l[i]; if(o.off||o[2]<0.45||y-gy0>(o[2]>=1?2.7:1.85)) continue; if(Math.hypot(o[0]-x,o[1]-z)<o[2]+0.15) return true;}}      /* low, it keeps out of the bottle cages, benches, shelters and crates (thin poles it ignores) */
+    if(A.drive&&A.drive.live){const me=car(), gy=gy0; if(y-gy<1.75){const L=A.drive.live; for(let i=0;i<L.length;i++){const k=L[i]; if(k===me||Math.abs(k.x-x)>4||Math.abs(k.z-z)>4) continue; const cs=k.circles(); for(let j=0;j<cs.length;j++) if(Math.hypot(cs[j][0]-x,cs[j][1]-z)<cs[j][2]+0.25) return true;}}}      /* low enough to be in a car's way */
+    return false;}
   let inR=false;
   for(const k in A.rooms){const rm=A.rooms[k]; if((rm.lvl||0)!==lvl||!nodes[rm.node||k]) continue; const rs=rm.rs;
     for(let i=0;i<rs.length&&!inR;i++){const q=rs[i]; if(x>q[0]-0.12&&x<q[1]+0.12&&z>q[2]-0.12&&z<q[3]+0.12) inR=true;}}
@@ -35,9 +40,9 @@ function blocked(x,z,y,lvl,out){
   if(nodes.hall&&!nodes.lk) return !SM.onLevel(lvl,function(){return SM.isFree(x,z);});      // the lobby and the landings: their pillars and stair walls too
   return false;
 }
-function collide(from,to,lvl,out){      // walk out from the pivot toward where the camera wants to be; stop short of the first thing in the way
+function collide(from,to,lvl,out,walls){      // walk out from the pivot toward where the camera wants to be; stop short of the first thing in the way
   const d=from.distanceTo(to), n=Math.max(2,Math.ceil(d/0.18)); let k=1;
-  for(let i=1;i<=n;i++){const t=i/n, x=from.x+(to.x-from.x)*t, z=from.z+(to.z-from.z)*t; if(blocked(x,z,0,lvl,out)){k=Math.max(0,(i-1.6)/n); break;}}
+  for(let i=1;i<=n;i++){const t=i/n, x=from.x+(to.x-from.x)*t, z=from.z+(to.z-from.z)*t, y=from.y+(to.y-from.y)*t; if(blocked(x,z,y,lvl,out,walls)){k=Math.max(0,(i-1.6)/n); break;}}
   return k;
 }
 
@@ -62,9 +67,9 @@ A.gtaTapFloor=function(){if(!canLock()) return false; try{const r=cv.requestPoin
 document.addEventListener('pointerlockchange',function(){const on=locked(); document.body.classList.toggle('gtaLock',on); if(on){C.lockT=A.t; hint(true);}});
 document.addEventListener('mousemove',function(e){if(!locked()||!active()) return; turn(e.movementX,e.movementY,0.0023);});
 cv.addEventListener('pointerdown',function(e){
-  if(!active()) return;
+  if(!active()) return; const fe=document.activeElement; if(fe&&fe!==document.body&&fe.blur) fe.blur();      /* a click in the view: the keys are the game's again */
   if(locked()){e.preventDefault(); if(e.button===0) punch(); return;}
-  if(e.pointerType==='touch'&&e.isPrimary===false) return;
+  if(drag&&drag.id!==e.pointerId) return;      /* one finger turns the camera at a time; it need not be the first one down */
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};
 });
 window.addEventListener('pointermove',function(e){if(!drag||e.pointerId!==drag.id) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
@@ -80,6 +85,7 @@ const keys={};
 window.addEventListener('keydown',function(e){
   if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true;
   if(e.repeat) return;
+  if(k==='alt') e.preventDefault();      /* held, you walk (and the browser's menu bar stays shut) */
   if(k===' '&&!car()){jump(); e.preventDefault();}
   else if(k==='v') cycle();
   else if(k==='r'&&!car()) punch();
@@ -102,7 +108,7 @@ function punch(){if(car()||!A.game) return; if(A.gtaAttack) A.gtaAttack(); else 
 
 /* ---------- jumping ---------- */
 const J={y:0,v:0,on:false};
-function jump(){const p=SM.player; if(!p||J.on||p.seat||p.script||p.driving||p.riding||(A.game&&A.game.G&&A.game.G.down)) return;
+function jump(){const p=SM.player; if(!p||J.on||p.seat||p.script||p.driving||p.riding||(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted)) return;
   if(p.path.length&&!p.manual){SM.stop(); p.path=[]; p.cb=null;}
   J.on=true; J.v=3.7; J.y=0.001; if(A.gtaSound) A.gtaSound.jump(); if(A.gtaStats) A.gtaStats.jumps++;}
 function jumpStep(dt){const p=SM.player; if(!J.on||!p) {if(p) p.p.air=Math.max(0,(p.p.air||0)-dt*6); return;}
@@ -114,20 +120,23 @@ A.gtaJump={get y(){return J.y;},get on(){return J.on;}};
 /* ---------- stairs: walk into a flight and you go up or down it, as in GTA (the bar by the stairs still offers it too) ---------- */
 let stairT=0;
 function stairs(){const p=SM.player; if(!p||!p.manual||p.script||p.seat||p.driving||!A.stairsPath||!A.goStairs||!A.levels||A.t<stairT) return; const L=p.lvl||0;
+  let best=0, bd=0.75;
   for(let dir=1;dir>=-1;dir-=2){const to=L+dir; if(!A.levels[to]) continue; const pts=A.stairsPath(L,to); if(!pts||pts.length<2) continue;
-    const s=pts[0], n=pts[1], d=Math.hypot(p.x-s[0],p.z-s[2]); if(d>0.75) continue;
+    const s=pts[0], n=pts[1], d=Math.hypot(p.x-s[0],p.z-s[2]); if(d>bd) continue;
     if(Math.abs(wrap(p.h-Math.atan2(n[0]-s[0],n[2]-s[2])))>0.9) continue;      // facing up (or down) the flight
-    stairT=A.t+2; A.goStairs(dir); const cb=p.cb; p.path=[]; p.cb=null; if(cb) cb(); return;}}      // you are already at its foot: straight onto the steps (holding a key would cancel the walk there)
+    best=dir; bd=d;}      /* the flight up and the one down start half a metre apart on our floor: the nearer one */
+  if(!best) return; stairT=A.t+2; A.goStairs(best); const cb=p.cb; p.path=[]; p.cb=null; if(cb) cb();}      // you are already at its foot: straight onto the steps (holding a key would cancel the walk there)
 
 /* ---------- how fast you go: a stroll, or Shift to run; the flat is too small to run flat out ---------- */
-A.walkSpeed=function(run){const out=outdoors(); return run?(out?5.6:3.1):(out?1.65:1.45);};
+A.walkSpeed=function(run){const out=outdoors(); if(!out) return run?3.1:1.45; return run?6.6:keys.alt?1.6:3.6;};      /* outside, as GTA on a keyboard: a jog, Shift to sprint, Alt to walk; the flat is too small for any of that */
 
 /* ---------- the camera, every frame ---------- */
 const UP=new THREE.Vector3(0,1,0);
 function frame(dt){
   const on=active();
   if(!on){if(hid.length) unhide(); if(C.headHid&&SM.player&&SM.camMode!=='eye'){C.headHid=false; SM.player.p.hideHead(false);} if(C.was){C.was=false; if(SM.camMode!=='eye') ctl.enabled=true; if(locked()) document.exitPointerLock(); if(SM.camMode!=='eye'){cam.fov=40; cam.updateProjectionMatrix();}} return;}
-  if(!C.was){C.was=true; C.snap=true; const p=SM.player; C.yaw=(car()?A.drive.heading():p.h); C.pitch=outdoors()||car()?-0.2:-0.4; if(A.gtaSet) C.zoom=A.gtaSet.get('dist');}
+  if(!C.was){C.was=true; C.snap=true; const p=SM.player; C.yaw=(car()?A.drive.heading():p.h); C.pitch=outdoors()||car()?-0.2:-0.4; if(A.gtaSet) C.zoom=A.gtaSet.get('dist');
+    if(!p.lvl&&Math.hypot(p.x-SM.EX,p.z-SM.SPAWN)<0.4){C.yaw+=0.6; C.pitch=-0.5;}}      /* just in at the front door: looking in at an angle, not through the door frame */
   ctl.enabled=false; if(A.flying()) A.stopFly();
   const p=SM.player, c=car(), out=c?true:outdoors(), lvl=p.lvl||0, ls=A.sticks&&A.sticks.look;
   if(ls&&Math.hypot(ls.x,ls.y)>0.15){C.yaw-=ls.x*Math.abs(ls.x)*dt*2.6; C.pitch=clamp(C.pitch-ls.y*Math.abs(ls.y)*dt*1.4,-1.25,0.55); C.look=A.t;}      // the right stick
@@ -142,7 +151,8 @@ function frame(dt){
   const aim=!c&&A.gtaAiming&&A.gtaAiming();
   if(aim){pv.x-=Math.cos(C.yaw)*0.55; pv.z+=Math.sin(C.yaw)*0.55; pv.y+=0.12; if(!C.aimWas) C.pitch=Math.max(C.pitch,-0.03);}      // aiming: over the right shoulder, looking level
   C.aimWas=aim;
-  const base=aim?1.9:(c?CAR:FOOT)[1]*C.zoom*(out?1:0.72)+(c?Math.min(3,Math.abs(c.v)*0.09):0);
+  if(p.script){C.pitch+=(-0.32-C.pitch)*Math.min(1,dt*3); C.yaw+=wrap(head-C.yaw)*Math.min(1,dt*3);}      /* climbing: close behind you, turning with you on the landings, under the flight above */
+  const base=aim?1.9:p.script?1.35:(c?CAR:FOOT)[1]*C.zoom*(out?1:0.72)+(c?Math.min(3,Math.abs(c.v)*0.09):0);
   C.dist+=(base-C.dist)*Math.min(1,dt*4);
   dir.set(Math.sin(C.yaw)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(C.yaw)*Math.cos(C.pitch));
   want.copy(pv).addScaledVector(dir,-C.dist);
@@ -151,11 +161,13 @@ function frame(dt){
   const gy=(SM.ground?SM.ground(want.x,want.z):0)+0.35; if(out&&want.y<gy) want.y=gy;
   const rm=A.rooms[p.room], nd=rm?(rm.node||p.room):null; nodes={}; nodes[nd]=1;
   if(!lvl) LINKS.forEach(function(l){const d=A.door(l[2]); if(!d||d.cur<0.35) return; if(l[0]===nd) nodes[l[1]]=1; else if(l[1]===nd) nodes[l[0]]=1;});
-  const k=p.script?1:collide(pv,want,lvl,out); want.lerpVectors(pv,want,Math.max(k,0.08));      // in the stairwell, between floors, it keeps its distance
+  let k=p.script?1:collide(pv,want,lvl,out);
+  if(out&&!c&&!aim&&k<0.97){const kw=collide(pv,want,lvl,out,true); if(kw>k+0.1) for(let i=1;i<=5;i++){tw.copy(want); tw.y+=i*0.3; const kk=collide(pv,tw,lvl,out); if(kk>=kw-0.03){want.y=tw.y; k=kk; break;}}}      // a bench, a parked car, the bottle cage: up over it, not in against your head
+  want.lerpVectors(pv,want,Math.max(k,0.08));      // in the stairwell, between floors, it keeps its distance
   /* boxed in, and you are not turning it yourself: it swings round to where there is room, as GTA's does */
-  if(!c&&k<0.45&&idle>0.8&&!p.script){let best=0, bk=k; [0.7,-0.7,1.4,-1.4,2.1,-2.1,R].forEach(function(o){const y=C.yaw+o; dir2.set(Math.sin(y)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(y)*Math.cos(C.pitch)); tw.copy(pv).addScaledVector(dir2,-C.dist); const kk=collide(pv,tw,lvl,out); if(kk>bk+0.15){bk=kk; best=o;}});
+  if(!c&&k<0.45&&idle>0.8&&!p.script&&!aim){let best=0, bk=k; [0.7,-0.7,1.4,-1.4,2.1,-2.1,R].forEach(function(o){const y=C.yaw+o; dir2.set(Math.sin(y)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(y)*Math.cos(C.pitch)); tw.copy(pv).addScaledVector(dir2,-C.dist); const kk=collide(pv,tw,lvl,out); if(kk>bk+0.15){bk=kk; best=o;}});
     if(best) C.yaw+=wrap(best)*Math.min(1,dt*2.5);}
-  if(out&&!c) underCrowns(want,pv);
+  if(out&&!c){tw.copy(want); underCrowns(want,pv); if(want.y<tw.y-0.05&&collide(pv,want,lvl,out)<0.97) want.copy(tw);}      /* ducking under the leaves would put it in the bottle cage: it stays up, and the leaves by it fade */
   const hd=Math.hypot(want.x-pv.x,want.z-pv.z); if(!c&&hd<1.4){want.y+=Math.min(0.55,(1.4-hd)*0.6); if(!out){const top=(lvT&&A.levels&&A.levels[lvT]?A.levels[lvT].y:0)+A.D.H-0.12; if(want.y>top) want.y=top;}}      // squeezed against a wall: up, to look down over your head
   /* glide there; pulled in by a wall, at once */
   const d0=C.pos.distanceTo(pv), d1=want.distanceTo(pv);
@@ -208,7 +220,7 @@ A.stage.appendChild(pad);
 const hold=function(b,on,off){b.addEventListener('pointerdown',function(e){e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); on();}); ['pointerup','pointercancel'].forEach(function(n){b.addEventListener(n,function(){if(off) off();});});};
 hold(bRun,function(){A.running=true; bRun.classList.add('on');},function(){A.running=false; bRun.classList.remove('on');});
 hold(bJump,jump); hold(bHit,punch); hold(bRadio,function(){if(A.gtaSound) A.gtaSound.station(1);}); hold(bWeap,function(){if(A.gtaArms) A.gtaArms.cycle(1);}); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
-function carKey(){if(car()){A.drive.exit(); return true;} return enterNear();}
+function carKey(){const dn=(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted); if(dn) return true; if(car()){A.drive.exit(); return true;} return enterNear();}      /* wasted or busted, F does nothing at all */
 function enterNear(){const p=SM.player; if(!A.drive||!p||p.lvl) return false; let best=null, bd=4.5;
   A.drive.cars().forEach(function(c){const d=Math.hypot(c.x-p.x,c.z-p.z)-c.dim[0]/2; if(d<bd){bd=d; best=c;}});
   if(best){A.drive.enter(best); return true;} return false;}

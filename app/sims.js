@@ -261,6 +261,7 @@ Actor.prototype.update=function(dt){
 Actor.prototype.remove=function(){
   this.release(); this.gone=true; cancelTimers(this);
   this.p.dead=true; actors.remove(this.p.g); this.tag.remove(); if(this.bubble) this.bubble.remove();
+  this.p.g.traverse(function(m){if(m.geometry&&!m.geometry.userData.shared) m.geometry.dispose(); [].concat(m.material||[]).forEach(function(t){t.dispose();});});      /* gone for good: its meshes and materials freed (the cloth textures are shared and stay) */
 };
 const WHITE=new THREE.Color(1,1,1);
 const hv=new THREE.Vector3();

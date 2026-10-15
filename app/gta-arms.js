@@ -9,7 +9,7 @@
 const A=window.APP, SM=A.sims, T=A.town, R=Math.PI;
 if(!SM||!A.game) return;
 const scene=A.scene, cam=A.camera, cv=A.renderer.domElement, OUT=function(){return A.LAYER_OUT||5;};
-const TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const TOUCH=!!(window.matchMedia&&(matchMedia('(pointer: coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(any-pointer: fine)').matches)));      /* a phone or a tablet; a laptop with a touch screen and a mouse plays as a computer */
 function hyp(a,b){return Math.hypot(a,b);}
 function clamp(v,a,b){return v<a?a:v>b?b:v;}
 function rnd(a){return a[Math.floor(Math.random()*a.length)];}
@@ -46,7 +46,7 @@ function model(kind){const g=new THREE.Group(), m=function(c){return new THREE.M
   const r=new THREE.Mesh(new THREE.RingGeometry(0.42,0.5,32).rotateX(-R/2),ring); r.position.y=-0.85; g.add(r);
   return g;}
 function place(kind,x,z,once){const g=model(kind), y=(SM.ground?SM.ground(x,z):0)+0.9; g.position.set(x,y,z); g.userData.nc=true; g.traverse(function(o){o.layers.set(OUT());}); scene.add(g);
-  const p={kind:kind,x:x,z:z,y:y,g:g,back:0,once:!!once}; PU.push(p); return p;}
+  const p={kind:kind,x:x,z:z,y:y,g:g,back:0,once:!!once,until:once?A.t+60:Infinity}; PU.push(p); return p;}
 function spots(){
   const d=A.game.dump&&A.game.dump(); if(d) place('bat',d.stand.x+0.9,d.stand.z+0.6);      // by the green bins in the alley
   if(!T||!T.mapData) return;
@@ -63,7 +63,7 @@ function take(p){const S=SM.toast; p.back=A.t+(p.once?1e9:120); p.g.visible=fals
 function pickups(dt){const p=SM.player; if(!p) return; const me=A.drive&&A.drive.on()?null:p;
   PU.forEach(function(q){if(!q.g.visible){if(A.t>q.back){q.g.visible=true;} return;} q.g.rotation.y+=dt*1.8; q.g.position.y=q.y+Math.sin(A.t*2.4+q.x)*0.08;
     if(me&&!p.lvl&&hyp(q.x-p.x,q.z-p.z)<1.1) take(q);});
-  for(let i=PU.length-1;i>=0;i--) if(PU[i].once&&!PU[i].g.visible){scene.remove(PU[i].g); PU.splice(i,1);}}
+  for(let i=PU.length-1;i>=0;i--){const q=PU[i]; if(q.once&&(!q.g.visible||A.t>q.until)){scene.remove(q.g); q.g.traverse(function(o){if(o.geometry) o.geometry.dispose(); if(o.material&&o.material!==ring) o.material.dispose();}); PU.splice(i,1);}}}      /* taken, or left a minute: gone, and freed */
 /* an officer down drops his pistol */
 function drops(){if(!A.gtaCops) return; A.gtaCops.foot.forEach(function(o){const s=o.a._g; if(s&&s.down&&!o.dropped){o.dropped=true; o.a.gun.visible=false; const q=place('pistol',o.a.x+0.6,o.a.z+0.3,true); q.ammoOnly=true;}});}
 
@@ -81,7 +81,7 @@ function pick(aimed){const p=SM.player, list=people(); let best=null, bd=1e9;
     list.forEach(function(t){chest(t,v1); const base=v1.y-1.15, dx=v1.x-o.x, dz=v1.z-o.z, s=(dx*dirV.x+dz*dirV.z)/h2; if(s<1||s>45) return;
       const hx=dx-dirV.x*s, hz=dz-dirV.z*s, y=o.y+dirV.y*s, vy=y<base+0.35?base+0.35-y:y>base+1.8?y-(base+1.8):0, off=Math.hypot(hx,hz,vy);
       if(off>0.22+s*0.006) return; if(!clear(p.x,p.z,v1.x,v1.z)) return; if(s<bd){bd=s; best=t;}});}
-  else{const f=[Math.sin(p.h),Math.cos(p.h)]; list.forEach(function(t){chest(t,v1); const dx=v1.x-p.x, dz=v1.z-p.z, d=hyp(dx,dz); if(d>22||d<0.5) return; const c=(dx*f[0]+dz*f[1])/d; if(c<0.82) return; if(!clear(p.x,p.z,v1.x,v1.z)) return; const s=d*(1.6-c); if(s<bd){bd=s; best=t;}});}
+  else{const y=A.gtaCam&&A.gtaCam()&&A.gta&&A.gta.cam?A.gta.cam.yaw:p.h, f=[Math.sin(y),Math.cos(y)]; list.forEach(function(t){chest(t,v1); const dx=v1.x-p.x, dz=v1.z-p.z, d=hyp(dx,dz); if(d>22||d<0.5) return; const c=(dx*f[0]+dz*f[1])/d; if(c<0.82) return; if(!clear(p.x,p.z,v1.x,v1.z)) return; const s=d*(1.6-c); if(s<bd){bd=s; best=t;}});}
   return best;}
 function fire(){const p=SM.player, k=kit(); if(!k||W.cur!=='pistol'||A.t<W.next||W.reload>A.t||p.driving||p.seat||p.script) return;
   if(W.clip<=0){if(W.ammo>0){W.reload=A.t+1.3; W.next=W.reload; SM.toast&&SM.toast('Reloading…'); SM.later(1.3,function(){const n=Math.min(12,W.ammo); W.clip=n; W.ammo-=n; hud(true);});} else{SM.toast&&SM.toast('Out of ammunition.'); W.has.pistol=false; cycle(1);} return;}
@@ -113,7 +113,7 @@ A.gtaAttack=function(){if(W.cur==='pistol') fire(); else if(A.game.punchNearest)
 cv.addEventListener('mousedown',function(e){if(!A.simsOn||!SM.player||A.paused) return; if(e.button===2&&W.cur==='pistol'&&A.gtaCam&&A.gtaCam()){W.aim=true; e.preventDefault();} else if(e.button===0&&W.aim){fire(); e.preventDefault(); e.stopImmediatePropagation();}},true);
 window.addEventListener('mouseup',function(e){if(e.button===2) W.aim=false;});
 window.addEventListener('blur',function(){W.aim=false;});
-window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||(e.target.closest&&e.target.closest('#panel,#gtaMenu,#modal'))) return; if(e.key==='Tab'){e.preventDefault(); if(!e.repeat) cycle(e.shiftKey?-1:1);}});
+window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||(e.target.closest&&e.target.closest('#gtaMenu,#modal'))||(e.target.closest&&e.target.closest('#panel')&&!document.body.classList.contains('nomenu'))) return;      /* Tab moves through the side panel only while it is shown */ if(e.key==='Tab'){e.preventDefault(); if(!e.repeat) cycle(e.shiftKey?-1:1);}});
 A.gtaAiming=function(){return W.aim&&W.cur==='pistol'&&A.simsOn&&!!SM.player&&!SM.player.driving&&!!(A.gtaCam&&A.gtaCam());};
 
 /* ---------- on screen: the weapon and its rounds, the crosshair ---------- */

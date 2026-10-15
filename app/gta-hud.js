@@ -7,16 +7,17 @@
 'use strict';
 const A=window.APP, SM=A.sims, T=A.town, MB=A.gtaMapBase, R=Math.PI;
 if(!SM||!T||!MB) return;
-const TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const TOUCH=!!(window.matchMedia&&(matchMedia('(pointer: coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(any-pointer: fine)').matches)));      /* a phone or a tablet; a laptop with a touch screen and a mouse plays as a computer */
 const $=function(id){return document.getElementById(id);};
 function hyp(a,b){return Math.hypot(a,b);}
-function on(){return !!(A.simsOn&&SM.player&&A.gtaSet.get('hud'));}
+function on(){return !!(A.simsOn&&SM.player);}      /* the display's machinery; 'Hidden' in the settings only hides what it draws (bare) */
+function shown(){return A.gtaSet.get('hud')!==false;}
 
 const hud=document.createElement('div'); hud.id='gtaHUD'; hud.hidden=true;
 hud.innerHTML='<div id="gRadar"><canvas id="gRadarC"></canvas><div id="gFloor" hidden></div><div class="gBars"><i id="gHp"><b></b></i><i id="gAr"><b></b></i></div></div>'+
   '<div id="gTR"><div id="gStars"></div><div id="gCash"></div><div id="gDelta"></div><div id="gClock"></div></div>'+
   '<div id="gArea"><b id="gStreet"></b><span id="gTown"></span></div><div id="gCarName"></div><div id="gHelp" hidden></div>'+
-  '<div id="gBig" hidden><div class="gBand"><b id="gBigT"></b><span id="gBigS"></span></div></div><div id="gPass" hidden><b>task complete</b><span id="gPassN"></span><i id="gPassR"></i></div>';
+  '<button id="gMenuBtn" aria-label="Map and settings">Map</button><div id="gBig" hidden><div class="gBand"><b id="gBigT"></b><span id="gBigS"></span></div></div><div id="gPass" hidden><b>task complete</b><span id="gPassN"></span><i id="gPassR"></i></div>';
 A.stage.appendChild(hud);
 document.body.classList.toggle('touch',TOUCH);
 
@@ -91,6 +92,7 @@ let intro=-1, introT=0;
 try{if(!localStorage.getItem('haroe-gta-intro')) intro=0;}catch(e){}
 function introStep(){if(intro<0||!on()) return ''; if(!introT) introT=A.t+1.5; if(A.t<introT) return ''; const i=Math.floor((A.t-introT)/6); if(i>=INTRO.length){intro=-1; try{localStorage.setItem('haroe-gta-intro','1');}catch(e){} return '';} return INTRO[i];}
 function help(){let t=introStep(); if(t){if(t!==helpKey){helpKey=t; $('gHelp').innerHTML=t; $('gHelp').hidden=false;} return;}
+  if(document.body.classList.contains('gtaLock')){const ub=$('useBar'), tb=$('tgtBar'); if((ub&&!ub.hidden)||(tb&&tb.style.display!=='none'&&tb.style.display!=='')){if(helpKey){helpKey=''; $('gHelp').hidden=true;} return;}}      /* what is on offer sits in the same place: one at a time */
   const p=SM.player, c=A.drive&&A.drive.on()&&A.drive.pos();
   if(!c&&!p.lvl&&A.drive&&!SM.getDoing()){let best=null, bd=3.2; A.drive.cars().forEach(function(k){const d=hyp(k.x-p.x,k.z-p.z)-k.dim[0]/2; if(d<bd){bd=d; best=k;}});
     if(best) t=TOUCH?'Tap <b>CAR</b> to get in.':'Press <kbd>F</kbd> to '+(best.traffic?'pull the driver out':'get in the '+best.name)+'.';}
@@ -107,15 +109,16 @@ function deaths(){const G=A.game&&A.game.G, F=A.floors&&A.floors.G;
 let rt=0, was=false;
 A.frameFns.push(function(dt){
   const o=on(); if(o!==was){was=o; hud.hidden=!o; document.body.classList.toggle('gta',o); if(!o){bigHide();}}
-  if(!o) return;
+  if(!o) return; const bare=!shown(); if(hud.classList.contains('bare')!==bare) hud.classList.toggle('bare',bare);
+  const short=A.stage.clientHeight<600; if(hud.classList.contains('short')!==short){hud.classList.toggle('short',short); document.body.classList.toggle('gtaShort',short);}      /* on a phone with the side panel up, the view is half the screen: less on it */
   rt+=dt; if(rt>(TOUCH?0.07:0.034)){rt=0; radar();}
   bars(dt); stars(); cash(dt); area(dt); help(); deaths();
   $('gFloor').hidden=!SM.player.lvl; if(SM.player.lvl) $('gFloor').textContent=FLOOR[SM.player.lvl]||'';
 });
-$('gRadar').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true);});
+$('gRadar').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true);}); $('gMenuBtn').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true);});
 let simsWas=false;
 A.frameFns.push(function(){if(simsWas&&!A.simsOn){const G=A.game&&A.game.G, F=A.floors&&A.floors.G, p=SM.player;      /* out of Sims mode while wasted or busted: the timers that would end it were dropped with the rest */
-    if(G&&G.down){G.down=false; G.hp=100;} if(F&&F.busted){F.busted=false; F.wanted=0;} if(p){p.p.lieT=0; p.p.act=null;} bigHide(); A.timeScale=1;}
+    if(G&&G.down){G.down=false; G.hp=100; if(F) F.loot=0;} if(F&&F.busted){F.busted=false; F.wanted=0; F.loot=0;} if(p){p.p.lieT=0; p.p.act=null;} bigHide(); A.timeScale=1;}
   simsWas=A.simsOn;});
 /* M opens the pause map; the round map's own M is set aside while this display is on */
 window.addEventListener('keydown',function(e){if(!on()||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase();

@@ -7,7 +7,7 @@
 'use strict';
 const A=window.APP, T=A.town, SM=A.sims, R=Math.PI;
 if(!T||!SM||!T.mapData) return;
-const TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const TOUCH=!!(window.matchMedia&&(matchMedia('(pointer: coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(any-pointer: fine)').matches)));      /* a phone or a tablet; a laptop with a touch screen and a mouse plays as a computer */
 const TX0=T.extent[0], TZ0=T.extent[1], TS=T.extent[2];
 const $=function(id){return document.getElementById(id);};
 function hyp(a,b){return Math.hypot(a,b);}
@@ -178,12 +178,12 @@ function drawMap(){if(menu.hidden||tab!=='map') return; const d=sizeMap(), g=cvs
   g.fillStyle='rgba(255,255,255,0.75)'; g.font='700 '+Math.round(13*d)+'px "Barlow Condensed",sans-serif'; g.textAlign='left'; g.fillText('N ↑',12*d,20*d);}
 /* panning, zooming, a waypoint */
 let pan=null; const touches=new Map();
-cvs.addEventListener('pointerdown',function(e){cvs.setPointerCapture(e.pointerId); touches.set(e.pointerId,{x:e.clientX,y:e.clientY}); pan={x:e.clientX,y:e.clientY,moved:false,t:performance.now(),d0:null,s0:view.s};});
+cvs.addEventListener('pointerdown',function(e){cvs.setPointerCapture(e.pointerId); touches.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(pan&&touches.size>1){pan.multi=true; return;} pan={x:e.clientX,y:e.clientY,moved:false,t:performance.now(),d0:null,s0:view.s,btn:e.button,multi:false};});
 cvs.addEventListener('pointermove',function(e){if(!pan||!touches.has(e.pointerId)) return; const prevT=touches.get(e.pointerId); touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(touches.size>=2){const ps=[...touches.values()], dd=hyp(ps[0].x-ps[1].x,ps[0].y-ps[1].y); if(!pan.d0) pan.d0=dd; view.s=Math.max(0.35,Math.min(9,pan.s0*dd/pan.d0)); pan.moved=true; drawMap(); return;}
   const dx=e.clientX-prevT.x, dy=e.clientY-prevT.y; if(Math.hypot(e.clientX-pan.x,e.clientY-pan.y)>5) pan.moved=true; if(!pan.moved) return;
   view.cz-=dx/view.s; view.cx+=dy/view.s; drawMap();});
-cvs.addEventListener('pointerup',function(e){touches.delete(e.pointerId); if(!pan) return; const p=pan; if(touches.size) return; pan=null; if(p.moved) return;
+cvs.addEventListener('pointerup',function(e){touches.delete(e.pointerId); if(!pan) return; const p=pan; if(touches.size) return; pan=null; if(p.moved||p.multi||p.btn!==0) return;      /* not a pinch, not the right button */
   const r=cvs.getBoundingClientRect(), d=cvs.width/r.width, w=c2w((e.clientX-r.left)*d,(e.clientY-r.top)*d,d);
   if(WP.at&&hyp(WP.at[0]-w[0],WP.at[1]-w[1])<14/view.s+2) setWay(null); else if(T.inside(w[0],w[1])) setWay(w[0],w[1]); drawMap(); legend();});
 cvs.addEventListener('pointercancel',function(e){touches.delete(e.pointerId); pan=null;});
@@ -191,6 +191,7 @@ cvs.addEventListener('wheel',function(e){e.preventDefault(); const r=cvs.getBoun
   view.s=Math.max(0.35,Math.min(9,view.s*(e.deltaY>0?0.85:1.18))); const after=c2w(u,v,d); view.cx+=before[0]-after[0]; view.cz+=before[1]-after[1]; drawMap();},{passive:false});
 menu.querySelector('.gmZoom').onclick=function(e){const b=e.target.closest('button'); if(!b) return; view.s=Math.max(0.35,Math.min(9,view.s*(+b.dataset.z>0?1.35:0.74))); drawMap();};
 window.addEventListener('resize',function(){if(!menu.hidden) drawMap();});
+cvs.addEventListener('contextmenu',function(e){e.preventDefault();});
 function legend(){const el=menu.querySelector('.gmLegend'); const ks=['you','way','home','cafe','shop','clinic','bus','police'];
   el.innerHTML='<h4>Legend</h4>'+ks.map(function(k){return '<div class="gmL"><canvas width="44" height="44" data-k="'+k+'"></canvas><span>'+LEGEND[k]+'</span></div>';}).join('')+
     (WP.at?'<h4>Waypoint</h4><p class="gmWay">'+Math.round(WP.len||hyp(WP.at[0]-me().x,WP.at[1]-me().z))+' m '+(WP.car?'by road':'on foot')+'</p><button class="gmBtn" data-a="walk">Walk there by itself</button><button class="gmBtn" data-a="clear">Remove the waypoint</button>':'<p class="gmHint">'+(TOUCH?'Tap':'Click')+' the map to set a waypoint.</p>')+
@@ -219,7 +220,7 @@ menu.querySelector('[data-p="settings"]').addEventListener('click',function(e){c
 /* ---------- keys ---------- */
 function drawKeys(){const p=menu.querySelector('[data-p="keys"]');
   const K=TOUCH?[['Left stick','Walk, run when pushed far; in a car, gas, brake and steer'],['Right stick or a drag','Look around'],['Run · Jump · Punch','The round buttons'],['Car','Get in the nearest car, or out'],['Tap someone or something','What you can do with them'],['Radar','Opens this map']]:
-    [['W A S D','Walk; in a car, gas, brake and steer'],['Mouse','Look around (click the view to take the mouse, Esc gives it back)'],['Shift','Run'],['Space','Jump; in a car, the handbrake'],['F','Get in or out of a car'],['E','Do what is on offer'],['1 – 9','Pick from what is on offer'],['R or click','Punch'],['H','Horn'],['Q','Next radio station'],['C','Look behind you in a car'],['V','Camera: near, middle, far, your eyes'],['Wheel','Zoom the camera'],['M','This map'],['Esc','Let go of the mouse, close the map']];
+    [['W A S D','Jog outside, walk at home; in a car, gas, brake and steer'],['Mouse','Look around (click the view to take the mouse, Esc gives it back)'],['Shift','Sprint (run at home)'],['Alt','Walk, outside'],['Space','Jump; in a car, the handbrake'],['F','Get in or out of a car'],['E','Do what is on offer'],['1 – 9','Pick from what is on offer'],['R or click','Punch'],['H','Horn'],['Q','Next radio station'],['C','Look behind you in a car'],['V','Camera: near, middle, far, your eyes'],['Wheel','Zoom the camera'],['M','This map'],['Esc','Let go of the mouse, close the map']];
   p.innerHTML='<div class="gmList">'+K.map(function(r){return '<div class="gmRow gmK"><b class="gmKey">'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('')+'</div>';}
 
 /* ---------- your progress, kept in this browser as GTA keeps a save: money, weapons, armour, the time of day ---------- */

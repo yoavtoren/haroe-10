@@ -240,6 +240,10 @@ body.gtaLock #stage canvas{cursor:none}
 /* GTA display (gta-hud.js): the radar with health and armour under it, stars and money, the street, messages over the radar */
 #gtaHUD{position:absolute; inset:0; pointer-events:none; z-index:3; font-family:"Barlow Condensed",system-ui,sans-serif; color:#fff}
 #gtaHUD[hidden]{display:none !important}
+#gMenuBtn{display:none; position:absolute; left:calc(14px + env(safe-area-inset-left,0px)); bottom:calc(14px + env(safe-area-inset-bottom,0px)); pointer-events:auto; font:700 14px/1 "Barlow Condensed",sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#fff; background:rgba(4,6,8,.6); border:0; border-radius:3px; padding:8px 12px; cursor:pointer}
+#gtaHUD.bare > *:not(#gBig):not(#gPass):not(#gMenuBtn){display:none !important}
+#gtaHUD.bare #gMenuBtn{display:block}
+body.gta.touch #gtaHUD.bare #gMenuBtn{bottom:auto; top:calc(54px + env(safe-area-inset-top,0px))}
 #gRadar{position:absolute; left:calc(18px + env(safe-area-inset-left,0px)); bottom:calc(20px + env(safe-area-inset-bottom,0px)); pointer-events:auto; cursor:pointer}
 #gRadarC{display:block; border-radius:3px; box-shadow:0 0 0 2px rgba(0,0,0,.6),0 4px 18px rgba(0,0,0,.35)}
 .gBars{display:flex; gap:4px; margin-top:5px}
@@ -290,16 +294,24 @@ body.gta #useBtns .fab:hover, body.gta #tgtBar .fab:hover{background:rgba(255,25
 body.gta:not(.touch) #useBtns, body.gta:not(.touch) #tgtBar > span{counter-reset:k}
 body.gta:not(.touch) #useBtns .fab::before, body.gta:not(.touch) #tgtBar .fab::before{counter-increment:k; content:counter(k); display:inline-block; min-width:9px; margin-right:6px; padding:1px 4px; border-radius:2px; background:#fff; color:#111; font:700 12px/1.25 "Barlow Condensed",sans-serif; text-align:center}
 body.gta:not(.touch) #useBtns .fab:first-child::before, body.gta:not(.touch) #tgtBar .fab:first-child::before{content:"E"}
+/* the Sims-mode buttons in GTA dress; and gone while you play with the mouse taken, when what you can do shows top left as GTA's help */
+body.gta #stageBtns .fab, body.gta #dPick{background:rgba(4,6,8,.6); color:#fff; border-color:transparent; font-family:"Barlow Condensed",sans-serif; font-size:14px; letter-spacing:.02em}
+body.gta #dPick button, body.gta #dPick select{color:#fff} body.gta #dPick option{color:#17211C}
+body.gtaLock #stageBtns, body.gtaLock #dPick{opacity:0; pointer-events:none}
+body.gtaLock #useBar, body.gtaLock #tgtBar{left:calc(16px + env(safe-area-inset-left,0px)) !important; top:calc(56px + env(safe-area-inset-top,0px)) !important; transform:none !important; align-items:flex-start !important; text-align:left !important; max-width:360px}
+body.gtaLock #useBar #useBtns, body.gtaLock #tgtBar > span{justify-content:flex-start !important}
 body.gta.touch #gRadar{top:calc(54px + env(safe-area-inset-top,0px)); bottom:auto; left:calc(12px + env(safe-area-inset-left,0px))}
-body.gta.touch #toast{top:calc(196px + env(safe-area-inset-top,0px)); bottom:auto; left:calc(12px + env(safe-area-inset-left,0px)); max-width:260px; font-size:15px}
+body.gta.touch #toast{top:calc(250px + env(safe-area-inset-top,0px)); bottom:auto; left:calc(12px + env(safe-area-inset-left,0px)); max-width:230px; font-size:15px}
 body.gta.touch #gArea{left:50%; right:auto; transform:translateX(-50%); top:calc(10px + env(safe-area-inset-top,0px)); bottom:auto; text-align:center}
 body.gta.touch #gArea b{font-size:22px} body.gta.touch #gArea span{font-size:14px}
+body.gta.touch.gtaShort #gHelp{display:none !important} body.gta.touch.gtaShort #toast{max-width:180px; font-size:14px} body.gta.touch.gtaShort #gArea{display:none}
 body.gta.touch #gCarName{left:50%; right:auto; transform:translateX(-50%); top:calc(64px + env(safe-area-inset-top,0px)); bottom:auto; font-size:26px}
-body.gta.touch #gHelp{left:50%; transform:translateX(-50%); top:calc(110px + env(safe-area-inset-top,0px)); font-size:16px}
+body.gta.touch #gHelp{left:calc(12px + env(safe-area-inset-left,0px)); transform:none; top:calc(176px + env(safe-area-inset-top,0px)); max-width:260px; font-size:15px}
 body.gta.touch #gTR{top:calc(96px + env(safe-area-inset-top,0px))}
 body.gta.touch #gCash{font-size:28px}
 @media (orientation:landscape){#gtaPad{right:calc(144px + env(safe-area-inset-right,0px)); bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
-@media (orientation:portrait){body.gta.touch #gArea{left:auto; right:calc(12px + env(safe-area-inset-right,0px)); transform:none; top:calc(176px + env(safe-area-inset-top,0px)); text-align:right} body.gta.touch #gCarName{left:auto; right:calc(12px + env(safe-area-inset-right,0px)); transform:none; top:calc(236px + env(safe-area-inset-top,0px))}}
+@media (orientation:portrait){#gtaPad{grid-template-columns:repeat(3,50px); gap:8px; bottom:calc(142px + env(safe-area-inset-bottom,0px))} #gtaPad .gtaBtn{width:50px; height:50px}}      /* upright: three across, so it stays low and clear of the stars and money */
+@media (orientation:portrait){body.gta.touch #gArea{left:auto; right:calc(12px + env(safe-area-inset-right,0px)); transform:none; top:calc(232px + env(safe-area-inset-top,0px)); text-align:right} body.gta.touch #gCarName{left:auto; right:calc(12px + env(safe-area-inset-right,0px)); transform:none; top:calc(236px + env(safe-area-inset-top,0px))}}
 /* the pause menu (gta-map.js) */
 #gtaMenu{position:absolute; inset:0; z-index:9; background:rgba(7,9,11,.94); color:#fff; font-family:"Barlow Condensed",system-ui,sans-serif; display:flex; flex-direction:column}
 #gtaMenu[hidden]{display:none !important}

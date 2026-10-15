@@ -27,6 +27,7 @@ function make(){
   B={master:master,sfx:sfx,radio:radio,out:out,outF:outF};
   try{Object.defineProperty(ctx,'destination',{value:sfx,configurable:true});}catch(e){}
   ctx.close=function(){return Promise.resolve();};      // shared: nobody may close it
+  const resume0=ctx.resume.bind(ctx); ctx.resume=function(){return paused?Promise.resolve():resume0();}; ctx._resume=resume0;      /* nor wake it while the game is paused (audio.js does on any click) */
   ['pointerdown','keydown','touchstart'].forEach(function(ev){window.addEventListener(ev,function(){if(ctx.state==='suspended'&&!paused) ctx.resume();},{passive:true,capture:true});});
   volumes(); return ctx;}
 function shared(){return ctx||make();}
@@ -214,7 +215,7 @@ function cash(){const c=shared(), t=c.currentTime; tone(B.sfx,'triangle',1568,15
 function passed(){const c=shared(), t=c.currentTime, g=c.createGain(), f=c.createBiquadFilter(); f.type='lowpass'; f.frequency.value=2600; g.gain.value=1; g.connect(f).connect(B.master);      // a short brassy fanfare
   [[60,64,67],[62,65,69],[64,67,72]].forEach(function(ch,i){ch.forEach(function(m){const fr=440*Math.pow(2,(m-69)/12); tone(g,'sawtooth',fr,fr,i<2?0.16:0.9,0.035,t+i*0.14); tone(g,'square',fr*0.5,fr*0.5,i<2?0.16:0.9,0.015,t+i*0.14);});});}
 function blip(){const c=shared(), t=c.currentTime; tone(B.sfx,'sine',880,1320,0.08,0.06,t);}
-function pause(on){paused=on; const c=shared(); if(on){if(window.speechSynthesis) window.speechSynthesis.cancel(); c.suspend();} else c.resume(); burst(B.master,0.25,'bandpass',on?600:1200,0.8,0.04);}
+function pause(on){paused=on; const c=shared(); if(on){if(window.speechSynthesis) window.speechSynthesis.cancel(); c.suspend();} else c._resume(); burst(B.master,0.25,'bandpass',on?600:1200,0.8,0.04);}
 
 /* out of Sims mode: the voices that hum on underneath are stopped, and made again when you come back */
 function hush(){if(!V.length&&!hum) return; const t=ctx.currentTime; V.forEach(function(v){v.g.gain.setTargetAtTime(0,t,0.1); const n=v; setTimeout(function(){try{n.o.stop(); n.o2.stop(); n.n.stop();}catch(e){}},600);}); V.length=0;

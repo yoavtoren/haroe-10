@@ -32,7 +32,7 @@ const TEX={
     g.fillStyle='#d8d8d8'; g.beginPath(); g.arc(0,7,3.5,0,7); g.arc(256,7,3.5,0,7); g.fill();}),                                                                                    // button
   pj:cloth(64,64,5,3,function(g){g.fillStyle='#f6f6f6'; g.fillRect(0,0,64,64); for(let x=0;x<64;x+=16){g.fillStyle='rgba(255,255,255,0.9)'; g.fillRect(x,0,5,64); g.fillStyle='rgba(0,0,0,0.1)'; g.fillRect(x+8,0,2,64);}})
 };
-const curlGeo=new THREE.SphereGeometry(1,8,6);
+const curlGeo=new THREE.SphereGeometry(1,8,6); curlGeo.userData.shared=true;      /* every curly head uses it: never freed with one of them */
 const sg=function(r,a,b){return new THREE.SphereGeometry(r,a||20,b||14);};
 const cg=function(rt,rb,h,s){return new THREE.CylinderGeometry(rt,rb,h,s||16);};
 const lathe=function(pts,n){return new THREE.LatheGeometry(pts.map(function(q){return new THREE.Vector2(q[0],q[1]);}),n||26);};
@@ -90,7 +90,7 @@ A.makePerson=function(spec,parent){
   put(cg(0.006,0.0105,0.045),E.skin,head,0,-0.002,0.108).rotation.x=-0.3;
   [-1,1].forEach(function(s){put(sg(0.007),E.skin,head,s*0.011,-0.026,0.107);});
   const smile=put(new THREE.TorusGeometry(0.02,0.0028,8,18,R*0.8),E.lip,head,0,-0.05,0.1035); smile.rotation.z=R*1.1; smile.scale.y=0.55;
-  const mouth=put(sg(0.011),E.dark,head,0,-0.058,0.1); mouth.scale.set(1.3,0.01,0.5);            // opens when talking or eating
+  const mouth=put(sg(0.011),E.dark,head,0,-0.058,0.1); mouth.scale.set(1.3,0.01,0.5); mouth.userData.live=true;      /* it moves when they talk: never merged with the rest (gta-peds.js) */            // opens when talking or eating
   if(fem){
     put(sg(0.012),E.lip2,head,0,-0.067,0.1025).scale.set(1.45,0.42,0.4);
     const blush=new THREE.MeshStandardMaterial({color:E.lip2.b,roughness:0.6,transparent:true,opacity:0.4}); mats.push({m:blush,b:E.lip2.b.clone()});

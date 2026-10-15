@@ -29,17 +29,19 @@ function bark(){[0,0.28].forEach(function(t){const c=actx(); if(!c) return; cons
 /* ---------- keys: WASD or arrows walk (Shift runs), E does the first thing on offer, F punches ---------- */
 const keys={}; let kbOn=false;
 window.addEventListener('keydown',function(e){
-  if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true; A.running=!!keys.shift;      /* nothing while the GTA pause menu is open */
+  if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=keyOf(e); keys[k]=true; A.running=!!keys.shift;      /* nothing while the GTA pause menu is open */
   if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k)>=0) e.preventDefault();
   if(k==='e'&&!e.repeat){if(A.drive&&A.drive.key&&A.drive.key('e')) return; doFirst();}
   if(k==='f'&&!e.repeat){if(A.gtaCar&&A.gtaCar()) return; if(A.drive&&A.drive.on&&A.drive.on()) return; punchNearest();}      // F: in or out of a car close by, as in GTA; with none near, a punch
   if(k==='escape') select(null);
 });
-window.addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=false; A.running=!!keys.shift;});
+window.addEventListener('keyup',function(e){keys[keyOf(e)]=false; A.running=!!keys.shift;});
+function keyOf(e){const c=e.code||''; return /^Key[A-Z]$/.test(c)?c.slice(3).toLowerCase():/^Digit\d$/.test(c)?c.slice(5):e.key.toLowerCase();}      /* the key itself: Option on a Mac turns W into a different letter */
 window.addEventListener('blur',function(){for(const k in keys) keys[k]=false; A.running=false;});
 function kbFrame(){
   if(A.drive&&A.drive.on&&A.drive.on()) return;
   const st=A.sticks&&A.sticks.move; if(!st) return;
+  if(G.down||(A.floors&&A.floors.G.busted)){if(kbOn){st.x=st.y=0; kbOn=false;} return;}      /* wasted, or busted: you do not walk off */
   const x=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0), y=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
   if(x||y){const n=Math.hypot(x,y); st.x=x/n*0.95; st.y=y/n*0.95; kbOn=true; if(sel) select(null);}
   else if(kbOn){st.x=0; st.y=0; kbOn=false;}

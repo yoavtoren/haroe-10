@@ -98,9 +98,10 @@ function lod(){const p=SM.player; if(!p) return; const me=driving?driving:p, px=
 /* ---------- driving ---------- */
 let driving=null, getting=false, camBack=null;
 const keys={};
-window.addEventListener('keydown',function(e){if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true;
+window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=keyOf(e); keys[k]=true;
   if(!driving) return; if(k===' ') e.preventDefault(); if(k==='h'&&!e.repeat) honk();});
-window.addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=false;});
+window.addEventListener('keyup',function(e){keys[keyOf(e)]=false;});
+function keyOf(e){const c=e.code||''; return /^Key[A-Z]$/.test(c)?c.slice(3).toLowerCase():e.key.toLowerCase();}      /* the key itself, as game.js reads it */
 window.addEventListener('blur',function(){for(const k in keys) keys[k]=false;});
 const hud=document.createElement('div'); hud.id='driveHud';
 hud.style.cssText='position:absolute;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:4;display:none;align-items:center;gap:10px;background:rgba(23,33,28,.86);color:#fff;font:700 13px/1 inherit;padding:7px 8px 7px 16px;border-radius:99px;box-shadow:0 4px 14px rgba(0,0,0,.3)';
@@ -110,7 +111,7 @@ $('dOut').onclick=function(e){e.stopPropagation(); exit();}; $('dHorn').onclick=
 function honk(){horn(); const c=driving; if(!c) return; const f=c.fwd(); (A.game&&A.game.all?A.game.all():[]).forEach(function(t){if(t.kind!=='person'||(t.lvl||0)) return; const q=t.root.getWorldPosition(new THREE.Vector3()); const dx=q.x-c.x, dz=q.z-c.z; if(Math.hypot(dx,dz)<9&&dx*f[0]+dz*f[1]>0&&Math.random()<0.5&&A.game.say) A.game.say(t,['Alright, alright!','Hey! I am walking here!','Relax!'][Math.floor(Math.random()*3)]);});
   traffic.forEach(function(t){if(Math.hypot(t.car.x-c.x,t.car.z-c.z)<12) t.wait=Math.max(t.wait||0,0);});}
 function enter(c){
-  const p=SM.player; if(!c||driving||getting||p.lvl) return; SM.stop(); if(A.game&&A.game.select) A.game.select(null);
+  const p=SM.player; if(!c||driving||getting||p.lvl||(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted)) return; SM.stop(); if(A.game&&A.game.select) A.game.select(null);
   if(c.traffic){carjack(c); return;}
   const f=c.fwd(), w=c.dim[1]/2+0.55, doors=[[c.x+f[1]*w,c.z-f[0]*w],[c.x-f[1]*w,c.z+f[0]*w]].filter(function(q){return A.nav.isFree(q[0],q[1]);});      // the driver's door on the left; or the other, and slide across
   const door=doors.sort(function(a,b){return Math.hypot(a[0]-p.x,a[1]-p.z)-Math.hypot(b[0]-p.x,b[1]-p.z);})[0]||[c.x+f[1]*w,c.z-f[0]*w];
@@ -304,7 +305,7 @@ A.frameFns.push(function(dt){
     for(let i=traffic.length-1;i>=0;i--){const t=traffic[i]; if(Math.hypot(t.car.x-mx,t.car.z-mz)>240&&!t.car.held){t.car.remove(); traffic.splice(i,1);}}
     if(traffic.length<MAXT&&T.inside(mx,mz)) spawnTraffic(mx,mz);
     else if(!traffic.some(function(o){return o.bus;})&&traffic.length){let far=null; traffic.forEach(function(o){const d=Math.hypot(o.car.x-mx,o.car.z-mz); if(!o.car.held&&(!far||d>far.d)) far={o:o,d:d};}); if(far&&far.d>70){far.o.car.remove(); traffic.splice(traffic.indexOf(far.o),1);}}}}      // make room for a bus
-  if(getting&&!driving&&!p.path.length&&!p.cb){getting=false; p.speed=1.4; live.forEach(function(c){if(c.held&&!c.traffic) c.held=false;});}      /* the way to the car's door was called off */
+  if(getting&&!driving&&!p.path.length){getting=false; p.cb=null; p.speed=1.4; live.forEach(function(c){if(c.held&&!c.traffic) c.held=false;});}      /* the way to the car's door was called off */
   for(let i=traffic.length-1;i>=0;i--){const t=traffic[i]; trafficStep(t,dt); if(t.gone){t.car.remove(); traffic.splice(i,1);}}
   if(driving){drive(driving,dt); if(!(A.gtaCam&&A.gtaCam())) chase(driving,dt); else if(shake>0){if(A.gtaShake) A.gtaShake(shake); shake=0;}
     const w=T.roadNear(driving.x,driving.z); $('dWhere').textContent=w&&w.d<6&&w.r.name?w.r.name:'';

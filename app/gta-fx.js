@@ -114,7 +114,7 @@ const finM=pass([
   'uniform sampler2D t, b1, b2; uniform float s1, s2, ex, con, sat, vig, grain, time, warm; uniform vec3 shad, high, tint; varying vec2 vUv;',
   'float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}',
   'void main(){vec3 c=texture2D(t,vUv).rgb; c+=texture2D(b1,vUv).rgb*s1+texture2D(b2,vUv).rgb*s2; c*=ex;',
-  ' c=c/(1.0+max(c-vec3(0.82),0.0)*0.9);',                                        // a soft shoulder, so bright skies and lamps roll off
+  ' c=(c*(2.51*c+0.03))/(c*(2.43*c+0.59)+0.14);',                                  // a filmic curve (ACES): whites roll off instead of clipping, the darks deepen
   ' c=(c-0.5)*con+0.5; float l=dot(c,vec3(0.299,0.587,0.114)); c=mix(vec3(l),c,sat);',
   ' c+=shad*(1.0-l)*(1.0-l)*0.09+high*l*l*0.07; c*=tint;',                         // shadows a touch teal, highlights warm: the GTA light
   ' vec2 d=vUv-0.5; c*=1.0-vig*dot(d,d)*1.7;',
@@ -123,6 +123,7 @@ const finM=pass([
   {t:{value:null},b1:{value:null},b2:{value:null},s1:{value:0.5},s2:{value:0.6},ex:{value:1.0},con:{value:1.08},sat:{value:1.16},vig:{value:0.5},grain:{value:0.018},time:{value:0},warm:{value:0},
    shad:{value:new THREE.Color(-0.4,0.15,0.35)},high:{value:new THREE.Color(0.5,0.25,-0.3)},tint:{value:new THREE.Color(1,1,1)}});
 const PP={rt:null,a:null,b:null,c:null,d:null,w:0,h:0,ms:-1};
+const fsz=new THREE.Vector2(), fv=new THREE.Vector3();
 const sz=new THREE.Vector2();
 const RTO={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,stencilBuffer:false};
 function quality(){return A.gtaSet.get('quality');}
@@ -138,19 +139,21 @@ function draw(m,to){QUAD.material=m; renderer.setRenderTarget(to); renderer.rend
 function blur(src,tmp,dst){blurM.uniforms.t.value=src.texture; blurM.uniforms.d.value.set(1/src.width,0); draw(blurM,tmp); blurM.uniforms.t.value=tmp.texture; blurM.uniforms.d.value.set(0,1/src.height); draw(blurM,dst);}
 let ppOn=false, failed=false;
 function wanted(){return A.simsOn&&SM.player&&quality()!=='low'&&!failed;}
+function freePP(){[PP.rt,PP.a,PP.b,PP.c,PP.d].forEach(function(t){if(t) t.dispose();}); PP.rt=PP.a=PP.b=PP.c=PP.d=null; PP.w=PP.h=0; PP.ms=-1;}
+A.gtaSet.on(function(k){if(k==='quality'){failed=false; if(A.gtaSet.get('quality')==='low') freePP();}});
 A.renderHook=function(){
-  if(!wanted()) return false;
+  if(!wanted()){if(PP.rt&&!A.simsOn) freePP(); return false;}
   try{
     targets(); const q=quality();
     renderer.setRenderTarget(PP.rt); renderer.render(scene,camera);
     /* the bright parts, a quarter size, blurred; then an eighth, blurred wider */
     const n=NOW.night, inside=SM.player&&SM.player.room&&A.rooms[SM.player.room]&&!A.rooms[SM.player.room].ext;
-    brightM.uniforms.t.value=PP.rt.texture; brightM.uniforms.th.value=0.88-0.3*n+(inside?0.1:0); draw(brightM,PP.a);
+    brightM.uniforms.t.value=PP.rt.texture; brightM.uniforms.th.value=0.9-0.22*n+(inside?0.08:0); draw(brightM,PP.a);
     blur(PP.a,PP.b,PP.a);
     if(q==='high'){blurM.uniforms.t.value=PP.a.texture; blurM.uniforms.d.value.set(0.5/PP.a.width,0); draw(blurM,PP.c); blurM.uniforms.t.value=PP.c.texture; blurM.uniforms.d.value.set(0,1/PP.c.height); draw(blurM,PP.d); blur(PP.d,PP.c,PP.d);}
     const U=finM.uniforms; U.t.value=PP.rt.texture; U.b1.value=PP.a.texture; U.b2.value=q==='high'?PP.d.texture:PP.a.texture;
-    U.s1.value=0.35+0.45*n; U.s2.value=q==='high'?0.35+0.75*n:0;
-    U.con.value=1.07+0.05*n; U.sat.value=1.15-0.12*n+0.08*NOW.dusk; U.ex.value=1.02+0.06*n; U.vig.value=0.45+0.25*n; U.time.value=(A.t%60);
+    U.s1.value=0.32+0.22*n; U.s2.value=q==='high'?0.3+0.4*n:0;
+    U.con.value=1.06+0.04*n; U.sat.value=1.16-0.1*n+0.08*NOW.dusk; U.ex.value=(inside?0.9:0.84)+0.1*n; U.vig.value=0.45+0.25*n; U.time.value=(A.t%60);
     U.tint.value.setRGB(1-0.05*n+0.03*NOW.dusk,1-0.02*n,1+0.06*n-0.04*NOW.dusk);
     draw(finM,null);
   }catch(e){failed=true; renderer.setRenderTarget(null); if(window.console) console.warn('post-processing off:',e); return false;}
@@ -182,21 +185,23 @@ function lamps(c){if(c._lamps) return c._lamps; const L=c.dim[0], W=c.dim[1], g=
   const p=new THREE.Mesh(poolGeo,poolM); p.position.set(L/2,0.04,0); p.renderOrder=2; g.add(p);
   g.traverse(function(o){o.layers.set(OUT());}); c.g.add(g); c._lamps=g; return g;}
 function headlights(){const D=A.drive; if(!D||!D.live) return; const n=A.simsOn?NOW.night*0.85+NOW.dusk*0.25:0;
-  headM.opacity=clamp(n*1.2,0,1); tailM.opacity=clamp(n*1.1,0,0.9); poolM.opacity=clamp(n*0.55,0,0.5);
+  headM.opacity=clamp(n*1.1,0,0.9); tailM.opacity=clamp(n*1.1,0,0.85); poolM.opacity=clamp(n*0.4,0,0.32);
   const me=D.on()?D.pos():null;
   D.live.forEach(function(c){const want=n>0.08&&(c.traffic||c===me||c.cop); if(want) lamps(c).visible=true; else if(c._lamps) c._lamps.visible=false;});}
 
 /* ---------- every frame ---------- */
 A.frameFns.push(function(dt){
-  if(A.simsOn&&SM.player) tick(dt);
-  light(dt); headlights(); gloss(); fadeU.value=A.simsOn?1:0; if(SM.player){const pp=SM.player.p.g.position; fadeEnd.value=Math.max(1.2,camera.position.distanceTo(pp)-0.6);}
+  if(A.simsOn&&SM.player) tick(dt); else CK.ev=null;
+  light(dt); headlights(); gloss(); fadeU.value=A.gtaCam&&A.gtaCam()?1:0;
+  if(fadeU.value&&SM.player){const pp=SM.player.p.g.position, d=camera.position.distanceTo(pp); fadeEnd.value=Math.max(1.2,d-0.6);
+    renderer.getDrawingBufferSize(fsz); fv.copy(pp); fv.y+=1.0; fv.project(camera); fadeC.value.set((fv.x+1)/2*fsz.x,(fv.y+1)/2*fsz.y,fsz.y*Math.min(0.6,1.4/Math.max(1,d)));}      /* round you on the screen: a circle about your size */
 });
 /* leaves right in front of the camera dissolve, as GTA's foliage does, so a low crown never blinds the view (Sims mode only) */
-const fadeU={value:0}, fadeEnd={value:2.6};      /* on, and how deep: up to just short of you */
+const fadeU={value:0}, fadeEnd={value:2.6}, fadeC={value:new THREE.Vector3(0,0,1)};      /* on; how deep (up to just short of you); and where you are on the screen, and how far round */
 if(A.det&&A.det.leafM){const lm=A.det.leafM, prev=lm.onBeforeCompile;
-  lm.onBeforeCompile=function(sh,r){if(prev) prev(sh,r); sh.uniforms.uNearFade=fadeU; sh.uniforms.uFadeEnd=fadeEnd;
+  lm.onBeforeCompile=function(sh,r){if(prev) prev(sh,r); sh.uniforms.uNearFade=fadeU; sh.uniforms.uFadeEnd=fadeEnd; sh.uniforms.uFadeC=fadeC;
     sh.vertexShader='varying float vFadeZ;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n vFadeZ=-mvPosition.z;');
-    sh.fragmentShader='uniform float uNearFade, uFadeEnd; varying float vFadeZ;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','#include <alphatest_fragment>\n if(uNearFade>0.5){float hh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715)))); if(hh>smoothstep(uFadeEnd*0.45,uFadeEnd,vFadeZ)) discard;}');};      /* a fine even dither, from the camera to just short of you */
+    sh.fragmentShader='uniform float uNearFade, uFadeEnd; uniform vec3 uFadeC; varying float vFadeZ;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','#include <alphatest_fragment>\n if(uNearFade>0.5){float hh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715)))); float keep=max(smoothstep(uFadeEnd*0.45,uFadeEnd,vFadeZ),smoothstep(uFadeC.z*0.55,uFadeC.z,distance(gl_FragCoord.xy,uFadeC.xy))); if(hh>keep) discard;}');};      /* a fine even dither, from the camera to just short of you */
   lm.needsUpdate=true;}
 /* the sun's shadows out in the streets cover a wide square and much of the town: drawn every other frame there, they still follow what moves */
 let odd=false;
