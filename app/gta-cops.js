@@ -146,7 +146,7 @@ function shoot(o){const a=o.a, m=me(), w=new THREE.Vector3(); a.muzzle.getWorldP
   const d=hyp(m.x-a.x,m.z-a.z), running=m.p.manual&&A.running, chance=clamp(0.44-d*0.013-(m.p.manual?0.08:0)-(running?0.14:0)-(m.car?0.12:0)-(A.gtaJump&&A.gtaJump.on?0.2:0),0.06,0.5), hit=Math.random()<chance;
   const ty=(m.car?m.car.g.position.y+1.0:m.p.p.g.position.y+1.25), tx=m.x+(hit?0:(Math.random()-0.5)*2.4), tz=m.z+(hit?0:(Math.random()-0.5)*2.4);
   const g=new THREE.BufferGeometry().setFromPoints([w.clone(),new THREE.Vector3(tx,hit?ty:T.U+0.3+Math.random()*1.6,tz)]), ln=new THREE.Line(g,tracerM); ln.layers.set(OUT()); scene.add(ln); fx.push({o:ln,until:A.t+0.07,geo:g});
-  bang(a.x,a.z);
+  bang(a.x,a.z); if(A.gtaPanic) A.gtaPanic(a.x,a.z,35,2);
   if(hit){const dmg=m.car?4+Math.floor(Math.random()*4):7+Math.floor(Math.random()*6); if(A.game&&A.game.hurt) A.game.hurt(dmg); hurtFlash(); if(A.gtaShake) A.gtaShake(0.08);}
   else if(d<14) whizz();}
 const hurt=document.createElement('div'); hurt.id='gHurt'; hurt.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse at center,rgba(160,0,0,0) 45%,rgba(170,0,0,.55) 100%)'; A.stage.appendChild(hurt);

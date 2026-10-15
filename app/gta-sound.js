@@ -196,6 +196,14 @@ function dispatch(level,m){const c=shared(), t=c.currentTime; if(A.t-lastDisp<6)
 function sting(kind){const c=shared(), t=c.currentTime, g=c.createGain(); g.gain.value=1; g.connect(B.master);
   if(kind==='wasted'){tone(g,'sine',90,30,2.6,0.4,t); burst(g,2.2,'lowpass',500,0.5,0.25,t); [196,185,174].forEach(function(f,i){tone(g,'sawtooth',f,f*0.97,1.8,0.04,t+0.6+i*0.25);});}
   else{tone(g,'sine',110,55,1.4,0.35,t); [523,415,349].forEach(function(f,i){tone(g,'square',f,f,0.3,0.03,t+0.5+i*0.32);}); burst(g,0.4,'bandpass',1800,1,0.08,t+0.1);}}
+/* a scream down the street: a voice's 'ah', two formants over a rising, shaking pitch */
+let screamT=0;
+function scream(x,z){const SM=A.sims, p=SM&&SM.player; if(!p||A.t<screamT) return; screamT=A.t+1.5; const c=shared(), t=c.currentTime, d=Math.hypot(x-p.x,z-p.z), vol=clamp(0.1/(1+d*0.09),0.006,0.08), she=Math.random()<0.5;
+  const o=c.createOscillator(), vib=c.createOscillator(), vg=c.createGain(), f1=c.createBiquadFilter(), f2=c.createBiquadFilter(), g=c.createGain(), base=she?620:360;
+  o.type='sawtooth'; o.frequency.setValueAtTime(base,t); o.frequency.linearRampToValueAtTime(base*1.45,t+0.25); o.frequency.linearRampToValueAtTime(base*1.2,t+0.9); vib.frequency.value=7; vg.gain.value=base*0.04; vib.connect(vg).connect(o.frequency);
+  f1.type='bandpass'; f1.frequency.value=she?950:750; f1.Q.value=5; f2.type='bandpass'; f2.frequency.value=she?1500:1200; f2.Q.value=7;
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.06); g.gain.setValueAtTime(vol,t+0.6); g.gain.exponentialRampToValueAtTime(0.0001,t+1.0);
+  o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g); g.connect(B.out); o.start(t); vib.start(t); o.stop(t+1.05); vib.stop(t+1.05);}
 function lost(){const c=shared(), t=c.currentTime; [523,659,784,1046].forEach(function(f,i){tone(B.sfx,'triangle',f,f,0.25,0.05,t+i*0.09);});}
 function cash(){const c=shared(), t=c.currentTime; tone(B.sfx,'triangle',1568,1568,0.12,0.06,t); tone(B.sfx,'triangle',2093,2093,0.3,0.06,t+0.08); burst(B.sfx,0.15,'highpass',5000,0.6,0.03,t);}
 function blip(){const c=shared(), t=c.currentTime; tone(B.sfx,'sine',880,1320,0.08,0.06,t);}
@@ -206,5 +214,5 @@ A.frameFns.push(function(dt){if(!ctx){if(!A.simsOn) return; shared();}
   if(A.simsOn){steps(); traffic(); city(dt);} else if(B){B.out.gain.setTargetAtTime(0,ctx.currentTime,0.3);}
   radio();});
 window.addEventListener('load',function(){if(A.gtaSet) A.gtaSet.on(function(k){if(k==='master'||k==='radio'||k==='sfx') volumes();});});
-A.gtaSound={ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
+A.gtaSound={ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
 })();

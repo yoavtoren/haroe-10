@@ -232,6 +232,9 @@ A.makePerson=function(spec,parent){
     else if(a==='aim'){T.aRx=-1.5; T.fR=-0.06; T.aRz=-0.08; T.aLx=-1.36; T.fL=-0.5; T.aLz=-0.5; T.ty=0.18; T.hx=0.03; T.hy=0;}
     else if(a==='surrender'){T.aLz=T.aRz=2.6; T.aLx=T.aRx=-0.2; T.fL=T.fR=-1.1; T.hx=0.05; T.hy=0;}
     else if(a==='cower'){T.aLx=T.aRx=-1.9; T.fL=T.fR=-2.2; T.aLz=T.aRz=-0.35; T.tx=0.45; T.hx=0.5; T.hy=0;}
+    /* out in the streets (gta-peds.js): a phone at the ear, a cigarette now and then to the mouth */
+    else if(a==='phone'){T.aRx=-0.35; T.aRz=0.42; T.fR=-2.45; T.hx=0.06; T.hy=-0.12;}
+    else if(a==='smoke'){const up=Math.max(0,Math.sin(o*0.9))>0.85?1:0; T.aRx=-0.35-up*0.5; T.aRz=0.2+up*0.25; T.fR=-1.2-up*1.15; T.aLx=-0.2; T.fL=-0.9; T.aLz=-0.1; T.hx=-0.05*up;}
   }
   p.update=function(dt){
     p.sit+=(p.sitT-p.sit)*Math.min(1,dt*6.5); p.lie+=(p.lieT-p.lie)*Math.min(1,dt*5);
