@@ -289,7 +289,7 @@ A.frameFns.push(function(dt){
     if(traffic.length<MAXT&&T.inside(mx,mz)) spawnTraffic(mx,mz);
     else if(!traffic.some(function(o){return o.bus;})&&traffic.length){let far=null; traffic.forEach(function(o){const d=Math.hypot(o.car.x-mx,o.car.z-mz); if(!o.car.held&&(!far||d>far.d)) far={o:o,d:d};}); if(far&&far.d>70){far.o.car.remove(); traffic.splice(traffic.indexOf(far.o),1);}}}}      // make room for a bus
   for(let i=traffic.length-1;i>=0;i--){const t=traffic[i]; trafficStep(t,dt); if(t.gone){t.car.remove(); traffic.splice(i,1);}}
-  if(driving){drive(driving,dt); chase(driving,dt);
+  if(driving){drive(driving,dt); if(!(A.gtaCam&&A.gtaCam())) chase(driving,dt); else if(shake>0){if(A.gtaShake) A.gtaShake(shake); shake=0;}
     const w=T.roadNear(driving.x,driving.z); $('dWhere').textContent=w&&w.d<6&&w.r.name?w.r.name:'';
     if(goal){const d=Math.hypot(goal[0]-driving.x,goal[1]-driving.z); $('dWhere').textContent+=' · '+Math.round(d)+' m to go'; if(d<12){goal=null; beam.visible=false; SM.toast('You have arrived.');}}}
   else if(goal&&Math.hypot(goal[0]-p.x,goal[1]-p.z)<6){goal=null; beam.visible=false;}

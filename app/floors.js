@@ -361,7 +361,8 @@ function randomSpot(fl){const k=fl.rooms[Math.floor(Math.random()*fl.rooms.lengt
 function settleIn(fl){            // the people of a flat, at home, somewhere inside
   if(!fl.home||fl.folk.length||!A.sims) return;
   fl.people.forEach(function(spec){const a=new A.sims.Actor(spec); a.lvl=fl.f; a.speed=1.0; const s=randomSpot(fl);
-    const c=A.sims.onLevel(fl.f,function(){return A.sims.nearestXZ(s[0],s[1]);}); if(c){a.x=c[0]; a.z=c[1];} a.next=A.t+2+Math.random()*6; a.flat=fl; fl.folk.push(a);
+    const c=A.sims.onLevel(fl.f,function(){return A.sims.nearestXZ(s[0],s[1]);}), mine=c&&fl.rooms.indexOf(A.roomAt(c[0],c[1],fl.f))>=0&&Math.hypot(c[0]-s[0],c[1]-s[1])<1.5;
+    a.x=mine?c[0]:s[0]; a.z=mine?c[1]:s[1]; a.next=A.t+2+Math.random()*6; a.flat=fl; fl.folk.push(a);      // behind a locked door their rooms are not on the walking map: they stay put inside, not at the nearest open spot
     const st=Math.random()<0.55?seatFor(fl,fl.folk.length-1):null;      // on the sofa or in an armchair: reading, a drink, the laptop, the television
     if(st){a.x=st.x; a.z=st.z; a.h=a.hT=st.h; a.p.seatY=st.y; a.p.sitT=a.p.sit=1; a.sitting=true; a.p.act=['read',null,'drink','type',null][Math.floor(Math.random()*5)];}});
 }
@@ -370,7 +371,8 @@ function seatFor(fl,i){
   if(!fl.plan){const ss=(A.liveSeats?A.liveSeats():[]).filter(function(s){return s.type==='sit'&&['living','kitchen','bed1','bed2'].indexOf(A.roomAt(s.x,s.z,0))>=0;}); const s=ss[(i*3+f)%Math.max(1,ss.length)]; return s?{x:s.x,z:s.z,h:s.h,y:s.y}:null;}      // over ours: the same furniture where ours stands
   const out=[], v=new THREE.Vector3(); if(lvlGroups[f]) lvlGroups[f].traverse(function(o){if(o.userData&&(o.userData.cat==='arm'||o.userData.cat==='chair')){o.getWorldPosition(v); if(fl.rooms.indexOf(A.roomAt(v.x,v.z,f))>=0) out.push({x:v.x,z:v.z,h:o.rotation.y+R/2,y:0.45});}});
   return out.length?out[i%out.length]:null;}
-function wander(a){if(a.busy||a.path.length||a.script||(a.sitting&&a.p.sitT>0)) return; if(A.t<a.next) return; a.next=A.t+6+Math.random()*9;
+function onMap(a){return A.sims.onLevel(a.lvl,function(){return A.sims.isFree(a.x,a.z);});}      // their rooms are walkable: the door is open, or it is upstairs and reachable
+function wander(a){if(a.busy||a.path.length||a.script||(a.sitting&&a.p.sitT>0)) return; if(A.t<a.next) return; a.next=A.t+6+Math.random()*9; if(!onMap(a)) return;
   const s=randomSpot(a.flat); a.goTo(s[0],s[1]);}
 
 /* ---------- at the door ---------- */
@@ -381,7 +383,8 @@ function doorPos(fl){if(fl.plan){const s=doorSpec(fl.n,fl.f); return {x:s.ix,z:s
   return fl.key==='shelter'?{x:XB-0.55,z:(LDW[0]+LDW[1])/2,ox:XB+0.6,oz:(LDW[0]+LDW[1])/2,h:R/2}:{x:(LDS[0]+LDS[1])/2,z:L-0.55,ox:(LDS[0]+LDS[1])/2,oz:L+0.6,h:0};}
 function answer(fl){            // someone comes to the door, opens it a little, and talks
   const a=fl.folk[0], d=fl.door, dp=doorPos(fl); if(!a) return;
-  a.busy=true; a.goTo(dp.x,dp.z,function(){a.hT=dp.h+R; d.force=0.45; a.say(LINES_ANSWER[Math.floor(Math.random()*LINES_ANSWER.length)],2.6); fl.atDoor=A.t+14; G.answered=fl; refreshBar();});
+  a.busy=true; const there=function(){a.hT=dp.h+R; d.force=0.45; a.say(LINES_ANSWER[Math.floor(Math.random()*LINES_ANSWER.length)],2.6); fl.atDoor=A.t+14; G.answered=fl; refreshBar();};
+  if(onMap(a)) a.goTo(dp.x,dp.z,there); else{a.release(); a.path=[[dp.x,dp.z]]; a.cb=there;}      // behind the shut door: straight across their own hall to it
 }
 function closeUp(fl){const d=fl.door; if(!fl.broken&&!fl.invited) d.force=null; d.target=0; const a=fl.folk[0]; if(a){a.busy=false; a.next=A.t+3;} if(G.answered===fl) G.answered=null; refreshBar();}
 function knock(fl){

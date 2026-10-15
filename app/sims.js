@@ -644,7 +644,7 @@ cv.addEventListener('pointermove',function(e){
   yaw+=(e.clientX-down.lx)*0.005; pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.clientY-down.ly)*0.004)); down.lx=e.clientX; down.ly=e.clientY; lastDrag=A.t; freeLook=true;
 });
 window.addEventListener('pointerup',function(e){
-  const d=down; down=null; if(!d||!A.simsOn||e.target!==cv) return;
+  const d=down; down=null; if(!d||!A.simsOn||e.target!==cv||(A.gtaLocked&&A.gtaLocked())) return;      // with the mouse taken (gta.js), a click is a punch, not a tap
   if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>7||performance.now()-d.t>500) return;
   const r=cv.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
   ray.setFromCamera(ndc,camera);
@@ -653,6 +653,7 @@ window.addEventListener('pointerup',function(e){
   if(A.tapHook&&A.tapHook(ray,e)) return;      // people, animals, cars and things you can do something to
   if(A.life&&A.life.tap(ray.ray)) return;
   if(player.script) return;
+  if(A.gtaTapFloor&&A.gtaTapFloor()) return;      // behind you on a computer, a click on the floor takes the mouse to look around
   if(player.lvl){floorPlane.constant=-lvY(player.lvl); const ok=ray.ray.intersectPlane(floorPlane,hit); floorPlane.constant=0; if(ok) walkTo(hit.x,hit.z); return;}      // up or down the building: the floor you are on
   if(!ray.ray.intersectPlane(floorPlane,hit)) return;
   const h=gy(hit.x,hit.z); if(h){floorPlane.constant=-h; ray.ray.intersectPlane(floorPlane,hit); floorPlane.constant=0;}      // out on the square the ground is higher
@@ -699,8 +700,8 @@ function driveSticksOn(dt){
     let fx, fz;
     if(camMode==='eye'){fx=Math.sin(yaw); fz=Math.cos(yaw);}
     else{fx=controls.target.x-camera.position.x; fz=controls.target.z-camera.position.z; const n=Math.hypot(fx,fz)||1; fx/=n; fz/=n;}
-    const mx=fx*(-jMove.y)-fz*jMove.x, mz=fz*(-jMove.y)+fx*jMove.x, want=(A.running?3.4:1.45)*Math.min(1,(mag-0.18)/0.72);      // Shift: run
-    manSpeed+=(want-manSpeed)*Math.min(1,dt*5);
+    const mx=fx*(-jMove.y)-fz*jMove.x, mz=fz*(-jMove.y)+fx*jMove.x, want=(A.walkSpeed?A.walkSpeed(A.running):A.running?3.4:1.45)*Math.min(1,(mag-0.18)/0.72);      // Shift: run
+    manSpeed+=(want-manSpeed)*Math.min(1,dt*7);
     const base=Math.atan2(mx,mz), sp=manSpeed*dt, TRY=[0,0.45,-0.45,0.9,-0.9,1.35,-1.35];
     for(let i=0;i<TRY.length;i++){                       // blocked straight ahead: slide round the obstacle
       const a=base+TRY[i], nx=player.x+Math.sin(a)*sp, nz=player.z+Math.cos(a)*sp;
@@ -711,7 +712,7 @@ function driveSticksOn(dt){
   if(Math.hypot(jLook.x,jLook.y)>0.15){
     const lx=jLook.x*Math.abs(jLook.x), ly=jLook.y*Math.abs(jLook.y);        // squared response: small pushes turn slowly
     if(camMode==='eye'){yaw-=lx*dt*1.5; pitch=Math.max(-1.0,Math.min(1.0,pitch+ly*dt*1.0)); freeLook=true; lastDrag=A.t;}
-    else if(!A.flying()){
+    else if(!A.flying()&&!(A.gtaCam&&A.gtaCam())){      // behind you (gta.js) the right stick turns its own camera
       offv.copy(camera.position).sub(controls.target); sphc.setFromVector3(offv);
       sphc.theta-=lx*dt*1.5; sphc.phi=Math.max(0.2,Math.min(Math.PI/2-0.06,sphc.phi-ly*dt*1.0));
       offv.setFromSpherical(sphc); camera.position.copy(controls.target).add(offv);
@@ -752,7 +753,7 @@ A.frameFns.push(function(dt,t){
     if(camera.position.distanceTo(eye)>1) camera.position.copy(eye); else camera.position.lerp(eye,1-Math.exp(-dt*16));
     camera.rotation.order='YXZ'; camera.rotation.set(-pitch,yaw+R,0);
     if(!freeLook) yaw=angLerp(yaw,player.h,Math.min(1,dt*6));
-  }else if(!A.flying()){
+  }else if(!A.flying()&&!(A.gtaCam&&A.gtaCam())){
     tgt.set(player.x,1.0+player.p.g.position.y,player.z); delta.copy(tgt).sub(controls.target).multiplyScalar(1-Math.exp(-dt*5));
     controls.target.add(delta); camera.position.add(delta);
   }

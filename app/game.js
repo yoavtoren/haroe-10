@@ -32,7 +32,7 @@ window.addEventListener('keydown',function(e){
   if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase(); keys[k]=true; A.running=!!keys.shift;
   if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k)>=0) e.preventDefault();
   if(k==='e'&&!e.repeat){if(A.drive&&A.drive.key&&A.drive.key('e')) return; doFirst();}
-  if(k==='f'&&!e.repeat){if(A.drive&&A.drive.on&&A.drive.on()) return; punchNearest();}
+  if(k==='f'&&!e.repeat){if(A.gtaCar&&A.gtaCar()) return; if(A.drive&&A.drive.on&&A.drive.on()) return; punchNearest();}      // F: in or out of a car close by, as in GTA; with none near, a punch
   if(k==='escape') select(null);
 });
 window.addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=false; A.running=!!keys.shift;});
@@ -126,7 +126,7 @@ function actsFor(t){
 function renderBar(){if(!sel) return; const P=actsFor(sel); bar.innerHTML='<b>'+sel.name+'</b><span style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></span>';
   const sp=bar.lastChild; P.forEach(function(q){const b=document.createElement('button'); b.className='fab'; b.textContent=q[0]; b.style.cssText='background:var(--green);color:var(--on);border-color:var(--green)'; b.onclick=function(ev){ev.stopPropagation(); q[1]();}; sp.appendChild(b);});
   bar.style.display='flex';}
-function doFirst(){if(sel){const P=actsFor(sel); if(P.length) P[0][1](); return;} const t=nearest(2.2,function(x){return true;}); if(t){select(t);}}
+function doFirst(){if(sel){const P=actsFor(sel); if(P.length) P[0][1](); return;} if(A.gtaPick&&A.gtaPick(0)) return; const t=nearest(2.2,function(x){return true;}); if(t){select(t);}}      // or the first thing in the bar by what is in front of you
 function nearest(r,ok){const p=SM.player; if(!p) return null; let best=null, bd=r; all().forEach(function(t){if((t.lvl||0)!==(p.lvl||0)||!ok(t)) return; const q=posOf(t,v1), d=Math.hypot(q.x-p.x,q.z-p.z); if(d<bd){bd=d; best=t;}}); return best;}
 function punchNearest(){const t=nearest(2.0,function(t){return t.kind==='person';}); if(t){select(t); punch(t);} else{const p=SM.player; p.p.act='punch'; whoosh(); SM.later(0.5,function(){p.p.act=null;});}}
 
@@ -314,6 +314,6 @@ window.addEventListener('load',function(){makeBin(); setTimeout(addPets,0);});
 /* a kick at a parked car: the alarm goes off, and whoever is around has something to say */
 function kickCar(t){const p=SM.player, c=t.car; select(null); SM.stop(); const dx=c.x-p.x, dz=c.z-p.z, d=Math.hypot(dx,dz)||1;
   p.goTo(c.x-dx/d*1.6,c.z-dz/d*1.6,function(){p.hT=Math.atan2(dx,dz); p.p.act='reach'; hit(0.7,300); SM.later(0.4,function(){p.p.act=null; A.drive.kick(c); const w=witnesses(t,15); if(w.length){bubble(w[0],rnd(['Hey! That is not your car!','What are you doing?!','I am calling the police!']),2.4); if(Math.random()<0.5) cops(1);} else toast('WEE-OO WEE-OO. The alarm wails down the street.');});});}
-A.game={select:select,punch:punch,push:push,hug:hug,talk:talk,pet:pet,flip:flip,trashOut:trashOut,throwBag:throwBag,all:all,G:G,addPets:addPets,dump:function(){return dump;},
+A.game={select:select,punch:punch,punchNearest:punchNearest,push:push,hug:hug,talk:talk,pet:pet,flip:flip,trashOut:trashOut,throwBag:throwBag,all:all,G:G,addPets:addPets,dump:function(){return dump;},
   knock:knockDown,state:state,witnesses:witnesses,say:function(t,text){bubble(t,text,2.4);}};
 })();

@@ -157,7 +157,7 @@ A.makePerson=function(spec,parent){
 
   /* ---------- clothes ---------- */
   const D={top:new THREE.Color(spec.top),pants:new THREE.Color(spec.pants),shoe:new THREE.Color(spec.shoes||0x2b2b2b),sleeves:!!spec.sleeves,knit:!!spec.sleeves};
-  const p={g:g,head:head,mats:mats,sc:sc,spec:spec,sit:0,lie:0,walk:0,sitT:0,lieT:0,walking:false,phase:0,seatY:0.45,lieY:0.45,knee:1,recline:0,vel:0,amp:0.4,moved:null,pjOn:false,isNude:false,pantsLv:0,shoesOn:true,
+  const p={g:g,head:head,mats:mats,sc:sc,spec:spec,sit:0,lie:0,walk:0,sitT:0,lieT:0,walking:false,phase:0,seatY:0.45,lieY:0.45,knee:1,recline:0,vel:0,amp:0.4,run:0,air:0,moved:null,pjOn:false,isNude:false,pantsLv:0,shoesOn:true,
     t:Math.random()*10,blink:2+Math.random()*3,act:null,talk:0,twirl:0,eyeUp:0,hand:Rm.fore,handL:Lm.fore,lap:lap};
   const set=function(list,e){list.forEach(function(m){m.material=e.m;});}, show=function(list,v){list.forEach(function(m){m.visible=v;});};
   function dress(){
@@ -191,9 +191,10 @@ A.makePerson=function(spec,parent){
   function targets(){
     const o=p.t, s=p.sit, lie=p.lie, a=p.act, w=p.walk, still=1-w, br=Math.sin(o*1.7);
     const sn=Math.sin(p.phase), sw=sn*p.amp*w;                 // the left leg is back when sn > 0, so the left arm is forward
-    T.aLx=-sw*0.8-0.2*s+br*0.015*still; T.aRx=sw*0.8-0.2*s-br*0.015*still; T.aLz=T.aRz=0.1-0.035*w;
-    T.fL=-(0.2+0.34*Math.max(0,sn))*w-1.05*s*(1-lie)-0.14*still; T.fR=-(0.2+0.34*Math.max(0,-sn))*w-1.05*s*(1-lie)-0.14*still;      // the elbow bends as the hand comes forward
-    T.tx=-p.recline*s+0.04*w; T.ty=sn*p.amp*0.42*w;            // shoulders turn against the hips
+    const run=p.run*w;                                          // running: the arms pump, elbows bent, and the body leans into it
+    T.aLx=-sw*(0.8+0.55*run)-0.2*s+br*0.015*still; T.aRx=sw*(0.8+0.55*run)-0.2*s-br*0.015*still; T.aLz=T.aRz=0.1-0.035*w+0.06*run;
+    T.fL=-(0.2+0.34*Math.max(0,sn))*w*(1-run)-run*(1.35+0.3*Math.max(0,sn))-1.05*s*(1-lie)-0.14*still; T.fR=-(0.2+0.34*Math.max(0,-sn))*w*(1-run)-run*(1.35+0.3*Math.max(0,-sn))-1.05*s*(1-lie)-0.14*still;      // the elbow bends as the hand comes forward
+    T.tx=-p.recline*s+0.04*w+0.17*run; T.ty=sn*p.amp*0.42*w;            // shoulders turn against the hips
     T.hy=Math.sin(o*0.43)*0.22*still*(1-lie)-sn*p.amp*0.2*w; T.hx=Math.sin(o*0.31)*0.05*still-0.03*w;                                  // and the head stays facing ahead
     if(lie>0.5){T.aLx=T.aRx=-0.12; T.fL=T.fR=-0.25; T.hy=0; T.hx=0;}
     if(!a) return;
@@ -232,7 +233,7 @@ A.makePerson=function(spec,parent){
     p.sit+=(p.sitT-p.sit)*Math.min(1,dt*6.5); p.lie+=(p.lieT-p.lie)*Math.min(1,dt*5);
     // walking: the stride follows the ground actually covered, so feet do not slide; slower walking takes shorter steps
     const mv=p.moved==null?(p.walking?1.4*dt:0):p.moved; p.vel+=((dt>0?mv/dt:0)-p.vel)*Math.min(1,dt*7);
-    const gk=Math.min(1.25,Math.max(0.5,Math.sqrt(p.vel/1.4))); p.amp=0.4*gk;
+    const gk=Math.min(1.25,Math.max(0.5,Math.sqrt(p.vel/1.4))); p.run+=(Math.max(0,Math.min(1,(p.vel-2.3)/2.2))-p.run)*Math.min(1,dt*6); p.amp=0.4*gk*(1+0.32*p.run);      // a longer stride when running
     p.walk+=((p.walking&&p.vel>0.12?1:0)-p.walk)*Math.min(1,dt*7);
     if(p.walk>0.02) p.phase+=mv/(4*LEG*sc*Math.sin(p.amp))*2*R;
     p.t+=dt; targets();
@@ -248,6 +249,7 @@ A.makePerson=function(spec,parent){
     Lm.knee.rotation.x=s*R/2*kn+(kL*kf+0.06)*w; Rm.knee.rotation.x=s*R/2*kn+(kR*kf+0.06)*w;
     Lm.arm.rotation.set(C.aLx,0,-C.aLz); Rm.arm.rotation.set(C.aRx,0,C.aRz); Lm.fore.rotation.x=C.fL; Rm.fore.rotation.x=C.fR;
     torso.rotation.set(C.tx,C.ty,0); torso.scale.set(1,1+br*0.008*still,1+br*0.02*still);
+    const air=p.air; if(air>0.01){Lm.leg.rotation.x-=0.75*air; Rm.leg.rotation.x-=0.25*air; Lm.knee.rotation.x+=1.25*air; Rm.knee.rotation.x+=0.75*air; Lm.arm.rotation.x-=0.7*air; Rm.arm.rotation.x+=0.25*air; Lm.arm.rotation.z-=0.18*air; Rm.arm.rotation.z+=0.22*air; Lm.fore.rotation.x-=0.5*air; Rm.fore.rotation.x-=0.4*air; torso.rotation.x+=0.12*air; hips.position.y+=0.08*air;}      // in a jump
     head.rotation.set(C.hx+0.2*p.lie,C.hy,0); head.position.set(0,0.74-0.012*p.lie,0.06*p.lie);          // lying down: the head is propped on the pillow
     if((p.blink-=dt)<0) p.blink=2.5+Math.random()*3.5;
     eyes.scale.y=(p.blink<0.12||p.asleep)?0.1:1;
