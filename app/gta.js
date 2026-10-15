@@ -86,7 +86,7 @@ function pick(i){const bars=[$('tgtBar'),$('useBar')];
   for(let b=0;b<bars.length;b++){const el=bars[b]; if(!el||el.hidden||el.style.display==='none') continue; const bs=el.querySelectorAll('button'); if(bs[i]){bs[i].click(); return true;}}
   return false;}
 A.gtaPick=pick;
-function punch(){if(car()||!A.game) return; if(A.game.punchNearest) A.game.punchNearest();}
+function punch(){if(car()||!A.game) return; if(A.gtaAttack) A.gtaAttack(); else if(A.game.punchNearest) A.game.punchNearest();}      // with the pistol out (gta-arms.js), a shot
 
 /* ---------- jumping ---------- */
 const J={y:0,v:0,on:false};
@@ -127,7 +127,10 @@ function frame(dt){
   if(c){const sp=Math.abs(c.v); if(keys.c) {C.yaw=head+R; C.back=true;} else{if(C.back){C.back=false; C.yaw=head;} if(idle>1.2&&sp>1) C.yaw+=wrap(head-C.yaw)*Math.min(1,dt*(1.2+sp*0.12)); C.pitch+=(-0.2-C.pitch)*Math.min(1,dt*(idle>1.2?1.5:0));}}
   else if((p.manual||p.path.length)&&idle>2.5){if(!locked()) C.yaw+=wrap(head-C.yaw)*Math.min(1,dt*0.9); C.pitch+=((out?-0.2:-0.4)-C.pitch)*Math.min(1,dt*1.2);}      // indoors it looks down over your head, the rooms are small
   /* how far back: the zoom, closer indoors, farther the faster the car */
-  const base=(c?CAR:FOOT)[1]*C.zoom*(out?1:0.72)+(c?Math.min(3,Math.abs(c.v)*0.09):0);
+  const aim=!c&&A.gtaAiming&&A.gtaAiming();
+  if(aim){pv.x-=Math.cos(C.yaw)*0.55; pv.z+=Math.sin(C.yaw)*0.55; pv.y+=0.12; if(!C.aimWas) C.pitch=Math.max(C.pitch,-0.03);}      // aiming: over the right shoulder, looking level
+  C.aimWas=aim;
+  const base=aim?1.9:(c?CAR:FOOT)[1]*C.zoom*(out?1:0.72)+(c?Math.min(3,Math.abs(c.v)*0.09):0);
   C.dist+=(base-C.dist)*Math.min(1,dt*4);
   dir.set(Math.sin(C.yaw)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(C.yaw)*Math.cos(C.pitch));
   want.copy(pv).addScaledVector(dir,-C.dist);
@@ -151,7 +154,7 @@ function frame(dt){
   lookAt.copy(pv); if(c){const f=c.fwd(); lookAt.x+=f[0]*2.2; lookAt.z+=f[1]*2.2;}
   cam.up.copy(UP); cam.lookAt(lookAt); ctl.target.copy(pv);
   /* a wider lens at speed, and running */
-  const fov=c?56+Math.min(12,Math.abs(c.v)*0.45):(A.running&&p.manual?55:52);
+  const fov=aim?42:c?56+Math.min(12,Math.abs(c.v)*0.45):(A.running&&p.manual?55:52);
   C.fov+=(fov-C.fov)*Math.min(1,dt*3); const near=out?0.12:0.06;
   if(Math.abs(cam.fov-C.fov)>0.05||cam.near!==near){cam.fov=C.fov; cam.near=near; cam.updateProjectionMatrix();}
 }
@@ -185,13 +188,13 @@ function hint(on){if(told||!on) return; told=true; if(SM.toast) SM.toast('Mouse 
 
 /* ---------- on a phone: buttons to run, jump, punch and take a car ---------- */
 const pad=document.createElement('div'); pad.id='gtaPad'; pad.hidden=true;
-const ICON={run:'<path d="M13 4a2 2 0 1 0 0-.01M9 21l2-6 3 2v5M7 12l3-4 4 1 3 3 3 0M10 8l-1 5" />',jump:'<path d="M12 3v12M7 8l5-5 5 5M5 20h14" />',hit:'<path d="M6 11V7a2 2 0 0 1 4 0v3M10 10V6a2 2 0 0 1 4 0v4M14 10V7a2 2 0 0 1 4 0v6a6 6 0 0 1-6 6h-1a5 5 0 0 1-5-5v-3a2 2 0 0 1 4 0" />',car:'<path d="M5 16V11l2-5h10l2 5v5M5 16h14M3 11h18M7 19v-3M17 19v-3" />',horn:'<path d="M4 10v4h3l5 4V6L7 10zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />',radio:'<path d="M4 9h16v10H4zM7 9l9-5M8 14h.01M16 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />'};
+const ICON={run:'<path d="M13 4a2 2 0 1 0 0-.01M9 21l2-6 3 2v5M7 12l3-4 4 1 3 3 3 0M10 8l-1 5" />',jump:'<path d="M12 3v12M7 8l5-5 5 5M5 20h14" />',hit:'<path d="M6 11V7a2 2 0 0 1 4 0v3M10 10V6a2 2 0 0 1 4 0v4M14 10V7a2 2 0 0 1 4 0v6a6 6 0 0 1-6 6h-1a5 5 0 0 1-5-5v-3a2 2 0 0 1 4 0" />',car:'<path d="M5 16V11l2-5h10l2 5v5M5 16h14M3 11h18M7 19v-3M17 19v-3" />',horn:'<path d="M4 10v4h3l5 4V6L7 10zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />',radio:'<path d="M4 9h16v10H4zM7 9l9-5M8 14h.01M16 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />',weap:'<path d="M3 10h13l2-2h3v4l-4 1-2 5h-3l1-4H3z" />'};
 function btn(id,label,icon){const b=document.createElement('button'); b.className='gtaBtn'; b.id=id; b.setAttribute('aria-label',label); b.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICON[icon]+'</svg><span>'+label+'</span>'; pad.appendChild(b); return b;}
-const bRun=btn('gRun','Run','run'), bJump=btn('gJump','Jump','jump'), bHit=btn('gHit','Punch','hit'), bCar=btn('gCar','Car','car'), bHorn=btn('gHorn','Horn','horn'), bRadio=btn('gRadioB','Radio','radio');
+const bRun=btn('gRun','Run','run'), bJump=btn('gJump','Jump','jump'), bHit=btn('gHit','Punch','hit'), bCar=btn('gCar','Car','car'), bHorn=btn('gHorn','Horn','horn'), bRadio=btn('gRadioB','Radio','radio'), bWeap=btn('gWeapB','Weapon','weap');
 A.stage.appendChild(pad);
 const hold=function(b,on,off){b.addEventListener('pointerdown',function(e){e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); on();}); ['pointerup','pointercancel'].forEach(function(n){b.addEventListener(n,function(){if(off) off();});});};
 hold(bRun,function(){A.running=true; bRun.classList.add('on');},function(){A.running=false; bRun.classList.remove('on');});
-hold(bJump,jump); hold(bHit,punch); hold(bRadio,function(){if(A.gtaSound) A.gtaSound.station(1);}); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
+hold(bJump,jump); hold(bHit,punch); hold(bRadio,function(){if(A.gtaSound) A.gtaSound.station(1);}); hold(bWeap,function(){if(A.gtaArms) A.gtaArms.cycle(1);}); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
 function carKey(){if(car()){A.drive.exit(); return true;} return enterNear();}
 function enterNear(){const p=SM.player; if(!A.drive||!p||p.lvl) return false; let best=null, bd=4.5;
   A.drive.cars().forEach(function(c){const d=Math.hypot(c.x-p.x,c.z-p.z)-c.dim[0]/2; if(d<bd){bd=d; best=c;}});
@@ -203,7 +206,8 @@ A.frameFns.push(function(dt){
   jumpStep(dt); stairs(); frame(dt);
   const ck=A.simsOn+SM.camMode+C.on; if(ck!==camKey){camKey=ck; pressCams();}
   const show=A.simsOn&&TOUCH&&!!SM.player; if(pad.hidden===show) pad.hidden=!show;
-  if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bRadio.hidden=!c; bCar.classList.toggle('on',c);}
+  if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bRadio.hidden=!c; bCar.classList.toggle('on',c);
+    const W=A.gtaWeapon; bWeap.hidden=c||!W||!(W.has.bat||W.has.pistol); const gun=W&&W.cur==='pistol'; if(bHit.dataset.gun!==String(gun)){bHit.dataset.gun=gun; bHit.lastChild.textContent=gun?'Shoot':'Punch';}}
 });
 A.gta=Object.assign(A.gta||{},{cam:C,active:active,cycle:cycle,jump:jump,punch:punch,enterNear:enterNear,pressCams:pressCams});
 })();

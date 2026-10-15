@@ -233,6 +233,7 @@ A.makePerson=function(spec,parent){
     else if(a==='surrender'){T.aLz=T.aRz=2.6; T.aLx=T.aRx=-0.2; T.fL=T.fR=-1.1; T.hx=0.05; T.hy=0;}
     else if(a==='cower'){T.aLx=T.aRx=-1.9; T.fL=T.fR=-2.2; T.aLz=T.aRz=-0.35; T.tx=0.45; T.hx=0.5; T.hy=0;}
     /* out in the streets (gta-peds.js): a phone at the ear, a cigarette now and then to the mouth */
+    else if(a==='swing'){const u=(o*2.6)%1, e=u<0.35?Math.sin(u/0.35*R):0; T.aRx=-2.3+2.2*e; T.aLx=-2.1+2.0*e; T.fR=T.fL=-0.6+0.4*e; T.aRz=0.1; T.aLz=-0.35; T.ty=0.5-1.1*e; T.tx=0.1+0.15*e; T.hy=0;}      // a bat, swung through with both hands
     else if(a==='phone'){T.aRx=-0.35; T.aRz=0.42; T.fR=-2.45; T.hx=0.06; T.hy=-0.12;}
     else if(a==='smoke'){const up=Math.max(0,Math.sin(o*0.9))>0.85?1:0; T.aRx=-0.35-up*0.5; T.aRz=0.2+up*0.25; T.fR=-1.2-up*1.15; T.aLx=-0.2; T.fL=-0.9; T.aLz=-0.1; T.hx=-0.05*up;}
   }

@@ -129,7 +129,7 @@ function renderBar(){if(!sel) return; const P=actsFor(sel); bar.innerHTML='<b>'+
   bar.style.display='flex';}
 function doFirst(){if(sel){const P=actsFor(sel); if(P.length) P[0][1](); return;} if(A.gtaPick&&A.gtaPick(0)) return; const t=nearest(2.2,function(x){return true;}); if(t){select(t);}}      // or the first thing in the bar by what is in front of you
 function nearest(r,ok){const p=SM.player; if(!p) return null; let best=null, bd=r; all().forEach(function(t){if((t.lvl||0)!==(p.lvl||0)||!ok(t)) return; const q=posOf(t,v1), d=Math.hypot(q.x-p.x,q.z-p.z); if(d<bd){bd=d; best=t;}}); return best;}
-function punchNearest(){const t=nearest(2.0,function(t){return t.kind==='person';}); if(t){select(t); punch(t);} else{const p=SM.player; p.p.act='punch'; whoosh(); SM.later(0.5,function(){p.p.act=null;});}}
+function punchNearest(){const t=nearest(2.0,function(t){return t.kind==='person';}); if(t){select(t); punch(t);} else{const p=SM.player; p.p.act=A.gtaMelee?A.gtaMelee.act:'punch'; whoosh(); SM.later(0.5,function(){p.p.act=null;});}}
 
 /* taps: anyone or anything listed above */
 const rc=new THREE.Raycaster(); rc.layers.enableAll();
@@ -204,8 +204,8 @@ function talk(t){const p=SM.player; approach(t,0.9,function(){const k=t.sub==='s
   SM.later(1.8,function(){bubble(t,(ANS[k][i]||rnd(ANS[k])),2.8);});});}
 function punch(t){
   const p=SM.player, s=state(t); if(s.down){toast('They are already down.'); return;}
-  approach(t,0.7,function(){p.p.act='punch'; whoosh(); SM.later(0.3,function(){
-    hit(0.8); t.p.act='hurt'; s.hp-=t.sub==='cop'?20:34; bubble(t,rnd(['Ow!','Ouch!','Hey!!','Argh!']),1.4);
+  approach(t,0.7,function(){p.p.act=A.gtaMelee?A.gtaMelee.act:'punch'; whoosh(); SM.later(0.3,function(){
+    hit(0.8); t.p.act='hurt'; s.hp-=(t.sub==='cop'?20:34)*(A.gtaMelee?A.gtaMelee.k:1);      // a bat (gta-arms.js) hits harder bubble(t,rnd(['Ow!','Ouch!','Hey!!','Argh!']),1.4);
     SM.later(0.5,function(){p.p.act='guard'; SM.later(1.2,function(){if(p.p.act==='guard') p.p.act=null;}); if(t.p.act==='hurt') t.p.act=null;});
     const w=witnesses(t,14);
     if(t.sub==='cop'){cops(3); if(!state(t).fight) fightBack(t);}

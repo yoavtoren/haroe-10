@@ -644,7 +644,7 @@ cv.addEventListener('pointermove',function(e){
   yaw+=(e.clientX-down.lx)*0.005; pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.clientY-down.ly)*0.004)); down.lx=e.clientX; down.ly=e.clientY; lastDrag=A.t; freeLook=true;
 });
 window.addEventListener('pointerup',function(e){
-  const d=down; down=null; if(!d||!A.simsOn||e.target!==cv||(A.gtaLocked&&A.gtaLocked())) return;      // with the mouse taken (gta.js), a click is a punch, not a tap
+  const d=down; down=null; if(!d||!A.simsOn||e.target!==cv||(A.gtaLocked&&A.gtaLocked())||(A.gtaAiming&&A.gtaAiming())) return;      // with the mouse taken (gta.js), a click is a punch, not a tap
   if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>7||performance.now()-d.t>500) return;
   const r=cv.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
   ray.setFromCamera(ndc,camera);
