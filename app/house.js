@@ -61,7 +61,7 @@ A.doorFrame('end',en[0],en[1]); A.doorFrame('tv',bd[0]-KZ,bd[1]-KZ); A.doorFrame
 A.doorFrame('blk_n',wd[0]-BLK,wd[1]-BLK); A.doorFrame('wc_n',wd[0]-WC.x0,wd[1]-WC.x0);
 A.doorLeaf('bed1',d1[1],0,R,R/2,'living',0.78);
 A.doorLeaf('bed2',d2[0],0,0,R*0.44,'living',0.78);      // hinged on the side by the shoe cabinet, it swings in toward the wardrobe
-A.doorLeaf('bath',W,bd[0],-R/2,0,'living',bd[1]-bd[0]);  // hinged on the left as you walk in, swings into the bathroom
+A.doorLeaf('bath',W,bd[0],-R/2,-R/2+R/2/0.94,'living',bd[1]-bd[0]);  // hinged on the left as you walk in, swings into the bathroom a full right angle (doors stop at 94% of theirs) and stops on the washing machine
 A.doorLeaf('wc',wd[0],ZW,0,-R/2*0.92,'living',0.65);       // hinged by the wall, it swings in and comes to rest beside the basin
 A.doorLeaf('entrance',en[0],L,0,R/2,'living',0.85);
 
@@ -434,8 +434,8 @@ inRoom('wc',function(){
   seat({id:'wc',label:'Guest toilet',room:'wc',x:WC.x1-0.5,z:mz,y:0.6,h:-R/2,type:'sit',hidden:true});
 });
 
-/* ---------- bathroom, from the photos. The washing machine stands right beside the door, against the same wall, in a niche
-   under the boiler cupboard, so the open door rests along its side; the towel rail hangs on the back of the door. Sink on its
+/* ---------- bathroom, from the photos. The washing machine stands right beside the door in a niche under the boiler cupboard,
+   facing the door, which opens onto its front and stops on it; the towel rail hangs on the back of the door. Sink on its
    navy cabinet on the right, a mirror and a navy wall cupboard over it; toilet on the far wall under a window, and the
    shower to the right of the toilet, with its own window and striped frosted glass ---------- */
 inRoom('bath',function(){
@@ -466,38 +466,41 @@ inRoom('bath',function(){
   box(0.02,0.1,0.07,0x1d1f21,vx+0.47,0.78,BA.z1-0.04); box(0.12,0.012,0.012,0x1d1f21,vx+0.47,0.78,BA.z1-0.075); cyl(0.055,0.1,0xfbfbf8,vx+0.47,0.72,BA.z1-0.075,null,14).rotation.z=R/2;   // the black roll holder, toward the toilet,
   A.rbox(0.1,0.14,0.07,0xf4f4f1,vx+0.47,0.5,BA.z1-0.035,null,0.015);                                                           // and a white dispenser under it
   A.rbox(0.34,0.62,0.03,0x5f7cab,W+0.22,1.0,BA.z1-0.03,null,0.012); box(0.03,0.04,0.03,0xf4f4f1,W+0.22,1.33,BA.z1-0.015);           // a blue towel on a hook by the door
-  /* the washing machine, from the photos: a white Siemens on a black anti-vibration stand in a niche 60 wide and 58 deep,
-     between the door's jamb and a white boxed column; a knit laundry basket with a black bucket in it and a pouch of Ariel
-     on top; the boiler cupboard juts out above, a black hose curving down from a brass fitting in its underside; on the
-     column a clip with two mops, a broom and a squeegee on the floor, and a green mat in front */
-  const wz=bd[0]-0.31, wx=W+0.3, wf=W+0.59, wy=0.08, top=wy+0.84;
-  box(0.6,0.05,0.6,0x1b1c1e,wx,0.055,wz); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){box(0.07,0.04,0.07,0x26282a,wx+q[0]*0.25,0.02,wz+q[1]*0.25);});
-  A.rbox(0.58,0.84,0.6,0xfbfbfa,wx,wy+0.42,wz,null,0.025,0.03);
+  /* the washing machine, from the photos: a white Siemens on a black anti-vibration stand in a niche between the door's jamb
+     and a white boxed column. Its back is to the column and its round door faces the bathroom door, which opens a right angle
+     and stops on it. A knit laundry basket with a black bucket in it and a pouch of Ariel on top; the boiler cupboard juts out
+     above, a black hose curving down from a brass fitting in its underside; on the column a clip with two mops, a broom and a
+     squeegee on the floor, and a green mat beside it. Built facing its local +x, like the furniture, and turned to face +z */
+  const wz=bd[0]-0.31, wy=0.08, top=wy+0.84, WD=0.55, F=WD/2;            // wz: the middle of the niche; the machine is 55 deep, its round door 3 cm more
+  const wb=wz-0.295, wf=wb+WD, wx=W+0.312, wm=G(); wm.position.set(wx,0,wb+F); wm.rotation.y=-R/2;      // 1 cm off the tiles, its back 5 mm off the column, its front 3.5 cm short of the open door
+  box(WD,0.05,0.6,0x1b1c1e,0,0.055,0,wm); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){box(0.07,0.04,0.07,0x26282a,q[0]*0.24,0.02,q[1]*0.25,wm);});
+  A.rbox(WD,0.84,0.6,0xfbfbfa,0,wy+0.42,0,wm,0.025,0.03);
   const cy=wy+0.37;
-  A.torus(0.205,0.032,0xf4f4f2,wf+0.01,cy,wz).rotation.y=R/2; A.torus(0.165,0.016,0x9aa0a4,wf+0.025,cy,wz).rotation.y=R/2;      // the round door: white rim, grey ring
+  A.torus(0.205,0.03,0xf4f4f2,F+0.003,cy,0,wm).rotation.y=R/2; A.torus(0.165,0.016,0x9aa0a4,F+0.016,cy,0,wm).rotation.y=R/2;      // the round door: white rim, grey ring
   const drum=new THREE.Mesh(new THREE.CircleGeometry(0.155,28),A.MT(canvasTex(128,128,function(g){g.fillStyle='#22262a'; g.fillRect(0,0,128,128);
     [['#8fbd9b',40,50,30],['#d6a21e',80,44,24],['#3d5a80',64,84,30],['#f3ebdc',36,86,18]].forEach(function(q){g.globalAlpha=0.55; g.fillStyle=q[0]; g.beginPath(); g.ellipse(q[1],q[2],q[3],q[3]*0.6,q[1]/20,0,7); g.fill();});
     g.globalAlpha=0.25; g.fillStyle='#ffffff'; g.beginPath(); g.ellipse(44,36,30,12,-0.6,0,7); g.fill();})));
-  drum.position.set(wf+0.02,cy,wz); drum.rotation.y=R/2; scene.add(drum);
-  box(0.02,0.07,0.035,0xd4d7d9,wf+0.03,cy,wz-0.19);                                                                    // its handle
+  drum.position.set(F+0.012,cy,0); drum.rotation.y=R/2; wm.add(drum);
+  box(0.02,0.07,0.035,0xd4d7d9,F+0.02,cy,-0.19,wm);                                                                    // its handle
   const pT=canvasTex(256,64,function(g){g.fillStyle='#f6f7f5'; g.fillRect(0,0,256,64); g.fillStyle='#d9dcdc'; g.fillRect(0,58,256,6);
     g.strokeStyle='#b9bec0'; g.lineWidth=2; g.strokeRect(6,10,64,26); g.fillStyle='#c9cdcf'; g.fillRect(22,30,30,3);                  // detergent drawer
     g.fillStyle='#6a7074'; g.font='bold 9px sans-serif'; g.fillText('SIEMENS',8,8);
     for(let i=0;i<5;i++){g.fillStyle='#8a9094'; g.fillRect(80,10+i*9,14,2); g.fillRect(150,10+i*9,14,2); g.fillStyle='#3b4246'; g.fillRect(96,9+i*9,3,3); g.fillRect(146,9+i*9,3,3);}
     g.fillStyle='#8a9094'; for(let i=0;i<4;i++) g.fillRect(170+i*20,46,14,2);});
-  const pn=new THREE.Mesh(new THREE.PlaneGeometry(0.58,0.145),A.MT(pT,'bath',true)); pn.position.set(wf+0.002,wy+0.765,wz); pn.rotation.y=R/2; scene.add(pn);
-  cyl(0.034,0.025,0xc4c8cb,wf+0.014,wy+0.765,wz+0.028,null,24).rotation.z=R/2; box(0.004,0.03,0.006,0x6a7074,wf+0.028,wy+0.78,wz+0.028);   // the programme dial
+  const pn=new THREE.Mesh(new THREE.PlaneGeometry(0.58,0.145),A.MT(pT,'bath',true)); pn.position.set(F+0.002,wy+0.765,0); pn.rotation.y=R/2; wm.add(pn);
+  cyl(0.034,0.025,0xc4c8cb,F+0.014,wy+0.765,0.028,wm,24).rotation.z=R/2; box(0.004,0.03,0.006,0x6a7074,F+0.028,wy+0.78,0.028,wm);   // the programme dial
   const wcv=document.createElement('canvas'); wcv.width=128; wcv.height=48; const wtex=new THREE.CanvasTexture(wcv);
-  const disp=new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.055),new THREE.MeshBasicMaterial({map:wtex})); disp.position.set(wf+0.005,wy+0.77,wz-0.16); disp.rotation.y=R/2; scene.add(disp);
-  A.washer={x:wx,z:wz,drum:drum,canvas:wcv,tex:wtex,sx:wx+0.75,sz:wz,h:-R/2,top:top,box:[W+0.01,wf,0,top+0.01,wz-0.3,wz+0.3]};
+  const disp=new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.055),new THREE.MeshBasicMaterial({map:wtex})); disp.position.set(F+0.005,wy+0.77,-0.16); disp.rotation.y=R/2; wm.add(disp);
+  A.washer={x:wx,z:wb+F,drum:drum,canvas:wcv,tex:wtex,sx:wx,sz:wf+0.47,h:R,top:top,box:[W+0.012,W+0.612,0,top+0.01,wb,wf],
+    by:{x:W+0.88,z:bd[0]+0.13}};      // a spot clear of the door's swing, to close the door from before stepping up to the machine
   const knit=A.MT(canvasTex(64,64,function(g){g.fillStyle='#f5f4f0'; g.fillRect(0,0,64,64); g.fillStyle='rgba(60,60,58,0.55)';
     for(let y=4;y<64;y+=8) for(let x=(y%16?4:0);x<64;x+=8){g.beginPath(); g.ellipse(x+2,y,2.2,1.6,0,0,7); g.fill();}}),'bath',true);
   knit.map.wrapS=knit.map.wrapT=THREE.RepeatWrapping; knit.map.repeat.set(4,2);
-  const bk=G(); bk.position.set(wx-0.03,top,wz+0.05);                                                                  // the laundry basket, open, with the bucket in it
+  const bk=G(wm); bk.position.set(-0.03,top,0.025);                                                                    // the laundry basket, open, with the bucket in it
   box(0.36,0.012,0.5,0xf1f0ec,0,0.006,0,bk); [-1,1].forEach(function(s){box(0.012,0.26,0.52,knit,s*0.18,0.13,0,bk); box(0.38,0.26,0.012,knit,0,0.13,s*0.255,bk);
     A.rbox(0.03,0.025,0.54,0xf7f6f2,s*0.185,0.265,0,bk,0.01); A.rbox(0.39,0.025,0.03,0xf7f6f2,0,0.265,s*0.26,bk,0.01); box(0.006,0.05,0.12,0x8f9294,0,0.2,s*0.262,bk).rotation.y=R/2;});
   cyl(0.14,0.28,0x17181a,-0.05,0.16,-0.06,bk,24,0.155); A.torus(0.15,0.014,0x111213,-0.05,0.305,-0.06,bk).rotation.x=R/2; cyl(0.13,0.01,0x0d0e0f,-0.05,0.295,-0.06,bk,24);
-  const ar=G(); ar.position.set(wx+0.17,top,wz-0.2); ar.rotation.y=0.25;                                               // the pouch of Ariel, standing
+  const ar=G(wm); ar.position.set(0.17,top,-0.18); ar.rotation.y=0.25;                                                  // the pouch of Ariel, standing
   const arT=canvasTex(64,96,function(g){g.fillStyle='#f3f5f4'; g.fillRect(0,0,64,96); g.fillStyle='#1f7d74'; g.beginPath(); g.arc(30,40,16,0,7); g.fill(); g.fillStyle='#f3f5f4'; g.beginPath(); g.arc(34,38,9,0,7); g.fill();
     g.fillStyle='#c8202a'; g.font='bold 10px sans-serif'; g.fillText('ARIEL',18,44); g.fillStyle='#9aa'; for(let i=0;i<6;i++) g.fillRect(8,64+i*4,48-(i%3)*8,2);});
   const pb=box(0.13,0.32,0.22,A.MT(arT,'bath',true),0,0.16,0,ar); pb.scale.set(1,1,1); cyl(0.012,0.03,0xf4f4f1,0.02,0.33,0.08,ar,10);
@@ -508,7 +511,7 @@ inRoom('bath',function(){
   const hose=new THREE.CatmullRomCurve3([new THREE.Vector3(W+0.09,1.98,wz-0.24),new THREE.Vector3(W+0.2,1.7,wz-0.26),new THREE.Vector3(W+0.26,1.3,wz-0.28),new THREE.Vector3(W+0.2,1.05,wz-0.28),new THREE.Vector3(W+0.08,top+0.02,wz-0.28)]);
   const hm=new THREE.Mesh(new THREE.TubeGeometry(hose,30,0.011,8,false),M(0x1b1c1e)); hm.castShadow=true; scene.add(hm);                     // its black hose, down the back of the niche
   box(0.6,H,wz-0.3-cupZ0,0xf3f3f0,W+0.3,H/2,(cupZ0+wz-0.3)/2);                                                          // the white boxed column beside the machine
-  const cb=box(0.003,0.42,0.12,0xb48c5c,W+0.48,0.62,wz-0.302); cb.rotation.x=0.12;                                     // a piece of cardboard wedged in beside it
+  const cb=box(0.003,0.42,0.14,0xb48c5c,W+0.645,0.22,wb+0.35); cb.rotation.z=0.1;                                       // a piece of cardboard leaning on its side
   const cf=W+0.6;                                                                                                       // on the column's face: a clip with two mops, and a broom and a squeegee on the floor
   box(0.03,0.04,0.14,0xf4f4f1,cf+0.015,1.32,BA.z0+0.08);
   [[0.05,0x9da3a7],[-0.02,0xb9bec1]].forEach(function(q,i){const m=cyl(0.012,1.42,q[1],cf+0.06+i*0.05,0.71,BA.z0+0.08+q[0],null,8); m.rotation.z=0.06; m.rotation.x=-0.04;
@@ -516,7 +519,7 @@ inRoom('bath',function(){
   box(0.26,0.05,0.07,0xc9a46a,cf+0.25,0.025,BA.z0+0.24).rotation.y=0.5; box(0.24,0.03,0.05,0xe9dfc4,cf+0.25,0.06,BA.z0+0.24).rotation.y=0.5;
   box(0.45,0.035,0.05,0x17181a,cf+0.22,0.018,BA.z0+0.45).rotation.y=-0.45;
   const mat=A.MT(canvasTex(64,64,function(g){g.fillStyle='#7aa594'; g.fillRect(0,0,64,64); g.strokeStyle='rgba(255,255,255,0.18)'; g.lineWidth=2; for(let i=-64;i<64;i+=6){g.beginPath(); g.moveTo(i,0); g.lineTo(i+64,64); g.stroke();}}),'bath',true);
-  box(0.5,0.012,0.78,mat,W+0.9,0.007,bd[0]+0.12).castShadow=false;                                                    // green mat in front of the machine
+  box(0.5,0.012,0.78,mat,W+0.9,0.007,bd[0]+0.12).castShadow=false;                                                    // green mat beside the machine
   /* the toilet wall: a tiled box with a ledge, the bowl hung on it, the flush plate, and above it the small tilting window in a tiled reveal */
   const pz=BA.x1-0.22, pz0=BA.z0+0.92, pzm=(pz0+BA.z1)/2;
   box(0.22,1.22,BA.z1-pz0,0xf6f6f3,BA.x1-0.11,0.61,pzm);

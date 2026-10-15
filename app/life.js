@@ -169,6 +169,9 @@ function begin(m){SM.stop(); tok={}; mode=m||''; return tok;}
 function later(sec,fn){const t=tok; SM.later(sec,function(){if(t===tok) fn();},t);}
 function chain(steps){const t=tok; let i=0; const next=function(){if(t===tok&&i<steps.length) steps[i++](next);}; next();}
 const Wk=function(x,z,h){return function(n){walk(x,z,h,n);};}, Ps=function(s){return function(n){later(s,n);};}, Do=function(f){return function(n){f(); n();};};
+/* the bathroom door opens onto the front of the washing machine: shut it from beside the sink, step up to the machine, and come back there to let it go */
+function toWasher(){const w=A.washer; return [Wk(w.by.x,w.by.z,null),Do(function(){A.door('bath').force=0;}),Ps(0.4),Wk(w.sx,w.sz,w.h)];}
+function fromWasher(){const w=A.washer; return [Wk(w.by.x,w.by.z,null),Do(function(){A.door('bath').force=null;})];}
 const doing=function(t){SM.setDoing(t);};
 function goal(k){if(st.done[k]) return; st.done[k]=1; renderGoals(); const nm=GOALS.filter(function(g){return g[0]===k;})[0][1]; SM.toast('Done: '+nm+'.'); if(A.gtaHud&&A.gtaHud.passed) A.gtaHud.passed(nm,50);      // the GTA banner (gta-hud.js)
   if(Object.keys(st.done).length===GOALS.length) SM.later(3.5,function(){SM.toast('A full day at Haroe 10. Good night.'); if(A.gtaHud&&A.gtaHud.passed) A.gtaHud.passed('A full day at Haroe 10',500,'day complete');},st);}
@@ -357,15 +360,15 @@ const DO={
   laundry:function(){
     if(st.wash>0){SM.toast('The machine is still running.'); return;}
     begin('laundry'); doing('doing the laundry');
-    const load=[Wk(A.washer.sx,A.washer.sz,A.washer.h),Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.2),
-      Do(function(){carry(null); st.pile=null; pile.visible=false; st.wash=45; st.washDone=false; AU.blip('beep'); AU.loop('washer',true); pose(null); doing(''); SM.toast('The wash is on. 45 seconds on the timer.'); hud();})];
+    const load=toWasher().concat([Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.2),
+      Do(function(){carry(null); st.pile=null; pile.visible=false; st.wash=45; st.washDone=false; AU.blip('beep'); AU.loop('washer',true); pose(null); doing(''); SM.toast('The wash is on. 45 seconds on the timer.'); hud();})],fromWasher());
     if(st.pile&&st.carry!=='clothes'){const s=SM.seatBy(st.pile); if(s){chain([Wk(s.x+Math.sin(s.h)*0.65,s.z+Math.cos(s.h)*0.65,null),Do(function(){pile.visible=false; st.pile=null; carry('clothes');})].concat(load)); return;}}
     chain(load);
   },
   hang:function(){
     const q=rackSpot(); if(!st.washDone||!q) return; begin('hang');
-    chain([Do(function(){doing('emptying the machine');}),Wk(A.washer.sx,A.washer.sz,A.washer.h),Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.0),Do(function(){st.washDone=false; carry('wet'); doing('hanging the laundry');}),
-      Wk(q.sx,q.sz,q.h),Ps(0.3),Do(function(){pose('reach');}),Ps(1.8),Do(function(){carry(null); st.hung=true; doing(''); SM.toast('The laundry is drying.'); goal('laundry'); hud();})]);
+    chain([Do(function(){doing('emptying the machine');})].concat(toWasher(),[Ps(0.3),Do(function(){pose('reachlow'); AU.blip('click');}),Ps(1.0),Do(function(){st.washDone=false; carry('wet'); doing('hanging the laundry');})],fromWasher(),
+      [Wk(q.sx,q.sz,q.h),Ps(0.3),Do(function(){pose('reach');}),Ps(1.8),Do(function(){carry(null); st.hung=true; doing(''); SM.toast('The laundry is drying.'); goal('laundry'); hud();})]));
   },
   book:function(){
     const q=shelf(); if(!q) return; begin();
