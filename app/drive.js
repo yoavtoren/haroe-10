@@ -15,7 +15,7 @@ function wrap(d){while(d>R) d-=2*R; while(d<-R) d+=2*R; return d;}
 const root=new THREE.Group(); root.userData.nc=true; root.userData.nofight=true; scene.add(root);      // not in the way of the walking map; moves, so no flicker search
 const lampH=A.lampMat('L:street',0xe6ecee,0xfff6dc,1.1), lampT=A.lampMat('L:street',0xb0262a,0xff3a2a,0.9);
 const DIM={mini:[3.6,1.6,2.38],hatch:[4.05,1.76,2.58],sedan:[4.62,1.8,2.7],suv:[4.45,1.84,2.64],van:[4.4,1.78,2.73],bus:[11.8,2.55,5.9]};      // length, width, wheelbase
-const NAME={mini:'Little car',hatch:'Hatchback',sedan:'Saloon',suv:'SUV',van:'Van',bus:'City bus'};
+const NAME={mini:'Ptitim Mini',hatch:'Rishon Hatch',sedan:'Yarkon Saloon',suv:'Negev 4x4',van:'Shuk Van',bus:'City Bus 61'};      // made-up makes, as GTA has its own
 
 /* ---------- sounds ---------- */
 let ac=null;

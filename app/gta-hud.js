@@ -87,7 +87,7 @@ let helpKey='';
 function help(){let t='';
   const p=SM.player, c=A.drive&&A.drive.on()&&A.drive.pos();
   if(!c&&!p.lvl&&A.drive&&!SM.getDoing()){let best=null, bd=3.2; A.drive.cars().forEach(function(k){const d=hyp(k.x-p.x,k.z-p.z)-k.dim[0]/2; if(d<bd){bd=d; best=k;}});
-    if(best) t=TOUCH?'Tap <b>CAR</b> to get in.':'Press <kbd>F</kbd> to '+(best.traffic?'pull the driver out':'get in the '+(/^[A-Z]+$/.test(best.name)?best.name:best.name.toLowerCase()))+'.';}
+    if(best) t=TOUCH?'Tap <b>CAR</b> to get in.':'Press <kbd>F</kbd> to '+(best.traffic?'pull the driver out':'get in the '+best.name)+'.';}
   if(t!==helpKey){helpKey=t; $('gHelp').innerHTML=t; $('gHelp').hidden=!t;}}
 /* ---------- wasted, busted ---------- */
 let big=null;
