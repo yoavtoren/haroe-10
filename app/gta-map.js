@@ -216,6 +216,15 @@ function drawKeys(){const p=menu.querySelector('[data-p="keys"]');
     [['W A S D','Walk; in a car, gas, brake and steer'],['Mouse','Look around (click the view to take the mouse, Esc gives it back)'],['Shift','Run'],['Space','Jump; in a car, the handbrake'],['F','Get in or out of a car'],['E','Do what is on offer'],['1 – 9','Pick from what is on offer'],['R or click','Punch'],['H','Horn'],['Q','Next radio station'],['C','Look behind you in a car'],['V','Camera: near, middle, far, your eyes'],['Wheel','Zoom the camera'],['M','This map'],['Esc','Let go of the mouse, close the map']];
   p.innerHTML='<div class="gmList">'+K.map(function(r){return '<div class="gmRow gmK"><b class="gmKey">'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('')+'</div>';}
 
+/* ---------- your progress, kept in this browser as GTA keeps a save: money, weapons, armour, the time of day ---------- */
+let loaded=false, saveT=0;
+function load(){loaded=true; let s=null; try{s=JSON.parse(localStorage.getItem('haroe-gta-save')||'null');}catch(e){} if(!s) return;
+  const G=A.floors&&A.floors.G, W=A.gtaWeapon; if(G&&typeof s.loot==='number') G.loot=Math.max(0,Math.floor(s.loot));
+  if(W&&s.w){['bat','pistol'].forEach(function(k){W.has[k]=!!s.w[k];}); W.ammo=Math.max(0,s.ammo|0); W.clip=Math.max(0,Math.min(12,s.clip|0)); if(W.has[s.cur]) W.cur=s.cur;}
+  if(typeof s.armour==='number') A.gtaArmor=Math.max(0,Math.min(100,s.armour)); if(typeof s.hour==='number'&&A.gtaSetHour&&SET.clock==='game') A.gtaSetHour(s.hour);
+  if(A.floors&&A.floors.drawHud) A.floors.drawHud();}
+function store(){const G=A.floors&&A.floors.G, W=A.gtaWeapon; try{localStorage.setItem('haroe-gta-save',JSON.stringify({loot:G?G.loot:0,w:W?{bat:W.has.bat,pistol:W.has.pistol}:null,ammo:W?W.ammo:0,clip:W?W.clip:0,cur:W?W.cur:'fists',armour:A.gtaArmor||0,hour:A.gtaHour?A.gtaHour():10}));}catch(e){}}
+
 /* ---------- keys and the frame ---------- */
 window.addEventListener('keydown',function(e){if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase();
   if(!menu.hidden&&(k==='escape'||k==='m'||k==='p')){open(false); e.preventDefault(); e.stopImmediatePropagation();}
@@ -230,6 +239,7 @@ A.frameFns.push(function(dt){
   /* stats: how far you went */
   if(m){if(STATS._x!=null){const d=hyp(m.x-STATS._x,m.z-STATS._z); if(d<30){if(m.car) STATS.driven+=d; else STATS.walked+=d;}} STATS._x=m.x; STATS._z=m.z;}
   statT+=dt; if(statT>10){statT=0; saveStats();}
+  if(!loaded) load(); saveT+=dt; if(saveT>8){saveT=0; store();}
   if(!menu.hidden){mt+=dt; if(mt>0.25){mt=0; const ck=$('gmClock'), cs=$('gmCash'); if(ck) ck.textContent=A.gtaClock?A.gtaClock():''; if(cs) cs.textContent='₪ '+((A.floors&&A.floors.G.loot)||0).toLocaleString('en');}}
 });
 /* the menu draws itself again while it is open, so the blips blink */
