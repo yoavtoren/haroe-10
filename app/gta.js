@@ -41,6 +41,18 @@ function collide(from,to,lvl,out){      // walk out from the pivot toward where 
   return k;
 }
 
+/* the crowns of the street trees hang down to about two metres, where the camera rides: it ducks under them, or comes in closer */
+let TG=null;
+function treeGrid(){if(TG) return TG; TG=new Map(); const T=A.town; (T&&T.trees||[]).forEach(function(q){if(q[2]===2||!q.s) return; const k=Math.floor(q[0]/8)+','+Math.floor(q[1]/8); let l=TG.get(k); if(!l) TG.set(k,l=[]); l.push(q);}); return TG;}
+function underCrowns(w,pv){const g=treeGrid(); if(!g.size) return; const U=A.town.U;
+  for(let it=0;it<3;it++){let hit=null, hy=0; const i0=Math.floor(w.x/8), k0=Math.floor(w.z/8);
+    for(let i=i0-1;i<=i0+1&&!hit;i++) for(let k=k0-1;k<=k0+1&&!hit;k++){const l=g.get(i+','+k); if(!l) continue;
+      for(let n=0;n<l.length;n++){const q=l[n], rx=q.s*1.1, ry=q.s*q.sy*0.8, dx=w.x-q[0], dz=w.z-q[1], h2=(dx*dx+dz*dz)/(rx*rx); if(h2>=1) continue;
+        const cy=U+q.h, e=h2+Math.pow((w.y-cy)/ry,2); if(e<1){hit=q; hy=cy-ry*Math.sqrt(1-h2)-0.3; break;}}}
+    if(!hit) return;
+    if(hy>pv.y-0.25){w.y=hy; return;}      // low enough to stay below the leaves
+    w.lerp(pv,0.35);}}      // too low a crown: closer in, and look again
+
 /* ---------- the mouse: click the view to take it, Esc to let go; or drag ---------- */
 let drag=null;
 function locked(){return document.pointerLockElement===cv;}
@@ -143,6 +155,7 @@ function frame(dt){
   /* boxed in, and you are not turning it yourself: it swings round to where there is room, as GTA's does */
   if(!c&&!out&&k<0.45&&idle>0.8&&!p.script){let best=0, bk=k; [0.7,-0.7,1.4,-1.4,2.1,-2.1,R].forEach(function(o){const y=C.yaw+o; dir2.set(Math.sin(y)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(y)*Math.cos(C.pitch)); tw.copy(pv).addScaledVector(dir2,-C.dist); const kk=collide(pv,tw,lvl,out); if(kk>bk+0.15){bk=kk; best=o;}});
     if(best) C.yaw+=wrap(best)*Math.min(1,dt*2.5);}
+  if(out&&!c) underCrowns(want,pv);
   const hd=Math.hypot(want.x-pv.x,want.z-pv.z); if(!c&&hd<1.4){want.y+=Math.min(0.55,(1.4-hd)*0.6); if(!out){const top=(lvT&&A.levels&&A.levels[lvT]?A.levels[lvT].y:0)+A.D.H-0.12; if(want.y>top) want.y=top;}}      // squeezed against a wall: up, to look down over your head
   /* glide there; pulled in by a wall, at once */
   const d0=C.pos.distanceTo(pv), d1=want.distanceTo(pv);

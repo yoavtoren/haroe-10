@@ -189,8 +189,15 @@ function headlights(){const D=A.drive; if(!D||!D.live) return; const n=A.simsOn?
 /* ---------- every frame ---------- */
 A.frameFns.push(function(dt){
   if(A.simsOn&&SM.player) tick(dt);
-  light(dt); headlights(); gloss();
+  light(dt); headlights(); gloss(); fadeU.value=A.simsOn?1:0; if(SM.player){const pp=SM.player.p.g.position; fadeEnd.value=Math.max(1.2,camera.position.distanceTo(pp)-0.6);}
 });
+/* leaves right in front of the camera dissolve, as GTA's foliage does, so a low crown never blinds the view (Sims mode only) */
+const fadeU={value:0}, fadeEnd={value:2.6};      /* on, and how deep: up to just short of you */
+if(A.det&&A.det.leafM){const lm=A.det.leafM, prev=lm.onBeforeCompile;
+  lm.onBeforeCompile=function(sh,r){if(prev) prev(sh,r); sh.uniforms.uNearFade=fadeU; sh.uniforms.uFadeEnd=fadeEnd;
+    sh.vertexShader='varying float vFadeZ;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n vFadeZ=-mvPosition.z;');
+    sh.fragmentShader='uniform float uNearFade, uFadeEnd; varying float vFadeZ;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','#include <alphatest_fragment>\n if(uNearFade>0.5){float hh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715)))); if(hh>smoothstep(uFadeEnd*0.45,uFadeEnd,vFadeZ)) discard;}');};      /* a fine even dither, from the camera to just short of you */
+  lm.needsUpdate=true;}
 /* the sun's shadows out in the streets cover a wide square and much of the town: drawn every other frame there, they still follow what moves */
 let odd=false;
 A.shadowSkip=function(){if(!A.simsOn||!SM.player) return false; const r=A.rooms[SM.player.room]; if(!(SM.player.driving||(r&&r.ext&&!SM.player.lvl))) return false; odd=!odd; return odd;};

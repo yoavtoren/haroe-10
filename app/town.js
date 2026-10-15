@@ -790,7 +790,7 @@ function groundY(x,z){const q=roadNear(x,z); return q&&q.r.w[0]>0&&q.d>0.12&&q.d
 A.town={signals:SIG,sigState:sigState,stops:stops,gates:gates,cafes:cafes,free:free,path:path,y:groundY,inside:inside,kept:kept,roads:roads,net:net,cross:cross,nodes:nodes,key:key,roadNear:roadNear,parked:parked,showParked:showParked,
   inBuilding:inBuilding,obstacles:{at:obAt,add:addOb,grid:OB,G:OG},blds:blds,outlines:blds.concat(own.map(function(p){let cx=0,cz=0; p.forEach(function(q){cx+=q[0]; cz+=q[1];}); return {p:p,c:[cx/p.length,cz/p.length]};})),extent:[TX0,TZ0,TS],canvas:gcan,cp:cp,root:root,U:U,nearest:function(x,z){const c=nearCell(x,z); return c<0?null:cxz(c);},
   near:function(x,z,rad){return !kept(x,z)&&inside(x,z);}};
-A.town.skyEnv=skyEnv; A.town.mapData={parks:TD.G.map(function(a){return {kind:a[0],name:a[1],p:outline(a[2],true)};}),own:own,keep:KEEP};      // for gta-map.js to draw its own map
+A.town.trees=treeSpots; A.town.skyEnv=skyEnv; A.town.mapData={parks:TD.G.map(function(a){return {kind:a[0],name:a[1],p:outline(a[2],true)};}),own:own,keep:KEEP};      // for gta-map.js to draw its own map
 
 /* =====================================================================
    The map: a little round one in the corner while you are out, the whole of it on M
