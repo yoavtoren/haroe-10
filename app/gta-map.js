@@ -13,7 +13,7 @@ const $=function(id){return document.getElementById(id);};
 function hyp(a,b){return Math.hypot(a,b);}
 
 /* ---------- settings, kept in this browser ---------- */
-const DEF={master:0.8,radio:0.6,sfx:0.9,quality:TOUCH?'low':'high',sens:1,invert:false,hud:true,clock:'game',dist:1};
+const DEF={master:0.8,radio:0.6,sfx:0.9,voices:true,quality:TOUCH?'low':'high',sens:1,invert:false,hud:true,clock:'game',dist:1};
 const SET=Object.assign({},DEF);
 try{const s=JSON.parse(localStorage.getItem('haroe-gta')||'{}'); for(const k in DEF) if(s[k]!=null&&typeof s[k]===typeof DEF[k]) SET[k]=s[k];}catch(e){}
 function save(){try{localStorage.setItem('haroe-gta',JSON.stringify(SET));}catch(e){}}
@@ -203,7 +203,7 @@ function drawStats(){const p=menu.querySelector('[data-p="stats"]'), km=function
 function drawSettings(){const p=menu.querySelector('[data-p="settings"]');
   const slider=function(k,label){return '<div class="gmRow"><span>'+label+'</span><input type="range" min="0" max="1" step="0.05" data-k="'+k+'" value="'+SET[k]+'" aria-label="'+label+'"></div>';};
   const choice=function(k,label,opts){return '<div class="gmRow"><span>'+label+'</span><div class="gmSeg">'+opts.map(function(o){return '<button data-k="'+k+'" data-v="'+o[0]+'" aria-pressed="'+(String(SET[k])===String(o[0]))+'">'+o[1]+'</button>';}).join('')+'</div></div>';};
-  p.innerHTML='<div class="gmList"><h4>Sound</h4>'+slider('master','Everything')+slider('radio','Car radio')+slider('sfx','Effects and the street')+
+  p.innerHTML='<div class="gmList"><h4>Sound</h4>'+slider('master','Everything')+slider('radio','Car radio')+slider('sfx','Effects and the street')+choice('voices','Police radio voice',[['true','On'],['false','Off']])+
     '<h4>Picture</h4>'+choice('quality','Quality',[['high','High'],['medium','Medium'],['low','Low']])+choice('hud','On-screen display',[['true','Shown'],['false','Hidden']])+
     '<h4>Camera</h4>'+choice('dist','Distance',[['0.7','Near'],['1','Middle'],['1.5','Far']])+slider('sens','Mouse speed')+choice('invert','Up and down',[['false','Normal'],['true','Inverted']])+
     '<h4>The clock</h4>'+choice('clock','Time of day',[['game','Runs (a day in 48 min)'],['real','The real time'],['day','Always day'],['night','Always night']])+'</div>';}

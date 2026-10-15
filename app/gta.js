@@ -89,10 +89,10 @@ function punch(){if(car()||!A.game) return; if(A.game.punchNearest) A.game.punch
 const J={y:0,v:0,on:false};
 function jump(){const p=SM.player; if(!p||J.on||p.seat||p.script||p.driving||p.riding||(A.game&&A.game.G&&A.game.G.down)) return;
   if(p.path.length&&!p.manual){SM.stop(); p.path=[]; p.cb=null;}
-  J.on=true; J.v=3.7; J.y=0.001; if(A.sfx&&A.sfx.jump) A.sfx.jump();}
+  J.on=true; J.v=3.7; J.y=0.001; if(A.gtaSound) A.gtaSound.jump(); if(A.gtaStats) A.gtaStats.jumps++;}
 function jumpStep(dt){const p=SM.player; if(!J.on||!p) {if(p) p.p.air=Math.max(0,(p.p.air||0)-dt*6); return;}
   J.y+=J.v*dt; J.v-=11*dt; p.p.air=Math.min(1,(p.p.air||0)+dt*9);
-  if(J.y<=0){J.on=false; J.y=0; J.v=0; if(A.sfx&&A.sfx.land) A.sfx.land(); C.shake=Math.max(C.shake,0.04);}
+  if(J.y<=0){J.on=false; J.y=0; J.v=0; if(A.gtaSound) A.gtaSound.land(); C.shake=Math.max(C.shake,0.04);}
   p.p.g.position.y+=J.y;}
 A.gtaJump={get y(){return J.y;},get on(){return J.on;}};
 
@@ -169,13 +169,13 @@ function hint(on){if(told||!on) return; told=true; if(SM.toast) SM.toast('Mouse 
 
 /* ---------- on a phone: buttons to run, jump, punch and take a car ---------- */
 const pad=document.createElement('div'); pad.id='gtaPad'; pad.hidden=true;
-const ICON={run:'<path d="M13 4a2 2 0 1 0 0-.01M9 21l2-6 3 2v5M7 12l3-4 4 1 3 3 3 0M10 8l-1 5" />',jump:'<path d="M12 3v12M7 8l5-5 5 5M5 20h14" />',hit:'<path d="M6 11V7a2 2 0 0 1 4 0v3M10 10V6a2 2 0 0 1 4 0v4M14 10V7a2 2 0 0 1 4 0v6a6 6 0 0 1-6 6h-1a5 5 0 0 1-5-5v-3a2 2 0 0 1 4 0" />',car:'<path d="M5 16V11l2-5h10l2 5v5M5 16h14M3 11h18M7 19v-3M17 19v-3" />',horn:'<path d="M4 10v4h3l5 4V6L7 10zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />'};
+const ICON={run:'<path d="M13 4a2 2 0 1 0 0-.01M9 21l2-6 3 2v5M7 12l3-4 4 1 3 3 3 0M10 8l-1 5" />',jump:'<path d="M12 3v12M7 8l5-5 5 5M5 20h14" />',hit:'<path d="M6 11V7a2 2 0 0 1 4 0v3M10 10V6a2 2 0 0 1 4 0v4M14 10V7a2 2 0 0 1 4 0v6a6 6 0 0 1-6 6h-1a5 5 0 0 1-5-5v-3a2 2 0 0 1 4 0" />',car:'<path d="M5 16V11l2-5h10l2 5v5M5 16h14M3 11h18M7 19v-3M17 19v-3" />',horn:'<path d="M4 10v4h3l5 4V6L7 10zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />',radio:'<path d="M4 9h16v10H4zM7 9l9-5M8 14h.01M16 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />'};
 function btn(id,label,icon){const b=document.createElement('button'); b.className='gtaBtn'; b.id=id; b.setAttribute('aria-label',label); b.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICON[icon]+'</svg><span>'+label+'</span>'; pad.appendChild(b); return b;}
-const bRun=btn('gRun','Run','run'), bJump=btn('gJump','Jump','jump'), bHit=btn('gHit','Punch','hit'), bCar=btn('gCar','Car','car'), bHorn=btn('gHorn','Horn','horn');
+const bRun=btn('gRun','Run','run'), bJump=btn('gJump','Jump','jump'), bHit=btn('gHit','Punch','hit'), bCar=btn('gCar','Car','car'), bHorn=btn('gHorn','Horn','horn'), bRadio=btn('gRadioB','Radio','radio');
 A.stage.appendChild(pad);
 const hold=function(b,on,off){b.addEventListener('pointerdown',function(e){e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); on();}); ['pointerup','pointercancel'].forEach(function(n){b.addEventListener(n,function(){if(off) off();});});};
 hold(bRun,function(){A.running=true; bRun.classList.add('on');},function(){A.running=false; bRun.classList.remove('on');});
-hold(bJump,jump); hold(bHit,punch); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
+hold(bJump,jump); hold(bHit,punch); hold(bRadio,function(){if(A.gtaSound) A.gtaSound.station(1);}); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
 function carKey(){if(car()){A.drive.exit(); return true;} return enterNear();}
 function enterNear(){const p=SM.player; if(!A.drive||!p||p.lvl) return false; let best=null, bd=4.5;
   A.drive.cars().forEach(function(c){const d=Math.hypot(c.x-p.x,c.z-p.z)-c.dim[0]/2; if(d<bd){bd=d; best=c;}});
@@ -187,7 +187,7 @@ A.frameFns.push(function(dt){
   jumpStep(dt); frame(dt);
   const ck=A.simsOn+SM.camMode+C.on; if(ck!==camKey){camKey=ck; pressCams();}
   const show=A.simsOn&&TOUCH&&!!SM.player; if(pad.hidden===show) pad.hidden=!show;
-  if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bCar.classList.toggle('on',c);}
+  if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bRadio.hidden=!c; bCar.classList.toggle('on',c);}
 });
 A.gta=Object.assign(A.gta||{},{cam:C,active:active,cycle:cycle,jump:jump,punch:punch,enterNear:enterNear,pressCams:pressCams});
 })();

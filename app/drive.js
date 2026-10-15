@@ -27,7 +27,7 @@ function thud(){noise(0.7,260,0.2);}
 function horn(){const c=actx(); if(!c) return; [392,494].forEach(function(f){const o=c.createOscillator(), g=c.createGain(); o.type='square'; o.frequency.value=f; g.gain.setValueAtTime(0.06,c.currentTime); g.gain.setValueAtTime(0.06,c.currentTime+0.38); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.45); o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+0.5);});}
 function doorSound(){noise(0.45,900,0.12);}
 let eng=null;
-function engine(on){const c=actx(); if(!c) return;
+function engine(on){if(A.gtaSound){A.gtaSound.engine(on); return;} const c=actx(); if(!c) return;      // gta-sound.js has the better engine
   if(on&&!eng){const o=c.createOscillator(), o2=c.createOscillator(), g=c.createGain(), fl=c.createBiquadFilter(); o.type='sawtooth'; o2.type='square'; o.frequency.value=38; o2.frequency.value=19; fl.type='lowpass'; fl.frequency.value=380;
     const g2=c.createGain(); g2.gain.value=0.35; o.connect(fl); o2.connect(g2).connect(fl); fl.connect(g).connect(c.destination); g.gain.value=0.0001; g.gain.setTargetAtTime(0.05,c.currentTime,0.2); o.start(); o2.start(); eng={o:o,o2:o2,g:g,fl:fl};}
   if(!on&&eng){const e=eng; eng=null; e.g.gain.setTargetAtTime(0.0001,c.currentTime,0.15); setTimeout(function(){try{e.o.stop(); e.o2.stop();}catch(x){}},700);}}
@@ -115,8 +115,8 @@ function enter(c){
     p.release(); p.path=[]; p.cb=null; p.p.g.visible=false; p.driving=c; engine(true); hud.style.display='flex';
     camBack=SM.camMode; if(SM.camMode==='eye') SM.setCam('follow'); SM.setDoing('driving');
     SM.toast(TOUCH?'Push the left stick to drive: up is gas, down brakes and reverses. Get out with the button.':'W gas · S brake and reverse · A D steer · Space handbrake · H horn · E get out · M map');};
-  if(Math.hypot(p.x-door[0],p.z-door[1])<1.2) go(); else p.goTo(door[0],door[1],go);
-  setTimeout(function(){if(getting&&!driving){getting=false; c.held=false;}},20000);
+  if(Math.hypot(p.x-door[0],p.z-door[1])<1.2) go(); else{p.speed=3.6; p.goTo(door[0],door[1],function(){p.speed=1.4; go();});}      // a jog to the door, as in GTA
+  setTimeout(function(){if(getting&&!driving){getting=false; c.held=false; p.speed=1.4;}},20000);
 }
 function exit(quiet){
   const c=driving, p=SM.player; if(!c) return; driving=null; engine(false); hud.style.display='none'; p.driving=null; c.v=Math.abs(c.v)<0.5?0:c.v*0.3; c.steer=0;
@@ -175,7 +175,7 @@ function drive(c,dt){
   /* people in the way */
   if(Math.abs(c.v)>2.2&&A.game&&A.game.all){const cs=c.circles(); A.game.all().forEach(function(t){if(t.kind!=='person'||(t.lvl||0)) return; const q=t.a?{x:t.a.x,z:t.a.z}:t.root.getWorldPosition(new THREE.Vector3());
     for(let k=0;k<3;k++){if(Math.hypot(q.x-cs[k][0],q.z-cs[k][1])<cs[k][2]+0.25){runOver(t,c); break;}}});}
-  if(eng&&ac){const sp=Math.abs(c.v), gear=sp<6?sp/6:sp<12?(sp-6)/6:(sp-12)/7; eng.o.frequency.setTargetAtTime(36+gear*55+sp*1.5,ac.currentTime,0.05); eng.o2.frequency.setTargetAtTime(18+gear*27,ac.currentTime,0.05); eng.fl.frequency.setTargetAtTime(320+sp*30+(I.gas?200:0),ac.currentTime,0.08);}
+  if(A.gtaSound) A.gtaSound.rev(c,I,dt); else if(eng&&ac){const sp=Math.abs(c.v), gear=sp<6?sp/6:sp<12?(sp-6)/6:(sp-12)/7; eng.o.frequency.setTargetAtTime(36+gear*55+sp*1.5,ac.currentTime,0.05); eng.o2.frequency.setTargetAtTime(18+gear*27,ac.currentTime,0.05); eng.fl.frequency.setTargetAtTime(320+sp*30+(I.gas?200:0),ac.currentTime,0.08);}
   const p=SM.player; p.x=c.x; p.z=c.z; p.lx=p.x; p.lz=p.z; p.h=p.hT=c.psi+R/2; p.p.g.position.set(c.x,c.g.position.y,c.z); p.p.walking=false;
   $('dSpd').textContent=Math.round(Math.abs(c.v)*3.6);
   if(v0!==c.v||c.v) A.touch(1);
