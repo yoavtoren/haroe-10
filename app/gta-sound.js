@@ -211,6 +211,8 @@ function scream(x,z){const SM=A.sims, p=SM&&SM.player; if(!p||A.t<screamT) retur
   o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g); g.connect(B.out); o.start(t); vib.start(t); o.stop(t+1.05); vib.stop(t+1.05);}
 function lost(){const c=shared(), t=c.currentTime; [523,659,784,1046].forEach(function(f,i){tone(B.sfx,'triangle',f,f,0.25,0.05,t+i*0.09);});}
 function cash(){const c=shared(), t=c.currentTime; tone(B.sfx,'triangle',1568,1568,0.12,0.06,t); tone(B.sfx,'triangle',2093,2093,0.3,0.06,t+0.08); burst(B.sfx,0.15,'highpass',5000,0.6,0.03,t);}
+function passed(){const c=shared(), t=c.currentTime, g=c.createGain(), f=c.createBiquadFilter(); f.type='lowpass'; f.frequency.value=2600; g.gain.value=1; g.connect(f).connect(B.master);      // a short brassy fanfare
+  [[60,64,67],[62,65,69],[64,67,72]].forEach(function(ch,i){ch.forEach(function(m){const fr=440*Math.pow(2,(m-69)/12); tone(g,'sawtooth',fr,fr,i<2?0.16:0.9,0.035,t+i*0.14); tone(g,'square',fr*0.5,fr*0.5,i<2?0.16:0.9,0.015,t+i*0.14);});});}
 function blip(){const c=shared(), t=c.currentTime; tone(B.sfx,'sine',880,1320,0.08,0.06,t);}
 function pause(on){paused=on; const c=shared(); if(on){if(window.speechSynthesis) window.speechSynthesis.cancel(); c.suspend();} else c.resume(); burst(B.master,0.25,'bandpass',on?600:1200,0.8,0.04);}
 
@@ -219,5 +221,5 @@ A.frameFns.push(function(dt){if(!ctx){if(!A.simsOn) return; shared();}
   if(A.simsOn){steps(); traffic(); city(dt);} else if(B){B.out.gain.setTargetAtTime(0,ctx.currentTime,0.3);}
   radio();});
 window.addEventListener('load',function(){if(A.gtaSet) A.gtaSet.on(function(k){if(k==='master'||k==='radio'||k==='sfx') volumes();});});
-A.gtaSound={ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,shot:shot,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
+A.gtaSound={ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,shot:shot,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,passed:passed,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
 })();

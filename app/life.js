@@ -170,8 +170,8 @@ function later(sec,fn){const t=tok; SM.later(sec,function(){if(t===tok) fn();},t
 function chain(steps){const t=tok; let i=0; const next=function(){if(t===tok&&i<steps.length) steps[i++](next);}; next();}
 const Wk=function(x,z,h){return function(n){walk(x,z,h,n);};}, Ps=function(s){return function(n){later(s,n);};}, Do=function(f){return function(n){f(); n();};};
 const doing=function(t){SM.setDoing(t);};
-function goal(k){if(st.done[k]) return; st.done[k]=1; renderGoals(); SM.toast('Done: '+GOALS.filter(function(g){return g[0]===k;})[0][1]+'.');
-  if(Object.keys(st.done).length===GOALS.length) SM.later(3.5,function(){SM.toast('A full day at Haroe 10. Good night.');},st);}
+function goal(k){if(st.done[k]) return; st.done[k]=1; renderGoals(); const nm=GOALS.filter(function(g){return g[0]===k;})[0][1]; SM.toast('Done: '+nm+'.'); if(A.gtaHud&&A.gtaHud.passed) A.gtaHud.passed(nm,50);      // the GTA banner (gta-hud.js)
+  if(Object.keys(st.done).length===GOALS.length) SM.later(3.5,function(){SM.toast('A full day at Haroe 10. Good night.'); if(A.gtaHud&&A.gtaHud.passed) A.gtaHud.passed('A full day at Haroe 10',500,'day complete');},st);}
 function walk(x,z,h,cb){const t=tok, p=me(); p.goTo(x,z,function(){if(t!==tok) return; if(h!=null) p.hT=h; if(cb) cb();});}
 function slideTo(x,z,dur){const p=me(); p.slide={fx:p.x,fz:p.z,tx:x,tz:z,t:0,dur:dur,then:null};}
 function front(id,dist){const p=A.pieceFor?A.pieceFor(id):A.pieces[id]; if(!p||p.to[3]<1) return null; const f=p.to[2], c=Math.cos(f), s=Math.sin(f);

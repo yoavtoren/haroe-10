@@ -16,7 +16,7 @@ const hud=document.createElement('div'); hud.id='gtaHUD'; hud.hidden=true;
 hud.innerHTML='<div id="gRadar"><canvas id="gRadarC"></canvas><div id="gFloor" hidden></div><div class="gBars"><i id="gHp"><b></b></i><i id="gAr"><b></b></i></div></div>'+
   '<div id="gTR"><div id="gStars"></div><div id="gCash"></div><div id="gDelta"></div><div id="gClock"></div></div>'+
   '<div id="gArea"><b id="gStreet"></b><span id="gTown"></span></div><div id="gCarName"></div><div id="gHelp" hidden></div>'+
-  '<div id="gBig" hidden><div class="gBand"><b id="gBigT"></b><span id="gBigS"></span></div></div>';
+  '<div id="gBig" hidden><div class="gBand"><b id="gBigT"></b><span id="gBigS"></span></div></div><div id="gPass" hidden><b>task complete</b><span id="gPassN"></span><i id="gPassR"></i></div>';
 A.stage.appendChild(hud);
 document.body.classList.toggle('touch',TOUCH);
 
@@ -110,5 +110,10 @@ $('gRadar').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true)
 /* M opens the pause map; the round map's own M is set aside while this display is on */
 window.addEventListener('keydown',function(e){if(!on()||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase();
   if(k==='m'&&A.gtaMap&&!A.gtaMap.on){A.gtaMap.open(true); e.preventDefault(); e.stopImmediatePropagation();}},true);
-A.gtaHud={on:on,big:bigShow};
+/* ---------- one of the day's tasks done: the banner GTA puts up for a mission passed, and a little money ---------- */
+let passT=null;
+function passed(name,reward,title){if(!on()) return; const el=$('gPass'); el.firstChild.textContent=title||'task complete'; $('gPassN').textContent=name; $('gPassR').innerHTML=reward?'+ <small>₪</small>'+reward:'';
+  el.hidden=false; el.style.animation='none'; void el.offsetWidth; el.style.animation=''; clearTimeout(passT); passT=setTimeout(function(){el.hidden=true;},4200);
+  if(reward&&A.floors&&A.floors.G){A.floors.G.loot+=reward;} if(A.gtaSound&&A.gtaSound.passed) A.gtaSound.passed();}
+A.gtaHud={on:on,big:bigShow,passed:passed};
 })();
