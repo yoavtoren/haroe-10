@@ -672,7 +672,8 @@ function carGeos(){      // boxes, a few hundred triangles: a thousand of them p
   paint.forEach(function(g){g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(g.attributes.position.count*3).fill(1),3));});
   return [merge(paint),merge(dark.map(function(d){return d[0];}))];
 }
-const CARG=carGeos(), paintM=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'town'), darkM=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'town');
+const CARG=carGeos(), paintM=A.reg(new THREE.MeshPhongMaterial({vertexColors:true,specular:0x4a4a4a,shininess:80,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.2}),'town'),      // glossy paint that catches the sky
+  darkM=A.reg(new THREE.MeshLambertMaterial({vertexColors:true}),'town');
 const parked=[];
 carSpots.forEach(function(q,i){const t=tileOf(q[0],q[1]), r=A.rng(i*13+5); const c={i:parked.length,x:q[0],z:q[1],h:q[2],col:CARC[Math.floor(r()*CARC.length)],kind:['hatch','sedan','hatch','suv','mini','sedan','van'][Math.floor(r()*7)],t:t,slot:t.cars.length,hidden:false}; t.cars.push(c); parked.push(c);});
 tiles.forEach(function(t){if(!t||!t.cars.length) return; const cs=t.cars;
@@ -722,7 +723,7 @@ pools.frustumCulled=false; pools.renderOrder=2; pools.visible=false; pools.userD
 const warm=new THREE.Color(1,0.84,0.58);
 let eveWas=-1;
 A.frameFns.push(function(){const e=1-A.get('day'); if(Math.abs(e-eveWas)<0.01) return; eveWas=e;
-  lights.forEach(function(m){m.emissive.copy(warm).multiplyScalar(e*0.95);}); glassy.forEach(function(m){m.reflectivity=0.42*(1-e)+0.06; m.specular.setScalar(0.6*(1-e)+0.04);}); poolM.opacity=e*0.8; pools.visible=e>0.05; LAMPH.emissive.setRGB(1,0.86,0.6).multiplyScalar(e*1.2); A.set('L:town',e>0.5?0.32:0);});
+  lights.forEach(function(m){m.emissive.copy(warm).multiplyScalar(e*0.95);}); glassy.forEach(function(m){m.reflectivity=0.42*(1-e)+0.06; m.specular.setScalar(0.6*(1-e)+0.04);}); paintM.reflectivity=0.2*(1-e)+0.03; poolM.opacity=e*0.8; pools.visible=e>0.05; LAMPH.emissive.setRGB(1,0.86,0.6).multiplyScalar(e*1.2); A.set('L:town',e>0.5?0.32:0);});
 
 /* all of it on the outside's own layer, as building.js does */
 let layered=false;
@@ -788,7 +789,7 @@ function groundY(x,z){const q=roadNear(x,z); return q&&q.r.w[0]>0&&q.d>0.12&&q.d
 A.town={signals:SIG,sigState:sigState,stops:stops,gates:gates,cafes:cafes,free:free,path:path,y:groundY,inside:inside,kept:kept,roads:roads,net:net,cross:cross,nodes:nodes,key:key,roadNear:roadNear,parked:parked,showParked:showParked,
   inBuilding:inBuilding,obstacles:{at:obAt,add:addOb,grid:OB,G:OG},blds:blds,outlines:blds.concat(own.map(function(p){let cx=0,cz=0; p.forEach(function(q){cx+=q[0]; cz+=q[1];}); return {p:p,c:[cx/p.length,cz/p.length]};})),extent:[TX0,TZ0,TS],canvas:gcan,cp:cp,root:root,U:U,nearest:function(x,z){const c=nearCell(x,z); return c<0?null:cxz(c);},
   near:function(x,z,rad){return !kept(x,z)&&inside(x,z);}};
-A.town.mapData={parks:TD.G.map(function(a){return {kind:a[0],name:a[1],p:outline(a[2],true)};}),own:own,keep:KEEP};      // for gta-map.js to draw its own map
+A.town.skyEnv=skyEnv; A.town.mapData={parks:TD.G.map(function(a){return {kind:a[0],name:a[1],p:outline(a[2],true)};}),own:own,keep:KEEP};      // for gta-map.js to draw its own map
 
 /* =====================================================================
    The map: a little round one in the corner while you are out, the whole of it on M

@@ -458,7 +458,7 @@ function frame(now){
     if(Math.abs(nr-camera.near)>0.02){camera.near=nr; camera.updateProjectionMatrix();}
   }
   if(A.shadowFrames>0){A.shadowFrames--; renderer.shadowMap.needsUpdate=true;}
-  renderer.render(scene,camera);
+  if(!(A.renderHook&&A.renderHook())) renderer.render(scene,camera);      // gta-fx.js finishes the picture in Sims mode
   for(let i=0;i<A.labelFns.length;i++) A.labelFns[i]();
 }
 A.start=function(){A.thicken(); syncBg(); resize(); applyShutters(); relight(); last=performance.now(); requestAnimationFrame(frame);};

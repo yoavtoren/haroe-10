@@ -202,7 +202,7 @@ function drawSettings(){const p=menu.querySelector('[data-p="settings"]');
   p.innerHTML='<div class="gmList"><h4>Sound</h4>'+slider('master','Everything')+slider('radio','Car radio')+slider('sfx','Effects and the street')+
     '<h4>Picture</h4>'+choice('quality','Quality',[['high','High'],['medium','Medium'],['low','Low']])+choice('hud','On-screen display',[['true','Shown'],['false','Hidden']])+
     '<h4>Camera</h4>'+choice('dist','Distance',[['0.7','Near'],['1','Middle'],['1.5','Far']])+slider('sens','Mouse speed')+choice('invert','Up and down',[['false','Normal'],['true','Inverted']])+
-    '<h4>The clock</h4>'+choice('clock','Time of day',[['game','Runs (a day in 24 min)'],['real','The real time'],['day','Always day'],['night','Always night']])+'</div>';}
+    '<h4>The clock</h4>'+choice('clock','Time of day',[['game','Runs (a day in 48 min)'],['real','The real time'],['day','Always day'],['night','Always night']])+'</div>';}
 menu.querySelector('[data-p="settings"]').addEventListener('input',function(e){const k=e.target.dataset.k; if(k) A.gtaSet.set(k,+e.target.value);});
 menu.querySelector('[data-p="settings"]').addEventListener('click',function(e){const b=e.target.closest('button[data-k]'); if(!b) return; const k=b.dataset.k, v=b.dataset.v;
   A.gtaSet.set(k,typeof DEF[k]==='boolean'?v==='true':typeof DEF[k]==='number'?+v:v); drawSettings();});

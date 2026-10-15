@@ -58,7 +58,7 @@ function model(kind,col,cop){const k=kind+'|'+col+(cop?'|cop':'');
   if(!built[k]){const g0=det.car(kind,{color:col,plate:String(11+(plateN*37)%88)+'-'+String(100+(plateN*53)%899)+'-'+String(10+(plateN*7)%89),lamp:lampH,tail:lampT}); plateN++;
     if(cop){const P=det.P; P.box(0.9,0.12,1.2,0x1d1f22,-0.3,DIM[kind][0]>4.5?1.53:1.55,0,g0); P.box(0.36,0.1,0.5,copBlue,-0.3,1.66,-0.3,g0); P.box(0.36,0.1,0.5,copRed,-0.3,1.66,0.3,g0);
       P.box(2.2,0.18,0.012,0x2a5ad8,0.1,0.72,DIM[kind][1]/2+0.01,g0); P.box(2.2,0.18,0.012,0x2a5ad8,0.1,0.72,-DIM[kind][1]/2-0.01,g0);}
-    const g=det.solid(g0,'street'); delete g.userData.wheels; built[k]=g;}
+    const g=det.solid(g0,'street'); delete g.userData.wheels; if(A.gtaPaint) A.gtaPaint(g,col); built[k]=g;}      // a clear coat on the paint and the glass (gta-fx.js)
   const g=built[k].clone(); g.traverse(function(m){m.layers.set(OUT());}); return g;}
 function Car(o){
   this.kind=o.kind; this.col=o.col; this.g=model(o.kind,o.col,o.cop); this.dim=DIM[o.kind]||DIM.hatch; this.name=o.cop?'Police car':NAME[o.kind]||'Car';

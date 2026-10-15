@@ -27,9 +27,9 @@ skyG.setAttribute('color',new THREE.BufferAttribute(skyC,3));
 const sky=new THREE.Mesh(skyG,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,depthWrite:false,fog:false}));
 sky.renderOrder=-10; sky.frustumCulled=false; sky.userData.nc=true; sky.userData.live=true; sky.layers.set(OUT()); scene.add(sky);
 const dayTop=new THREE.Color(0x5f8fc9), dayHor=new THREE.Color(0xdfe9ef), eveTop=new THREE.Color(0x12192e), eveHor=new THREE.Color(0xd98a5a), cT=new THREE.Color(), cH=new THREE.Color(), cc=new THREE.Color();
-let skyDay=-1;
-function paintSky(){const d=A.get?A.get('day'):1; if(Math.abs(d-skyDay)<0.01) return; skyDay=d;
-  cT.copy(eveTop).lerp(dayTop,d); cH.copy(eveHor).lerp(dayHor,d);
+let skyDay=-1, skyV=-2;
+function paintSky(){const d=A.get?A.get('day'):1, v=A.skyVer&&A.simsOn?A.skyVer():-1; if(Math.abs(d-skyDay)<0.01&&v===skyV) return; skyDay=d; skyV=v;
+  if(v>=0) A.skyColors(cT,cH); else{cT.copy(eveTop).lerp(dayTop,d); cH.copy(eveHor).lerp(dayHor,d);}      // the colours of the hour from gta-fx.js's clock, in Sims mode
   const P=skyG.attributes.position; for(let i=0;i<P.count;i++){const t=Math.max(0,P.getY(i)/85); cc.copy(cH).lerp(cT,Math.pow(t,0.6)); if(P.getY(i)<0) cc.copy(cH).multiplyScalar(0.92); skyC[i*3]=cc.r; skyC[i*3+1]=cc.g; skyC[i*3+2]=cc.b;}
   skyG.attributes.color.needsUpdate=true;}
 
@@ -49,7 +49,7 @@ A.frameFns.push(function(dt){const c=A.camera.position; clouds.position.set(c.x,
 
 /* ---------- the sun's shadows come with you when you are out of the flat ---------- */
 const sunHome={pos:A.sun.position.clone(),tgt:A.sun.target.position.clone()}, sunAt=new THREE.Vector3(1e9,0,0);
-let sunOut=false;
+let sunOut=false; const dirWas=new THREE.Vector3();
 /* out in the neighbourhood, or driving, the shadows reach farther: the blocks' shade lies across the streets */
 const SC=A.sun.shadow.camera, SC0={l:SC.left,r:SC.right,t:SC.top,b:SC.bottom,f:SC.far};
 let wide=null;
@@ -57,8 +57,8 @@ function shadowBox(w){if(w===wide) return; wide=w; const s=w?34:SC0.r; SC.left=-
 function followSun(p){
   const out=A.simsOn&&p&&(p.lvl!==0||['living','kitchen','bed1','bed2','bath','wc'].indexOf(p.room)<0)&&$hide('pClimate');
   const drv=A.drive&&A.drive.on(), far=out&&p.lvl===0&&(drv||Math.hypot(p.x-(A.LB.XF-11),p.z-(A.LB.ZC+5))>45);
-  if(out){const dir=sunHome.pos.clone().sub(sunHome.tgt).normalize(); shadowBox(far);
-    if(!sunOut){sunOut=true; sunAt.set(1e9,0,0);}
+  if(out){const dir=A.sunDir?A.sunDir.clone():sunHome.pos.clone().sub(sunHome.tgt).normalize(); shadowBox(far);      // where the clock (gta-fx.js) has the sun
+    if(!sunOut||!dir.equals(dirWas)){sunOut=true; sunAt.set(1e9,0,0); dirWas.copy(dir);}
     const y=p.p.g.position.y, step=far?(drv?6:3):1.2; if(Math.hypot(p.x-sunAt.x,p.z-sunAt.z)>step||Math.abs(y-sunAt.y)>1){sunAt.set(p.x,y,p.z); A.sun.target.position.copy(sunAt); A.sun.position.copy(sunAt).addScaledVector(dir,far?80:18); A.sun.target.updateMatrixWorld(); A.touch(3);}}
   else if(sunOut){sunOut=false; shadowBox(false); A.sun.position.copy(sunHome.pos); A.sun.target.position.copy(sunHome.tgt); A.sun.target.updateMatrixWorld(); A.touch(3);}
 }
