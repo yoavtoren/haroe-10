@@ -584,7 +584,7 @@ A.moreItems=function(out,p){
 };
 
 /* once everything is built: the doors on the landings */
-window.addEventListener('load',function(){readMats(); landingDoors(); PF.forEach(function(n){buildFlat(n,0);}); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});      // the flats round ours are there from the start
+window.addEventListener('load',function(){readMats(); landingDoors(); PF.forEach(function(n){buildFlat(n,0);}); groupFor(0).traverse(function(o){if((o.isMesh||o.isLine||o.isPoints)&&o.layers.mask===1) o.layers.set(A.LAYER_FLOOR);}); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});      // the flats round ours are there from the start
   const was=A.sims&&A.sims.onStop; if(A.sims) A.sims.onStop=function(){G.picking=false; if(was) was();};});
 A.floors={siren:sirenOn,coin:SND.coin,drawHud:drawHud,G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildFlat:buildFlat,buildCore:buildCore,pkey:pkey,NUMOF:NUMOF,doorSpec:doorSpec,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,SH:SH,busted:busted};
 })();

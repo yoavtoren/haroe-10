@@ -498,7 +498,7 @@ A.frameFns.push(function(){
   const w=!!(A.bldWhole&&A.bldWhole());
   if(w!==whole){whole=w; up.visible=skin.visible=w; A.touch(3);}
   sfr.visible=w&&!(SF.fac&&SF.fac.visible);      // the street front: the street's own drawing of it at eye level
-  const b=A.state.scope==='building', far=b?700:(A.farOut&&A.farOut())||100; ctl.maxDistance=b?260:50;      // in the flat the old short view keeps the depth fine
+  const b=A.state.scope==='building', fl=A.state.scope==='floor', far=b?700:fl?240:(A.farOut&&A.farOut())||100; ctl.maxDistance=b?260:fl?120:50;      // in the flat the old short view keeps the depth fine
   if(cam.far!==far){cam.far=far; cam.updateProjectionMatrix();}
   A.renderer.getClearColor(fog.color);
 });

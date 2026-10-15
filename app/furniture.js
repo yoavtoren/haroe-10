@@ -552,61 +552,74 @@ const KEYS=A.DESIGN_KEYS=['a','b','c','d','e','f','g','h','i','j','k','l'];
 KEYS.forEach(function(k){$('d_'+k).onclick=function(){A.setDesign(k);};});
 $('d_now').onclick=function(){A.setDesign('n');}; $('d_new').onclick=function(){A.setDesign(lastNew);};
 $('bTable').onclick=function(){A.setTable(S.table===1?0:1);}; $('bTable2').onclick=function(){A.setTable(S.table===2?0:2);}; $('bLift').onclick=function(){A.setLift(!S.lift);};
-/* ---------- Apartment view: the flat on its own. Building view: the flat in its building, with the lobby, the yard and the street ---------- */
-const OUT=5, OUTR={hall:1,out:1,street:1}, FLATR=['living','kitchen','bed1','bed2','bath','wc'];      // OUT: the layer for whatever is outside the flat
+/* ---------- Apartment view: the flat on its own. Floor view: our floor, the flats round ours and the lobby, the corridor and the stairwell
+   between them. Building view: the flat in its building, with the lobby, the yard and the street ---------- */
+const OUT=5, FLR=6, OUTR={hall:1,out:1,street:1}, FLATR=['living','kitchen','bed1','bed2','bath','wc'];      // OUT: the layer for whatever is outside our floor; FLR: for what is on it, round the flat
 const BLD3=new THREE.Vector3(4.5,0,8.5), BLDT=new THREE.Vector3(11.5,0,7.6);      // looking inside: at the lobby, with the flat beyond it and the street beside it; from above, at all of it
 const BW3=new THREE.Vector3(A.LB.XF-4,3,A.LB.ZC-6), BWT=new THREE.Vector3(A.LB.XF+6,0,A.LB.ZC+2);      // the whole building: from over Haroe St, across the garden to our front; from above, the block from Haroe St to David St
+const FLB=(function(){const b=[1e9,-1e9,1e9,-1e9], add=function(r){b[0]=Math.min(b[0],r[0]); b[1]=Math.max(b[1],r[1]); b[2]=Math.min(b[2],r[2]); b[3]=Math.max(b[3],r[3]);};
+  for(const n in A.PLAN.flats) A.PLAN.flats[n].rooms.forEach(function(q){add([q[3],q[4],q[5],q[6]]);}); FLATR.concat(['hall']).forEach(function(k){A.rooms[k].rs.forEach(add);}); return b;})();      // our floor, from the back of flats 1 and 2 to the front of flat 6
+const FLC=new THREE.Vector3((FLB[0]+FLB[1])/2,0,(FLB[2]+FLB[3])/2);
 const LBX=[A.LB.XL-0.6,A.LB.XF+0.35,L-0.1,A.LB.ZC+0.5];      // the lobby's ground, from our door to the doorway onto the bridge
-const lobbyCut=new THREE.Plane(new THREE.Vector3(0,-1,0),1000);      // in Building view the lobby is cut at our ceiling, as the flat is, so the stairwell above never hides it
-S.scope='flat'; S.inside=false; let curView='3d', flatNow=null, cutNow=null, sorted=false;
-A.camera.layers.enable(OUT); A.LAYER_OUT=OUT;
+const lobbyCut=new THREE.Plane(new THREE.Vector3(0,-1,0),1000);      // in Floor view and looking inside the building the lobby is cut at our ceiling, as the flat is, so the stairwell above never hides it
+S.scope='flat'; S.inside=false; let curView='3d', flatNow=null, floorNow=null, cutNow=null, sorted=false;
+A.camera.layers.enable(OUT); A.camera.layers.enable(FLR); A.LAYER_OUT=OUT; A.LAYER_FLOOR=FLR;
+function inRs(rs,p,pad){for(let j=0;j<rs.length;j++){const r=rs[j]; if(p.x>r[0]-pad&&p.x<r[1]+pad&&p.z>r[2]-pad&&p.z<r[3]+pad) return true;} return false;}
 function inFlat(p){
   if(p.y<-0.3||p.y>H+0.6) return false;
-  for(let i=0;i<FLATR.length;i++){const rs=A.rooms[FLATR[i]].rs; for(let j=0;j<rs.length;j++){const r=rs[j]; if(p.x>r[0]-0.3&&p.x<r[1]+0.3&&p.z>r[2]-0.3&&p.z<r[3]+0.3) return true;}}
+  for(let i=0;i<FLATR.length;i++) if(inRs(A.rooms[FLATR[i]].rs,p,0.3)) return true;
   return false;
 }
-/* once everything is built: what is made for the lobby, the yard or the street, or stands outside the flat, goes on its own
-   layer. The camera draws that layer, and it casts shadows and can be tapped, only while the outside is shown. */
+function inLobby(p){return p.y>-0.3&&p.y<H+0.6&&inRs(A.rooms.hall.rs,p,0);}
+function onFloor(p){return inFlat(p)||(p.y>-0.3&&p.y<H+0.6&&!!A.PLAN.whatAt(p.x,p.z));}
+function alive(o){for(;o;o=o.parent) if(o.userData.live) return true; return false;}
+/* once everything is built: what is made for the lobby, the yard or the street, or stands outside the flat, goes on a layer of its own:
+   the lobby and the stairwell on our floor's, the rest on the outside's (the flats round ours are put on our floor's as floors.js builds
+   them). The camera draws those layers, and they cast shadows and can be tapped, only while they are shown. */
 function sortOut(){
   sorted=true;
   const roomOf=new Map(); for(const k in A.rooms) A.rooms[k].mats.forEach(function(e){roomOf.set(e.m,e.keep?'':k);});      // a door belongs to both its rooms
   const b=new THREE.Box3(), c=new THREE.Vector3(), cut=new Set(); scene.updateMatrixWorld(true);
   scene.traverse(function(o){
     if(!(o.isMesh||o.isLine||o.isPoints)||o.layers.mask!==1||!o.geometry) return;
-    const ms=[].concat(o.material); let out=null;
+    const ms=[].concat(o.material); let out=null, hall=false;
     if(!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld).getCenter(c);
-    for(let i=0;i<ms.length;i++){const r=roomOf.get(ms[i]); if(r===undefined) continue; out=!!OUTR[r]; if(!out) break;}
-    if(out===null) out=!inFlat(c);      // light pools and the like go by where they are
+    for(let i=0;i<ms.length;i++){const r=roomOf.get(ms[i]); if(r===undefined) continue; if(r==='hall') hall=true; out=!!OUTR[r]; if(!out) break;}
+    const loose=out===null; if(loose) out=!inFlat(c);      // light pools and the like go by where they are
     if(!out) return;
-    o.layers.set(OUT);
+    o.layers.set(hall||(loose&&inLobby(c)&&!alive(o))?FLR:OUT);
     if(c.x>LBX[0]&&c.x<LBX[1]&&c.z>LBX[2]&&c.z<LBX[3]) ms.forEach(function(m){cut.add(m);});
   });
   cut.forEach(function(m){m.clippingPlanes=(m.clippingPlanes||[]).concat([lobbyCut]); m.needsUpdate=true;});
 }
 /* Sims mode, Sun & air (the neighbours' shadows), Float inside and the street always show the outside; a room on its own never does */
-function wantFlat(){return (S.scope==='flat'||!!(A.ed&&A.ed.iso()))&&!A.simsOn&&$('pClimate').hidden&&!(A.flyOn&&A.flyOn())&&curView!=='street';}
-function wantCut(){return S.scope==='building'&&S.inside&&!A.simsOn&&$('pClimate').hidden&&!(A.flyOn&&A.flyOn())&&curView!=='street'&&!(A.ed&&A.ed.iso());}
+function plain(){return !A.simsOn&&$('pClimate').hidden&&!(A.flyOn&&A.flyOn())&&curView!=='street';}
+function wantFlat(){return (S.scope==='flat'||!!(A.ed&&A.ed.iso()))&&plain();}
+function wantFloor(){return S.scope==='floor'&&plain()&&!(A.ed&&A.ed.iso());}
+function wantCut(){return S.scope==='building'&&S.inside&&plain()&&!(A.ed&&A.ed.iso());}
 A.thinTrees=wantCut;
 A.bldWhole=function(){return S.scope==='building'&&!S.inside&&!A.simsOn&&$('pClimate').hidden;};      // the floors above and the outside of our own, in building.js
 function applyScope(){
-  const f=wantFlat(), c=wantCut(); if(f===flatNow&&c===cutNow) return; flatNow=f; cutNow=c;
+  const f=wantFlat(), fl=wantFloor(), c=wantCut(); if(f===flatNow&&fl===floorNow&&c===cutNow) return; flatNow=f; floorNow=fl; cutNow=c;
   if(!sorted) sortOut();
-  if(f) A.camera.layers.disable(OUT); else A.camera.layers.enable(OUT);
-  lobbyCut.constant=c?H+0.02:1000;
+  if(f||fl) A.camera.layers.disable(OUT); else A.camera.layers.enable(OUT);
+  if(f) A.camera.layers.disable(FLR); else A.camera.layers.enable(FLR);
+  lobbyCut.constant=c||fl?H+0.02:1000;
   A.touch(3);
 }
 A.frameFns.push(applyScope);
-A.outsideHidden=function(p){return (!!flatNow&&!inFlat(p))||!!(A.bldWhole&&A.bldWhole()&&A.building&&A.building.covers(p));};      // labels out there are hidden with it; and those inside our building, while it is shown whole
+A.outsideHidden=function(p){return (!!flatNow&&!inFlat(p))||(!!floorNow&&!onFloor(p))||!!(A.bldWhole&&A.bldWhole()&&A.building&&A.building.covers(p));};      // labels out there are hidden with it; and those inside our building, while it is shown whole
+function pressScope(){$('bFlat').setAttribute('aria-pressed',S.scope==='flat'); $('bFloor').setAttribute('aria-pressed',S.scope==='floor'); $('bBuilding').setAttribute('aria-pressed',S.scope==='building'); $('bldSeg').hidden=S.scope!=='building';}
 function setScope(s){
-  S.scope=s; $('bFlat').setAttribute('aria-pressed',s==='flat'); $('bBuilding').setAttribute('aria-pressed',s==='building'); $('bldSeg').hidden=s!=='building';
+  S.scope=s; pressScope();
   if(A.flyOn&&A.flyOn()) A.setFly(false);
   A.setView(curView==='top'?'top':'3d');
 }
-$('bFlat').onclick=function(){setScope('flat');}; $('bBuilding').onclick=function(){setScope('building');};
+$('bFlat').onclick=function(){setScope('flat');}; $('bFloor').onclick=function(){setScope('floor');}; $('bBuilding').onclick=function(){setScope('building');};
 function setInside(v){S.inside=v; $('bWhole').setAttribute('aria-pressed',!v); $('bInside').setAttribute('aria-pressed',v); if(S.scope==='building') A.setView(curView==='top'?'top':'3d');}
 $('bWhole').onclick=function(){setInside(false);}; $('bInside').onclick=function(){setInside(true);};
 function fitDist(){const a=A.stage.clientWidth/A.stage.clientHeight; return 19*Math.max(1,1.0/Math.max(a,0.5));}
-A.viewTarget=function(v){return S.scope!=='building'?A.home:S.inside?(v==='top'?BLDT:BLD3):(v==='top'?BWT:BW3);};
+A.viewTarget=function(v){return S.scope==='flat'?A.home:S.scope==='floor'?FLC:S.inside?(v==='top'?BLDT:BLD3):(v==='top'?BWT:BW3);};
 A.viewPos=function(v){
   const d=fitDist(), t=A.viewTarget(v);
   if(S.scope==='building'&&!S.inside){
@@ -617,12 +630,16 @@ A.viewPos=function(v){
     if(v==='top') return new THREE.Vector3(t.x,d*2.3,t.z+0.01);
     return new THREE.Vector3(t.x-d*0.6,d*0.85,t.z+d*0.95);      // over the lobby's back corner, looking across it to the flat and the street
   }
+  if(S.scope==='floor'){
+    if(v==='top') return new THREE.Vector3(t.x,d*2.4,t.z+0.01);
+    return new THREE.Vector3(t.x+d*1.1,d*1.5,t.z-d*0.9);      // from over the street front, our flat nearest
+  }
   if(v==='top') return new THREE.Vector3(t.x,d*1.02,t.z+0.01);
   return new THREE.Vector3(t.x+d*0.5,d*0.62,t.z+d*0.6);
 };
 A.setView=function(v,instant){
-  if(v==='street'&&S.scope!=='building'){S.scope='building'; $('bFlat').setAttribute('aria-pressed',false); $('bBuilding').setAttribute('aria-pressed',true); $('bldSeg').hidden=false;}      // the street is outside
-  curView=v; A.controls.maxDistance=S.scope==='building'?260:50;      // room to stand back from the whole block, before the camera flies there
+  if(v==='street'&&S.scope!=='building'){S.scope='building'; pressScope();}      // the street is outside
+  curView=v; A.controls.maxDistance=S.scope==='building'?260:S.scope==='floor'?120:50;      // room to stand back from the whole block, before the camera flies there
   $('b3d').setAttribute('aria-pressed',v==='3d'); $('bTop').setAttribute('aria-pressed',v==='top'); $('bStreet').setAttribute('aria-pressed',v==='street');
   if(v==='street') A.fly(A.streetView[0],A.streetView[1],900,instant); else A.fly(A.viewPos(v),A.viewTarget(v),700,instant);
 };
