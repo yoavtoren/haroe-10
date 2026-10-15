@@ -56,6 +56,7 @@ function actorsHere(){
   if(A.life&&A.life.partner) add(A.life.partner,null,'partner');
   SM.guests.forEach(function(g){add(g,null,'guest');});
   if(A.floors){for(const k in A.floors.FLATS) A.floors.FLATS[k].folk.forEach(function(a){add(a,null,'resident');}); A.floors.G.cops.forEach(function(c){add(c,c.spec.name,'cop');});}
+  if(A.gtaCops) A.gtaCops.list().forEach(function(c){add(c,c.spec.name,'cop');});      // the police out in the streets (gta-cops.js)
   return out;
 }
 function animals(){const SL=A.streetLife, out=[]; if(!SL) return out;
@@ -314,6 +315,6 @@ window.addEventListener('load',function(){makeBin(); setTimeout(addPets,0);});
 /* a kick at a parked car: the alarm goes off, and whoever is around has something to say */
 function kickCar(t){const p=SM.player, c=t.car; select(null); SM.stop(); const dx=c.x-p.x, dz=c.z-p.z, d=Math.hypot(dx,dz)||1;
   p.goTo(c.x-dx/d*1.6,c.z-dz/d*1.6,function(){p.hT=Math.atan2(dx,dz); p.p.act='reach'; hit(0.7,300); SM.later(0.4,function(){p.p.act=null; A.drive.kick(c); const w=witnesses(t,15); if(w.length){bubble(w[0],rnd(['Hey! That is not your car!','What are you doing?!','I am calling the police!']),2.4); if(Math.random()<0.5) cops(1);} else toast('WEE-OO WEE-OO. The alarm wails down the street.');});});}
-A.game={select:select,punch:punch,punchNearest:punchNearest,push:push,hug:hug,talk:talk,pet:pet,flip:flip,trashOut:trashOut,throwBag:throwBag,all:all,G:G,addPets:addPets,dump:function(){return dump;},
+A.game={select:select,punch:punch,punchNearest:punchNearest,hurt:hurtMe,push:push,hug:hug,talk:talk,pet:pet,flip:flip,trashOut:trashOut,throwBag:throwBag,all:all,G:G,addPets:addPets,dump:function(){return dump;},
   knock:knockDown,state:state,witnesses:witnesses,say:function(t,text){bubble(t,text,2.4);}};
 })();

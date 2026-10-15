@@ -72,6 +72,7 @@ function blip(g,k,cx,cy,s,t){g.save(); g.translate(cx,cy); g.lineJoin='round'; g
   else if(k==='policecar'){const on=Math.floor((t||0)*4)%2; g.fillStyle=on?'#e8423f':'#3d7bf0'; g.fillRect(-s*0.5,-s*0.3,s,s*0.6); g.strokeRect(-s*0.5,-s*0.3,s,s*0.6);}
   else if(k==='way'){g.fillStyle='#b65cf0'; g.beginPath(); g.moveTo(0,s*0.65); g.bezierCurveTo(-s*0.75,-s*0.1,-s*0.45,-s*0.75,0,-s*0.75); g.bezierCurveTo(s*0.45,-s*0.75,s*0.75,-s*0.1,0,s*0.65); g.closePath(); g.stroke(); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(0,-s*0.25,s*0.18,0,7); g.fill();}
   else if(k==='you'){g.fillStyle='#fff'; g.beginPath(); g.moveTo(0,-s*0.7); g.lineTo(s*0.5,s*0.5); g.lineTo(0,s*0.22); g.lineTo(-s*0.5,s*0.5); g.closePath(); g.stroke(); g.fill();}
+  else if(k==='heli'){const on=Math.floor((t||0)*4)%2; g.fillStyle=on?'#e8423f':'#3d7bf0'; g.beginPath(); g.arc(0,0,s*0.34,0,7); g.fill(); g.stroke(); g.strokeStyle='#fff'; g.lineWidth=Math.max(1.2,s*0.1); g.beginPath(); g.moveTo(-s*0.6,-s*0.6); g.lineTo(s*0.6,s*0.6); g.moveTo(s*0.6,-s*0.6); g.lineTo(-s*0.6,s*0.6); g.stroke();}
   else if(k==='car'){g.fillStyle='#f5f5f5'; g.fillRect(-s*0.3,-s*0.5,s*0.6,s); g.strokeRect(-s*0.3,-s*0.5,s*0.6,s);}
   g.restore();}
 A.gtaBlip=blip;
@@ -108,6 +109,9 @@ function route(x0,z0,x1,z1,car){
   const out=[]; for(let i=bestEnd;i>=0;i=prev[i]) out.push([NODES[i].x,NODES[i].z]); out.reverse();
   return [[x0,z0],[S.x,S.z]].concat(out,[[E.x,E.z],[x1,z1]]);}
 A.gtaRoute=route;
+/* a point on a road of the main network between dmin and dmax from x,z (where the police come from), with the way the road runs */
+A.gtaRoadPoint=function(x,z,dmin,dmax,ok){for(let k=0;k<80;k++){const s=SEGS[Math.floor(Math.random()*SEGS.length)]; if(!s.mainCar) continue; const a=NODES[s.a], b=NODES[s.b], t=Math.random(), px=a.x+(b.x-a.x)*t, pz=a.z+(b.z-a.z)*t, d=hyp(px-x,pz-z);
+  if(d<dmin||d>dmax||(ok&&!ok(px,pz))) continue; return {x:px,z:pz,h:Math.atan2(b.x-a.x,b.z-a.z)};} return null;};
 
 /* ---------- the waypoint, and the way to it ---------- */
 const WP={at:null,path:null,t:0,len:0};

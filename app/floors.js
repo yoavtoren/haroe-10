@@ -452,8 +452,8 @@ function search(fl,s){
 /* ---------- the police ---------- */
 const COPSPEC=function(i){return {id:'cop'+i,name:i?'Officer Levi':'Officer Cohen',h:1.78,skin:i?0xc99a72:0xe4b594,hair:0x1b1512,style:'short',top:0x1f3a6b,pants:0x1d2a44,pj:0x1f3a6b,shoes:0x111111};};
 function raise(n){
-  const was=G.wanted; G.wanted=Math.min(3,Math.max(G.wanted,n)); G.since=A.t; drawHud();
-  if(!was&&G.wanted){A.sims.toast('★ Wanted. The police are on their way.'); sirenOn(true); G.callAt=A.t+(G.wanted>1?16:24);}
+  const was=G.wanted; G.wanted=Math.min(5,Math.max(G.wanted,n)); G.since=A.t; drawHud();      // up to five stars, as in GTA
+  if(!was&&G.wanted){A.sims.toast('★ Wanted. The police are on their way.'); if(!(A.gtaCops&&A.gtaCops.outside())) sirenOn(true); G.callAt=A.t+(G.wanted>1?16:24);}      // out in the streets their cars bring their own sirens
 }
 function spawnCops(){
   if(G.cops.length) return; const n=G.wanted>1?2:1;
@@ -501,8 +501,9 @@ A.frameFns.push(function(dt){
     fl.folk.forEach(function(a){const here=a.lvl===lv; a.p.g.visible=here;
       if(here){wander(a); a.update(dt); if(fl.broken&&playerIn(fl)&&!a.angry&&Math.hypot(a.x-p.x,a.z-p.z)<(a.sitting?7:5)){a.angry=true; if(a.sitting){a.sitting=false; a.p.sitT=0; a.p.act=null;} a.hT=Math.atan2(p.x-a.x,p.z-a.z); notice(fl,'pick');}}});
   }
-  if(G.wanted&&!G.cops.length&&A.t>G.callAt) spawnCops();
-  if(G.wanted&&A.t-G.since>150) giveUp();                      // a long while without trouble: they stop looking
+  const outside=A.gtaCops&&A.gtaCops.outside();      // out in the streets the police there (gta-cops.js) take over; these come up the stairs
+  if(G.wanted&&!G.cops.length&&A.t>G.callAt&&!outside) spawnCops();
+  if(G.wanted&&A.t-G.since>150&&!outside) giveUp();                      // a long while without trouble: they stop looking
   for(let i=G.cops.length-1;i>=0;i--){const c=G.cops[i];
     if(c.gone){c.remove(); G.cops.splice(i,1); if(!G.cops.length) drawHud(); continue;}
     huntStep(c); c.update(dt); c.p.g.visible=c.lvl===lv||!!c.script;
@@ -585,5 +586,5 @@ A.moreItems=function(out,p){
 /* once everything is built: the doors on the landings */
 window.addEventListener('load',function(){readMats(); landingDoors(); PF.forEach(function(n){buildFlat(n,0);}); scene.traverse(function(o){if(o.userData.hideBelow) wantHide.push(o);});      // the flats round ours are there from the start
   const was=A.sims&&A.sims.onStop; if(A.sims) A.sims.onStop=function(){G.picking=false; if(was) was();};});
-A.floors={coin:SND.coin,drawHud:drawHud,G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildFlat:buildFlat,buildCore:buildCore,pkey:pkey,NUMOF:NUMOF,doorSpec:doorSpec,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,SH:SH,busted:busted};
+A.floors={siren:sirenOn,coin:SND.coin,drawHud:drawHud,G:G,FLATS:FLATS,flatOf:flatOf,knock:knock,pick:pick,kick:kick,raise:raise,LV:LV,build:buildOver,buildFlat:buildFlat,buildCore:buildCore,pkey:pkey,NUMOF:NUMOF,doorSpec:doorSpec,buildShelter:buildShelter,groups:lvlGroups,doors:doors,NUM:NUM,DESIGN:DESIGN,readMats:readMats,SH:SH,busted:busted};
 })();

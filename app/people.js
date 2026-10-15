@@ -228,6 +228,10 @@ A.makePerson=function(spec,parent){
     else if(a==='pet'){T.aRx=-0.8; T.fR=-0.25+Math.sin(o*5)*0.18; T.aLx=-0.35; T.fL=-0.4; T.tx=0.75; T.hx=0.45; T.hy=0;}
     else if(a==='cheer'){T.aLz=T.aRz=2.7; T.aLx=T.aRx=0; T.fL=T.fR=-0.35+f*0.2; T.hx=-0.15; T.hy=0;}
     else if(a==='kiss'){T.aLx=T.aRx=-0.65; T.fL=T.fR=-0.85; T.aLz=T.aRz=-0.45; T.tx=0.2; T.hx=0.28; T.hy=0;}
+    /* the police (gta-cops.js): a pistol held out in both hands; hands up when they catch you; cowering */
+    else if(a==='aim'){T.aRx=-1.5; T.fR=-0.06; T.aRz=-0.08; T.aLx=-1.36; T.fL=-0.5; T.aLz=-0.5; T.ty=0.18; T.hx=0.03; T.hy=0;}
+    else if(a==='surrender'){T.aLz=T.aRz=2.6; T.aLx=T.aRx=-0.2; T.fL=T.fR=-1.1; T.hx=0.05; T.hy=0;}
+    else if(a==='cower'){T.aLx=T.aRx=-1.9; T.fL=T.fR=-2.2; T.aLz=T.aRz=-0.35; T.tx=0.45; T.hx=0.5; T.hy=0;}
   }
   p.update=function(dt){
     p.sit+=(p.sitT-p.sit)*Math.min(1,dt*6.5); p.lie+=(p.lieT-p.lie)*Math.min(1,dt*5);

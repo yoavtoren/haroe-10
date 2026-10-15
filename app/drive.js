@@ -293,7 +293,7 @@ A.frameFns.push(function(dt){
     const w=T.roadNear(driving.x,driving.z); $('dWhere').textContent=w&&w.d<6&&w.r.name?w.r.name:'';
     if(goal){const d=Math.hypot(goal[0]-driving.x,goal[1]-driving.z); $('dWhere').textContent+=' · '+Math.round(d)+' m to go'; if(d<12){goal=null; beam.visible=false; SM.toast('You have arrived.');}}}
   else if(goal&&Math.hypot(goal[0]-p.x,goal[1]-p.z)<6){goal=null; beam.visible=false;}
-  copStep(dt);
+  if(!A.gtaCops) copStep(dt);      // gta-cops.js runs the police in the streets
   for(let i=jacked.length-1;i>=0;i--){const j=jacked[i]; j.a.update(dt); if(A.t>j.until){j.a.remove(); jacked.splice(i,1);}}
 });
 
@@ -303,7 +303,7 @@ A.drive={cars:function(){const p=SM.player; return live.filter(function(c){retur
   key:function(k){if(k==='e'&&driving){exit(); return true;} return false;},
   kick:function(c){c.alarm=A.t+7; alarm(c);},
   mapDots:function(fn){traffic.forEach(function(t){fn(t.car.x,t.car.z,'#ffffff');}); if(cop) fn(cop.x,cop.z,'#2a5ad8'); if(goal) fn(goal[0],goal[1],'#f4d53a');},
-  traffic:traffic,live:live};
+  traffic:traffic,live:live,Car:Car,hitsCar:hitsCar,outlineFree:outlineFree,copLights:[copRed,copBlue],crash:crash,shake:function(s){shake=Math.max(shake,s);}};
 function alarm(c){const ctx=actx(); if(!ctx) return; const o=ctx.createOscillator(), g=ctx.createGain(); o.type='square'; o.frequency.value=900; const l=ctx.createOscillator(), lg=ctx.createGain(); l.frequency.value=3; lg.gain.value=300; l.connect(lg).connect(o.frequency);
   g.gain.value=0.05; o.connect(g).connect(ctx.destination); o.start(); l.start(); o.stop(ctx.currentTime+6); l.stop(ctx.currentTime+6);}
 })();
