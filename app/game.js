@@ -182,7 +182,7 @@ function fighterStep(t,dt){
   if(d>0.85){if(t.a){if(!t.a.path.length||A.t>(s.rp||0)){s.rp=A.t+0.7; const k=0.75/d; t.a.busy=true; t.a.goTo(q.x+(p.x-q.x)*(1-k),q.z+(p.z-q.z)*(1-k));}}
     else if(t.f){const S=A.street, l=S.st.worldToLocal(v2.set(p.x,0,p.z)), o=t.f.kind==='walk'?t.f:null; if(o){const dx=l.x-o.x, dz=l.z-o.z, dd=Math.hypot(dx,dz); o.x+=dx/dd*2.2*dt; o.z+=dz/dd*2.2*dt; t.p.g.position.x=o.x; t.p.g.position.z=o.z; t.p.walking=true; t.p.moved=2.2*dt; o.wait=1;}}}
   else if(A.t>s.next){s.next=A.t+1.0+Math.random()*0.5; t.p.act='punch'; whoosh(); SM.later(0.32,function(){
-      if(Math.hypot(posOf(t,v1).x-p.x,posOf(t,v1).z-p.z)<1.1&&!G.down){hurtMe(t.sub==='cop'?25:12+Math.floor(Math.random()*8)); hit(0.6);}
+      if(Math.hypot(posOf(t,v1).x-p.x,posOf(t,v1).z-p.z)<1.1&&!G.down){hurtMe(t.sub==='cop'?25:12+Math.floor(Math.random()*8)); hit(0.6); if(A.gtaHitFrom) A.gtaHitFrom(v1.x,v1.z);}
       t.p.act='guard';});}
   return true;
 }

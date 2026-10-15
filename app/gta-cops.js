@@ -147,7 +147,7 @@ function shoot(o){const a=o.a, m=me(), w=new THREE.Vector3(); a.muzzle.getWorldP
   const ty=(m.car?m.car.g.position.y+1.0:m.p.p.g.position.y+1.25), tx=m.x+(hit?0:(Math.random()-0.5)*2.4), tz=m.z+(hit?0:(Math.random()-0.5)*2.4);
   const g=new THREE.BufferGeometry().setFromPoints([w.clone(),new THREE.Vector3(tx,hit?ty:T.U+0.3+Math.random()*1.6,tz)]), ln=new THREE.Line(g,tracerM); ln.layers.set(OUT()); scene.add(ln); fx.push({o:ln,until:A.t+0.07,geo:g});
   bang(a.x,a.z); if(A.gtaPanic) A.gtaPanic(a.x,a.z,35,2);
-  if(hit){const dmg=m.car?4+Math.floor(Math.random()*4):7+Math.floor(Math.random()*6); if(A.game&&A.game.hurt) A.game.hurt(dmg); hurtFlash(); if(A.gtaShake) A.gtaShake(0.08);}
+  if(hit){const dmg=m.car?4+Math.floor(Math.random()*4):7+Math.floor(Math.random()*6); if(A.game&&A.game.hurt) A.game.hurt(dmg); hurtFlash(); if(A.gtaHitFrom) A.gtaHitFrom(a.x,a.z); if(A.gtaShake) A.gtaShake(0.08);}
   else if(d<14) whizz();}
 const hurt=document.createElement('div'); hurt.id='gHurt'; hurt.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse at center,rgba(160,0,0,0) 45%,rgba(170,0,0,.55) 100%)'; A.stage.appendChild(hurt);
 function hurtFlash(){hurt.style.transition='none'; hurt.style.opacity=1; requestAnimationFrame(function(){hurt.style.transition='opacity .9s'; hurt.style.opacity=0;});}
@@ -180,7 +180,11 @@ function footStep(o,dt){
     if(A.t>o.shout){o.shout=A.t+5+Math.random()*4; a.say(rnd(SHOUT),1.8);} a.update(dt); return true;}
   a.p.act=null; a.gun.visible=armed; a.speed=4.1;
   if(A.t>o.shout&&d<30){o.shout=A.t+5+Math.random()*4; a.say(rnd(SHOUT),1.8);}
-  const tx=Z.seen?m.x:Z.x, tz=Z.seen?m.z:Z.z;
+  let tx=Z.seen?m.x:Z.x, tz=Z.seen?m.z:Z.z;
+  if(Z.seen) o.look=null;
+  else{if(!o.look) o.look=[Z.x,Z.z,A.t+20];      /* lost you: first where you were last seen, then about the circle they search, looking */
+    else if(hyp(o.look[0]-a.x,o.look[1]-a.z)<3||A.t>o.look[2]){const r=radius()*0.75; for(let i=0;i<6;i++){const an=Math.random()*2*R, rr=r*Math.sqrt(Math.random()), qx=Z.x+Math.cos(an)*rr, qz=Z.z+Math.sin(an)*rr; if(A.nav.isFree(qx,qz)){o.look=[qx,qz,A.t+9]; break;}}}
+    tx=o.look[0]; tz=o.look[1];}
   if(sees&&d<9){a.release(); a.path=[[tx,tz]]; a.cb=null;}
   else if(A.t>o.next){o.next=A.t+1.3; if(hyp(tx-a.x,tz-a.z)<70&&A.nav.isFree(tx,tz)) a.goTo(tx,tz); else a.goTo(a.x+(tx-a.x)*0.3,a.z+(tz-a.z)*0.3);}
   a.update(dt); return true;}
@@ -238,14 +242,18 @@ function sight(dt){const m=me(), hidden=!outside();
   losT-=dt; const fresh=losT<=0; if(fresh) losT=0.2;
   let seen=false;
   if(!hidden){
-    UNITS.forEach(function(u){if(u.state==='leave'||u.inside<=0) return; const c=u.car, d=hyp(m.x-c.x,m.z-c.z); if(d<55){if(fresh) u.los=los(c.x,c.z,m.x,m.z); if(u.los) seen=true;}});
-    FOOT.forEach(function(o){const a=o.a, d=hyp(m.x-a.x,m.z-a.z); if(o.state==='down'||o.state==='back') return; if(d<42){if(fresh) o.los=los(a.x,a.z,m.x,m.z); if(o.los) seen=true;} else o.los=false;});
+    UNITS.forEach(function(u){if(u.state==='leave'||u.inside<=0) return; const c=u.car, d=hyp(m.x-c.x,m.z-c.z); if(d<CONE.car[0]){if(fresh) u.los=looks(u,c.psi+R/2,c.x,c.z,m,d,CONE.car)&&los(c.x,c.z,m.x,m.z); if(u.los) seen=true;}});
+    FOOT.forEach(function(o){const a=o.a, d=hyp(m.x-a.x,m.z-a.z); if(o.state==='down'||o.state==='back') return; if(d<CONE.foot[0]){if(fresh) o.los=looks(o,a.h,a.x,a.z,m,d,CONE.foot)&&los(a.x,a.z,m.x,m.z); if(o.los) seen=true;} else o.los=false;});
     if(heli&&G.wanted>=4&&hyp(heli.x-m.x,heli.z-m.z)<65) seen=true;}
   if(A.t<Z.grace&&!hidden) seen=true;
   const p=SM.player; (G.cops||[]).forEach(function(c){if(!c.gone&&c.lvl===p.lvl&&hyp(c.x-p.x,c.z-p.z)<14) seen=true;});      // the officers on the stairs (floors.js) see you too
   Z.seen=seen;
   if(seen){Z.x=m.x; Z.z=m.z; Z.t=A.t; Z.lose=0;}
   else if(!hidden){const r=radius(); if(hyp(m.x-Z.x,m.z-Z.z)>r){Z.lose+=dt; if(Z.lose>6) lost();} else Z.lose=Math.max(0,Z.lose-dt*0.3);}}
+/* they see ahead of them, as GTA's police do (the cones on the radar): this far, this wide either side, and all round this close.
+   Once one has seen you he keeps you in his eye a moment, though he turns a corner after you */
+const CONE={foot:[42,0.96,7],car:[55,1.13,10]};
+function looks(o,h,x,z,m,d,k){const ok=d<k[2]||Math.abs(wrap(Math.atan2(m.x-x,m.z-z)-h))<k[1]; if(ok) o.saw=A.t; return ok||A.t-(o.saw||-9)<2.5;}
 function lost(){G.wanted=0; Z.lose=0; (G.cops||[]).forEach(function(c){c.leaving=true; c.next=0;}); if(A.floors.drawHud) A.floors.drawHud(); if(A.floors.siren) A.floors.siren(false); SM.toast('You lost the police.'); if(A.gtaSound&&A.gtaSound.lost) A.gtaSound.lost();}
 /* a crime they see while you are wanted: a star more (at most one every few seconds) */
 const raise0=A.floors.raise;
@@ -285,9 +293,10 @@ A.labelFns.push(function(){const v=new THREE.Vector3(); FOOT.forEach(function(o)
 
 /* ---------- for the radar, the map and game.js ---------- */
 A.gtaCops={outside:outside,list:function(){return FOOT.filter(function(o){return !o.a.gone&&o.a.p.g.visible;}).map(function(o){return o.a;});},get seen(){return G.wanted>0?Z.seen:true;},
-  blips:function(dot,circle){
+  blips:function(dot,circle,cone){
     if(G.wanted>0&&!Z.seen&&circle){const k=Math.floor(A.t*2)%2; circle(Z.x,Z.z,radius(),k?'rgba(230,60,60,0.22)':'rgba(60,110,240,0.22)');}
     UNITS.forEach(function(u){if(u.state!=='leave'||G.wanted>0) dot(u.car.x,u.car.z,'policecar');});
+    if(G.wanted>0&&!Z.seen&&cone){UNITS.forEach(function(u){if(u.state!=='leave'&&u.inside>0) cone(u.car.x,u.car.z,u.car.psi+R/2,CONE.car);}); FOOT.forEach(function(o){if(!o.a.gone&&o.state!=='back'&&o.state!=='down') cone(o.a.x,o.a.z,o.a.h,CONE.foot);});}      // searching: where each of them is looking
     FOOT.forEach(function(o){if(!o.a.gone&&o.state!=='back') dot(o.a.x,o.a.z,'police');});
     if(heli) dot(heli.x,heli.z,'heli');},
   units:UNITS,foot:FOOT,zone:Z,get heli(){return heli;},clear:clear};

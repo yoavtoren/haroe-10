@@ -186,12 +186,18 @@ function radio(){const d=!!(A.simsOn&&A.drive&&A.drive.on&&A.drive.on()&&!A.paus
 /* =====================================================================
    The dispatcher, and the stings
    ===================================================================== */
-function voices(){return !!(window.speechSynthesis&&(!A.gtaSet||A.gtaSet.get('voices')!==false));}
-function say(text,o){if(!voices()) return; try{const u=new SpeechSynthesisUtterance(text); u.rate=(o&&o.rate)||1.05; u.pitch=(o&&o.pitch)||0.9; u.volume=clamp(((o&&o.vol)||0.55)*(A.gtaSet?A.gtaSet.get('master'):0.8),0,1); u.lang='en-US'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);}catch(e){}}
+function voices(){return !!(window.speechSynthesis&&(!A.gtaSet||A.gtaSet.get('dispatch')!=='off'));}
+/* the dispatcher speaks Hebrew, as the police here do, where the device has a Hebrew voice; English where it has none, or by choice */
+try{if(window.speechSynthesis) window.speechSynthesis.getVoices();}catch(e){}      /* the browser loads its voices when first asked: ask now, so they are there when the stars come */
+function hebrew(){if(!A.gtaSet||A.gtaSet.get('dispatch')!=='he') return null; try{return window.speechSynthesis.getVoices().find(function(v){return /^he|^iw/i.test(v.lang);})||null;}catch(e){return null;}}
+function say(text,o){if(!voices()) return; try{const u=new SpeechSynthesisUtterance(text); u.rate=(o&&o.rate)||1.05; u.pitch=(o&&o.pitch)||0.9; u.volume=clamp(((o&&o.vol)||0.55)*(A.gtaSet?A.gtaSet.get('master'):0.8),0,1); if(o&&o.voice){u.voice=o.voice; u.lang=o.voice.lang;} else u.lang='en-US'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);}catch(e){}}
 let lastDisp=0;
 function dispatch(level,m){const c=shared(), t=c.currentTime; if(A.t-lastDisp<6) return; lastDisp=A.t;
   burst(B.sfx,0.25,'bandpass',1800,1.2,0.05); tone(B.sfx,'square',1200,1200,0.07,0.02,t+0.26); tone(B.sfx,'square',1600,1600,0.07,0.02,t+0.36);
-  const q=A.town&&A.town.roadNear?A.town.roadNear(m.x,m.z):null, st=q&&q.d<10&&q.r.name?q.r.name:'Haroe Street';
+  const q=A.town&&A.town.roadNear?A.town.roadNear(m.x,m.z):null, st=q&&q.d<10&&q.r.name?q.r.name:'Haroe Street', he=hebrew();
+  if(he){const hs=q&&q.d<10&&q.r.he?q.r.he:'הרואה';
+    const HL=level>=4?['לכל הניידות, לכל הניידות: החשוד חמוש ומסוכן, נראה לאחרונה ברחוב '+hs+'. מסוק בדרך.','מוקד לכל הניידות: אירוע ירי ברחוב '+hs+'. המסוק בדרך אליכם.']:level>=3?['לכל הניידות, דיווח על יריות ברחוב '+hs+'. להתקדם בזהירות.','חשוד אלים ברחוב '+hs+'. כל הניידות הפנויות, להגיע.']:level>=2?['ניידות באזור, חשוד נמלט ברחוב '+hs+'.','מוקד: תקיפה ברחוב '+hs+'. ניידות, להגיע.']:['ניידת שתים עשרה, דיווח על הפרת סדר ברחוב '+hs+'.','חשוד אפשרי ברחוב '+hs+'. ניידות באזור, לבדוק.'];
+    setTimeout(function(){say('מוקד. '+rnd(HL),{rate:1.1,pitch:0.85,vol:0.5,voice:he});},500); return;}
   const lines=level>=4?['All units, all units: the suspect is armed and dangerous, last seen on '+st+'. Air support is on the way.','Dispatch to all units: a shooting incident on '+st+'. Air unit is responding.']:level>=3?['All units, shots fired near '+st+'. Proceed with caution.','We have a violent suspect on '+st+'. All available units respond.']:level>=2?['Units in the area, a suspect is fleeing on '+st+'.','Dispatch: assault in progress on '+st+'. Units respond.']:['Unit twelve, a disturbance reported on '+st+'.','Possible suspect on '+st+'. Units in the area, check it out.'];
   setTimeout(function(){say('Dispatch. '+rnd(lines),{rate:1.15,pitch:0.8,vol:0.5});},500);}
 function sting(kind){const c=shared(), t=c.currentTime, g=c.createGain(); g.gain.value=1; g.connect(B.master);

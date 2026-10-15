@@ -45,7 +45,9 @@ function radar(){
   const edge=function(s,pad){return [Math.max(pad,Math.min(W-pad,s[0])),Math.max(pad,Math.min(H-pad,s[1]))];};
   const inR=function(s){return s[0]>0&&s[1]>0&&s[0]<W&&s[1]<H;};
   (A.gtaPOI||[]).forEach(function(q){if(q.big) return; const s=to(q.x,q.z); const keep=q.k==='home'; if(!inR(s)&&!keep) return; const e=edge(s,9*dpr); A.gtaBlip(g,q.k,e[0],e[1],(q.k==='home'?15:12)*dpr,A.t);});
-  if(A.gtaCops) A.gtaCops.blips(function(wx,wz,kind){const s=to(wx,wz), e=edge(s,6*dpr); A.gtaBlip(g,kind,e[0],e[1],(inR(s)?11:8)*dpr,A.t);},function(wx,wz,r,col){const s=to(wx,wz); g.fillStyle=col; g.beginPath(); g.arc(s[0],s[1],r*sc,0,7); g.fill();});
+  if(A.gtaCops) A.gtaCops.blips(function(wx,wz,kind){const s=to(wx,wz), e=edge(s,6*dpr); A.gtaBlip(g,kind,e[0],e[1],(inR(s)?11:8)*dpr,A.t);},function(wx,wz,r,col){const s=to(wx,wz); g.fillStyle=col; g.beginPath(); g.arc(s[0],s[1],r*sc,0,7); g.fill();},
+    function(wx,wz,hd,k){const s=to(wx,wz), r=k[0]; g.fillStyle='rgba(235,240,255,0.2)'; g.beginPath(); g.moveTo(s[0],s[1]); for(let i=0;i<=8;i++){const an=hd-k[1]+k[1]*i/4, q=to(wx+Math.sin(an)*r,wz+Math.cos(an)*r); g.lineTo(q[0],q[1]);} g.closePath(); g.fill();      /* the way each one looks, while they search */
+      g.beginPath(); g.arc(s[0],s[1],k[2]*sc,0,7); g.fill();});
   if(A.gtaWay&&A.gtaWay.at){const s=to(A.gtaWay.at[0],A.gtaWay.at[1]), e=edge(s,11*dpr); A.gtaBlip(g,'way',e[0],e[1]-(inR(s)?8*dpr:0),18*dpr);}
   /* north, on the rim */
   const n=to(x+1000,z), nd=hyp(n[0]-cx,n[1]-cy), nx=cx+(n[0]-cx)/nd*Math.min(W,H), ny=cy+(n[1]-cy)/nd*Math.min(W,H), ne=edge([nx,ny],9*dpr);
@@ -107,12 +109,25 @@ function deaths(){const G=A.game&&A.game.G, F=A.floors&&A.floors.G;
 
 /* ---------- each frame ---------- */
 let rt=0, was=false;
+/* ---------- where a hit came from: a red arc round you on the screen, toward whoever it was, as GTA marks it ---------- */
+const dmg=document.createElement('canvas'); dmg.id='gDmg'; dmg.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; hud.insertBefore(dmg,$('gBig'));
+const hits=[], hv=new THREE.Vector3(), HIT=1.4;
+A.gtaHitFrom=function(x,z){if(!on()) return; hits.push({x:x,z:z,t:A.t}); if(hits.length>4) hits.shift();};
+function marks(){const w=A.stage.clientWidth, h=A.stage.clientHeight, g=dmg.getContext('2d');
+  if(!hits.length){if(dmg._on){dmg._on=false; g.clearRect(0,0,dmg.width,dmg.height);} return;}
+  if(dmg.width!==Math.round(w*dpr)||dmg.height!==Math.round(h*dpr)){dmg.width=Math.round(w*dpr); dmg.height=Math.round(h*dpr);}
+  dmg._on=true; g.clearRect(0,0,dmg.width,dmg.height); const p=SM.player, cam=A.camera;
+  hv.set(p.x,p.p.g.position.y+1.0,p.z).project(cam); const cx=(hv.x+1)/2*dmg.width, cy=(1-hv.y)/2*dmg.height, r=Math.min(dmg.width,dmg.height)*0.21;
+  g.lineCap='round'; g.shadowColor='rgba(255,0,0,0.7)'; g.shadowBlur=14*dpr;
+  for(let i=hits.length-1;i>=0;i--){const q=hits[i], age=A.t-q.t; if(age>HIT||age<0){hits.splice(i,1); continue;}
+    hv.set(q.x-p.x,0,q.z-p.z).transformDirection(cam.matrixWorldInverse); const an=Math.atan2(hv.x,-hv.z)-R/2;      /* round from straight ahead, which is up the screen */
+    g.strokeStyle='rgba(225,24,24,'+(0.9*(1-age/HIT)).toFixed(3)+')'; g.lineWidth=(12+8*(1-age/HIT))*dpr; g.beginPath(); g.arc(cx,cy,r,an-0.38,an+0.38); g.stroke();}}
 A.frameFns.push(function(dt){
   const o=on(); if(o!==was){was=o; hud.hidden=!o; document.body.classList.toggle('gta',o); if(!o){bigHide();}}
   if(!o) return; const bare=!shown(); if(hud.classList.contains('bare')!==bare) hud.classList.toggle('bare',bare);
   const short=A.stage.clientHeight<600; if(hud.classList.contains('short')!==short){hud.classList.toggle('short',short); document.body.classList.toggle('gtaShort',short);}      /* on a phone with the side panel up, the view is half the screen: less on it */
   rt+=dt; if(rt>(TOUCH?0.07:0.034)){rt=0; radar();}
-  bars(dt); stars(); cash(dt); area(dt); help(); deaths();
+  bars(dt); stars(); cash(dt); area(dt); help(); deaths(); marks();
   $('gFloor').hidden=!SM.player.lvl; if(SM.player.lvl) $('gFloor').textContent=FLOOR[SM.player.lvl]||'';
 });
 $('gRadar').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true);}); $('gMenuBtn').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true);});
