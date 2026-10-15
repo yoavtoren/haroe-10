@@ -127,7 +127,7 @@ function rev(car,I,dt){if(!E) return; const c=shared(), t=c.currentTime, v=Math.
   E.o1.frequency.setTargetAtTime(f,t,0.04); E.o2.frequency.setTargetAtTime(f*2.01,t,0.04); E.o3.frequency.setTargetAtTime(f*0.5,t,0.04); E.nf.frequency.setTargetAtTime(f*4,t,0.05);
   E.f.frequency.setTargetAtTime(240+E.rpm*0.16+th*900,t,0.05); E.g.gain.setTargetAtTime(0.045+th*0.04+E.rpm/6000*0.02,t,0.08);
   /* the tyres squeal on the handbrake, braking hard, cornering fast */
-  const st=Math.abs(car.steer||0), sq=clamp((I.hand&&v>4?0.9:0)+(I.brk&&car.v>8?0.5:0)+(st>0.3&&v>10?(st-0.3)*2.2*(v/20):0),0,1);
+  const st=Math.abs(car.steer||0), sq=car.skid!=null?car.skid:clamp((I.hand&&v>4?0.9:0)+(I.brk&&car.v>8?0.5:0)+(st>0.3&&v>10?(st-0.3)*2.2*(v/20):0),0,1);
   E.sqg.gain.setTargetAtTime(sq*0.07,t,0.06); E.sqf.frequency.setTargetAtTime(1600+Math.random()*500,t,0.05);
   A.gtaSkid=sq;}
 

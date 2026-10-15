@@ -166,7 +166,7 @@ A.gtaPaint=function(g,col){      // the body of a finely built car (drive.js): i
     const reg=A.rooms.street.mats.find(function(e){return e.m===mt;}), base=reg?reg.b:mt.color;
     const glass=base.getHex()===0x27313a, body=base.getHex()===col;
     if(!glass&&!body) return;
-    const pm=new THREE.MeshPhongMaterial({color:base.clone(),specular:glass?0x8a9aa8:0x5a5a5a,shininess:glass?110:85,envMap:ENV,combine:THREE.MixOperation,reflectivity:glass?0.55:0.22,emissive:mt.emissive?mt.emissive.clone():0});
+    const pm=new THREE.MeshPhongMaterial({color:base.clone(),specular:glass?0x56606a:0x5a5a5a,shininess:glass?110:85,envMap:ENV,combine:THREE.MixOperation,reflectivity:glass?0.2:0.22,emissive:mt.emissive?mt.emissive.clone():0});
     pm.userData.refl=pm.reflectivity; shiny.push(pm); A.reg(pm,'street'); pm.color.copy(base).multiply(A.rooms.street.tint); m.material=pm;});};
 const shiny=[];      // the sky they reflect is a day sky: at night they reflect little
 function gloss(){const d=A.simsOn?NOW.day:1; if(Math.abs(d-(gloss.d||-1))<0.02) return; gloss.d=d; shiny.forEach(function(m){m.reflectivity=m.userData.refl*(0.15+0.85*d);});}

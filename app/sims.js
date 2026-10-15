@@ -254,7 +254,7 @@ Actor.prototype.update=function(dt){
   }else{p.walking=!!this.manual; if(!this.manual) this.v=0;}
   this.h=angLerp(this.h,this.hT,Math.min(1,dt*8));
   p.moved=p.walking?Math.hypot(this.x-(this.lx==null?this.x:this.lx),this.z-(this.lz==null?this.z:this.lz)):0; this.lx=this.x; this.lz=this.z;      // ground covered this frame: the stride is measured from it
-  p.g.position.set(this.x,this.lvl?lvY(this.lvl):this.seat?0:gy(this.x,this.z),this.z); p.g.rotation.y=this.h; p.update(dt);
+  p.g.position.set(this.x,(this.lvl?lvY(this.lvl):this.seat?0:gy(this.x,this.z))+(this.airY||0),this.z); p.g.rotation.y=this.h; p.update(dt);      // airY: thrown by a car (gta-drive.js)
   const rm=(!this.lvl&&A.town&&!this.script&&!inFine(this.x,this.z))?'street':A.roomAt(this.x,this.z,this.lvl)||this.room||'hall';      // out in the neighbourhood: the street
   if(rm!==this.room||this.ver!==A.lightVer||p.dirty){p.dirty=false; this.room=rm; this.ver=A.lightVer; p.tint(A.rooms[rm].tint);}
 };

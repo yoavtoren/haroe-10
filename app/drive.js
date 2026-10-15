@@ -64,9 +64,10 @@ function Car(o){
   this.kind=o.kind; this.col=o.col; this.g=model(o.kind,o.col,o.cop); this.dim=DIM[o.kind]||DIM.hatch; this.name=o.cop?'Police car':NAME[o.kind]||'Car';
   this.wheels=this.g.children.filter(function(c){return c.userData.wheel!=null;});
   this.x=o.x; this.z=o.z; this.psi=o.psi; this.v=0; this.steer=0; this.pk=o.pk||null; this.traffic=null; this.moved=false; this.cop=!!o.cop; this.spin=0; this.alarm=0;
+  this.roll=0; this.pitch=0; this.hp=100; this.g.rotation.order='YXZ';
   this.g.userData.car=this; root.add(this.g); this.place(); live.push(this);
 }
-Car.prototype.place=function(){const y=SM.ground?SM.ground(this.x,this.z):U; this.g.position.set(this.x,y,this.z); this.g.rotation.y=this.psi;};
+Car.prototype.place=function(){const y=SM.ground?SM.ground(this.x,this.z):U; this.g.position.set(this.x,y,this.z); this.g.rotation.set(this.roll,this.psi,this.pitch);};      // leaning in the corners, nose up as it pulls away and down as it brakes
 Car.prototype.fwd=function(){return [Math.cos(this.psi),-Math.sin(this.psi)];};
 Car.prototype.wheelsTurn=function(dt){const self=this; this.spin+=this.v*dt/0.31;
   this.wheels.forEach(function(w){w.rotation.x=-self.spin; w.rotation.y=R/2+(w.position.x>0?self.steer:0);});};
@@ -111,7 +112,7 @@ function enter(c){
   const door=doors.sort(function(a,b){return Math.hypot(a[0]-p.x,a[1]-p.z)-Math.hypot(b[0]-p.x,b[1]-p.z);})[0]||[c.x+f[1]*w,c.z-f[0]*w];
   getting=true; c.held=true;
   const go=function(){getting=false; if(driving) return; p.hT=c.psi+R/2; doorSound(); setTimeout(function(){doorSound();},350);
-    driving=c; c.held=false; c.moved=true; c.v=0; if(c.pk){(c.pk.ob||[]).forEach(function(o){o.off=true;});}
+    driving=c; c.held=false; c.moved=true; c.v=0; c.vdir=c.psi; if(c.pk){(c.pk.ob||[]).forEach(function(o){o.off=true;});}
     p.release(); p.path=[]; p.cb=null; p.p.g.visible=false; p.driving=c; engine(true); hud.style.display='flex';
     camBack=SM.camMode; if(SM.camMode==='eye') SM.setCam('follow'); SM.setDoing('driving');
     SM.toast(TOUCH?'Push the left stick to drive: up is gas, down brakes and reverses. Get out with the button.':'W gas · S brake and reverse · A D steer · Space handbrake · H horn · E get out · M map');};
@@ -152,25 +153,36 @@ function outlineFree(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], s=[f[1],
   const P=[[L,W],[L,-W],[-L,W],[-L,-W],[L,0],[-L,0],[0,W],[0,-W],[L*0.5,W],[L*0.5,-W],[-L*0.5,W],[-L*0.5,-W]];
   for(let i=0;i<P.length;i++){const q=P[i]; if(blockedAt(x+f[0]*q[0]+s[0]*q[1],z+f[1]*q[0]+s[1]*q[1])) return false;} return true;}
 let hitCool=0;
+/* as in GTA: quick, a little twitchy, and the handbrake throws the back out */
+const TOP={mini:25,hatch:28,sedan:31,suv:29,van:25,bus:19}, ACC={mini:6.2,hatch:7,sedan:7.8,suv:7.2,van:5.8,bus:3.2};
 function drive(c,dt){
-  const I=inputs(), v0=c.v, maxV=19, top=c.cop?24:maxV;
-  if(I.gas){if(c.v<0) c.v+=11*dt*I.gas; else c.v+=(c.v<8?6.5:3.6)*dt*I.gas;}
-  if(I.brk){if(c.v>0.3) c.v-=13*dt*I.brk; else c.v-=3.5*dt*I.brk;}
-  if(!I.gas&&!I.brk) c.v-=Math.sign(c.v)*Math.min(Math.abs(c.v),(0.9+0.025*c.v*c.v)*dt);
-  if(I.hand) c.v-=Math.sign(c.v)*Math.min(Math.abs(c.v),7*dt);
-  c.v=Math.max(-6,Math.min(top,c.v));
-  const ms=0.6/(1+Math.abs(c.v)*0.07); c.steer+=(I.steer*ms-c.steer)*Math.min(1,dt*(I.steer?5:7));
-  const yaw=c.v/c.dim[2]*Math.tan(c.steer)*(I.hand&&Math.abs(c.v)>4?1.6:1);
-  const npsi=c.psi+yaw*dt, f=[Math.cos(npsi),-Math.sin(npsi)], nx=c.x+f[0]*c.v*dt, nz=c.z+f[1]*c.v*dt;
+  const I=inputs(), v0=c.v, top=c.cop?34:TOP[c.kind]||28, acc=(ACC[c.kind]||7)*(c.hp<=0?0:c.hp<30?0.55:1);      // a wreck hardly pulls, a dead engine not at all
+  if(c.vdir==null) c.vdir=c.psi;
+  if(I.gas){if(c.v<0) c.v+=12*dt*I.gas; else c.v+=acc*dt*I.gas*(1-0.85*Math.pow(Math.max(0,c.v)/top,2));}
+  if(I.brk){if(c.v>0.3) c.v-=15*dt*I.brk; else c.v-=5*dt*I.brk;}
+  if(!I.gas&&!I.brk) c.v-=Math.sign(c.v)*Math.min(Math.abs(c.v),(0.6+0.012*c.v*c.v)*dt);
+  if(I.hand) c.v-=Math.sign(c.v)*Math.min(Math.abs(c.v),4.5*dt);
+  c.v=Math.max(-8,Math.min(top,c.v));
+  const sp=Math.abs(c.v), ms=0.62/(1+sp*0.045); c.steer+=(I.steer*ms-c.steer)*Math.min(1,dt*(I.steer?6:8));
+  const drift=I.hand&&sp>5, yaw=c.v/c.dim[2]*Math.tan(c.steer)*(drift?1.75:1);
+  const npsi=c.psi+yaw*dt;
+  /* the way it goes follows the way it points: at once with grip, slowly with the handbrake on, a little late in a fast corner; sliding scrubs speed */
+  const grip=drift?1.6:(sp>14&&Math.abs(c.steer)>0.3?6:14), slip=wrap(npsi-c.vdir);
+  c.vdir=npsi-slip*Math.exp(-grip*dt); if(Math.abs(slip)>0.08) c.v*=1-Math.min(0.5,Math.abs(slip))*0.6*dt;
+  c.skid=Math.max(0,Math.min(1,Math.abs(slip)*sp/5+(drift?0.5:0)+(I.brk&&c.v>9?0.45:0)));
+  const f=[Math.cos(c.vdir),-Math.sin(c.vdir)], nx=c.x+f[0]*c.v*dt, nz=c.z+f[1]*c.v*dt;
   let other=hitsCar(c,nx,nz,npsi);
   if(other&&!other.traffic&&!other.cop&&Math.abs(c.v)<9&&outlineFree(c,nx,nz,npsi)){      // a parked car: shove it along
     const px=(nx-c.x)*0.9, pz=(nz-c.z)*0.9, ox=other.x+px, oz=other.z+pz;
     if(outlineFree(other,ox,oz,other.psi)&&!hitsCar(other,ox,oz,other.psi)){other.x=ox; other.z=oz; other.moved=true; other.place(); c.v*=Math.pow(0.4,dt); if(Math.abs(c.v)>1.5&&A.t>hitCool){noise(0.25,400,0.15); hitCool=A.t+0.35;} other=null;}}
   if(other||!outlineFree(c,nx,nz,npsi)){
-    if(Math.abs(c.v)>2.5&&A.t>hitCool){crash(Math.abs(c.v)); hitCool=A.t+0.6; shake=Math.min(0.5,Math.abs(c.v)*0.03); if(other){other.alarm=A.t+6; if(other.traffic) other.traffic.angry=A.t+3;}}
+    if(Math.abs(c.v)>2.5&&A.t>hitCool){crash(Math.abs(c.v)); hitCool=A.t+0.6; shake=Math.min(0.5,Math.abs(c.v)*0.03); if(other){other.alarm=A.t+6; if(other.traffic) other.traffic.angry=A.t+3; other.hp-=Math.min(35,Math.abs(c.v)*1.4);}
+      if(Math.abs(c.v)>4) c.hp=Math.max(0,c.hp-Math.min(40,Math.abs(c.v)*1.5));}      // a knock costs the car; enough of them and it smokes, then dies
     if(outlineFree(c,c.x,c.z,npsi)) c.psi=npsi;      // turning on the spot still works against a wall
-    c.v=-c.v*0.2;
+    c.v=-c.v*0.2; c.vdir=c.psi;
   }else{c.x=nx; c.z=nz; c.psi=npsi;}
+  const lat=yaw*c.v, lon=(c.v-v0)/Math.max(dt,1e-3);
+  c.roll+=(Math.max(-0.07,Math.min(0.07,lat*0.0045))-c.roll)*Math.min(1,dt*5); c.pitch+=(Math.max(-0.045,Math.min(0.045,lon*0.0045))-c.pitch)*Math.min(1,dt*5);
   c.place(); c.wheelsTurn(dt);
   /* people in the way */
   if(Math.abs(c.v)>2.2&&A.game&&A.game.all){const cs=c.circles(); A.game.all().forEach(function(t){if(t.kind!=='person'||(t.lvl||0)) return; const q=t.a?{x:t.a.x,z:t.a.z}:t.root.getWorldPosition(new THREE.Vector3());
@@ -196,7 +208,7 @@ function chase(c,dt){const f=c.fwd(), back=7.4+Math.abs(c.v)*0.12, y=c.g.positio
 /* =====================================================================
    Traffic: along the streets of the map, both ways, keeping to the right
    ===================================================================== */
-const traffic=[], MAXT=TOUCH?6:12, COLS=[0xe9e9e6,0x2f4f7a,0xb5372f,0x7a7f84,0xf2f2ee,0x1d1f21,0xb9bcbe,0x8a1f2a,0x3a4a5a,0x2e5e4e,0xdddddd,0x101214,0xc9b27a];
+const traffic=[], MAXT=TOUCH?7:16, COLS=[0xe9e9e6,0x2f4f7a,0xb5372f,0x7a7f84,0xf2f2ee,0x1d1f21,0xb9bcbe,0x8a1f2a,0x3a4a5a,0x2e5e4e,0xdddddd,0x101214,0xc9b27a];
 const drivable=T.net.filter(function(r){return r.k===1||r.k===2||r.k===6||r.k===7;});
 function laneOff(rd){return rd.k===2?0.0:rd.k===1?0.95:2.1;}      // between the parked cars on a side street; on a main street, its own side
 function segPos(t){const rd=t.rd, a=rd.p[t.j], b=rd.p[t.j+1], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1, s=Math.min(t.s,l), n=[-dz/l,dx/l], lo=laneOff(rd)*t.dir;
