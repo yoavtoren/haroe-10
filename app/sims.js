@@ -764,9 +764,10 @@ A.labelFns.push(function(){
   const all=[player].concat(guests,extras);
   for(let i=0;i<all.length;i++){const a=all[i]; if(!a) continue;
     const show=A.simsOn&&S.labels&&!(a.me&&camMode==='eye');
-    a.headPos(tv3); tv3.y+=0.28; A.place(a.tag,tv3,show&&!a.zz&&!a.bubble);
-    if(a.zz){tv3.y+=0.12; A.place(a.zz,tv3,A.simsOn);}
-    if(a.bubble){A.place(a.bubble,tv3,A.simsOn);}
+    const here=(a.lvl||0)===(player.lvl||0)||a===player;      // someone on another floor: their words do not show through it
+    a.headPos(tv3); tv3.y+=0.28; A.place(a.tag,tv3,show&&!a.zz&&!a.bubble&&here);
+    if(a.zz){tv3.y+=0.12; A.place(a.zz,tv3,A.simsOn&&here);}
+    if(a.bubble){A.place(a.bubble,tv3,A.simsOn&&here);}
   }
 });
 

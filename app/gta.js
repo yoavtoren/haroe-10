@@ -16,7 +16,7 @@ function wrap(d){while(d>R) d-=2*R; while(d<-R) d+=2*R; return d;}
 /* ---------- the state of the camera ---------- */
 const C={on:true,yaw:R,pitch:-0.2,zoom:1,dist:3.4,look:-10,lockT:0,back:false,was:false,pos:new THREE.Vector3(),fov:52,shake:0,snap:true};
 const FOOT=[2.3,3.4,5.2], CAR=[5.4,7.0,9.4];      // near, middle, far
-const pv=new THREE.Vector3(), want=new THREE.Vector3(), lookAt=new THREE.Vector3(), dir=new THREE.Vector3();
+const pv=new THREE.Vector3(), want=new THREE.Vector3(), lookAt=new THREE.Vector3(), dir=new THREE.Vector3(), dir2=new THREE.Vector3(), tw=new THREE.Vector3();
 function active(){return !!(A.simsOn&&SM.player&&SM.camMode==='follow'&&C.on);}
 A.gtaCam=active;
 function outdoors(){const p=SM.player; return !!(p&&!p.lvl&&(p.room==='street'||p.room==='out'||p.room==='town'));}      // the neighbours' flats and the landings are marked ext too, for their light; they are indoors
@@ -28,9 +28,12 @@ const LINKS=[['lk','hall','entrance'],['lk','bed1','bed1'],['lk','bed2','bed2'],
 let nodes={};
 function blocked(x,z,y,lvl,out){
   if(out){const T=A.town; return !!(T&&T.inBuilding&&T.inBuilding(x,z,0.35));}
+  let inR=false;
   for(const k in A.rooms){const rm=A.rooms[k]; if((rm.lvl||0)!==lvl||!nodes[rm.node||k]) continue; const rs=rm.rs;
-    for(let i=0;i<rs.length;i++){const q=rs[i]; if(x>q[0]-0.12&&x<q[1]+0.12&&z>q[2]-0.12&&z<q[3]+0.12) return false;}}
-  return true;
+    for(let i=0;i<rs.length&&!inR;i++){const q=rs[i]; if(x>q[0]-0.12&&x<q[1]+0.12&&z>q[2]-0.12&&z<q[3]+0.12) inR=true;}}
+  if(!inR) return true;
+  if(nodes.hall&&!nodes.lk) return !SM.onLevel(lvl,function(){return SM.isFree(x,z);});      // the lobby and the landings: their pillars and stair walls too
+  return false;
 }
 function collide(from,to,lvl,out){      // walk out from the pivot toward where the camera wants to be; stop short of the first thing in the way
   const d=from.distanceTo(to), n=Math.max(2,Math.ceil(d/0.18)); let k=1;
@@ -96,6 +99,14 @@ function jumpStep(dt){const p=SM.player; if(!J.on||!p) {if(p) p.p.air=Math.max(0
   p.p.g.position.y+=J.y;}
 A.gtaJump={get y(){return J.y;},get on(){return J.on;}};
 
+/* ---------- stairs: walk into a flight and you go up or down it, as in GTA (the bar by the stairs still offers it too) ---------- */
+let stairT=0;
+function stairs(){const p=SM.player; if(!p||!p.manual||p.script||p.seat||p.driving||!A.stairsPath||!A.goStairs||!A.levels||A.t<stairT) return; const L=p.lvl||0;
+  for(let dir=1;dir>=-1;dir-=2){const to=L+dir; if(!A.levels[to]) continue; const pts=A.stairsPath(L,to); if(!pts||pts.length<2) continue;
+    const s=pts[0], n=pts[1], d=Math.hypot(p.x-s[0],p.z-s[2]); if(d>0.75) continue;
+    if(Math.abs(wrap(p.h-Math.atan2(n[0]-s[0],n[2]-s[2])))>0.9) continue;      // facing up (or down) the flight
+    stairT=A.t+2; A.goStairs(dir); const cb=p.cb; p.path=[]; p.cb=null; if(cb) cb(); return;}}      // you are already at its foot: straight onto the steps (holding a key would cancel the walk there)
+
 /* ---------- how fast you go: a stroll, or Shift to run; the flat is too small to run flat out ---------- */
 A.walkSpeed=function(run){const out=outdoors(); return run?(out?5.6:3.1):(out?1.65:1.45);};
 
@@ -103,7 +114,7 @@ A.walkSpeed=function(run){const out=outdoors(); return run?(out?5.6:3.1):(out?1.
 const UP=new THREE.Vector3(0,1,0);
 function frame(dt){
   const on=active();
-  if(!on){if(hid.length) unhide(); if(C.was){C.was=false; ctl.enabled=true; if(locked()) document.exitPointerLock(); if(SM.camMode!=='eye'){cam.fov=40; cam.updateProjectionMatrix();}} return;}
+  if(!on){if(hid.length) unhide(); if(C.headHid&&SM.player&&SM.camMode!=='eye'){C.headHid=false; SM.player.p.hideHead(false);} if(C.was){C.was=false; ctl.enabled=true; if(locked()) document.exitPointerLock(); if(SM.camMode!=='eye'){cam.fov=40; cam.updateProjectionMatrix();}} return;}
   if(!C.was){C.was=true; C.snap=true; const p=SM.player; C.yaw=(car()?A.drive.heading():p.h); C.pitch=outdoors()||car()?-0.2:-0.4;}
   ctl.enabled=false; if(A.flying()) A.stopFly();
   const p=SM.player, c=car(), out=c?true:outdoors(), lvl=p.lvl||0, ls=A.sticks&&A.sticks.look;
@@ -120,17 +131,22 @@ function frame(dt){
   C.dist+=(base-C.dist)*Math.min(1,dt*4);
   dir.set(Math.sin(C.yaw)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(C.yaw)*Math.cos(C.pitch));
   want.copy(pv).addScaledVector(dir,-C.dist);
-  if(!out){const top=(lvl&&A.levels&&A.levels[lvl]?A.levels[lvl].y:0)+A.D.H-0.18; if(want.y>top) want.y=top;}
+  const lvT=p.script?Math.max(lvl,p.script.lvl):lvl;      // on the stairs: the ceiling of the floor you are going to, if it is higher
+  if(!out){const top=(lvT&&A.levels&&A.levels[lvT]?A.levels[lvT].y:0)+A.D.H-0.18; if(want.y>top) want.y=top;}
   const gy=(SM.ground?SM.ground(want.x,want.z):0)+0.35; if(out&&want.y<gy) want.y=gy;
   const rm=A.rooms[p.room], nd=rm?(rm.node||p.room):null; nodes={}; nodes[nd]=1;
   if(!lvl) LINKS.forEach(function(l){const d=A.door(l[2]); if(!d||d.cur<0.35) return; if(l[0]===nd) nodes[l[1]]=1; else if(l[1]===nd) nodes[l[0]]=1;});
-  const k=collide(pv,want,lvl,out); want.lerpVectors(pv,want,Math.max(k,0.08));
-  const hd=Math.hypot(want.x-pv.x,want.z-pv.z); if(!c&&hd<1.4){want.y+=Math.min(0.55,(1.4-hd)*0.6); if(!out){const top=(lvl&&A.levels&&A.levels[lvl]?A.levels[lvl].y:0)+A.D.H-0.12; if(want.y>top) want.y=top;}}      // squeezed against a wall: up, to look down over your head
+  const k=p.script?1:collide(pv,want,lvl,out); want.lerpVectors(pv,want,Math.max(k,0.08));      // in the stairwell, between floors, it keeps its distance
+  /* boxed in, and you are not turning it yourself: it swings round to where there is room, as GTA's does */
+  if(!c&&!out&&k<0.45&&idle>0.8&&!p.script){let best=0, bk=k; [0.7,-0.7,1.4,-1.4,2.1,-2.1,R].forEach(function(o){const y=C.yaw+o; dir2.set(Math.sin(y)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(y)*Math.cos(C.pitch)); tw.copy(pv).addScaledVector(dir2,-C.dist); const kk=collide(pv,tw,lvl,out); if(kk>bk+0.15){bk=kk; best=o;}});
+    if(best) C.yaw+=wrap(best)*Math.min(1,dt*2.5);}
+  const hd=Math.hypot(want.x-pv.x,want.z-pv.z); if(!c&&hd<1.4){want.y+=Math.min(0.55,(1.4-hd)*0.6); if(!out){const top=(lvT&&A.levels&&A.levels[lvT]?A.levels[lvT].y:0)+A.D.H-0.12; if(want.y>top) want.y=top;}}      // squeezed against a wall: up, to look down over your head
   /* glide there; pulled in by a wall, at once */
   const d0=C.pos.distanceTo(pv), d1=want.distanceTo(pv);
   if(C.snap||C.pos.distanceTo(want)>12){C.pos.copy(want); C.snap=false;}
   else C.pos.lerp(want,d1<d0-0.05?Math.min(1,dt*20):Math.min(1,dt*(c?9:14)));
   cam.position.copy(C.pos); if(!out) seeThrough(lvl); else if(hid.length) unhide();
+  const close=!c&&C.pos.distanceTo(pv)<0.55; if(close!==C.headHid){C.headHid=close; p.p.hideHead(close);}      // right at your head: it is not drawn
   if(C.shake>0){cam.position.x+=(Math.random()-0.5)*C.shake; cam.position.y+=(Math.random()-0.5)*C.shake; C.shake=Math.max(0,C.shake-dt*1.2);}
   lookAt.copy(pv); if(c){const f=c.fwd(); lookAt.x+=f[0]*2.2; lookAt.z+=f[1]*2.2;}
   cam.up.copy(UP); cam.lookAt(lookAt); ctl.target.copy(pv);
@@ -184,7 +200,7 @@ A.gtaCar=carKey;
 
 let camKey='';
 A.frameFns.push(function(dt){
-  jumpStep(dt); frame(dt);
+  jumpStep(dt); stairs(); frame(dt);
   const ck=A.simsOn+SM.camMode+C.on; if(ck!==camKey){camKey=ck; pressCams();}
   const show=A.simsOn&&TOUCH&&!!SM.player; if(pad.hidden===show) pad.hidden=!show;
   if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bRadio.hidden=!c; bCar.classList.toggle('on',c);}

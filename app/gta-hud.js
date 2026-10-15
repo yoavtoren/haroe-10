@@ -73,9 +73,10 @@ function cash(dt){const G=A.floors&&A.floors.G, v=G?G.loot:0;
   const ck=A.gtaClock?A.gtaClock():''; if($('gClock').textContent!==ck) $('gClock').textContent=ck;}
 /* ---------- the street you are on, the car you got into ---------- */
 let street='', streetT=0, carWas=null, carT=0;
+const FLOOR={'-1':'The shelter',1:'First floor',2:'Second floor',3:'Third floor'};      // as floors.js names them
 function area(dt){const p=SM.player, c=A.drive&&A.drive.on()?A.drive.pos():null, x=c?c.x:p.x, z=c?c.z:p.z;
   let nm='';
-  if(p.lvl) nm=p.lvl>0?'Haroe 10, floor '+(p.lvl+1):'Haroe 10, the shelter';
+  if(p.lvl) nm=FLOOR[p.lvl]?'Haroe 10, '+FLOOR[p.lvl].toLowerCase():'Haroe 10';
   else{const rm=A.rooms[p.room]; if(rm&&!rm.ext&&!c) nm='Haroe 10'; else if(p.room==='hall') nm='Haroe 10'; else{const q=T.roadNear(x,z); if(q&&q.d<8&&q.r.name) nm=q.r.name; else if(!T.inside(x,z)||T.kept(x,z)) nm='Haroe St';}}
   if(nm&&nm!==street){street=nm; streetT=4.5; $('gStreet').textContent=nm; $('gTown').textContent='Ramat Gan';}
   streetT=Math.max(0,streetT-dt); $('gArea').style.opacity=streetT>0?Math.min(1,streetT,(4.5-streetT)*3):0;
@@ -103,7 +104,7 @@ A.frameFns.push(function(dt){
   if(!o) return;
   rt+=dt; if(rt>(TOUCH?0.07:0.034)){rt=0; radar();}
   bars(dt); stars(); cash(dt); area(dt); help(); deaths();
-  $('gFloor').hidden=!SM.player.lvl; if(SM.player.lvl) $('gFloor').textContent=SM.player.lvl>0?'Floor '+(SM.player.lvl+1):'Shelter';
+  $('gFloor').hidden=!SM.player.lvl; if(SM.player.lvl) $('gFloor').textContent=FLOOR[SM.player.lvl]||'';
 });
 $('gRadar').addEventListener('click',function(){if(A.gtaMap) A.gtaMap.open(true);});
 /* M opens the pause map; the round map's own M is set aside while this display is on */
