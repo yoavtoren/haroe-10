@@ -53,15 +53,19 @@ function busModel(col){const P=det.P, g=P.grp(), L=11.8, W=2.5, Hb=3.05, M=det.m
   [-1,1].forEach(function(s){P.box(0.05,0.15,0.3,lampH,L/2+0.03,0.75,s*(W/2-0.3),g); P.box(0.05,0.2,0.24,lampT,-L/2-0.03,0.85,s*(W/2-0.25),g); P.box(0.3,0.18,0.04,0x1d1f21,L/2-0.3,2.3,s*(W/2+0.15),g);
     [L/2-2.5,-L/2+3.1].forEach(function(x){const w=det.wheel(g,0.5,0.3,{style:'car',rim:0xb9bdc0}); w.position.set(x,0.5,s*(W/2-0.2)); w.rotation.order='YXZ'; w.rotation.y=R/2; w.userData.wheel=0.5;});});
   return g;}
-function model(kind,col,cop){const k=kind+'|'+col+(cop?'|cop':'');
+/* a taxi's yellow roof sign, lit at night */
+let taxiM=null;
+function taxiSign(){if(taxiM) return taxiM; const t=det.tex(128,48,function(c){c.fillStyle='#f2c81e'; c.fillRect(0,0,128,48); c.fillStyle='#1d1d1d'; c.font='bold 26px sans-serif'; c.textAlign='center'; c.fillText('מונית',64,33);},false); taxiM=det.mat(t); A.lit('L:street',taxiM,0xffd84a,0.35); return taxiM;}
+function model(kind,col,cop,taxi){const k=kind+'|'+col+(cop?'|cop':'')+(taxi?'|taxi':'');
   if(!built[k]&&kind==='bus'){const g=det.solid(busModel(col),'street'); delete g.userData.wheels; built[k]=g;}
   if(!built[k]){const g0=det.car(kind,{color:col,plate:String(11+(plateN*37)%88)+'-'+String(100+(plateN*53)%899)+'-'+String(10+(plateN*7)%89),lamp:lampH,tail:lampT}); plateN++;
     if(cop){const P=det.P; P.box(0.9,0.12,1.2,0x1d1f22,-0.3,DIM[kind][0]>4.5?1.53:1.55,0,g0); P.box(0.36,0.1,0.5,copBlue,-0.3,1.66,-0.3,g0); P.box(0.36,0.1,0.5,copRed,-0.3,1.66,0.3,g0);
       P.box(2.2,0.18,0.012,0x2a5ad8,0.1,0.72,DIM[kind][1]/2+0.01,g0); P.box(2.2,0.18,0.012,0x2a5ad8,0.1,0.72,-DIM[kind][1]/2-0.01,g0);}
+    if(taxi) det.P.box(0.62,0.18,0.26,taxiSign(),-0.2,1.6,0,g0);
     const g=det.solid(g0,'street'); delete g.userData.wheels; if(A.gtaPaint) A.gtaPaint(g,col); built[k]=g;}      // a clear coat on the paint and the glass (gta-fx.js)
   const g=built[k].clone(); g.traverse(function(m){m.layers.set(OUT());}); return g;}
 function Car(o){
-  this.kind=o.kind; this.col=o.col; this.g=model(o.kind,o.col,o.cop); this.dim=DIM[o.kind]||DIM.hatch; this.name=o.cop?'Police car':NAME[o.kind]||'Car';
+  this.kind=o.kind; this.col=o.col; this.g=model(o.kind,o.col,o.cop,o.taxi); this.dim=DIM[o.kind]||DIM.hatch; this.name=o.cop?'Police car':o.taxi?'Taxi':NAME[o.kind]||'Car'; this.taxi=!!o.taxi;
   this.wheels=this.g.children.filter(function(c){return c.userData.wheel!=null;});
   this.x=o.x; this.z=o.z; this.psi=o.psi; this.v=0; this.steer=0; this.pk=o.pk||null; this.traffic=null; this.moved=false; this.cop=!!o.cop; this.spin=0; this.alarm=0;
   this.roll=0; this.pitch=0; this.hp=100; this.g.rotation.order='YXZ';
@@ -219,7 +223,7 @@ function spawnTraffic(px,pz){const wantBus=!traffic.some(function(o){return o.bu
     const t={rd:rd,j:j,s:Math.random()*l,dir:Math.random()<0.5?1:-1,wait:0,stop:0,cruise:rd.k===2?6.5:9.5}; const q=segPos(t), d=Math.hypot(q.x-px,q.z-pz);
     if(d<70||d>190||T.kept(q.x,q.z)||nearHome(q.x,q.z)||!A.nav.isFree(q.x,q.z)) continue;
     if(traffic.some(function(o){return Math.hypot(o.car.x-q.x,o.car.z-q.z)<15;})) continue;
-    const bus=rd.k!==2&&wantBus, kinds=['hatch','sedan','hatch','suv','mini','van','sedan'], c=new Car({kind:bus?'bus':kinds[Math.floor(Math.random()*kinds.length)],col:bus?0xf2f2ee:COLS[Math.floor(Math.random()*COLS.length)],x:q.x,z:q.z,psi:q.h-R/2});
+    const bus=rd.k!==2&&wantBus, taxi=!bus&&Math.random()<0.16, kinds=['hatch','sedan','hatch','suv','mini','van','sedan'], c=new Car({kind:bus?'bus':taxi?'sedan':kinds[Math.floor(Math.random()*kinds.length)],col:bus||taxi?0xf2f2ee:COLS[Math.floor(Math.random()*COLS.length)],taxi:taxi,x:q.x,z:q.z,psi:q.h-R/2});      /* now and then a taxi, white with its yellow sign */
     if(bus){t.bus=true; t.cruise=7.5;} c.traffic=t; t.car=c; c.v=t.cruise*0.6; traffic.push(t); return t;}
   return null;}
 /* at the end of a stretch: on along the same street, or round the corner onto another */
