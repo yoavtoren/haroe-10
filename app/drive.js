@@ -188,7 +188,8 @@ function drive(c,dt){
     if(Math.abs(c.v)>2.5&&A.t>hitCool){crash(Math.abs(c.v)); hitCool=A.t+0.6; shake=Math.min(0.5,Math.abs(c.v)*0.03); if(other){other.alarm=A.t+6; if(other.traffic) other.traffic.angry=A.t+3; other.hp-=Math.min(35,Math.abs(c.v)*1.4);}
       if(Math.abs(c.v)>4) c.hp=Math.max(0,c.hp-Math.min(40,Math.abs(c.v)*1.5));}      // a knock costs the car; enough of them and it smokes, then dies
     if(outlineFree(c,c.x,c.z,npsi)) c.psi=npsi;      // turning on the spot still works against a wall
-    c.v=-c.v*0.2; c.vdir=c.psi;
+    const f0=c.fwd(), sd=other?Math.sign((other.x-c.x)*f0[1]-(other.z-c.z)*f0[0]||1):Math.sign(c.steer||1); if(outlineFree(c,c.x,c.z,c.psi-sd*Math.min(0.14,Math.abs(c.v)*0.012))) c.psi-=sd*Math.min(0.14,Math.abs(c.v)*0.012);      /* a knock on one side turns the nose away from it, as a crash does */
+    c.v=-c.v*0.3; c.vdir=c.psi;
   }else{c.x=nx; c.z=nz; c.psi=npsi;}
   const lat=yaw*c.v, lon=(c.v-v0)/Math.max(dt,1e-3);
   c.roll+=(Math.max(-0.07,Math.min(0.07,lat*0.0045))-c.roll)*Math.min(1,dt*5); c.pitch+=(Math.max(-0.045,Math.min(0.045,lon*0.0045))-c.pitch)*Math.min(1,dt*5);
