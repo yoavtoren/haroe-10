@@ -38,7 +38,7 @@ function cars(dt){const me=D.on()?D.pos():null, p=SM.player; pt+=dt; const tick=
   if(!tick) return;
   D.live.forEach(function(c){if(c.hp==null||c.hp>=45) return; if(Math.hypot(c.x-p.x,c.z-p.z)>70) return;
     const f=c.fwd(), x=c.x+f[0]*(c.dim[0]/2-0.7), z=c.z+f[1]*(c.dim[0]/2-0.7), y=c.g.position.y+1.0, k=c.hp<20?1:0;
-    if(Math.random()<(k?0.9:0.5)) puff(x+(Math.random()-0.5)*0.3,y,z+(Math.random()-0.5)*0.3,k?0x222222:0x8a8a8a,k?2.2:1.8,0.4,k?2.4:1.8,k?0.55:0.35,1.1+Math.random()*0.5);
+    if(Math.random()<(k?0.9:0.5)) puff(x+(Math.random()-0.5)*0.3,y,z+(Math.random()-0.5)*0.3,k?0x222222:0x8a8a8a,k?2.6:2.0,0.45,k?3.4:2.3,k?0.7:0.42,1.1+Math.random()*0.5);
     if(c.hp<=10&&!c.blown&&Math.random()<0.8) puff(x,y-0.15,z,Math.random()<0.5?0xff8a1a:0xffc23a,0.45,0.35,0.9,0.85,1.6,true);      // and flames when it is done for
     if(c.hp<=0&&!c.blown){c.deadT=(c.deadT||0)+0.05; if(c.deadT>5) explode(c);}});}      // which burns a while, and then goes up
 /* ---------- the blast, as GTA's: a fireball and black smoke, a bang that shakes the view, and whoever is near is thrown; the wreck is black ---------- */

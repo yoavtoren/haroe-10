@@ -26,12 +26,13 @@ function car(){return A.drive&&A.drive.on&&A.drive.on()?A.drive.pos():(A.gtaTaxi
    through a door standing open */
 const LINKS=[['lk','hall','entrance'],['lk','bed1','bed1'],['lk','bed2','bed2'],['lk','wc','wc'],['lk','bath','bath']];
 let nodes={};
+const HT={bus:3.2,van:2.15,suv:1.95,sedan:1.5,hatch:1.55,mini:1.5};      // how high each kind of car stands
 function blocked(x,z,y,lvl,out,walls){
   if(out){const T=A.town; if(T&&T.inBuilding&&T.inBuilding(x,z,0.35)) return true;
     if(walls) return false;
     const OB=T&&T.obstacles, gy0=(SM.ground?SM.ground(x,z):0);
     if(OB&&OB.grid&&y-gy0<2.7){const g=OB.G, i0=Math.floor(x/g), k0=Math.floor(z/g); for(let i=i0-1;i<=i0+1;i++) for(let k=k0-1;k<=k0+1;k++){const l=OB.grid.get(i+','+k); if(l) for(let n=0;n<l.length;n++){const o=l[n]; if(o.off||o[2]<0.45||y-gy0>(o[2]>=1?2.7:1.85)) continue; if(Math.hypot(o[0]-x,o[1]-z)<o[2]+0.15) return true;}}}      /* low, it keeps out of the bottle cages, benches, shelters and crates (thin poles it ignores) */
-    if(A.drive&&A.drive.live){const me=car(), gy=gy0; if(y-gy<1.75){const L=A.drive.live; for(let i=0;i<L.length;i++){const k=L[i]; if(k===me||Math.abs(k.x-x)>4||Math.abs(k.z-z)>4) continue; const cs=k.circles(); for(let j=0;j<cs.length;j++) if(Math.hypot(cs[j][0]-x,cs[j][1]-z)<cs[j][2]+0.25) return true;}}}      /* low enough to be in a car's way */
+    if(A.drive&&A.drive.live){const me=car(), gy=gy0; if(y-gy<3.5){const L=A.drive.live; for(let i=0;i<L.length;i++){const k=L[i]; if(k===me||Math.abs(k.x-x)>6||Math.abs(k.z-z)>6||y-gy>(HT[k.kind]||1.6)+0.25) continue; const cs=k.circles(); for(let j=0;j<cs.length;j++) if(Math.hypot(cs[j][0]-x,cs[j][1]-z)<cs[j][2]+0.25) return true;}}}      /* low enough to be in a car's way: a van's roof is higher than a hatchback's */
     return false;}
   let inR=false;
   for(const k in A.rooms){const rm=A.rooms[k]; if((rm.lvl||0)!==lvl||!nodes[rm.node||k]) continue; const rs=rm.rs;
@@ -164,6 +165,7 @@ function frame(dt){
   if(!lvl) LINKS.forEach(function(l){const d=A.door(l[2]); if(!d||d.cur<0.35) return; if(l[0]===nd) nodes[l[1]]=1; else if(l[1]===nd) nodes[l[0]]=1;});
   let k=p.script?1:collide(pv,want,lvl,out);
   if(out&&!c&&!aim&&k<0.97){const kw=collide(pv,want,lvl,out,true); if(kw>k+0.1) for(let i=1;i<=5;i++){tw.copy(want); tw.y+=i*0.3; const kk=collide(pv,tw,lvl,out); if(kk>=kw-0.03){want.y=tw.y; k=kk; break;}}}      // a bench, a parked car, the bottle cage: up over it, not in against your head
+  if(c&&!p.script){const minD=c.dim[0]/2+1.3; if(k*C.dist<minD){const kk=Math.min(1,minD/C.dist); tw.copy(pv); tw.y+=1.7; tw.addScaledVector(dir,-C.dist); if(collide(pv,tw,lvl,out)>=kk){want.copy(tw); k=Math.max(k,kk);} else k=kk;}}      /* never inside the car you are in, as GTA's never is: it rises over what is behind, or stops at the bumper */
   want.lerpVectors(pv,want,Math.max(k,0.08));      // in the stairwell, between floors, it keeps its distance
   /* boxed in, and you are not turning it yourself: it swings round to where there is room, as GTA's does */
   if(!c&&k<0.45&&idle>0.8&&!p.script&&!aim){let best=0, bk=k; [0.7,-0.7,1.4,-1.4,2.1,-2.1,R].forEach(function(o){const y=C.yaw+o; dir2.set(Math.sin(y)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(y)*Math.cos(C.pitch)); tw.copy(pv).addScaledVector(dir2,-C.dist); const kk=collide(pv,tw,lvl,out); if(kk>bk+0.15){bk=kk; best=o;}});

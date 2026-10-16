@@ -84,6 +84,7 @@ function area(dt){const p=SM.player, taxi=A.gtaTaxi?A.gtaTaxi.car():null, c=A.dr
   if(nm&&nm!==street){street=nm; streetT=4.5; $('gStreet').textContent=nm; $('gTown').textContent='Ramat Gan';}
   streetT=Math.max(0,streetT-dt); $('gArea').style.opacity=streetT>0?Math.min(1,streetT,(4.5-streetT)*3):0;
   if(c!==carWas){carWas=c; if(c){carT=3.4; $('gCarName').textContent=c.name; if(A.gtaStats&&c!==taxi) A.gtaStats.cars++;}}
+  if(taxi&&A.gtaTaxi.state){const st=A.gtaTaxi.state(); if(st&&st.route){let left=hyp(st.route[0][0]-taxi.x,st.route[0][1]-taxi.z); for(let i=1;i<st.route.length;i++) left+=hyp(st.route[i][0]-st.route[i-1][0],st.route[i][1]-st.route[i-1][1]); $('gCarName').textContent='Taxi · ₪ '+st.fare+' · '+Math.round(left)+' m'; carT=Math.max(carT,1);}}      /* the meter, as GTA's cab shows it */
   carT=Math.max(0,carT-dt); $('gCarName').style.opacity=carT>0?Math.min(1,carT,(3.4-carT)*3):0;}
 /* ---------- a word in the corner: what a key does here ---------- */
 let helpKey='';
@@ -146,7 +147,7 @@ function passed(name,reward,title){if(!on()) return; const el=$('gPass'); el.fir
   if(reward&&A.floors&&A.floors.G){A.floors.G.loot+=reward;} if(A.gtaSound&&A.gtaSound.passed) A.gtaSound.passed();}
 /* wasted out in the streets: you come to outside the clinic, and pay for it */
 A.gtaRespawn=function(out){if(!out||!T) return false; const cl=(A.gtaPOI||[]).find(function(q){return q.k==='clinic';}); if(!cl) return false; const q=T.nearest(cl.x,cl.z); if(!q) return false;
-  const p=SM.player; p.lvl=0; p.x=p.lx=q[0]; p.z=p.lz=q[1]; p.h=p.hT=Math.atan2(cl.x-q[0],cl.z-q[1]); p.room='street';      /* facing the clinic, the camera behind you in the street */ if(SM.flyToPlayer) SM.flyToPlayer();
+  const p=SM.player; p.lvl=0; p.x=p.lx=q[0]; p.z=p.lz=q[1]; p.h=p.hT=Math.atan2(q[0]-cl.x,q[1]-cl.z); p.room='street';      /* on the pavement facing the street, the camera behind you */ if(SM.flyToPlayer) SM.flyToPlayer();
   const F=A.floors&&A.floors.G, bill=F?Math.min(F.loot,300):0; if(F){F.loot-=bill; F.wanted=0; if(A.floors.drawHud) A.floors.drawHud();}
   SM.toast('You come to outside the Maccabi clinic.'+(bill?' The bill: ₪ '+bill+'.':'')); return true;};
 A.gtaHud={on:on,big:bigShow,passed:passed};

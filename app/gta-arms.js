@@ -27,8 +27,9 @@ function kit(){const p=SM.player; if(!p) return null; if(held&&held.p===p.p) ret
   const bat=new THREE.Group(); bat.position.set(0,-0.3,0.02); P.hand.add(bat);
   const wood=mk(0xb9844a,0.5), grip=mk(0x1d1f22,0.8); const b1=new THREE.Mesh(new THREE.CylinderGeometry(0.036,0.016,0.72,12),wood); b1.position.y=-0.38; bat.add(b1); const b2=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.16,10),grip); b2.position.y=0.04; bat.add(b2);
   const gun=new THREE.Group(); gun.position.set(0,-0.31,0.03); P.hand.add(gun); const gm=mk(0x161718,0.4);
-  const gb=new THREE.Mesh(new THREE.BoxGeometry(0.032,0.17,0.04),gm); gb.position.y=-0.04; gun.add(gb); const gg=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.04,0.09),gm); gg.position.set(0,0.03,-0.03); gun.add(gg);
-  const muzzle=new THREE.Object3D(); muzzle.position.set(0,-0.14,0); gun.add(muzzle);
+  const gb=new THREE.Mesh(new THREE.BoxGeometry(0.036,0.2,0.046),gm); gb.position.y=-0.05; gun.add(gb); const gs=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.2,0.02),mk(0x3a3d42,0.35)); gs.position.set(0,-0.05,-0.03); gun.add(gs);      // the slide, a shade lighter, so the gun reads
+  const gg=new THREE.Mesh(new THREE.BoxGeometry(0.034,0.05,0.11),mk(0x2a2420,0.8)); gg.position.set(0,0.035,-0.035); gun.add(gg); const tg=new THREE.Mesh(new THREE.TorusGeometry(0.022,0.004,6,12,R),gm); tg.position.set(0,0.0,0.025); tg.rotation.y=R/2; gun.add(tg);      // the grip and the trigger guard
+  gun.scale.setScalar(1.25); const muzzle=new THREE.Object3D(); muzzle.position.set(0,-0.15,0); gun.add(muzzle);
   bat.visible=gun.visible=false; P.dirty=true; held={p:P,bat:bat,gun:gun,muzzle:muzzle}; return held;}
 function show(){const k=kit(); if(!k) return; k.bat.visible=W.cur==='bat'; k.gun.visible=W.cur==='pistol';}
 function cycle(d){let i=ORDER.indexOf(W.cur); for(let n=0;n<3;n++){i=(i+(d||1)+3)%3; if(W.has[ORDER[i]]) break;} W.cur=ORDER[i]; show(); hud(true); if(A.gtaSound) A.gtaSound.blip();}
@@ -99,7 +100,7 @@ function fire(){const p=SM.player, k=kit(); if(!k||W.cur!=='pistol'||A.t<W.next|
   if(A.gtaSound&&A.gtaSound.shot) A.gtaSound.shot(p.x,p.z,true); if(A.gtaShake) A.gtaShake(0.04);
   if(A.gtaPanic) A.gtaPanic(p.x,p.z,40,2);
   if(t) hitBy(t,'bullet');
-  crime(t,3);}
+  crime(t,t&&t.sub==='cop'?3:t?2:1);}      /* as GTA V counts it: a shot one star, a hit two, a shot at the police three (and one more each time they see you again) */
 /* a hit with a bullet or the bat: down for a good while */
 function hitBy(t,how){const s=A.game.state(t); if(s.down) return; s.hp-=how==='bullet'?75:0; t.p.act='hurt';
   if(A.game.say) A.game.say(t,rnd(['Aaargh!','I am hit!','Ahh!']));

@@ -269,9 +269,10 @@ function sight(dt){const m=me(), hidden=!outside();
     if(heli&&G.wanted>=4&&hyp(heli.x-m.x,heli.z-m.z)<65) seen=true;}
   if(A.t<Z.grace&&!hidden) seen=true;
   const p=SM.player; (G.cops||[]).forEach(function(c){if(!c.gone&&c.lvl===p.lvl&&hyp(c.x-p.x,c.z-p.z)<14) seen=true;});      // the officers on the stairs (floors.js) see you too
-  Z.seen=seen;
-  if(seen){Z.x=m.x; Z.z=m.z; Z.t=A.t; Z.lose=0;}
-  else if(!hidden){const r=radius(); if(hyp(m.x-Z.x,m.z-Z.z)>r){Z.lose+=dt; if(Z.lose>6) lost();} else Z.lose=Math.max(0,Z.lose-dt*0.3);}}
+  Z.seen=seen; const vx=Z.lx==null?0:(m.x-Z.lx)/Math.max(dt,1e-3), vz=Z.lz==null?0:(m.z-Z.lz)/Math.max(dt,1e-3); Z.lx=m.x; Z.lz=m.z;
+  if(seen){Z.x=m.x; Z.z=m.z; Z.t=A.t; Z.lose=0; Z.vx=clamp((Z.vx||0)+(vx-(Z.vx||0))*Math.min(1,dt*3),-14,14); Z.vz=clamp((Z.vz||0)+(vz-(Z.vz||0))*Math.min(1,dt*3),-14,14);}      // which way you were going, for the search
+  else{Z.x+=(Z.vx||0)*dt; Z.z+=(Z.vz||0)*dt; Z.vx=(Z.vx||0)*Math.exp(-0.25*dt); Z.vz=(Z.vz||0)*Math.exp(-0.25*dt);      /* unseen, the circle drifts on the way you went, as GTA V's does, and slows */
+    if(!hidden){const r=radius(); if(hyp(m.x-Z.x,m.z-Z.z)>r){Z.lose+=dt; if(Z.lose>12+8*G.wanted) lost();} else Z.lose=Math.max(0,Z.lose-dt*0.3);}}}
 /* they see ahead of them, as GTA's police do (the cones on the radar): this far, this wide either side, and all round this close.
    Once one has seen you he keeps you in his eye a moment, though he turns a corner after you */
 const CONE={foot:[42,0.96,7],car:[55,1.13,10]};
