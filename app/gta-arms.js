@@ -63,7 +63,7 @@ function take(p){const S=SM.toast; p.back=A.t+(p.once?1e9:120); p.g.visible=fals
   else{if(A.game.G){A.game.G.hp=100;} S&&S('First aid. Health restored.');}
   if(p.kind==='cash') return;      /* the display rings for the money itself (gta-hud.js) */
   show(); hud(true); if(A.gtaSound) A.gtaSound.cash();}
-function pickups(dt){const p=SM.player; if(!p) return; const me=A.drive&&A.drive.on()?null:p;
+function pickups(dt){const p=SM.player; if(!p) return; const me=(A.drive&&A.drive.on())||(A.gtaTaxi&&A.gtaTaxi.car())?null:p;      /* not from a car, nor from the taxi you ride in */
   PU.forEach(function(q){if(!q.g.visible){if(A.t>q.back){q.g.visible=true;} return;} q.g.rotation.y+=dt*1.8; q.g.position.y=q.y+Math.sin(A.t*2.4+q.x)*0.08;
     if(me&&!p.lvl&&hyp(q.x-p.x,q.z-p.z)<1.1) take(q);});
   for(let i=PU.length-1;i>=0;i--){const q=PU[i]; if(q.once&&(!q.g.visible||A.t>q.until)){scene.remove(q.g); q.g.traverse(function(o){if(o.geometry) o.geometry.dispose(); if(o.material&&o.material!==ring) o.material.dispose();}); PU.splice(i,1);}}}      /* taken, or left a minute: gone, and freed */

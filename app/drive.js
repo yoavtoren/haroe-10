@@ -152,7 +152,7 @@ let noDyn=false;
 T.dyn=function(x,z,rad){if(noDyn) return false; for(let i=0;i<live.length;i++){const c=live[i]; if(c===driving||Math.abs(c.x-x)>3.5||Math.abs(c.z-z)>3.5) continue; const cs=c.circles(); for(let k=0;k<3;k++) if(Math.hypot(cs[k][0]-x,cs[k][1]-z)<cs[k][2]+rad) return true;} return false;};
 function hitsCar(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], L=c.dim[0], r=c.dim[1]/2;
   for(let i=0;i<live.length;i++){const o=live[i]; if(o===c) continue; if(Math.hypot(o.x-x,o.z-z)>6) continue; const oc=o.circles();
-    for(let s=-1;s<=1;s++){const px=x+f[0]*s*L/3, pz=z+f[1]*s*L/3; for(let k=0;k<3;k++) if(Math.hypot(oc[k][0]-px,oc[k][1]-pz)<oc[k][2]+r*0.95) return o;}}
+    for(let s=-1;s<=1;s++){const px=x+f[0]*s*L/3, pz=z+f[1]*s*L/3; for(let k=0;k<3;k++) if(Math.hypot(oc[k][0]-px,oc[k][1]-pz)<oc[k][2]+r*0.82) return o;}}      /* a little under the true width: the lane beside the kerb-parked cars is only just wide enough, and a car in it must not be held by them */
   return null;}
 function outlineFree(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], s=[f[1],-f[0]], L=c.dim[0]/2-0.05, W=c.dim[1]/2-0.05;
   const P=[[L,W],[L,-W],[-L,W],[-L,-W],[L,0],[-L,0],[0,W],[0,-W],[L*0.5,W],[L*0.5,-W],[-L*0.5,W],[-L*0.5,-W]];
