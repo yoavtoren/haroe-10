@@ -146,7 +146,7 @@ function inputs(){
   let gas=(keys.w||keys.arrowup)?1:0, brk=(keys.s||keys.arrowdown)?1:0, steer=((keys.a||keys.arrowleft)?1:0)-((keys.d||keys.arrowright)?1:0);
   if(Math.hypot(sx,sy)>0.15){if(sy<-0.15) gas=Math.min(1,-sy*1.2); if(sy>0.15) brk=Math.min(1,sy*1.2); if(Math.abs(sx)>0.12) steer=-sx;}
   return {gas:gas,brk:brk,steer:steer,hand:!!keys[' ']};}
-function blockedAt(x,z){noDyn=true; try{return !A.nav.isFree(x,z);} finally{noDyn=false;}}
+function blockedAt(x,z){noDyn=true; try{if(T.kept(x,z)||!T.inside(x,z)) return !A.nav.isFree(x,z); return !T.free(x,z,0.06);} finally{noDyn=false;}}      /* out in the town, the walking test's margin of a quarter metre would have the lane beside the parked cars too narrow for the car */
 /* the cars as things in the way of whoever walks: the walking map asks */
 let noDyn=false;
 T.dyn=function(x,z,rad){if(noDyn) return false; for(let i=0;i<live.length;i++){const c=live[i]; if(c===driving||Math.abs(c.x-x)>3.5||Math.abs(c.z-z)>3.5) continue; const cs=c.circles(); for(let k=0;k<3;k++) if(Math.hypot(cs[k][0]-x,cs[k][1]-z)<cs[k][2]+rad) return true;} return false;};
