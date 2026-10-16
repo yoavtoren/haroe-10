@@ -117,6 +117,7 @@ cv.addEventListener('mousedown',function(e){if(!A.simsOn||!SM.player||A.paused) 
 window.addEventListener('mouseup',function(e){if(e.button===2) W.aim=false;});
 window.addEventListener('blur',function(){W.aim=false;});
 window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||(e.target.closest&&e.target.closest('#gtaMenu,#modal'))||(e.target.closest&&e.target.closest('#panel')&&!document.body.classList.contains('nomenu'))) return;      /* Tab moves through the side panel only while it is shown */ if(e.key==='Tab'){e.preventDefault(); if(!e.repeat) cycle(e.shiftKey?-1:1);}});
+A.gtaAimSet=function(on){W.aim=!!on&&W.cur==='pistol';}; A.gtaFire=function(){if(A.gtaAiming()&&!A.paused) fire();};      /* for a gamepad (gta.js): the left trigger aims, the right one fires */
 A.gtaAiming=function(){return W.aim&&W.cur==='pistol'&&A.simsOn&&!!SM.player&&!SM.player.driving&&!!(A.gtaCam&&A.gtaCam());};
 
 /* ---------- on screen: the weapon and its rounds, the crosshair ---------- */

@@ -184,6 +184,27 @@ function frame(dt){
   if(Math.abs(cam.fov-C.fov)>0.05||cam.near!==near){cam.fov=C.fov; cam.near=near; cam.updateProjectionMatrix();}
 }
 A.gtaShake=function(s){C.shake=Math.max(C.shake,s);};
+/* a gamepad, as GTA is played: the left stick walks (or steers), the right one looks, the right trigger runs (or is the gas), the left
+   one aims (or is the brake); A jumps, B does what is on offer, X punches or shoots, Y takes a car; the bumpers change the weapon and
+   the station, Start opens the map, Back changes the camera, clicking the sticks sounds the horn and looks back */
+const GP={on:false,held:{},moved:false,was:{}};
+function gpKey(name,code,down){if(!!GP.held[name]===!!down) return; GP.held[name]=down; window.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{key:name,code:code,bubbles:true,cancelable:true}));}
+function gamepad(){const gps=navigator.getGamepads?navigator.getGamepads():null; let g=null; if(gps) for(let i=0;i<gps.length;i++) if(gps[i]&&gps[i].connected){g=gps[i]; break;}
+  const S=A.sticks;
+  if(!g||!A.simsOn||!SM.player){if(GP.on){GP.on=false; for(const k in GP.held) if(GP.held[k]) gpKey(k,'',false); if(GP.moved&&S){S.move.x=S.move.y=0; S.look.x=S.look.y=0; GP.moved=false;} if(A.gtaAimSet) A.gtaAimSet(false);} return;}
+  GP.on=true; const dz=function(v){return Math.abs(v)<0.14?0:v;}, b=function(i){const q=g.buttons[i]; return !!(q&&(q.pressed||q.value>0.5));}, once=function(i){const now=b(i), was=GP.was[i]; GP.was[i]=now; return now&&!was;};
+  const lx=dz(g.axes[0]||0), ly=dz(g.axes[1]||0), rx=dz(g.axes[2]||0), ry=dz(g.axes[3]||0), rt=g.buttons[7]?g.buttons[7].value:0, lt=g.buttons[6]?g.buttons[6].value:0, c=car();
+  if(A.paused) return;
+  if(S){if(c){S.move.x=lx; S.move.y=lt>0.1?lt:-rt; GP.moved=true;}      /* in a car the sticks are drive.js's own: steer, gas and brake */
+    else if(lx||ly){S.move.x=lx; S.move.y=ly; GP.moved=true;} else if(GP.moved){S.move.x=S.move.y=0; GP.moved=false;}
+    S.look.x=rx; S.look.y=ry;}
+  if(c){gpKey(' ','Space',b(0)); gpKey('h','KeyH',b(10)); gpKey('c','KeyC',b(11)); gpKey('f','KeyF',b(3)); if(once(5)) gpKey('q','KeyQ',true), gpKey('q','KeyQ',false);}
+  else{gpKey('shift','ShiftLeft',rt>0.5); gpKey(' ','Space',b(0)); gpKey('e','KeyE',b(1)); gpKey('f','KeyF',b(3));
+    const aim=lt>0.5&&!!A.gtaAimSet; if(aim!==!!GP.aim){GP.aim=aim; if(A.gtaAimSet) A.gtaAimSet(aim);}      /* only as the trigger goes down or up: the mouse's own aim stays */
+    if(aim){if(once(2)&&A.gtaFire) A.gtaFire();} else gpKey('r','KeyR',b(2));
+    if(once(4)){gpKey('tab','Tab',true); gpKey('tab','Tab',false);}}
+  if(once(9)&&A.gtaMap) A.gtaMap.toggle(); if(once(8)) cycle();
+  if(once(12)) gpKey('q','KeyQ',true), gpKey('q','KeyQ',false);}
 /* a door standing open between the camera and you is not drawn while it is in the way */
 const hid=[];
 function unhide(){for(let i=0;i<hid.length;i++) hid[i].visible=true; hid.length=0;}
@@ -227,6 +248,9 @@ function enterNear(){const p=SM.player; if(!A.drive||!p||p.lvl) return false; le
 A.gtaCar=carKey;
 
 let camKey='';
+A.frameFns.push(function(dt){gamepad();});
+(function pausedPoll(){requestAnimationFrame(pausedPoll); if(!A.paused||!GP.on||!navigator.getGamepads) return; const gps=navigator.getGamepads(); let g=null; for(let i=0;gps&&i<gps.length;i++) if(gps[i]&&gps[i].connected){g=gps[i]; break;}
+  if(!g) return; const q=g.buttons[9], now=!!(q&&q.pressed); if(now&&!GP.was[9]&&A.gtaMap) A.gtaMap.toggle(); GP.was[9]=now;})();      /* the frame functions rest while the map is open: Start is watched on its own, to close it */
 A.frameFns.push(function(dt){
   jumpStep(dt); stairs(); frame(dt);
   const ck=A.simsOn+SM.camMode+C.on; if(ck!==camKey){camKey=ck; pressCams();}

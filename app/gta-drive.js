@@ -48,7 +48,7 @@ function explode(c){c.blown=true; const x=c.x, z=c.z, y=c.g.position.y+0.7;
   if(A.gtaShake) A.gtaShake(0.7); if(A.gtaSound&&A.gtaSound.boom) A.gtaSound.boom(x,z); if(A.gtaPanic) A.gtaPanic(x,z,40,2);
   const p=SM.player, me=D.on()?D.pos():null, d=Math.hypot(p.x-x,p.z-z), G=A.game;
   if(me===c){D.exit(true); if(G&&G.hurt) G.hurt(400);}      /* in it: that is the end of you */
-  else if(d<7&&!p.lvl&&G&&G.hurt){G.hurt(Math.round(120*(1-d/7)+20)); if(A.gtaHitFrom) A.gtaHitFrom(x,z);}
+  else if(d<7&&!p.lvl&&(p.room==='street'||p.room==='town'||p.room==='out')&&G&&G.hurt){G.hurt(Math.round(120*(1-d/7)+20)); if(A.gtaHitFrom) A.gtaHitFrom(x,z);}      /* out in the street, not behind the building's walls */
   if(G&&G.all) G.all().forEach(function(t){if(t.kind!=='person'||!t.a||(t.lvl||0)) return; const a=t.a, dd=Math.hypot(a.x-x,a.z-z); if(dd>8||a.gone) return;
     const s=G.state(t); s.hp-=70*(1-dd/9); G.knock(t,6); const ux=(a.x-x)/(dd||1), uz=(a.z-z)/(dd||1); fly.push({a:a,vx:ux*(9-dd),vz:uz*(9-dd),vy:3+(8-dd)*0.5}); a.p.twirl=1;});
   D.live.forEach(function(k){if(k===c||Math.hypot(k.x-x,k.z-z)>6) return; k.hp=Math.max(0,k.hp-55); k.alarm=A.t+6;});      // the cars beside it take it too, and may go up in their turn
