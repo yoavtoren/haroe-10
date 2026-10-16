@@ -113,8 +113,9 @@ let rt=0, was=false;
 const dmg=document.createElement('canvas'); dmg.id='gDmg'; dmg.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; hud.insertBefore(dmg,$('gBig'));
 const hits=[], hv=new THREE.Vector3(), HIT=1.4;
 A.gtaHitFrom=function(x,z){if(!on()) return; hits.push({x:x,z:z,t:A.t}); if(hits.length>4) hits.shift();};
-function marks(){const w=A.stage.clientWidth, h=A.stage.clientHeight, g=dmg.getContext('2d');
+function marks(){const g=dmg.getContext('2d');
   if(!hits.length){if(dmg._on){dmg._on=false; g.clearRect(0,0,dmg.width,dmg.height);} return;}
+  const w=A.stage.clientWidth, h=A.stage.clientHeight;
   if(dmg.width!==Math.round(w*dpr)||dmg.height!==Math.round(h*dpr)){dmg.width=Math.round(w*dpr); dmg.height=Math.round(h*dpr);}
   dmg._on=true; g.clearRect(0,0,dmg.width,dmg.height); const p=SM.player, cam=A.camera;
   hv.set(p.x,p.p.g.position.y+1.0,p.z).project(cam); const cx=(hv.x+1)/2*dmg.width, cy=(1-hv.y)/2*dmg.height, r=Math.min(dmg.width,dmg.height)*0.21;

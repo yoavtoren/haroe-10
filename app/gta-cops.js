@@ -73,6 +73,19 @@ function spawnCar(){const m=me();
   const route=A.gtaRoute(q.x,q.z,m.x,m.z,true), nx=route&&route.length>2?route[2]:[m.x,m.z], h=Math.atan2(nx[0]-q.x,nx[1]-q.z);      // pointing the way the route to you goes
   const c=new D.Car({kind:'sedan',col:0xf2f2ee,cop:true,x:q.x,z:q.z,psi:h-R/2}); c.name='Police car'; c.v=8; strobes(c);
   const u={car:c,inside:2,crew:[],state:'drive',route:route,rt:A.t+1.6,stuck:0,rev:0,ghost:0,born:A.t}; c.unit=u; UNITS.push(u); return u;}
+/* from three stars, driving: a roadblock up the road ahead, as GTA throws them, two cars across it and four officers behind them with their guns up */
+let blockT=8;
+function roadblock(m){const f=m.car.fwd();
+  for(let d=95;d<=150;d+=11){const x=m.x+f[0]*d, z=m.z+f[1]*d, rn=T.roadNear(x,z); if(!rn||rn.d>0||!rn.r.w[0]) continue;      /* up the road you are on, a stretch of it clear of its ends */
+    const a=rn.r.p[rn.j-1], b=rn.r.p[rn.j], dx=b[0]-a[0], dz=b[1]-a[1], l=hyp(dx,dz)||1, t=clamp(((x-a[0])*dx+(z-a[1])*dz)/(l*l),0.15,0.85), qx=a[0]+dx*t, qz=a[1]+dz*t, ux=dx/l, uz=dz/l;
+    if(l<24||Math.abs(ux*f[0]+uz*f[1])<0.8||T.kept(qx,qz)||!A.nav.isFree(qx,qz)) continue;
+    const w=rn.r.w[0], u=[ux,uz], n=[uz,-ux], far=((m.x-qx)*ux+(m.z-qz)*uz)>0?-1:1, sp=Math.min(2.4,w/4+0.6), psi=Math.atan2(ux,uz);
+    [-1,1].forEach(function(s,i){const cx=qx+n[0]*s*sp, cz=qz+n[1]*s*sp, c=new D.Car({kind:'sedan',col:0xf2f2ee,cop:true,x:cx,z:cz,psi:psi+(i?R:0)}); c.name='Police car'; c.v=0; strobes(c);
+      const unit={car:c,inside:0,crew:[],state:'block',route:null,rt:0,stuck:0,rev:0,ghost:0,born:A.t,dir:u,far:far}; c.unit=unit; UNITS.push(unit);
+      [-1,1].forEach(function(k){const ox=cx+u[0]*far*2.6+n[0]*k*0.9, oz=cz+u[1]*far*2.6+n[1]*k*0.9, ok=A.nav.isFree(ox,oz), o2=officer(ok?ox:cx+u[0]*far*2.6,ok?oz:cz+u[1]*far*2.6,Math.atan2(m.x-ox,m.z-oz));
+        const o={a:o2,u:unit,state:'block',next:0,fire:A.t+1.5+Math.random(),shout:A.t+1+Math.random()*2,arrest:0}; unit.crew.push(o); FOOT.push(o); o2.gun.visible=true; o2.p.act='aim';});});
+    return true;}
+  return false;}
 /* the light bar's flashes, and the red and blue they throw on the street round the car */
 const glowT=A.canvasTex(64,64,function(g){const gr=g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.25,'rgba(255,255,255,0.7)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,64,64);});
 const sR=new THREE.SpriteMaterial({map:glowT,color:0xff2a2a,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}), sB=new THREE.SpriteMaterial({map:glowT,color:0x3a6aff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
@@ -115,6 +128,8 @@ function carStep(u,dt){
   if(u.state==='leave'){if(!unstick(u,dt,true)){if(!u.away){const q=A.gtaRoadPoint(c.x,c.z,120,200); u.away=q?[q.x,q.z]:[c.x+80,c.z]; u.route=null;} follow(u,u.away[0],u.away[1],11,dt);}
     if((d>150&&!inView(c.x,c.z))||A.t-u.left>40) dropCar(u); return;}
   if(!wantd){u.state='leave'; u.left=A.t; recall(u); return;}
+  if(u.state==='block'){c.v*=Math.pow(0.05,dt); move(c,dt); const tw=((m.x-c.x)*u.dir[0]+(m.z-c.z)*u.dir[1])*u.far;      /* the roadblock: the cars stay across the road until you are through it, or out of your car near it */
+    if(G.wanted<3||tw>8||(d<30&&!m.car)||A.t-u.born>120){u.state='out'; u.crew.forEach(function(o){if(o.state==='block') o.state='chase';});} return;}
   if(u.fails>6&&d>70&&!inView(c.x,c.z)){dropCar(u); return;}      // hopelessly stuck somewhere out of sight: another car comes instead
   if(u.state==='out'){c.v*=Math.pow(0.05,dt); move(c,dt);      // parked with the doors open; back in when you get away in a car
     if(m.car&&Math.abs(m.car.v)>4&&d>14) recall(u);
@@ -161,6 +176,10 @@ function footStep(o,dt){
   if(!outside()&&!D.on()){a.p.act=null; a.gun.visible=G.wanted>=3; o.arrest=0; o.los=false; if(A.t>o.next){o.next=A.t+2; if(hyp(Z.x-a.x,Z.z-a.z)>3) a.goTo(Z.x+(Math.random()-0.5)*4,Z.z+(Math.random()-0.5)*4);} a.update(dt); return true;}      // you are indoors or upstairs: they wait about where they last saw you
   const d=hyp(m.x-a.x,m.z-a.z);
   if(!G.wanted&&o.state!=='back'&&o.state!=='walk') o.state='back';
+  if(o.state==='block'){if(!o.u||o.u.state!=='block') o.state='chase';      /* at the roadblock: behind the cars, aiming up the road at you */
+    else if(d>2.5&&!(m.car&&Math.abs(m.car.v)<1.5&&d<10)){a.path=[]; a.cb=null; a.hT=Math.atan2(m.x-a.x,m.z-a.z); a.gun.visible=true;
+      if(o.los!==false&&d<48){a.p.act='aim'; if(A.t>o.fire){o.fire=A.t+0.9+Math.random()*0.7; shoot(o);}} else a.p.act=null;
+      if(A.t>o.shout&&d<40){o.shout=A.t+6+Math.random()*4; a.say(rnd(SHOUT),1.8);} a.update(dt); return true;}}
   if(o.state==='back'||o.state==='walk'){a.p.act=null; a.gun.visible=false; a.speed=o.state==='back'?3.2:1.4;
     const c=o.u&&o.u.car&&UNITS.indexOf(o.u)>=0?o.u.car:null;
     if(!c){if(!o.away){o.away=[a.x+(a.x-m.x)*3,a.z+(a.z-m.z)*3]; a.goTo(o.away[0],o.away[1]);} if((d>60&&!inView(a.x,a.z))||A.t-(o.t0||(o.t0=A.t))>30) return false; a.update(dt); return true;}
@@ -275,8 +294,9 @@ A.frameFns.push(function(dt){
   wasW=G.wanted;
   if(G.wanted>0) sight(dt); else Z.seen=true;
   /* more cars while there are fewer than the stars call for */
-  const live=UNITS.filter(function(u){return u.state!=='leave';}).length;
+  const live=UNITS.filter(function(u){return u.state!=='leave'&&u.state!=='block';}).length;
   spawnT-=dt; if(G.wanted>0&&outside()&&live<want()&&spawnT<=0){spawnT=2.5; spawnCar();}
+  blockT-=dt; if(G.wanted>=3&&m.car&&Math.abs(m.car.v)>7&&outside()&&blockT<=0&&!UNITS.some(function(u){return u.state==='block';})){blockT=roadblock(m)?30:3;}
   for(let i=UNITS.length-1;i>=0;i--){const u=UNITS[i]; if(D.live.indexOf(u.car)<0){UNITS.splice(i,1); continue;}
     if(u.car===D.pos()){UNITS.splice(i,1); u.crew.forEach(function(o){o.u=null; if(o.state==='back') o.state='chase';}); continue;}      /* you took it: it is yours now, and its officers come after you on foot */
     carStep(u,dt); const d=hyp(u.car.x-m.x,u.car.z-m.z); if(d>260&&!inView(u.car.x,u.car.z)) dropCar(u);}

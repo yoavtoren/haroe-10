@@ -65,5 +65,11 @@ A.frameFns.push(function(dt){
   if(!A.simsOn||!SM.player){if(skN){skN=0; skids.count=0;} return;}
   cars(dt); puffStep(dt); flyStep(dt); dodge(dt);
 });
+/* ---------- the old figs along Haroe St and the cars parked under them (building.js) are drawn as part of the street: here they are
+   made solid, for whoever walks, for the car you drive, and for the camera, which keeps out of the cars and under the crowns ---------- */
+(function(){const B=A.building, T=A.town; if(!B||!T||!T.obstacles||!T.trees) return; const SB=A.streetBlock||(A.streetBlock=[]), L={mini:3.6,hatch:4.05,sedan:4.62,suv:4.45,van:4.4};
+  (B.figs||[]).forEach(function(q){T.obstacles.add(q[0],q[1],0.35); SB.push([q[0]-0.35,q[0]+0.35,q[1]-0.35,q[1]+0.35]); const t=[q[0],q[1],1]; t.s=3.1*q[2]; t.sy=0.93; t.h=5.6*q[2]; t.a=0; T.trees.push(t);});
+  (B.cars||[]).forEach(function(q){const f=[Math.cos(q[2]),-Math.sin(q[2])], l=(L[q[3]]||4.4)/2, w=0.9; [-1.5,-0.5,0.5,1.5].forEach(function(s){T.obstacles.add(q[0]+f[0]*s,q[1]+f[1]*s,0.95);});
+    const ex=Math.abs(f[0])*l+Math.abs(f[1])*w, ez=Math.abs(f[1])*l+Math.abs(f[0])*w; SB.push([q[0]-ex,q[0]+ex,q[1]-ez,q[1]+ez]);});})();
 A.gtaDrive={skids:skids,puff:puff};
 })();

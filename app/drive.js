@@ -221,11 +221,11 @@ function segPos(t){const rd=t.rd, a=rd.p[t.j], b=rd.p[t.j+1], dx=b[0]-a[0], dz=b
 const mains=drivable.filter(function(r){return r.k!==2;});
 function spawnTraffic(px,pz){const wantBus=!traffic.some(function(o){return o.bus;});
   for(let tries=0;tries<30;tries++){const rd=wantBus&&tries%2===0?mains[Math.floor(Math.random()*mains.length)]:drivable[Math.floor(Math.random()*drivable.length)], j=Math.floor(Math.random()*(rd.p.length-1)), a=rd.p[j], b=rd.p[j+1], l=Math.hypot(b[0]-a[0],b[1]-a[1]); if(l<8) continue;
-    const t={rd:rd,j:j,s:Math.random()*l,dir:Math.random()<0.5?1:-1,wait:0,stop:0,cruise:rd.k===2?6.5:9.5}; const q=segPos(t), d=Math.hypot(q.x-px,q.z-pz);
+    const t={rd:rd,j:j,s:Math.random()*l,dir:Math.random()<0.5?1:-1,wait:0,stop:0,cruise:cruiseOf(rd,false)}; const q=segPos(t), d=Math.hypot(q.x-px,q.z-pz);
     if(d<70||d>190||T.kept(q.x,q.z)||nearHome(q.x,q.z)||!A.nav.isFree(q.x,q.z)) continue;
     if(traffic.some(function(o){return Math.hypot(o.car.x-q.x,o.car.z-q.z)<15;})) continue;
     const bus=rd.k!==2&&wantBus, taxi=!bus&&Math.random()<0.16, kinds=['hatch','sedan','hatch','suv','mini','van','sedan'], c=new Car({kind:bus?'bus':taxi?'sedan':kinds[Math.floor(Math.random()*kinds.length)],col:bus||taxi?0xf2f2ee:COLS[Math.floor(Math.random()*COLS.length)],taxi:taxi,x:q.x,z:q.z,psi:q.h-R/2});      /* now and then a taxi, white with its yellow sign */
-    if(bus){t.bus=true; t.cruise=7.5;} c.traffic=t; t.car=c; c.v=t.cruise*0.6; traffic.push(t); return t;}
+    if(bus){t.bus=true; t.cruise=cruiseOf(null,true);} c.traffic=t; t.car=c; c.v=t.cruise*0.6; traffic.push(t); return t;}
   return null;}
 /* at the end of a stretch: on along the same street, or round the corner onto another */
 function nextSeg(t){const rd=t.rd;
@@ -234,7 +234,8 @@ function nextSeg(t){const rd=t.rd;
 function turnAt(t,pt,must){const n=T.nodes.get(T.key(pt)); if(!n) return false; const opts=[];
   n.roads.forEach(function(r){if(r===t.rd||drivable.indexOf(r)<0||(t.bus&&r.k===2)) return;      /* the bus keeps to the main streets */ const j=r.p.findIndex(function(q){return T.key(q)===T.key(pt);}); if(j<0) return; if(j<r.p.length-1) opts.push({rd:r,j:j,dir:1}); if(j>0) opts.push({rd:r,j:j-1,dir:-1});});
   if(!opts.length||(!must&&Math.random()<0.55)) return !must;
-  const o=opts[Math.floor(Math.random()*opts.length)]; t.rd=o.rd; t.j=o.j; t.dir=o.dir; t.s=0; t.cruise=t.bus?7.5:o.rd.k===2?6.5:9.5; return true;}
+  const o=opts[Math.floor(Math.random()*opts.length)]; t.rd=o.rd; t.j=o.j; t.dir=o.dir; t.s=0; t.cruise=cruiseOf(o.rd,t.bus); return true;}
+function cruiseOf(rd,bus){return bus?9.5:rd&&rd.k===2?8:12.5;}      /* as GTA's traffic: 45 km/h down the main streets, 29 in the side streets, the bus 34 */
 function aheadClear(t,dist){const c=t.car, f=c.fwd(), p=SM.player;
   const check=function(x,z,lat){const dx=x-c.x, dz=z-c.z, a=dx*f[0]+dz*f[1], s=Math.abs(dx*f[1]-dz*f[0]); return a>0&&a<dist&&s<lat;};
   if(p&&!p.lvl&&!driving&&check(p.x,p.z,1.8)) return 'you';
@@ -248,7 +249,8 @@ function trafficStep(t,dt){const c=t.car; if(c.held) return;
   /* the lights at the junction ahead: red, or amber with room to stop, and it waits at the line */
   {const rd=t.rd, q0=segPos(t), end=t.dir>0?rd.p[t.j+1]:rd.p[t.j], sig=T.signals&&T.signals.get(T.key(end));
     if(sig){const st=T.sigState(sig.grp.has(rd)?sig.grp.get(rd):0), toLine=(q0.l-t.s)-(sig.wo+3.2)-c.dim[0]/2;
-      if(st!=='g'&&toLine>-0.5&&toLine<40&&!(st==='a'&&toLine<c.v*0.6)) want=Math.min(want,Math.max(0,Math.sqrt(2*4.5*Math.max(0,toLine))-0.5));}}
+      if(st!=='g'&&toLine>-0.5&&toLine<40&&!(st==='a'&&toLine<c.v*0.6)) want=Math.min(want,Math.max(0,Math.sqrt(2*4.5*Math.max(0,toLine))-0.5));}
+    const nd=T.nodes.get(T.key(end)); if(nd&&nd.roads.length>1){const rem=q0.l-t.s; if(rem<16) want=Math.min(want,Math.max(6,6+(rem-4)*0.55));}}      /* and it slows for the junction itself, to turn or to cross */
   /* the bus pulls in at its stops and waits while people get on */
   if(t.bus&&T.stops) for(let i=0;i<T.stops.length;i++){const s=T.stops[i]; if(s.rd!==t.rd||t.last===s) continue; const f=c.fwd(), dx=s.x-c.x, dz=s.z-c.z, ahead=dx*f[0]+dz*f[1], side=Math.abs(dx*f[1]-dz*f[0]);
     if(side<5&&ahead<2&&ahead>-3){t.last=s; t.stop=7; if(A.busAt) A.busAt(s,c);}}

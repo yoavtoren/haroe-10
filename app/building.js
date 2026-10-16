@@ -452,7 +452,8 @@ function fig(x,z,s,seed){                                // an old street fig: i
   const t=det.tree('ficus',{s:s,a0:seed,seed:seed}), cg=P.grp(), tint=[0xffffff,0xe8f0d8,0xf4f8e8][seed%3];
   det.crown({c:[0,5.5*s,0],r:[3.4*s,1.9*s,3.4*s],n:300,size:1.15*s,seed:seed*3+1,tint:tint,cell:'broad',shell:0.45},cg);
   for(let k=0;k<5;k++){const a=seed+k*1.26; det.crown({c:[Math.sin(a)*2.5*s,6.0*s+(k%2)*0.4,Math.cos(a)*2.5*s],r:[1.8*s,1.2*s,1.8*s],n:70,size:1.0*s,seed:seed*7+k,tint:tint,cell:'broad',shell:0.4,droop:0.15},cg);}
-  town.bake(t.wood,x,U,z,0); crowns.bake(cg,x,U,z,0);}
+  town.bake(t.wood,x,U,z,0); crowns.bake(cg,x,U,z,0); FIGS.push([x,z,s]);}
+const FIGS=[], CARS=[];      // where they stand, for the street to be solid round them (gta-drive.js)
 (function(){
   const hs=ST.filter(function(s){return s.name==='Haroe St';}), side=function(s,off,from,to,step,skip){
     for(let i=1;i<s.p.length;i++){const a=s.p[i-1], b=s.p[i], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz), nx=-dz/l, nz=dx/l;
@@ -464,7 +465,7 @@ function fig(x,z,s,seed){                                // an old street fig: i
   let ci=0; const park=function(s,off,from,to,step){      // the street round the square parks its own cars in front of it
     for(let i=1;i<s.p.length;i++){const a=s.p[i-1], b=s.p[i], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz), nx=-dz/l, nz=dx/l;
     for(let t=6;t<l-4;t+=step){const x=a[0]+dx*t/l+nx*off, z=a[1]+dz*t/l+nz*off, u=z-ZC; if(u<from||u>to||(u>-28&&u<29)||sharet(u)||ci>=22) continue; const c=cars[ci++%cars.length];
-      town.bake(det.car(c[0],{color:c[1],plate:String(10+ci*7%89)+'-'+String(100+ci*37%899)+'-'+String(10+ci*3%89)}),x,U,z,Math.atan2(-dz,dx)+(off>0?0:R));}}};      // nose along the traffic on each side
+      const ry=Math.atan2(-dz,dx)+(off>0?0:R); town.bake(det.car(c[0],{color:c[1],plate:String(10+ci*7%89)+'-'+String(100+ci*37%899)+'-'+String(10+ci*3%89)}),x,U,z,ry); CARS.push([x,z,ry,c[0]]);}}};      // nose along the traffic on each side
   hs.forEach(function(s){park(s,-(WID[1][0]/2-1.05),-140,140,11); park(s,WID[1][0]/2-1.05,-140,140,13);});
 })();
 town.done('street'); crowns.done('street');
@@ -489,5 +490,5 @@ A.frameFns.push(function(){
    taken for the lobby and cut with it */
 let layered=false;
 A.frameFns.push(function(){if(layered||A.LAYER_OUT==null) return; layered=true; [root].concat(shade).forEach(function(o){o.traverse(function(m){m.layers.set(A.LAYER_OUT);});});});
-A.building={covers:function(p){return p.y<TOPP&&filled(p.x,p.z);},warp:warp,pt:pt,foot:FOOT,ROOF:ROOF,ground:groundMesh};
+A.building={covers:function(p){return p.y<TOPP&&filled(p.x,p.z);},warp:warp,pt:pt,foot:FOOT,ROOF:ROOF,ground:groundMesh,figs:FIGS,cars:CARS};
 })();
