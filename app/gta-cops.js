@@ -271,7 +271,7 @@ function sight(dt){const m=me(), hidden=!outside();
   const p=SM.player; (G.cops||[]).forEach(function(c){if(!c.gone&&c.lvl===p.lvl&&hyp(c.x-p.x,c.z-p.z)<14) seen=true;});      // the officers on the stairs (floors.js) see you too
   Z.seen=seen; const vx=Z.lx==null?0:(m.x-Z.lx)/Math.max(dt,1e-3), vz=Z.lz==null?0:(m.z-Z.lz)/Math.max(dt,1e-3); Z.lx=m.x; Z.lz=m.z;
   if(seen){Z.x=m.x; Z.z=m.z; Z.t=A.t; Z.lose=0; Z.vx=clamp((Z.vx||0)+(vx-(Z.vx||0))*Math.min(1,dt*3),-14,14); Z.vz=clamp((Z.vz||0)+(vz-(Z.vz||0))*Math.min(1,dt*3),-14,14);}      // which way you were going, for the search
-  else{Z.x+=(Z.vx||0)*dt; Z.z+=(Z.vz||0)*dt; Z.vx=(Z.vx||0)*Math.exp(-0.25*dt); Z.vz=(Z.vz||0)*Math.exp(-0.25*dt);      /* unseen, the circle drifts on the way you went, as GTA V's does, and slows */
+  else{if(!hidden){Z.x+=(Z.vx||0)*dt; Z.z+=(Z.vz||0)*dt; Z.vx=(Z.vx||0)*Math.exp(-0.25*dt); Z.vz=(Z.vz||0)*Math.exp(-0.25*dt);}      /* unseen in the street, the circle drifts on the way you went, as GTA V's does, and slows; indoors it stays at the door */
     if(!hidden){const r=radius(); if(hyp(m.x-Z.x,m.z-Z.z)>r){Z.lose+=dt; if(Z.lose>12+8*G.wanted) lost();} else Z.lose=Math.max(0,Z.lose-dt*0.3);}}}
 /* they see ahead of them, as GTA's police do (the cones on the radar): this far, this wide either side, and all round this close.
    Once one has seen you he keeps you in his eye a moment, though he turns a corner after you */
@@ -294,7 +294,7 @@ A.frameFns.push(function(dt){
   active=true;
   const m=me();
   /* the stars went up: they saw it happen here */
-  if(G.wanted>wasW){Z.x=m.x; Z.z=m.z; Z.grace=A.t+4; Z.lose=0; if(A.gtaStats) A.gtaStats.wanted=Math.max(A.gtaStats.wanted||0,G.wanted); if(A.gtaSound&&A.gtaSound.dispatch) A.gtaSound.dispatch(G.wanted,m);}
+  if(G.wanted>wasW){Z.x=m.x; Z.z=m.z; Z.grace=A.t+4; Z.lose=0; if(!wasW){Z.vx=Z.vz=0; Z.lx=Z.lz=null;} if(A.gtaStats) A.gtaStats.wanted=Math.max(A.gtaStats.wanted||0,G.wanted); if(A.gtaSound&&A.gtaSound.dispatch) A.gtaSound.dispatch(G.wanted,m);}
   wasW=G.wanted;
   if(G.wanted>0) sight(dt); else Z.seen=true;
   /* more cars while there are fewer than the stars call for */

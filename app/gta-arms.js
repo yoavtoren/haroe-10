@@ -3,7 +3,7 @@
    it, and they come back a while later. An officer you knock out drops his pistol. Tab changes weapon. With the pistol, hold the right
    mouse button to aim over your shoulder at the crosshair and click to fire, or fire from the hip with R and it finds whoever is in front
    of you; on a phone the punch button shoots. A bat or a bullet knocks people out; the street panics at shots, and the police take
-   gunfire seriously: three stars at once, four if you shoot at them. Armour takes most of a hit for you. */
+   gunfire as GTA V does: a shot in the air one star, a hit two, a shot at them three, and one more each time they see you again. Armour takes most of a hit for you. */
 (function(){
 'use strict';
 const A=window.APP, SM=A.sims, T=A.town, R=Math.PI;
@@ -107,7 +107,7 @@ function hitBy(t,how){const s=A.game.state(t); if(s.down) return; s.hp-=how==='b
   if(s.hp<=0||how==='bullet') A.game.knock(t,t.sub==='cop'?14:10);}
 function crime(t,n){const G=A.floors&&A.floors.G; if(!G||!A.floors.raise) return; const p=SM.player;
   const near=people().some(function(o){return o!==t&&hyp((o.a?o.a.x:p.x)-p.x,(o.a?o.a.z:p.z)-p.z)<45;})||(A.gtaCops&&A.gtaCops.foot.length);
-  if(t&&t.sub==='cop') A.floors.raise(4); else if(near||t) A.floors.raise(n);}
+  if(near||t) A.floors.raise(n);}
 /* armour takes most of a hit */
 const hurt0=A.game.hurt;
 if(hurt0) A.game.hurt=function(n){if(A.gtaArmor>0){const took=Math.min(A.gtaArmor,n*0.7); A.gtaArmor=Math.max(0,A.gtaArmor-took*1.2); n-=took;} hurt0(n);};

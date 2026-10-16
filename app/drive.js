@@ -157,8 +157,9 @@ function hitsCar(c,x,z,psi,skipPk){const f=[Math.cos(psi),-Math.sin(psi)], L=c.d
 function outlineFree(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], s=[f[1],-f[0]], L=c.dim[0]/2-0.05, W=c.dim[1]/2-0.05;
   const P=[[L,W],[L,-W],[-L,W],[-L,-W],[L,0],[-L,0],[0,W],[0,-W],[L*0.5,W],[L*0.5,-W],[-L*0.5,W],[-L*0.5,-W]];
   for(let i=0;i<P.length;i++){const q=P[i]; if(blockedAt(x+f[0]*q[0]+s[0]*q[1],z+f[1]*q[0]+s[1]*q[1])) return false;} return true;}
-function blockedCount(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], s=[f[1],-f[0]], L=c.dim[0]/2-0.05, W=c.dim[1]/2-0.05; let n=hitsCar(c,x,z,psi)?3:0;
-  [[L,W],[L,-W],[-L,W],[-L,-W],[L,0],[-L,0],[0,W],[0,-W]].forEach(function(q){if(blockedAt(x+f[0]*q[0]+s[0]*q[1],z+f[1]*q[0]+s[1]*q[1])) n++;}); return n;}      // how deep in something the car stands
+function blockedCount(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], s=[f[1],-f[0]], L=c.dim[0]/2-0.05, W=c.dim[1]/2-0.05, r=c.dim[1]/2; let n=0;
+  for(let i=0;i<live.length;i++){const o=live[i]; if(o===c||Math.hypot(o.x-x,o.z-z)>6) continue; const oc=o.circles(); for(let q=-1;q<=1;q++){const px=x+f[0]*q*c.dim[0]/3, pz=z+f[1]*q*c.dim[0]/3; for(let k=0;k<oc.length;k++) n+=Math.max(0,oc[k][2]+r*0.82-Math.hypot(oc[k][0]-px,oc[k][1]-pz))*10;}}      // how deep into the cars round it, so a move that goes deeper is never 'no deeper'
+  [[L,W],[L,-W],[-L,W],[-L,-W],[L,0],[-L,0],[0,W],[0,-W]].forEach(function(q){if(blockedAt(x+f[0]*q[0]+s[0]*q[1],z+f[1]*q[0]+s[1]*q[1])) n+=1;}); return n;}      // and the outline points in something that is not a car
 let hitCool=0;
 /* as in GTA: quick, a little twitchy, and the handbrake throws the back out */
 const TOP={mini:25,hatch:28,sedan:31,suv:29,van:25,bus:19}, ACC={mini:6.2,hatch:7,sedan:7.8,suv:7.2,van:5.8,bus:3.2};
@@ -182,9 +183,9 @@ function drive(c,dt){
   if(other&&!other.traffic&&!other.cop&&Math.abs(c.v)<9&&outlineFree(c,nx,nz,npsi)){      // a parked car: shove it along
     const px=(nx-c.x)*0.9, pz=(nz-c.z)*0.9, ox=other.x+px, oz=other.z+pz;
     if(outlineFree(other,ox,oz,other.psi)&&!hitsCar(other,ox,oz,other.psi)){other.x=ox; other.z=oz; other.moved=true; other.place(); c.v*=Math.pow(0.4,dt); if(Math.abs(c.v)>1.5&&A.t>hitCool){noise(0.25,400,0.15); hitCool=A.t+0.35;} other=null;}}
-  const wedged=(other||!outlineFree(c,nx,nz,npsi))&&Math.abs(c.v)<4&&(function(){const now=blockedCount(c,c.x,c.z,c.psi); return now>0&&blockedCount(c,nx,nz,npsi)<=now;})();      /* already in it after a scrape: a move that goes no deeper is let through, so you can back out, as GTA always lets you */
+  const freeN=outlineFree(c,nx,nz,npsi), wedged=(other||!freeN)&&Math.abs(c.v)<4&&(function(){const now=blockedCount(c,c.x,c.z,c.psi); return now>0&&blockedCount(c,nx,nz,npsi)<=now;})();      /* already in it after a scrape: a move that goes no deeper is let through, so you can back out, as GTA always lets you */
   if(wedged){c.x=nx; c.z=nz; c.psi=npsi; c.v*=Math.pow(0.5,dt);}
-  else if(other||!outlineFree(c,nx,nz,npsi)){
+  else if(other||!freeN){
     if(Math.abs(c.v)>2.5&&A.t>hitCool){crash(Math.abs(c.v)); hitCool=A.t+0.6; shake=Math.min(0.5,Math.abs(c.v)*0.03); if(other){other.alarm=A.t+6; if(other.traffic) other.traffic.angry=A.t+3; other.hp-=Math.min(35,Math.abs(c.v)*1.4);}
       if(Math.abs(c.v)>4) c.hp=Math.max(0,c.hp-Math.min(40,Math.abs(c.v)*1.5));}      // a knock costs the car; enough of them and it smokes, then dies
     if(outlineFree(c,c.x,c.z,npsi)) c.psi=npsi;      // turning on the spot still works against a wall
