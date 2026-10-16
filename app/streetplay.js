@@ -98,7 +98,7 @@ function order(){
 }
 
 /* ---------- a scooter in the alley, yours to ride ---------- */
-const scoot=det_solid(), park=toWorld(2.75,S.AL+2.2,U);
+const scoot=det_solid(), park=toWorld(2.75,S.AL+2.2,S.AY);
 function det_solid(){if(!A.det) return null; const g=A.det.solid(A.det.moto('scooter',{color:0x8fd3c0,plate:'51-907',lean:0}),'street'); g.rotation.y=0; const h=new THREE.Group(); g.rotation.y=R/2; h.add(g); h.userData.nc=true; scene.add(h); h.traverse(function(m){m.layers.set(OUT());}); return h;}
 let riding=false, engine=null;
 if(scoot){scoot.position.copy(park); scoot.rotation.y=0; blob(scoot,0.8,1.9,0.012);}

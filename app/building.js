@@ -12,7 +12,7 @@
 (function(){
 'use strict';
 const A=window.APP, D=A.D, LB=A.LB, det=A.det, P=det.P, R=Math.PI, H=D.H, L=D.L, AZ=A.AZ, XF=LB.XF, ZC=LB.ZC, $=function(id){return document.getElementById(id);};
-const GY=-2.9, U=0.17, FF=H+0.24, ROOF=4*FF;            // the yard, a floor down; the street; floor to floor; the top of our roof slab
+const GY=-2.9, U=A.street.U, AY=A.street.AY, FF=H+0.24, ROOF=4*FF;            // the yard, a floor down; the street, and the alley and garden six steps below it; floor to floor; the top of our roof slab
 
 /* ---------- OpenStreetMap, in the frame of our front: [id, storeys (0: not recorded), name, [u,v, u,v, ...]] ---------- */
 const OSMB=[[823,0,"",[-101.2,112.2,-94.5,83.5,-76.4,85,-82.8,116.7]],
@@ -113,7 +113,7 @@ function pt(u,v){return [XF+v,ZC+warp(u,v)];}             // a point of a street
 function outline(q,each){                                // a building keeps its shape and moves as a whole; or, each, every corner on its own
   let cu=0, cv=0; const n=q.length/2; for(let i=0;i<n;i++){cu+=q[2*i]; cv+=q[2*i+1];} cu/=n; cv/=n;
   const du=warp(cu,cv)-cu, out=[]; for(let i=0;i<n;i++) out.push([XF+q[2*i+1],ZC+(each?warp(q[2*i],q[2*i+1]):q[2*i]+du)]); return out;}
-const SF=A.street, D8=SF.D8, KZ=SF.KZ, RW=SF.RW, GZs=SF.GZ, SQ=SF.SQ, NXY=D.KX+4.9, LBH=-(warp(-20.4,0));      // the street's own measures; the yard's far side; Beit HaChayal's face, out from number 12's corner
+const SF=A.street, D8=SF.D8, KZ=SF.KZ, RW=SF.RW, GZs=SF.GZ, LBH=-(warp(-20.4,0));      // the street's own measures; Beit HaChayal's face, out from number 12's corner
 const ST=OSMR.map(function(r){const p=[]; for(let i=0;i<r[2].length;i+=2) p.push(pt(r[2][i],r[2][i+1]-(r[1]==='Haroe St'?1.9:0))); return {k:r[0],name:r[1],p:p};});      // Haroe St: its middle where the street drawn round the square has it. Moshe Sharet St bends the last few metres to where that drawing leaves it a gap
 const WID={1:[7.4,3.4],2:[6.2,2.6],3:[3.6,0.9],4:[0,6],5:[0,2.2]};      // carriageway, pavement each side
 function nearRoad(x,z){let best=1e9, kind=0; ST.forEach(function(s){for(let i=1;i<s.p.length;i++){const a=s.p[i-1], b=s.p[i], dx=b[0]-a[0], dz=b[1]-a[1], l2=dx*dx+dz*dz||1, t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[1])*dz)/l2)), d=Math.hypot(a[0]+t*dx-x,a[1]+t*dz-z)-WID[s.k][0]/2;
@@ -144,16 +144,12 @@ const groundT=det.tex(N,N,function(g){
   ST.forEach(function(s){const w=WID[s.k]; if(w[0]) stroke(s.p,w[0]+0.36,'#ecebe6');});                  // kerbs
   ST.forEach(function(s){const w=WID[s.k]; if(w[0]) stroke(s.p,w[0],'#5c6064');});                       // asphalt
   ST.forEach(function(s){if(s.k===1) stroke(s.p,0.14,'#e9e9e2',[3*K,5*K]); else if(s.k===2) stroke(s.p,0.1,'rgba(233,233,226,0.55)',[2*K,6*K]);});   // the dashed line down the middle
-  (function(){const q=function(lx,lz){return cp([XF+lz,ZC-lx]);}, a=q(12.4,NXY-XF), b=q(LBH,32);      // the garden's west half, from the building across our yard out to Haroe St: dark earth, dry leaves, a gravel path
-    g.fillStyle='#5f5340'; g.fillRect(Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]));
-    for(let i=0;i<2600;i++){const x=Math.min(a[0],b[0])+r()*Math.abs(b[0]-a[0]), y=Math.min(a[1],b[1])+r()*Math.abs(b[1]-a[1]); g.fillStyle=['#7a6a4f','#4a4232','#8a7a5a','#a08a62','#3f5a35','#56703f'][Math.floor(r()*6)]; g.fillRect(x,y,1+r()*3,1+r()*2);}
-    const p0=q(13.2,27.5), p1=q(19.5,20.5), p2=q(17.5,11.5); g.strokeStyle='#b9ad93'; g.lineWidth=1.6*K; g.beginPath(); g.moveTo(p0[0],p0[1]); g.quadraticCurveTo(p1[0],p1[1],p2[0],p2[1]); g.stroke();})();
   for(let i=0;i<6000;i++){g.fillStyle='rgba(0,0,0,'+(r()*0.05)+')'; g.fillRect(r()*N,r()*N,1,1);}
 });
 let groundMesh=null;
 (function(){
   const W=function(lx,lz){return [XF+lz,ZC-lx];}, S=function(lx,lz){return [SF.X0+lz,ZC-lx];};      // from our front, or from the street's (flat 6's, where the street frame begins)
-  const hole=[W(-14,-22.4),W(LBH,-22.4),W(LBH,NXY-XF),W(12.4,NXY-XF),S(12.4,GZs),S(SQ,GZs),S(SQ,16+D8),S(50,16+D8),S(50,29.05+D8),S(-19,29.05+D8),S(-19,GZs),S(0,GZs),S(0,0),W(0,0),W(-14,0)];   // our building, the yard and the gap by Beit HaChayal, the alley and the garden, the square and Haroe St as the street draws them
+  const hole=[W(-14,-22.4),W(LBH,-22.4),S(LBH,SF.PV),S(50,SF.PV),S(50,29.05+D8),S(-19,29.05+D8),S(-19,GZs),S(0,GZs),S(0,0),S(-12,0),W(-12,0),W(-14,0)];   // our building, the yard and the gap by Beit HaChayal, the yard in front of flat 1, the alley, the garden, the café's terrace and Haroe St as the street draws them
   const sh=new THREE.Shape(); sh.moveTo(GZ0,GX0); sh.lineTo(GZ0+GS,GX0); sh.lineTo(GZ0+GS,GX0+GS); sh.lineTo(GZ0,GX0+GS); sh.lineTo(GZ0,GX0);
   const ho=new THREE.Path(); hole.forEach(function(q,i){const x=q[0], z=q[1]; if(i) ho.lineTo(z,x); else ho.moveTo(z,x);}); ho.closePath(); sh.holes.push(ho);
   const g=new THREE.ShapeGeometry(sh), Pp=g.attributes.position, uv=g.attributes.uv, ix=g.index;
@@ -231,6 +227,7 @@ function quadUV(q){return q.map(function(p){return [XF+p[1],ZC+p[0]];});}
   blockOn(main[3],main[2],main[0],Object.assign({},o,{faces:{front:{ground:'shops',shops:['bakery','grocery','barber','kiosk','laundry','flowers','falafel','grocery','cafe','barber'],cables:true,balc:['closed','win','open']},back:{ground:'flats',pipes:2}}}));
   const wing=quadUV([[12.05,0.05],[17.6,0.05],[17.6,14.15],[12.05,14.15]]);      // its wing back to our building, between the café's block and the yard inside
   blockOn(wing[1],wing[2],wing[0],Object.assign({},o,{faces:{front:{ground:'flats',balc:['win','closed']}}}));
+  town.box(14.1,U-GY,5.55,0xd9d2c2,XF+7.1,(GY+U)/2,ZC+14.825);      // the wing stands at the street's level, over the yard behind it: its footing shows there
   const rw=obb(quadUV([[25.93,-10.78],[38.46,-15.14],[49.35,14],[35.3,14]])).corners;   // and the wing that runs back toward Natan St
   blockOn(rw[0],rw[1],rw[2],Object.assign({},o,{seed:13,faces:{front:{ground:'flats'},left:{ground:'flats'},right:{ground:'flats'},back:{ground:'flats'}}}));
   proxy(XF+0.2,XF+31,ZC+12,ZC+55,U+15.4); proxy(XF-15,XF+14,ZC+26,ZC+49,U+15.4);
@@ -245,29 +242,15 @@ BLD.forEach(function(bd){
   if(bd.near<70&&frontOf(obb(bd.pts)).k===1) nearBlock(bd); else farBlock(bd);      // a front with everything on it where it faces Haroe St close by; elsewhere, seen from above, a plain volume with its windows
 });
 
-/* ---------- the garden's west half, beyond the stretch the street draws: palms, a broad tree or two, yuccas and shrubs, a bench, the low green fence
-   along the pavement; and the building across our yard, seen from the garden as the plain white wall behind the palms ---------- */
-const garden=[];
-(function(){const at=function(lx,lz){return [XF+lz,ZC-lx];};
-  [[15.2,14.5,3.4],[21.5,18.5,4.2],[17.8,24.6,3.0],[24.6,28.2,3.8],[13.6,30.4,2.4],[25.8,12.6,4.6]].forEach(function(q,i){const p=at(q[0],q[1]), t=det.tree('palm',{h:q[2],s:0.95,n:22,seed:30+i,dates:q[2]>3.5,dead:5}); town.bake(t.wood,p[0],U,p[1],i); town.bake(t.crown,p[0],U,p[1],i); garden.push(p);});
-  [[22.8,23.4,1.05],[14.6,19.6,0.9]].forEach(function(q,i){const p=at(q[0],q[1]), t=det.tree('broad',{s:q[2],a0:i*2,seed:44+i}); town.bake(t.wood,p[0],U,p[1],0); crowns.bake(t.crown,p[0],U,p[1],0); garden.push(p);});
-  for(let i=0;i<18;i++){const r=A.rng(90+i), lx=13+r()*13.5, lz=11.5+r()*19, p=at(lx,lz); if(Math.abs(lx-17.5-(lz-11.5)*0.1)<1.2) continue;
-    const t=det.tree(i%3===0?'yucca':'shrub',i%3===0?{h:0.9+r()*0.6,s:0.9,trunks:2,seed:i}:{w:0.8+r()*0.9,h:0.6+r()*0.7,d:0.8+r()*0.8,seed:i,n:90,size:0.34,flowers:r()<0.3}); town.bake(t.wood,p[0],U,p[1],r()*6); (i%3===0?town:crowns).bake(t.crown,p[0],U,p[1],r()*6);}
-  const fence=function(a,b){const dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz), ry=Math.atan2(dx,dz);
-    for(let d=0.07;d<l;d+=0.14) town.box(0.014,0.52,0.014,0x23402f,a[0]+dx*d/l,U+0.32,a[1]+dz*d/l);
-    town.box(0.03,0.03,l,0x23402f,(a[0]+b[0])/2,U+0.6,(a[1]+b[1])/2,ry); town.box(0.03,0.03,l,0x23402f,(a[0]+b[0])/2,U+0.12,(a[1]+b[1])/2,ry);
-    town.box(l,0.22,0.12,0xc9c3b4,(a[0]+b[0])/2,U+0.11,(a[1]+b[1])/2,ry+R/2);};
-  fence(at(SQ+0.2,32.2),at(LBH-0.3,32.2));
-  const bp=at(19.8,31.2), bg=P.grp(), wood=0x8a5a3c, iron=0x2b2f2c;                                              // a bench by the path, facing the street
-  for(let i=0;i<3;i++){P.box(1.7,0.035,0.11,wood,0,0.44,-0.13+i*0.13,bg); P.box(1.7,0.11,0.03,wood,0,0.58+i*0.13,-0.24-i*0.03,bg);}
-  [-0.7,0.7].forEach(function(dx){P.box(0.05,0.44,0.42,iron,dx,0.22,-0.02,bg); P.box(0.05,0.5,0.05,iron,dx,0.68,-0.27,bg);}); town.bake(bg,bp[0],U,bp[1],R/2);
+/* ---------- the building across our yard, seen from the garden (which the street draws) as the plain white wall behind the palms ---------- */
+(function(){
   /* the building across our yard: its north and east walls, plain white render, as seen behind the palms */
   const NX=D.KX+4.9, X1=NX+6, Z0=-9, Z1=4.6, T=12.6, wm=det.plasterM('#f1eee7');
-  const fn=P.grp(X1+0.012,0,Z1,null,R/2); P.geo(det.wallGeo(Z1-Z0,T-U,3),wm,0,U,0,fn); P.box(Z1-Z0+0.1,0.1,0.25,0xd8d2c4,(Z1-Z0)/2,T+0.05,0.05,fn);
+  const fn=P.grp(X1+0.012,0,Z1,null,R/2); P.geo(det.wallGeo(Z1-Z0,T-AY,3),wm,0,AY,0,fn); P.box(Z1-Z0+0.1,0.1,0.25,0xd8d2c4,(Z1-Z0)/2,T+0.05,0.05,fn);
   [0.55,3.6,6.7,9.8].forEach(function(y,f){[1.6,4.4,7.6,10.6].forEach(function(s2,i){                       // its face toward the garden: a window and a closed-in balcony a flat, as on the side we see from the kitchen
     if(i%2) balcony(fn,s2-1.3,s2+1.3,y-0.05,1.0,(f+i)%3?'closed':'open'); else win(fn,s2,y+0.35,1.3,1.4,{ac:(f+i)%2===0,bars:f===0});});});
   town.bake(fn);
-  const fe=P.grp(NX,0,Z1+0.012,null,0); P.geo(det.wallGeo(X1-NX,T-U,3),wm,0,U,0,fe); for(let f=0;f<4;f++) win(fe,(X1-NX)/2,U+0.95+f*3.1,0.9,1.1,{down:0.7,curtain:false}); town.bake(fe);
+  const fe=P.grp(NX,0,Z1+0.012,null,0); P.geo(det.wallGeo(X1-NX,T-AY,3),wm,0,AY,0,fe); for(let f=0;f<4;f++) win(fe,(X1-NX)/2,AY+0.95+f*3.1,0.9,1.1,{down:0.7,curtain:false}); town.bake(fe);
   const rf=P.grp(); P.geo(det.wallGeo(Z1-Z0-0.2,X1-NX-0.2,4),det.plasterM('#a59f94'),0,0,0,rf).rotation.x=-R/2; town.bake(rf,X1-0.1,T+0.02,Z1-0.1,R/2);      // its roof, a parapet round it
   [[NX+0.06,Z0,Z1],[X1-0.06,Z0,Z1]].forEach(function(q){town.box(0.12,0.9,q[2]-q[1],0xe8e4dc,q[0],T+0.45,(q[1]+q[2])/2);}); town.box(X1-NX,0.9,0.12,0xe8e4dc,(NX+X1)/2,T+0.45,Z1-0.06);
   for(let k=0;k<3;k++){const hg=P.grp(NX+1.6+k*1.6,T,Z0+3+k*4.2,null,R/2); det.solar(hg,A.rng(k)); town.bake(hg);}
@@ -431,8 +414,8 @@ function balcony(fg,s0,s1,y,d,kind){                   // a balcony on its slab,
     r0.forEach(function(r){earth.push([snap(BX0+i*CS,XV),snap(BX0+i1*CS,XV),snap(BZ0+r[0]*CS,ZV),snap(BZ0+r[1]*CS,ZV)]);});
     i=i1;}
   const pos=[], uv=[];
-  earth.forEach(function(r){BLo.box(r[1]-r[0],U-0.004-GY,r[3]-r[2],0xd3cab6,(r[0]+r[1])/2,(GY+U-0.004)/2,(r[2]+r[3])/2);
-    [[r[0],r[2]],[r[0],r[3]],[r[1],r[3]],[r[0],r[2]],[r[1],r[3]],[r[1],r[2]]].forEach(function(q){pos.push(q[0],U-0.003,q[1]); uv.push((q[1]-GZ0)/GS,(q[0]-GX0)/GS);});});
+  earth.forEach(function(r){BLo.box(r[1]-r[0],AY-0.004-GY,r[3]-r[2],0xd3cab6,(r[0]+r[1])/2,(GY+AY-0.004)/2,(r[2]+r[3])/2);
+    [[r[0],r[2]],[r[0],r[3]],[r[1],r[3]],[r[0],r[2]],[r[1],r[3]],[r[1],r[2]]].forEach(function(q){pos.push(q[0],AY-0.003,q[1]); uv.push((q[1]-GZ0)/GS,(q[0]-GX0)/GS);});});
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.computeVertexNormals();
   const m=new THREE.Mesh(g,groundMesh.material); m.receiveShadow=true; root.add(m);
 })();

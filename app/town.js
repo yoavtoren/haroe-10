@@ -35,8 +35,8 @@ function polyD(p,x,z){let d=1e9; for(let i=0;i<p.length;i++) d=Math.min(d,segD(x
 const blds=TD.B.map(function(b,i){const p=outline(b[3]); let cx=0, cz=0; p.forEach(function(q){cx+=q[0]; cz+=q[1];}); return {i:i,lv:b[0],k:b[1],name:b[2],p:p,c:[cx/p.length,cz/p.length],area:areaOf(p)};})
   .filter(function(b){return b.p.length>=3&&b.area>4;});
 /* where building.js and the street draw their own: our building and number 12, the yard a floor down, the forecourts and bridges */
-const LBH=-warp(-20.4,0), GZs=SF.GZ;
-const KEEP=[[XF-23.2,SF.X0+GZs-0.1,ZC-LBH-0.6,ZC+19.5]];        // x0,x1,z0,z1: nothing of ours here, and not walked by this map
+const LBH=-warp(-20.4,0);
+const KEEP=[[XF-23.2,SF.X0+SF.PV-0.1,ZC-LBH-0.6,ZC+19.5]];        // x0,x1,z0,z1: nothing of ours here, and not walked by this map
 const own=TD.X.map(function(x){return outline(x[1],x[0]===798);}).concat([[[12.05,14.2],[55.2,14.2],[55.2,31.2],[12.05,31.2]],[[12.05,0.05],[17.6,0.05],[17.6,14.15],[12.05,14.15]],[[25.93,-10.78],[38.46,-15.14],[49.35,14],[35.3,14]]]
   .map(function(q){const o=q.map(function(p){return [XF+p[1],ZC+p[0]];}); let a2=0; for(let i=0;i<o.length;i++){const a=o[i], b=o[(i+1)%o.length]; a2+=a[0]*b[1]-b[0]*a[1];} return a2>0?o.reverse():o;}));      // number 12, along Haroe St, its wing and its back wing
 function nearHome(x,z){return x>XF-30&&x<XF+50&&z>ZC-56&&z<ZC+24;}

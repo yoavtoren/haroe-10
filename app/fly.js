@@ -45,7 +45,7 @@ A.frameFns.push(function(dt){
   pos.x+=(fx*(-sy)-fz*sx)*sp; pos.z+=(fz*(-sy)+fx*sx)*sp;
   pos.y+=(vy+(keys.e?1:0)-(keys.q?1:0))*1.2*dt;
   pos.x=Math.max(-40,Math.min(52,pos.x)); pos.z=Math.max(-40,Math.min(60,pos.z));              // as far as the other side of Haroe St, to the north, and round the block
-  pos.y=Math.max(pos.x<-12.4?1.3:0.3,Math.min(6,pos.y));                                        // past the garden steps the square is at street level, higher than the lobby
+  const S=A.street; pos.y=Math.max(S&&pos.x>S.X0+S.GZ-0.3?S.U+0.3:pos.x<-12.4?1.3:0.3,Math.min(6,pos.y));      // up the steps past the café the street is six steps higher than the alley
   if(Math.hypot(l.x,l.y)>0.15){yaw-=l.x*Math.abs(l.x)*dt*1.5; pitch=Math.max(-1.3,Math.min(1.3,pitch+l.y*Math.abs(l.y)*dt*1.0));}
   cam.position.copy(pos); cam.rotation.order='YXZ'; cam.rotation.set(-pitch,yaw+R,0);
 });

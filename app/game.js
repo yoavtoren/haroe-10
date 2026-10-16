@@ -288,7 +288,7 @@ function makeDumpster(){        // the city's green bins, in the alley by the ga
   const t=A.canvasTex(128,48,function(c){c.fillStyle='#2f6b45'; c.fillRect(0,0,128,48); c.fillStyle='#f2f2ee'; c.font='bold 15px sans-serif'; c.textAlign='center'; c.fillText('עיריית רמת גן',64,22); c.font='11px sans-serif'; c.fillText('פסולת ביתית',64,40);});
   const lab=new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.22),A.MT(t,'street')); lab.position.set(0,0.75,0.476); g.add(lab);
   A.det.realize(g,'street'); g.traverse(function(m){m.layers.set(OUTL()); m.userData.nc=true;});
-  const lx=2.95, lz=S.AL+3.4, w=S.st.localToWorld(new THREE.Vector3(lx,S.U,lz)); g.position.copy(w); g.rotation.y=R/2+R/2; scene.add(g);
+  const lx=2.95, lz=S.AL+3.4, w=S.st.localToWorld(new THREE.Vector3(lx,S.AY,lz)); g.position.copy(w); g.rotation.y=R/2+R/2; scene.add(g);
   const st=S.st.localToWorld(new THREE.Vector3(lx-1.05,0,lz));
   dump={g:g,lid:lid,stand:{x:st.x,z:st.z,h:Math.atan2(w.x-st.x,w.z-st.z)}};
   if(A.streetBlock) A.streetBlock.push([S.X0+lz-0.55,S.X0+lz+0.55,A.LB.ZC-lx-0.7,A.LB.ZC-lx+0.7]);

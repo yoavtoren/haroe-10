@@ -390,14 +390,20 @@ inRoom('out',function(){
 function batch(parent,lift,opt){return A.batch(parent,lift,opt);}
 
 inRoom('street',function(){
-  const WELL=1.6, D8=16-(XS-XF), GZ=10.4+D8, AW=3.4, U=0.17, LA=-0.15, RY=U-0.13, KZ=18.55+D8, RW=7, ZF=42+D8, FW=ZC-L, TOP=12.6, BRW=1.3, SQ=19.5;
+  const WELL=1.6, D8=16-(XS-XF), GZ=10.4+D8, AW=3.4, AY=0.17, NST=3, SRS=0.15, U=AY+NST*SRS, LA=-0.15, RY=U-0.13, KZ=18.55+D8, RW=7, ZF=42+D8, FW=ZC-L, TOP=12.6, BRW=1.3;
   const BL=2.2, SE=1.0, FZ=BL+0.45+6.0, AL=FZ+0.45;
-  /* WELL: width of the sunken strip along the front; LA: a step below the lobby; GZ: where the garden meets the square; AW: width of the alley; U: the
-     level of the alley, the café and the street; RY: the road; KZ: the kerb; RW: width of the road; ZF: far edge; FW and TOP: length and
-     height of our front. Our own way in, from the photos of the walk: a bridge BL long over the sunken strip; two low steps down from it to
+  const PV=16+D8, CW=10.8, LBH=26.95, FLT=0.38, FLL=(NST-1)*FLT, YY=D.KX+4.9-XS, YB=YY+6, XB=ZC-4.6, FL=[[0,AW],[8.6,10.6],[15.6,17.6]];
+  /* WELL: width of the sunken strip along the front; LA: a step below the lobby; GZ: where the café's terrace and the top of the garden end and the
+     ground falls away; AW: width of the alley; AY: the level of the alley and of the garden below; U: the street's, three steps of SRS higher, the level of
+     Haroe St, its pavement, the café's terrace and the garden's entrance; RY: the road; KZ: the kerb; RW: width of the road; ZF: far edge; FW and TOP:
+     length and height of our front. Our own way in, from the photos of the walk: a bridge BL long over the sunken strip; two low steps down from it to
      a forecourt of old slabs (LA) reaching to FZ, where two broad steps go up to the alley at AL. SE: how far the strip reaches out beside it.
      D8: how much farther out the square, the café and the street stand than first drawn, to make room for all of that, less the four
-     metres flat 6 stands out from our own front, where this frame begins: the square, the café and the street stay where they were. */
+     metres flat 6 stands out from our own front, where this frame begins: the square, the café and the street stay where they were.
+     PV: the line of the fronts along Haroe St, where the pavement begins; CW: where the café's terrace meets the garden; LBH: Beit HaChayal's face.
+     FL: the three flights of NST steps, FLT a tread, FLL deep, down from the street's level at GZ: into the alley just past the café, from the café's
+     terrace into the garden, and from the garden's gate into the garden proper. YY, YB, XB: where the garden ends over our yard, and along the
+     building across the yard, whose corner is at XB. */
   const BX=[ZC-ZO];    // the bridge, along the front
   const st=G(), can=G(st), fac=G(st);                  // everything; the tree crowns; our own street front
   st.userData.nc=true; st.rotation.y=R/2; st.position.set(XS,0,ZC); st.updateMatrixWorld(true);
@@ -465,14 +471,14 @@ inRoom('street',function(){
   const soil=0x4d4334, kerb=0xc9c3b4;
 
   B.box(AW,LA-GY,FZ-BL,stone,AW/2,(GY+LA)/2,(BL+FZ)/2); flat(0,AW,BL,FZ,LA+0.004,concM,2.4);      // our forecourt, solid ground: its edge is the wall of the pit beside the bridge
-  (function(){const ym=(LA+U)/2;                                                                    // two broad steps up to the alley, of the same worn slabs
+  (function(){const ym=(LA+AY)/2;                                                                   // two broad steps up to the alley, of the same worn slabs
     B.box(AW,ym-GY,AL-FZ,0xcbc4b3,AW/2,(ym+GY)/2,(FZ+AL)/2); flat(0,AW,FZ,AL,ym+0.004,slabM,1.6); B.box(AW,0.025,0.05,0xb3ac9b,AW/2,ym-0.012,FZ+0.025);
-    B.box(AW,U-GY,GZ-AL,stone,AW/2,(GY+U)/2,(AL+GZ)/2); flat(0,AW,AL,GZ,U+0.004,slabM,1.6); B.box(AW,0.025,0.05,0xb3ac9b,AW/2,U-0.012,AL+0.025);})();
-  [[AW,FW]].forEach(function(q){const w=q[1]-q[0], xc=(q[0]+q[1])/2;                                  // the garden, raised to street level
-    B.box(w,U-GY,GZ-WELL,stone,xc,(GY+U)/2,(WELL+GZ)/2); B.box(w-0.16,0.02,GZ-WELL-0.16,soil,xc,U+0.01,(WELL+GZ)/2);
-    B.box(0.12,0.22,GZ-WELL,kerb,q[0]+0.06,U+0.11,(WELL+GZ)/2); B.box(0.12,0.22,GZ-WELL,kerb,q[1]-0.06,U+0.11,(WELL+GZ)/2); B.box(w,0.22,0.12,kerb,xc,U+0.11,WELL+0.06);});
-  B.box(SQ+19,U-GY,KZ-GZ,stone,(SQ-19)/2,(GY+U)/2,(GZ+KZ)/2); flat(-19,SQ,GZ,KZ-0.16,U+0.004,paveM,1.6);       // the square, at street level
-  B.box(50-SQ,U-GY,KZ-16-D8,stone,(SQ+50)/2,(GY+U)/2,(16+D8+KZ)/2); flat(SQ,50,16+D8,KZ-0.16,U+0.004,paveM,1.6);        // and the pavement on past number 8
+    B.box(AW,AY-GY,GZ-FLL-AL,stone,AW/2,(GY+AY)/2,(AL+GZ-FLL)/2); flat(0,AW,AL,GZ-FLL,AY+0.004,slabM,1.6); B.box(AW,0.025,0.05,0xb3ac9b,AW/2,AY-0.012,AL+0.025);})();
+  [[AW,FW,WELL],[FW,XB,YY],[XB,LBH,YB]].forEach(function(q){B.box(q[1]-q[0],AY-GY,GZ-q[2],stone,(q[0]+q[1])/2,(GY+AY)/2,(q[2]+GZ)/2);});      // the garden, solid ground at the alley's level
+  B.box(CW+19,U-GY,KZ-GZ,stone,(CW-19)/2,(GY+U)/2,(GZ+KZ)/2); flat(-19,CW,GZ,KZ-0.16,U+0.004,paveM,1.6);       // the café's terrace and the pavement before number 12, at the street's level
+  B.box(50-CW,U-GY,KZ-PV,stone,(CW+50)/2,(GY+U)/2,(PV+KZ)/2); flat(CW,50,PV,KZ-0.16,U+0.004,paveM,1.6);        // and the pavement on past the garden and number 8
+  B.box(LBH-CW,U-GY,PV-GZ,stone,(CW+LBH)/2,(GY+U)/2,(GZ+PV)/2);                                                 // the top of the garden, inside its fence on the pavement
+  B.box(12,AY-GY,XS-XF,stone,-6,(GY+AY)/2,-(XS-XF)/2); flat(-12,0,-(XS-XF),0,AY+0.004,concM,2.4);      // behind number 12, the yard in front of flat 1, at the alley's level
   B.box(69,RY-GY,ZF-KZ,0x5d6164,15.5,(GY+RY)/2,(KZ+ZF)/2);                                            // asphalt: grey and grainy, patched where it was dug up, oil under the parked cars
   const asph=tex(512,512,function(g){const r=A.rng(91); g.fillStyle='#5a5e60'; g.fillRect(0,0,512,512);
     for(let i=0;i<9000;i++){const v=r(); g.fillStyle=v<0.5?'rgba(30,32,34,0.5)':v<0.85?'rgba(140,142,140,0.45)':'rgba(190,180,165,0.5)'; g.fillRect(r()*512,r()*512,1+r()*1.5,1+r()*1.5);}
@@ -491,7 +497,7 @@ inRoom('street',function(){
     for(let i=0;i<80;i++){const x=r()*256, y=r()*256, q=10+r()*26, gr=g.createRadialGradient(x,y,0,x,y,q);
       gr.addColorStop(0,'rgba(18,28,20,0.32)'); gr.addColorStop(1,'rgba(18,28,20,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}},true);
   const shadeM=new THREE.MeshBasicMaterial({map:shade,transparent:true,depthWrite:false});
-  flat(0,AW,AL,GZ,U+0.02,shadeM,18).renderOrder=1; flat(0,AW,BL,FZ,LA+0.02,shadeM,18).renderOrder=1; flat(0,20,GZ,KZ-0.16,U+0.02,shadeM,18).renderOrder=1;
+  flat(0,AW,AL,GZ-FLL,AY+0.02,shadeM,18).renderOrder=1; flat(0,AW,BL,FZ,LA+0.02,shadeM,18).renderOrder=1; flat(0,CW,GZ,KZ-0.16,U+0.02,shadeM,18).renderOrder=1;
 
   const wrail=0xefefea;
 
@@ -546,18 +552,15 @@ inRoom('street',function(){
     f.box(0.05,h+0.06,0.05,c,0,(h+0.06)/2,0); f.box(0.05,h+0.06,0.05,c,0,(h+0.06)/2,len);
     if(hoops) for(let d=0.4;d<len-0.3;d+=0.8) B.geo(new THREE.TorusGeometry(0.2,0.012,4,10,R),c,x0+Math.sin(a)*d,y+h,z0+Math.cos(a)*d,a+R/2);
   }
-  fence(AW,WELL+0.04,FW-0.1,WELL+0.04,U+0.22,0.8,wrail);      // along the edge of the sunken strip
-  fence(AW+0.06,WELL+0.12,AW+0.06,GZ-0.1,U+0.22,0.62,green); fence(AW+0.1,GZ-0.08,FW-0.1,GZ-0.08,U+0.22,0.62,green);      // low green fences on the garden's kerbs
-  fence(FW-0.1,WELL+0.12,FW-0.1,GZ-0.1,U+0.22,0.8,iron); fence(FW,GZ+0.08,SQ-0.1,GZ+0.08,U,0.95,iron); fence(SQ-0.1,GZ+0.08,SQ-0.1,11.4+D8,U,0.95,iron);      // where the garden and the square stand over the yard
 
   /* ---------- number 12's side of the alley, from the photos: green grilles on the ground floor, air conditioners, and an outside
      stair of white stone climbing along the wall toward our front to a concrete landing that reaches out over the steps ---------- */
-  const SB=AL+1.6, SN=11, SR=0.18, ST=0.28, LT=SB-SN*ST, LY=U+SN*SR, LD=LT-1.6;      // the stair's foot in the alley; its steps; the landing: its near edge, its height, and its far edge out over the steps down
-  for(let k=0;k<SN;k++){const y=U+SR*(k+1); B.box(0.96,y-U,ST,0xe9e6de,0.52,U+(y-U)/2,SB-ST*(k+0.5)); B.box(0.98,0.025,0.05,0xd4d0c6,0.53,y-0.012,SB-ST*(k+1)+0.025);}
+  const SB=AL+1.6, SN=11, SR=0.18, ST=0.28, LT=SB-SN*ST, LY=AY+SN*SR, LD=LT-1.6;      // the stair's foot in the alley; its steps; the landing: its near edge, its height, and its far edge out over the steps down
+  for(let k=0;k<SN;k++){const y=AY+SR*(k+1); B.box(0.96,y-AY,ST,0xe9e6de,0.52,AY+(y-AY)/2,SB-ST*(k+0.5)); B.box(0.98,0.025,0.05,0xd4d0c6,0.53,y-0.012,SB-ST*(k+1)+0.025);}
   B.box(0.96,0.18,LT-LD,0xd7d2c6,0.52,LY-0.09,(LD+LT)/2);                                                         // the landing slab
-  (function(){const sl=Math.hypot(SN*ST,SN*SR), a=Math.atan2(SN*SR,SN*ST), r=B.at(1.0,U,SB,0);
-    B.box(0.03,0.03,sl,0x1d1f21,1.0,U+0.92+SN*SR/2,SB-SN*ST/2,0,a);                                                  // black handrail up the open side
-    for(let k=0;k<SN;k+=2) B.box(0.016,0.9,0.016,0x1d1f21,1.0,U+SR*(k+1)+0.45,SB-ST*(k+0.5));
+  (function(){const sl=Math.hypot(SN*ST,SN*SR), a=Math.atan2(SN*SR,SN*ST), r=B.at(1.0,AY,SB,0);
+    B.box(0.03,0.03,sl,0x1d1f21,1.0,AY+0.92+SN*SR/2,SB-SN*ST/2,0,a);                                                  // black handrail up the open side
+    for(let k=0;k<SN;k+=2) B.box(0.016,0.9,0.016,0x1d1f21,1.0,AY+SR*(k+1)+0.45,SB-ST*(k+0.5));
     const rust=0x6b4a33; B.box(0.03,0.03,LT-LD,rust,0.99,LY+0.95,(LD+LT)/2); B.box(0.98,0.03,0.03,rust,0.5,LY+0.95,LD);      // rusty railing round the landing
     for(let z=LD+0.05;z<LT;z+=0.13) B.box(0.014,0.92,0.014,rust,0.99,LY+0.48,z); for(let x=0.08;x<1.0;x+=0.13) B.box(0.014,0.92,0.014,rust,x,LY+0.48,LD);
     [[0.25,LD+0.35],[0.25,LD+0.7]].forEach(function(q){B.cyl(0.11,0.2,0xf4f2ec,q[0],LY+0.1,q[1],10,0.13); B.sph(0.13,0xb84a5a,q[0],LY+0.28,q[1],1,0.7,1);});})();      // geraniums
@@ -567,15 +570,15 @@ inRoom('street',function(){
     g.fillStyle='#4f8a79'; g.fillRect(4,92,120,6);});
   const shutterT=tex(64,128,function(g){g.fillStyle='#f1efe9'; g.fillRect(0,0,64,128); g.fillStyle='#cfccc4'; for(let y=0;y<128;y+=5) g.fillRect(0,y,64,1.5);
     g.strokeStyle='#f8f8f6'; g.lineWidth=2; for(let x=4;x<64;x+=8){g.beginPath(); g.moveTo(x,0); g.lineTo(x,128); g.stroke();}});
-  [[SB+0.5,SB+1.85],[SB+2.4,SB+3.75]].forEach(function(q){panel(q[1]-q[0],2.3,A.MT(grille),0.035,U+1.15,(q[0]+q[1])/2,R/2);});            // green grilles with hearts on the ground floor
+  [[SB+0.5,SB+1.85],[SB+2.4,SB+3.75]].forEach(function(q){panel(q[1]-q[0],2.3,A.MT(grille),0.035,AY+1.15,(q[0]+q[1])/2,R/2);});            // green grilles with hearts on the ground floor
   function barred(z0,z1,y0,y1){panel(z1-z0,y1-y0,A.MT(shutterT),0.035,(y0+y1)/2,(z0+z1)/2,R/2);           // a window shut behind a white roller shutter, white bars in front, rusting
     for(let z=z0+0.06;z<z1;z+=0.115) B.box(0.022,y1-y0+0.1,0.022,0xeeede6,0.11,(y0+y1)/2,z); [y0+0.05,(y0+y1)/2,y1-0.02].forEach(function(y){B.box(0.03,0.03,z1-z0+0.1,0xeeede6,0.11,y,(z0+z1)/2); B.box(0.03,0.012,z1-z0,0x9a6a3e,0.105,y-0.02,(z0+z1)/2);});
     [z0-0.03,z1+0.03].forEach(function(z){B.box(0.12,0.04,0.04,0xeeede6,0.06,y1-0.02,z); B.box(0.12,0.04,0.04,0xeeede6,0.06,y0+0.05,z);});}
   barred(6.0,7.6,LA+0.4,LA+2.05); barred(0.15,1.95,-0.6,2.45);      // along the forecourt under the landing, and the tall one over the pit beside our doorway
   panel(0.9,2.0,A.MT(tex(32,64,function(g){g.fillStyle='#8f9496'; g.fillRect(0,0,32,64); g.strokeStyle='#6f7476'; g.strokeRect(3,3,26,58);})),0.035,LY+1.0,(LD+LT)/2,R/2);   // the door off the landing
-  [[0.18,U+2.55,15.6,1],[0.18,U+2.95,SB+0.2,1],[0.16,U+2.4,17.4,1],[0.18,LA+0.32,2.45,0],[0.18,LA+0.32,3.3,0],[0.18,LA+0.9,2.9,0],[0.2,U+4.6,12.6,1],[0.2,U+4.3,9.0,1],[0.2,U+7.4,11.0,1],[0.2,U+3.6,4.9,1],[0.2,U+3.2,1.6,1]].forEach(function(q){const u=B.at(q[0],q[1],q[2],R/2);      // air conditioners on the wall up every floor, and three on the forecourt
+  [[0.18,AY+2.55,15.6,1],[0.18,AY+2.95,SB+0.2,1],[0.16,AY+2.4,17.4,1],[0.18,LA+0.32,2.45,0],[0.18,LA+0.32,3.3,0],[0.18,LA+0.9,2.9,0],[0.2,AY+4.6,12.6,1],[0.2,AY+4.3,9.0,1],[0.2,AY+7.4,11.0,1],[0.2,AY+3.6,4.9,1],[0.2,AY+3.2,1.6,1]].forEach(function(q){const u=B.at(q[0],q[1],q[2],R/2);      // air conditioners on the wall up every floor, and three on the forecourt
     B.bake(det.ac({brand:['electra','tadiran','plain','haier'][Math.round(q[2]*3)%4],bracket:!!q[3],up:0.6,drain:q[3]?1.4:0.3}),q[0]-0.16,q[1]-0.28,q[2],R/2);});
-  B.box(0.02,1.4,0.02,0x8f9294,0.05,U+2.0,9.4);
+  B.box(0.02,1.4,0.02,0x8f9294,0.05,AY+2.0,9.4);
   /* ---------- planting ---------- */
   function bed(x0,x1,z0,z1,h,y){B.box(x1-x0,h,z1-z0,0xb9ab90,(x0+x1)/2,y+h/2,(z0+z1)/2); B.box(x1-x0-0.36,0.02,z1-z0-0.36,0x4d4334,(x0+x1)/2,y+h+0.002,(z0+z1)/2);}      // planted bed, a low border of washed concrete
   function shrub(x,z,r,c,y){const t=det.tree('shrub',{w:r*2.1,h:r*1.5,d:r*2.1,seed:Math.floor(x*13+z*7),n:Math.round(26+r*90),size:0.36+r*0.2,tint:c===0x2a5a3a?0xb8c8a8:c===0x9fb04a?0xf0f0b0:0xffffff});
@@ -586,92 +589,308 @@ inRoom('street',function(){
     const t=det.tree('ficus',{s:s,a0:a0,seed:Math.floor(x*7+z*3)}); B.bake(t.wood,x,y0,z,0); C.bake(t.crown,x,y0,z,0);
   }
   function yucca(x,z,h,s,y0){const t=det.tree('yucca',{h:h/s,s:s,a0:x*3+z,seed:Math.floor(x*11+z*5)}); B.bake(t.wood,x,y0,z,0); B.bake(t.crown,x,y0,z,0);}      // a spiky yucca: a few trunks, each with a burst of stiff, striped leaves
-  function tree(x,z,s,a0){const t=det.tree('broad',{s:s,a0:a0,seed:Math.floor(x*17+z*3)}); B.bake(t.wood,x,U,z,0); C.bake(t.crown,x,U,z,0);}      // a broad old tree: trunk, limbs, and a low crown spreading over the alley
+  function tree(x,z,s,a0,y){const t=det.tree('broad',{s:s,a0:a0,seed:Math.floor(x*17+z*3)}); B.bake(t.wood,x,y,z,0); C.bake(t.crown,x,y,z,0);}      // a broad old tree: trunk, limbs, and a low crown spreading over the alley
   function clump(bt,x,y,z,rx,ry,rz,n,o){o=o||{}; const g=new THREE.Group(); det.crown(Object.assign({c:[0,0,0],r:[rx,ry,rz],n:n,size:0.5,seed:Math.floor(x*13+y*7+z*3),cell:'broad'},o),g); bt.bake(g,x,y,z,0);}      // a mass of leaves on its own
   const rg=A.rng(23);
-  const GS=function(z){return WELL+(z-WELL)*(GZ-WELL)/(10.4-WELL);};      // the garden reaches farther out than first drawn: spread what grows in it to match
-  tree(5.3,GS(5.4),1.1,4.2); tree(5.2,GS(9.0),0.9,3.6); tree(10.6,GS(5.9),1.0,1.6); tree(12.0,GS(2.6),0.8,0.4); tree(4.8,GS(3.4),1.0,2.6); tree(8.4,GS(8.0),1.0,5.0);      // the old trees that roof the alley and the garden
-  for(let z=BL+0.4;z<GZ-0.6;z+=1.3) clump(C,AW-0.2,U+2.75+Math.sin(z*3)*0.2,z,0.6,0.75,0.75,60,{droop:0.5,shell:0.4});                 // branches hanging low over the alley
-  [[4.0,2.4,2.4,1.0],[4.2,8.7,3.0,1.15],[6.3,2.3,1.9,0.9],[9.6,2.6,2.6,1.0],[11.5,8.6,3.2,1.15],[6.2,9.4,2.2,0.95],[9.4,9.4,1.8,0.9],[4.1,6.0,2.6,1.0],[4.4,4.1,1.6,0.85]].forEach(function(q){yucca(q[0],GS(q[1]),q[2],q[3],U);});
-  palm(5.0,GS(3.4),0.7,0.9,U); palm(11.9,GS(4.6),1.2,0.8,U);
-  for(let z=WELL+0.6;z<GZ-0.6;z+=1.6) clump(B,AW+1.2,U+1.25+rg()*0.2,z,0.85,1.05,0.95,150,{cell:'bush',size:0.55,shell:0.35,tint:rg()<0.4?0xc8d8b8:0xffffff});      // a wall of green along the fence
-  for(let z=WELL+1.2;z<GZ-1;z+=3.1) clump(B,AW+0.7,U+1.8,z,0.6,0.7,0.9,90,{cell:'bougain',size:0.4,shell:0.6});      // and bougainvillea climbing through it
-  for(let i=0;i<64;i++){const x=AW+0.35+rg()*(FW-AW-0.7), z=WELL+0.35+rg()*(GZ-WELL-0.7); shrub(x,z,0.35+rg()*0.45,i%4===3?0x2a5a3a:leaf[i%3],U);}      // and everything else is green
-  for(let i=0;i<26;i++){const x=AW+0.3+rg()*(FW-AW-0.6), z=WELL+0.3+rg()*(GZ-WELL-0.6); const t=det.tree('grass',{w:0.35,d:0.35,n:16,seed:i}); B.bake(t.crown,x,U+0.02,z,0);}      // weeds between
-  for(let i=0;i<9;i++){const z=BL+0.4+i*(GZ-BL-0.8)/8; clump(B,AW+0.35,U+0.85+rg()*0.4,z,0.5,0.35,0.5,40,{cell:'broad',size:0.5,droop:0.3,tint:0xd0e0c0});}           // big leaves leaning over the fence into the alley
-  ficus(17.4,14.15+D8,0.95,2.0,U);
+  /* ---------- the garden, from the photos from Haroe St and from inside it. Between the café and Beit HaChayal a kerb with a green fence of hoops lines the
+     pavement, an old fig in the pavement at either end. Through the gap in it you walk onto a strip of gravel: the round memorial stone in a fenced bed on
+     your left, the grey electricity cabinets beside it on the pavement, two benches on your right, the brown board with the garden's name and rules, a bin.
+     Three steps go down from it into the garden, and three more from the café's terrace. Down there it is paved all over in washed gravel, brown going
+     pink, a darker band winding down the middle: a broad landing under the steps, a path that winds on down to a round square in front of the building
+     across our yard, a round planter in its middle and an old fig growing out of the paving beside it, and another that winds down past the old fig in
+     front of our building and out into the alley. Everything else is raised beds: low walls of rough yellow stone round the back of the round squares,
+     elsewhere a border of washed concrete with a low green fence on it; palms, figs, yuccas and big-leaved plants in them. ---------- */
+  const spline=function(pts,step){const out=[]; for(let i=0;i<pts.length-1;i++){const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)], n=Math.max(2,Math.ceil(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])/step));
+      for(let k=0;k<n;k++){const t=k/n, t2=t*t, t3=t2*t, f=function(a,b,c,d){return 0.5*(2*b+(c-a)*t+(2*a-5*b+4*c-d)*t2+(3*b-a-3*c+d)*t3);}; out.push([f(p0[0],p1[0],p2[0],p3[0]),f(p0[1],p1[1],p2[1],p3[1])]);}}
+    out.push(pts[pts.length-1]); return out;};      // a smooth line through the points, one every step
+  const PC=[19.4,12.2,4.3], PW=[8.0,12.6,2.5], PLANT=[[19.4,12.2,1.3]], BH=AY+0.38, KH=0.45;      // the round square before the building across the yard, and its planter; the little one before ours; the beds' earth; their walls
+  const GP=[[2.8,[[7.9,21.25],[10.6,21.1],[13.2,20.75],[15.9,21.0],[18.2,21.4]]],      // the paved ways, [width, points]: the landing under the two flights of steps;
+    [2.2,[[16.9,20.3],[18.9,18.8],[18.0,17.2],[19.0,15.6],[19.4,14.6]]],               // from it, winding down to the round square;
+    [1.9,[[15.6,12.6],[13.6,13.8],[11.6,13.4],[9.8,12.8]]],                            // from there across to the little one before our building;
+    [1.8,[[9.3,20.3],[7.8,18.4],[8.7,16.6],[7.7,14.6]]],                               // from the landing down to it, under the café's side;
+    [1.4,[[6.0,11.8],[4.6,11.1],[AW-0.6,11.05]]]]                                      // and from it out into the alley
+    .map(function(p){const q=spline(p[1],0.25); let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; q.forEach(function(c){x0=Math.min(x0,c[0]); x1=Math.max(x1,c[0]); z0=Math.min(z0,c[1]); z1=Math.max(z1,c[1]);}); return {w:p[0],pts:q,bb:[x0,x1,z0,z1]};});
+  const segD=function(q,x,z){let d=1e9; for(let i=1;i<q.length;i++){const a=q[i-1], b=q[i], dx=b[0]-a[0], dz=b[1]-a[1], l2=dx*dx+dz*dz||1e-6, t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[1])*dz)/l2)); d=Math.min(d,Math.hypot(a[0]+t*dx-x,a[1]+t*dz-z));} return d;};
+  const paved=function(x,z){let d=Math.min(Math.hypot(x-PC[0],z-PC[1])-PC[2],Math.hypot(x-PW[0],z-PW[1])-PW[2]);      // how far a point lies off the paving (below 0: on it); the planter is a bed
+    GP.forEach(function(p){const b=p.bb; if(Math.max(b[0]-x,x-b[1],b[2]-z,z-b[3],0)-p.w/2<d) d=Math.min(d,segD(p.pts,x,z)-p.w/2);});
+    PLANT.forEach(function(q){d=Math.max(d,q[2]-Math.hypot(x-q[0],z-q[1]));}); return d;};
+  const inGarden=function(x,z,m){m=m||0; if(z>GZ-m) return false; return (x>AW+m&&x<FW&&z>WELL+m)||(x>=FW&&x<XB&&z>YY+m)||(x>=XB&&x<LBH-m&&z>YB+m);};
+  const EDGE=[[AW,GZ],[AW,WELL],[FW,WELL],[FW,YY],[XB,YY],[XB,YB],[LBH,YB],[LBH,GZ]];
+  const inside=function(x,z){let d=1e9; for(let i=0;i<EDGE.length;i++) d=Math.min(d,segD([EDGE[i],EDGE[(i+1)%EDGE.length]],x,z)); return inGarden(x,z)?d:-d;};      // how far in from the garden's edge
+  const okAt=function(x,z,r){return inside(x,z)>r*0.5+0.12&&paved(x,z)>r*0.7+0.22;};      // room to grow: in a bed, clear of its walls
+  const PLZ=[15.4,18.45,GZ,26.45], ENT=[15.55,17.65];      // the strip of gravel inside the gate, and the gate in the fence
 
+  /* the ground: washed gravel under everything, the beds' earth raised over it, a low wall wherever the two meet */
+  const gravT=tex(512,512,function(g){const r=A.rng(818), C=['rgba(208,192,176,0.9)','rgba(122,100,86,0.85)','rgba(180,152,136,0.9)','rgba(228,218,206,0.85)','rgba(94,76,64,0.8)','rgba(196,160,146,0.85)'];
+    g.fillStyle='#9e8676'; g.fillRect(0,0,512,512);
+    for(let i=0;i<36;i++){const x=r()*512, y=r()*512, q=30+r()*90, gr=g.createRadialGradient(x,y,0,x,y,q); gr.addColorStop(0,r()<0.5?'rgba(80,58,46,0.16)':'rgba(220,200,186,0.14)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}
+    for(let i=0;i<34000;i++){const s=1+r()*1.8; g.fillStyle=C[Math.floor(r()*C.length)]; g.fillRect(r()*512,r()*512,s,s*(0.7+r()*0.5));}      // the grains, a few millimetres each
+    for(let i=0;i<6;i++){g.save(); g.translate(r()*512,r()*512); g.rotate(r()*7); const l=8+r()*5; g.fillStyle=['#6e5634','#5e5030','#7a5e3a'][i%3]; g.beginPath(); g.ellipse(0,0,l,l*0.45,0,0,7); g.fill(); g.restore();}      // a few fallen fig leaves
+    for(let i=0;i<26;i++){g.fillStyle='rgba(70,36,48,0.55)'; g.beginPath(); g.arc(r()*512,r()*512,2,0,7); g.fill();}},true), gravM=A.MT(gravT,null,true);
+  const washT=tex(256,128,function(g){const r=A.rng(515), C=['#cdbfae','#8e7d6f','#bfa392','#e2d8cb','#7a6a5e','#a88d7e'];      // washed concrete: pink and grey pebbles standing out of it
+    g.fillStyle='#ac9b8b'; g.fillRect(0,0,256,128);
+    for(let i=0;i<4200;i++){const s=0.8+r()*2.2; g.fillStyle=C[Math.floor(r()*C.length)]; g.beginPath(); g.ellipse(r()*256,r()*128,s,s*(0.6+r()*0.4),r()*3,0,7); g.fill();}
+    for(let i=0;i<10;i++){const x=r()*256, y=r()*128, q=8+r()*26, gr=g.createRadialGradient(x,y,0,x,y,q); gr.addColorStop(0,'rgba(60,45,35,0.16)'); gr.addColorStop(1,'rgba(60,45,35,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}},true), washM=A.MT(washT,null,true);
+  const stoneT=tex(512,256,function(g){const r=A.rng(616), C=[[200,178,135],[186,163,118],[212,194,152],[176,150,105],[196,170,122],[168,146,110]];      // rough yellow stones in two courses, dark joints between
+    g.fillStyle='#5d5243'; g.fillRect(0,0,512,256);
+    for(let row=0;row<2;row++){const y0=row*128; let x=-r()*140; const x0=x;
+      while(x<x0+512){const w=Math.min(110+r()*130,x0+512-x), c=C[Math.floor(r()*C.length)], h=118-r()*10;
+        [0,512].forEach(function(o){const bx=x+o+4, by=y0+5+r()*3;
+          g.fillStyle='rgb('+c[0]+','+c[1]+','+c[2]+')'; g.beginPath(); g.moveTo(bx+10,by); g.lineTo(bx+w-14,by+2); g.quadraticCurveTo(bx+w-6,by+4,bx+w-7,by+16); g.lineTo(bx+w-9,by+h-12); g.quadraticCurveTo(bx+w-10,by+h,bx+w-22,by+h); g.lineTo(bx+8,by+h-2); g.quadraticCurveTo(bx,by+h-4,bx+1,by+h-16); g.lineTo(bx+2,by+12); g.quadraticCurveTo(bx+2,by,bx+10,by); g.fill();
+          for(let k=0;k<70;k++){const px=bx+4+r()*(w-16), py=by+4+r()*(h-10), q=1+r()*3.5; g.fillStyle=r()<0.6?'rgba(90,70,45,'+(0.15+r()*0.3)+')':'rgba(240,226,190,'+(0.2+r()*0.3)+')'; g.beginPath(); g.arc(px,py,q,0,7); g.fill();}      // pitted and worn
+          g.fillStyle='rgba(255,245,215,0.22)'; g.fillRect(bx+8,by+1,w-24,4); g.fillStyle='rgba(50,38,26,0.25)'; g.fillRect(bx+6,by+h-6,w-22,5);});
+        x+=w;}}},true), stoneM=A.MT(stoneT,null,true);
+  const soilT=tex(256,256,function(g){const r=A.rng(717); g.fillStyle='#4b3e2f'; g.fillRect(0,0,256,256);
+    for(let i=0;i<3600;i++){g.fillStyle=['#5b4b39','#3a2f24','#675541','#4f5a34','#3e4a2a'][Math.floor(r()*5)]; g.fillRect(r()*256,r()*256,1+r()*2.5,1+r()*2);}
+    for(let i=0;i<70;i++){g.save(); g.translate(r()*256,r()*256); g.rotate(r()*7); const l=2.5+r()*3; g.fillStyle=['#6a5a34','#7a6236','#4f5a2e','#82663c','#5b4a2c'][i%5]; g.beginPath(); g.ellipse(0,0,l,l*0.45,0,0,7); g.fill(); g.restore();}},true), soilM=A.MT(soilT,null,true);
+  [[AW,FW,WELL],[FW,XB,YY],[XB,LBH,YB]].forEach(function(q){flat(q[0],q[1],q[2],GZ,AY+0.004,gravM,2.4); flat(q[0],q[1],q[2],GZ,AY+0.02,shadeM,18).renderOrder=1;});      // the paving, in the trees' dappled shade
+  const GX0=AW, GZ0=YY, GSX=LBH-AW, GSZ=GZ-YY, GPX=16;
+  const bandT=tex(Math.round(GSX*GPX),Math.round(GSZ*GPX),function(g){const X=function(x){return (x-GX0)*GPX;}, Z=function(z){return (z-GZ0)*GPX;};      // over it: the darker band winding down the middle, and the dark ring round the fig
+    g.clearRect(0,0,GSX*GPX,GSZ*GPX); g.lineCap=g.lineJoin='round';
+    const band=spline([[16.6,22.6],[16.8,20.9],[18.0,19.4],[18.3,17.6],[18.7,16.0],[19.2,14.5],[19.4,13.6]],0.2);
+    [[1.15,'rgba(96,64,48,0.18)'],[0.8,'rgba(92,60,44,0.32)']].forEach(function(s){g.strokeStyle=s[1]; g.lineWidth=s[0]*GPX; g.beginPath(); band.forEach(function(p,i){if(i) g.lineTo(X(p[0]),Z(p[1])); else g.moveTo(X(p[0]),Z(p[1]));}); g.stroke();});
+    const gr=g.createRadialGradient(X(22),Z(14),0,X(22),Z(14),1.4*GPX); gr.addColorStop(0,'rgba(48,36,28,0.7)'); gr.addColorStop(0.45,'rgba(60,44,32,0.45)'); gr.addColorStop(1,'rgba(60,44,32,0)'); g.fillStyle=gr; g.fillRect(X(20.5),Z(12.5),2.8*GPX,2.8*GPX);});
+  const bandM=A.MT(bandT,null,true); bandM.transparent=true; bandM.depthWrite=false;
+  function gflat(x0,x1,z0,z1,y,m){const g=new THREE.BufferGeometry(), u=function(x){return (x-GX0)/GSX;}, v=function(z){return 1-(z-GZ0)/GSZ;};      // a piece laid over the garden as a whole
+    g.setAttribute('position',new THREE.Float32BufferAttribute([x0,y,z0, x0,y,z1, x1,y,z1, x1,y,z0],3));
+    g.setAttribute('uv',new THREE.Float32BufferAttribute([u(x0),v(z0), u(x0),v(z1), u(x1),v(z1), u(x1),v(z0)],2));
+    g.setIndex([0,1,2,0,2,3]); g.computeVertexNormals(); const m2=new THREE.Mesh(g,m); m2.receiveShadow=true; st.add(m2); return m2;}
+  [[AW,FW,WELL],[FW,XB,YY],[XB,LBH,YB]].forEach(function(q){gflat(q[0],q[1],q[2],GZ,AY+0.012,bandM).renderOrder=1;});
+  flat(CW,LBH,GZ,PV,U+0.004,soilM,2); flat(PLZ[0],PLZ[1],GZ,PLZ[3],U+0.008,gravM,2.4); flat(ENT[0],ENT[1],PLZ[3]-0.01,PV,U+0.008,gravM,2.4);      // up at the street's level: the beds either side, the gravel inside the gate
+
+  /* where the paving ends and the beds begin, found on a 10 cm grid: the beds' earth over every cell, or part of a cell, that is bed; a wall along every line between */
+  const MS=0.1, MX0=AW-0.25, MZ0=YY-0.25, MNX=Math.ceil((LBH+0.25-MX0)/MS), MNZ=Math.ceil((GZ+0.25-MZ0)/MS), NN=MNX+1, FV=new Float32Array(NN*(MNZ+1)), GV=new Float32Array(NN*(MNZ+1));
+  for(let j=0;j<=MNZ;j++) for(let i=0;i<=MNX;i++){const x=MX0+i*MS, z=MZ0+j*MS; FV[j*NN+i]=paved(x,z); GV[j*NN+i]=inside(x,z);}
+  (function(){const P=[], Uv=[], val=function(i,j){const k=j*NN+i; return Math.min(FV[k],GV[k]);}, at=function(i,j){return [MX0+i*MS,MZ0+j*MS];};
+    const put=function(a,b,c){if((b[1]-a[1])*(c[0]-a[0])-(b[0]-a[0])*(c[1]-a[1])<0){const t=b; b=c; c=t;} [a,b,c].forEach(function(p){P.push(p[0],BH,p[1]); Uv.push(p[0]/2,p[1]/2);});};      // facing up
+    for(let j=0;j<MNZ;j++){let run=-1;
+      for(let i=0;i<=MNX;i++){
+        const full=i<MNX&&val(i,j)>0&&val(i+1,j)>0&&val(i+1,j+1)>0&&val(i,j+1)>0;
+        if(full){if(run<0) run=i; continue;}
+        if(run>=0){put(at(run,j),at(i,j),at(i,j+1)); put(at(run,j),at(i,j+1),at(run,j+1)); run=-1;}      // a row of whole cells at once
+        if(i===MNX) break;
+        const c=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]], v=c.map(function(q){return val(q[0],q[1]);}), poly=[];
+        for(let k=0;k<4;k++){const a=c[k], b=c[(k+1)%4], va=v[k], vb=v[(k+1)%4];
+          if(va>0) poly.push(at(a[0],a[1]));
+          if((va>0)!==(vb>0)){const t=va/(va-vb); poly.push([MX0+(a[0]+(b[0]-a[0])*t)*MS,MZ0+(a[1]+(b[1]-a[1])*t)*MS]);}}
+        for(let k=1;k<poly.length-1;k++) put(poly[0],poly[k],poly[k+1]);}}
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(Uv,2)); g.computeVertexNormals();
+    const m=new THREE.Mesh(g,soilM); m.receiveShadow=true; st.add(m);})();
+  const lines=(function(){const segs=[], eid=function(i,j,v){return (j*NN+i)*2+v;};      // the lines where the paving meets a bed, strung together from the cells' pieces
+    for(let j=0;j<MNZ;j++) for(let i=0;i<MNX;i++){
+      const C=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]], f=C.map(function(q){return FV[q[1]*NN+q[0]];}), E=[[0,1,eid(i,j,0)],[1,2,eid(i+1,j,1)],[3,2,eid(i,j+1,0)],[0,3,eid(i,j,1)]], X=[];
+      E.forEach(function(e,k){const fa=f[e[0]], fb=f[e[1]]; if((fa<0)!==(fb<0)){const t=fa/(fa-fb), a=C[e[0]], b=C[e[1]]; X[k]={p:[MX0+(a[0]+(b[0]-a[0])*t)*MS,MZ0+(a[1]+(b[1]-a[1])*t)*MS],e:e[2]};}});
+      const ks=[0,1,2,3].filter(function(k){return X[k];}); let pairs=[];
+      if(ks.length===2) pairs=[[ks[0],ks[1]]]; else if(ks.length===4) pairs=((f[0]+f[1]+f[2]+f[3])/4<0)===(f[0]<0)?[[0,1],[2,3]]:[[0,3],[1,2]];
+      pairs.forEach(function(pr){const a=X[pr[0]], b=X[pr[1]]; if(inside((a.p[0]+b.p[0])/2,(a.p[1]+b.p[1])/2)>0.04) segs.push({a:a.p,b:b.p,ea:a.e,eb:b.e});});}
+    const byE=new Map(); segs.forEach(function(s,k){[s.ea,s.eb].forEach(function(e){const l=byE.get(e); if(l) l.push(k); else byE.set(e,[k]);});});
+    const used=new Uint8Array(segs.length), out=[];
+    segs.forEach(function(s0,k0){if(used[k0]) return; used[k0]=1; const line=[s0.a,s0.b];
+      [[s0.eb,true],[s0.ea,false]].forEach(function(w){let e=w[0];
+        for(;;){const l=byE.get(e)||[]; let nk=-1; for(let i=0;i<l.length;i++) if(!used[l[i]]){nk=l[i]; break;} if(nk<0) break;
+          used[nk]=1; const s=segs[nk], p=s.ea===e?s.b:s.a; e=s.ea===e?s.eb:s.ea; if(w[1]) line.push(p); else line.unshift(p);}});
+      const closed=line.length>3&&Math.hypot(line[0][0]-line[line.length-1][0],line[0][1]-line[line.length-1][1])<1e-4; if(closed) line.pop();
+      if(line.length<2) return; const n=line.length, sm=line.map(function(p,i){if(!closed&&(i===0||i===n-1)) return p; const a=line[(i-1+n)%n], b=line[(i+1)%n]; return [(a[0]+2*p[0]+b[0])/4,(a[1]+2*p[1]+b[1])/4];});
+      out.push({pts:sm,closed:closed});});
+    return out;})();
+  const kindAt=function(p){if(Math.abs(Math.hypot(p[0]-PLANT[0][0],p[1]-PLANT[0][1])-PLANT[0][2])<0.3) return 'rim';      // what the wall is: the planter's rim, rough stone round the back of the round squares, or a bed's border
+    const dc=Math.hypot(p[0]-PC[0],p[1]-PC[1])-PC[2], dw=Math.hypot(p[0]-PW[0],p[1]-PW[1])-PW[2];
+    if((Math.abs(dc)<0.2&&p[1]<PC[1]+1.4)||(Math.abs(dw)<0.2&&p[1]<PW[1]+0.6)) return 'stone'; return 'bed';};
+  const WALL={stone:{h:0.5,t:0.34,m:stoneM},bed:{h:KH,t:0.16,m:washM},rim:{h:0.42,t:0.2,m:washM}};
+  function ribbon(q,closed,w){      // a low wall along a line on the paving's edge, its face to the paving, w.t thick into the bed
+    const n=q.length; let vote=0;
+    for(let i=0;i<n-1;i++){const a=q[i], b=q[i+1], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1, mx=(a[0]+b[0])/2, mz=(a[1]+b[1])/2; vote+=paved(mx-dz/l*0.08,mz+dx/l*0.08)>paved(mx+dz/l*0.08,mz-dx/l*0.08)?1:-1;}
+    const sd=vote>=0?1:-1, N=[], S=[0], P=[], Uv=[], y0=AY, y1=AY+w.h, yb=BH-0.03;
+    for(let i=0;i<n;i++){const a=q[closed?(i-1+n)%n:Math.max(0,i-1)], b=q[closed?(i+1)%n:Math.min(n-1,i+1)], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1; N.push([-dz/l*sd,dx/l*sd]); if(i) S.push(S[i-1]+Math.hypot(q[i][0]-q[i-1][0],q[i][1]-q[i-1][1]));}
+    const quad=function(a,b,c,d,ua,ub,uc,ud,want){const ux=b[0]-a[0], uy=b[1]-a[1], uz=b[2]-a[2], vx=c[0]-a[0], vy=c[1]-a[1], vz=c[2]-a[2];
+      let T=[[a,ua],[b,ub],[c,uc],[a,ua],[c,uc],[d,ud]]; if((uy*vz-uz*vy)*want[0]+(uz*vx-ux*vz)*want[1]+(ux*vy-uy*vx)*want[2]<0) T=[[a,ua],[c,uc],[b,ub],[a,ua],[d,ud],[c,uc]];
+      T.forEach(function(e){P.push(e[0][0],e[0][1],e[0][2]); Uv.push(e[1][0],e[1][1]);});};
+    const V=function(i){const p=q[i], m=N[i]; return {i0:[p[0],y0,p[1]],i1:[p[0],y1,p[1]],o1:[p[0]+m[0]*w.t,y1,p[1]+m[1]*w.t],ob:[p[0]+m[0]*w.t,yb,p[1]+m[1]*w.t],o0:[p[0]+m[0]*w.t,y0,p[1]+m[1]*w.t]};};
+    for(let i=0;i<(closed?n:n-1);i++){const j=(i+1)%n, A1=V(i), B1=V(j), sa=S[i]/1.2, sb=(j===0?S[n-1]+Math.hypot(q[0][0]-q[n-1][0],q[0][1]-q[n-1][1]):S[j])/1.2, hv=w.h/0.6, fn=[-(N[i][0]+N[j][0]),0,-(N[i][1]+N[j][1])];
+      quad(A1.i0,B1.i0,B1.i1,A1.i1,[sa,0],[sb,0],[sb,hv],[sa,hv],fn);                                   // its face
+      quad(A1.i1,B1.i1,B1.o1,A1.o1,[sa,hv],[sb,hv],[sb,hv+w.t/0.6],[sa,hv+w.t/0.6],[0,1,0]);           // its top
+      quad(A1.o1,B1.o1,B1.ob,A1.ob,[sa,hv],[sb,hv],[sb,0.1],[sa,0.1],[-fn[0],0,-fn[2]]);}              // and what shows of its back over the earth
+    if(!closed) [[0,1],[n-1,n-2]].forEach(function(e){const E1=V(e[0]), d=[q[e[0]][0]-q[e[1]][0],0,q[e[0]][1]-q[e[1]][1]]; quad(E1.i0,E1.o0,E1.o1,E1.i1,[0,0],[w.t/1.2,0],[w.t/1.2,w.h/0.6],[0,w.h/0.6],d);});      // its ends
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(Uv,2)); B.geo(g,w.m,0,0,0);
+    return {N:N,S:S};
+  }
+  lines.forEach(function(L){      // each line cut where the kind of wall changes, the pieces meeting at the cut
+    const q=L.pts, n=q.length, k=q.map(kindAt); let s0=0;
+    if(L.closed){let c=-1; for(let i=0;i<n;i++) if(k[i]!==k[(i-1+n)%n]){c=i; break;} if(c<0){const r=ribbon(q,true,WALL[k[0]]); if(k[0]==='bed') rail(q,r,true,WALL.bed); return;} s0=c;}
+    const seq=L.closed?q.slice(s0).concat(q.slice(0,s0+1)):q, ks=L.closed?k.slice(s0).concat(k.slice(0,s0+1)):k;
+    let a=0; for(let i=1;i<=seq.length;i++) if(i===seq.length||ks[i]!==ks[a]){const piece=seq.slice(a,Math.min(i+1,seq.length)); if(piece.length>1){const r=ribbon(piece,false,WALL[ks[a]]); if(ks[a]==='bed') rail(piece,r,false,WALL.bed);} a=i;}
+  });
+  function rail(q,r,closed,w){      // the low green fence along the top of a bed's border, a post every metre or so
+    const n=q.length, len=closed?r.S[n-1]+Math.hypot(q[0][0]-q[n-1][0],q[0][1]-q[n-1][1]):r.S[n-1]; if(len<0.5) return;
+    const at=function(i){const p=q[i%n], m=r.N[i%n]; return [p[0]+m[0]*w.t/2,p[1]+m[1]*w.t/2];}, idx=[0];
+    for(let i=1;i<n;i++) if(r.S[i]-r.S[idx[idx.length-1]]>=1.1) idx.push(i);
+    if(closed) idx.push(n); else if(idx[idx.length-1]!==n-1) idx.push(n-1);
+    for(let k=1;k<idx.length;k++){const a=at(idx[k-1]), b=at(idx[k]); fence(a[0],a[1],b[0],b[1],AY+w.h,0.55,green);}
+  }
+  /* round the garden's edge: a kerb as high as the beds' walls, and the fences on it */
+  B.box(FW-AW,KH,0.12,kerb,(AW+FW)/2,AY+KH/2,WELL+0.06); B.box(XB-FW,KH,0.12,kerb,(FW+XB)/2,AY+KH/2,YY+0.06); B.box(0.12,KH,WELL-YY,kerb,FW+0.06,AY+KH/2,(YY+WELL)/2);      // over the sunken strip and the yard
+  B.box(0.14,KH,GZ-YB,kerb,LBH-0.07,AY+KH/2,(YB+GZ)/2); B.box(LBH-XB,KH,0.14,kerb,(XB+LBH)/2,AY+KH/2,YB+0.07);      // and along Beit HaChayal and the building across the yard
+  fence(AW,WELL+0.04,FW-0.1,WELL+0.04,AY+KH,0.8,wrail);      // along the edge of the sunken strip
+  fence(FW+0.06,WELL,FW+0.06,YY+0.12,AY+KH,0.8,iron); fence(FW+0.06,YY+0.06,XB-0.05,YY+0.06,AY+KH,0.8,iron);      // and on round its end, over the yard, to the building across it
+  const PG=[10.35,11.75];      // where the path comes out into the alley
+  B.box(0.12,KH,PG[0]-WELL,kerb,AW+0.06,AY+KH/2,(WELL+PG[0])/2); B.box(0.12,KH,GZ-PG[1],kerb,AW+0.06,AY+KH/2,(PG[1]+GZ)/2);
+  fence(AW+0.06,WELL+0.12,AW+0.06,PG[0],AY+KH,0.62,green); fence(AW+0.06,PG[1],AW+0.06,GZ-0.05,AY+KH,0.62,green);      // the low green fence between the alley and the garden, open where the path comes out
+
+  /* the flights: three steps of washed concrete, each 15 cm, down from the street's level; where they stand out into the garden, a stepped cheek and a handrail each side */
+  function flight(x0,x1,open){const w=x1-x0, xc=(x0+x1)/2;
+    for(let k=1;k<NST;k++){const y=U-k*SRS, z0=GZ-k*FLT;
+      B.box(w,y-GY,FLT,0xc2b4a4,xc,(GY+y)/2,z0+FLT/2); B.box(w,0.025,0.04,0x9d8f80,xc,y-0.012,z0+0.02);
+      if(open) [x0-0.07,x1+0.07].forEach(function(x){B.box(0.14,y+0.14-AY,FLT,0xb9aa99,x,(AY+y+0.14)/2,z0+FLT/2);});}
+    const a=-Math.atan2(NST*SRS,FLL+FLT), sl=Math.hypot(NST*SRS,FLL+FLT);
+    (open?[x0-0.07,x1+0.07]:[x1-0.06]).forEach(function(x){B.box(0.035,0.035,sl,iron,x,(U+AY)/2+0.92,GZ+0.15-(FLL+FLT)/2,0,a);
+      for(let k=0;k<=NST;k+=2) B.box(0.025,0.92,0.025,iron,x,U-k*SRS+0.46,GZ+0.15-k*FLT);});}
+  FL.forEach(function(f,i){flight(f[0],f[1],i>0);});
+  function vwall(x0,x1,z,y0,y1,m){const g=new THREE.BufferGeometry();      // an upright face along x, toward -z, its texture laid out in metres
+    g.setAttribute('position',new THREE.Float32BufferAttribute([x0,y0,z, x1,y0,z, x1,y1,z, x0,y1,z],3)); g.setAttribute('uv',new THREE.Float32BufferAttribute([x0/1.2,(y0-AY)/0.6, x1/1.2,(y0-AY)/0.6, x1/1.2,(y1-AY)/0.6, x0/1.2,(y1-AY)/0.6],2));
+    g.setIndex([0,2,1,0,3,2]); B.geo(g,m,0,0,0);}
+  [[AW,FL[1][0]],[FL[1][1],FL[2][0]],[FL[2][1],LBH]].forEach(function(q){vwall(q[0],q[1],GZ-0.006,AY,U,washM);});      // the drop faced in washed concrete
+  [[AW,FL[1][0]],[FL[1][1],CW],[CW,FL[2][0]],[FL[2][1],LBH]].forEach(function(q){B.box(q[1]-q[0],0.07,0.3,0xb8a998,(q[0]+q[1])/2,U+0.035,GZ+0.15);});      // a coping along the top of it
+  B.box(FL[1][0]-AW,0.45,0.24,0xe9e5da,(AW+FL[1][0])/2,U+0.225,GZ+0.12); fence(AW,GZ+0.12,FL[1][0]-0.08,GZ+0.12,U+0.45,0.5,iron);      // the back of the café's terrace: a low white wall, a railing on it
+  [[CW,FL[2][0]-0.08],[FL[2][1]+0.08,LBH]].forEach(function(q){B.box(q[1]-q[0],0.3,0.16,kerb,(q[0]+q[1])/2,U+0.15,GZ+0.1); fence(q[0],GZ+0.1,q[1],GZ+0.1,U+0.3,0.62,green);});      // and over the garden: a kerb, a green fence on it
+  fence(CW,GZ+0.25,CW,PV-0.06,U,0.95,green);      // a taller green fence between the café and the garden
+  [[13.2,ENT[0]],[ENT[1],LBH]].forEach(function(q){B.box(q[1]-q[0],0.3,0.16,kerb,(q[0]+q[1])/2,U+0.15,PV-0.08); fence(q[0],PV-0.08,q[1],PV-0.08,U+0.3,0.62,green,true);});      // the garden's front on the pavement, hoops on top
+  [PLZ[0]-0.07,PLZ[1]+0.07].forEach(function(x){B.box(0.14,0.3,PLZ[3]-GZ-0.15,kerb,x,U+0.15,(GZ+0.15+PLZ[3])/2);});      // the gravel strip's kerbs,
+  B.box(PLZ[1]-ENT[1],0.3,0.14,kerb,(ENT[1]+PLZ[1])/2,U+0.15,PLZ[3]+0.07); B.box(0.14,0.3,PV-PLZ[3],kerb,ENT[1]+0.07,U+0.15,(PLZ[3]+PV)/2);
+  B.box(ENT[0]-13.25,0.3,0.14,kerb,(13.25+ENT[0])/2,U+0.15,PLZ[3]+0.07); B.box(0.14,0.3,PV-PLZ[3],kerb,ENT[0]-0.07,U+0.15,(PLZ[3]+PV)/2);      // and the memorial stone's bed, a low fence round it
+  B.box(ENT[0]-0.14-13.25,0.26,PV-0.16-PLZ[3]-0.14,soil,(13.25+ENT[0]-0.14)/2,U+0.13,(PLZ[3]+0.14+PV-0.16)/2);
+  fence(13.3,PLZ[3]+0.07,ENT[0]-0.07,PLZ[3]+0.07,U+0.3,0.42,green,true); fence(ENT[0]-0.07,PLZ[3]+0.07,ENT[0]-0.07,PV-0.16,U+0.3,0.42,green,true);
+  B.box(0.2,1.7,PV-GZ+0.2,0xd9c6b2,LBH+0.1,U+0.85,(GZ+PV)/2); B.box(0.26,0.06,PV-GZ+0.2,0xc9b6a2,LBH+0.1,U+1.72,(GZ+PV)/2);      // Beit HaChayal's rough pink wall closes it on the right
+
+  /* what grows, in the beds */
+  const gBlock=[], gSeat=[], gLamp=[];      // what stands on the paving, for walkers to go round
+  PLANT.forEach(function(q){for(let k=0;k<7;k++){const a=k*2.4, d=k?q[2]*0.55:0; shrub(q[0]+Math.cos(a)*d,q[1]+Math.sin(a)*d,0.3+(k%3)*0.06,k%3===1?0x2a5a3a:leaf[k%3],BH);}      // the round planter, full of low leaves
+    [0.6,2.7,4.8].forEach(function(a,k){clump(B,q[0]+Math.cos(a)*0.6,BH+0.35,q[1]+Math.sin(a)*0.6,0.35,0.3,0.35,26,{cell:'broad',size:0.75,droop:0.4,tint:k===1?0xc89090:0xd8ecb0});});});
+  ficus(10.6,7.6,1.0,1.0,BH);      // the old fig before our building, roofing the alley and half the garden
+  ficus(22.0,14.0,0.95,2.6,AY); gBlock.push([21.45,22.55,13.45,14.55]);      // and the one that grows out of the paving of the round square
+  [[5.6,5.6,1.15,4.2],[12.9,4.0,0.95,1.6],[5.0,18.0,0.95,3.6],[24.0,19.0,1.05,2.6],[25.2,9.0,1.0,5.0]].forEach(function(q){if(okAt(q[0],q[1],0.5)) tree(q[0],q[1],q[2],q[3],BH);});      // broad old trees
+  [[8.4,4.2,2.8,0.9],[13.4,9.4,4.6,1.0],[4.8,15.0,3.2,0.95],[21.8,20.4,4.2,1.0],[26.0,17.0,7.4,1.2],[25.6,13.2,6.6,1.15],[15.2,7.8,5.2,1.05],[14.6,10.4,4.4,1.0],[11.0,15.6,2.6,0.9]].forEach(function(q){if(okAt(q[0],q[1],0.4)) palm(q[0],q[1],q[2],q[3],BH);});      // date palms
+  function fan(x,z,h,y){const t=det.tree('washingtonia',{h:h,s:1,seed:Math.floor(x*5+z)}); B.bake(t.wood,x,y,z,0); C.bake(t.crown,x,y,z,0);}      // a tall fan palm
+  fan(11.7,24.6,10.5,U); fan(24.9,24.3,11.5,U); if(okAt(25.9,21.0,0.4)) fan(25.9,21.0,9.5,BH);
+  [[6.0,2.8,2.2,1.0],[9.4,2.6,2.6,1.0],[4.6,8.6,2.4,1.0],[4.4,13.4,1.8,0.9],[22.6,17.4,2.0,0.95],[22.8,7.5,2.2,1.0],[24.8,15.4,2.4,1.0],[15.6,17.6,2.2,1.0],[10.6,18.4,1.8,0.9],[16.6,9.2,2.0,0.95]].forEach(function(q){if(okAt(q[0],q[1],0.6)) yucca(q[0],q[1],q[2],q[3],BH);});
+  for(let i=0,n=0;i<500&&n<64;i++){const x=AW+0.4+rg()*(LBH-AW-0.8), z=YY+0.4+rg()*(GZ-YY-0.8), s=0.35+rg()*0.45; if(!okAt(x,z,s)) continue; n++; shrub(x,z,s,n%4===3?0x2a5a3a:leaf[n%3],BH);}      // and bushes everywhere else
+  for(let i=0,n=0;i<400&&n<18;i++){const x=AW+0.5+rg()*(LBH-AW-1), z=YY+0.5+rg()*(GZ-YY-1); if(!okAt(x,z,0.5)) continue; n++; clump(B,x,BH+0.55,z,0.55,0.6,0.55,36,{cell:'broad',size:0.95,droop:0.45,tint:0xd8ecb0});}      // philodendrons and elephant's ears, their leaves big as trays
+  for(let i=0,n=0;i<300&&n<40;i++){const x=AW+0.3+rg()*(LBH-AW-0.6), z=YY+0.3+rg()*(GZ-YY-0.6); if(!okAt(x,z,0.15)) continue; n++; const t=det.tree('grass',{w:0.35,d:0.35,n:16,seed:i}); B.bake(t.crown,x,BH,z,0);}      // weeds between
+  for(let z=BL+0.4;z<GZ-FLL-0.3;z+=1.3) clump(C,AW-0.2,AY+2.75+Math.sin(z*3)*0.2,z,0.6,0.75,0.75,60,{droop:0.5,shell:0.4});                 // branches hanging low over the alley
+  for(let z=WELL+0.6;z<GZ-0.6;z+=1.6) if(okAt(AW+1.2,z,0.7)) clump(B,AW+1.2,BH+0.9+rg()*0.2,z,0.85,1.05,0.95,150,{cell:'bush',size:0.55,shell:0.35,tint:rg()<0.4?0xc8d8b8:0xffffff});      // a wall of green along the alley's fence
+  for(let z=WELL+1.2;z<GZ-1;z+=3.1) if(okAt(AW+0.7,z,0.3)) clump(B,AW+0.7,BH+1.4,z,0.6,0.7,0.9,90,{cell:'bougain',size:0.4,shell:0.6});      // and bougainvillea climbing through it
+  for(let i=0;i<9;i++){const z=BL+0.4+i*(GZ-FLL-BL-0.8)/8; if(okAt(AW+0.4,z,0.1)) clump(B,AW+0.35,BH+0.5+rg()*0.4,z,0.5,0.35,0.5,40,{cell:'broad',size:0.5,droop:0.3,tint:0xd0e0c0});}           // big leaves leaning over the fence into the alley
+  /* the old fig in the bed by the landing, pruned back to a few bare limbs, a string of bulbs along every one, lit in the evening */
+  (function(){const x=13.0, z=17.2, y=BH, bark=det.barkM('brown'), wood=DP.grp(), lamp=A.lampMat('L:street',0xf3eedc,0xffd28a,1), top=[0.06,2.0,0.02], limbs=[];
+    DP.limb([[0,-0.05,0],[0.04,1.0,0.03],top],0.26,0.2,bark,wood,{flare:0.7,ls:5,rs:10,seed:5});
+    [[-0.5,1.1,[[-0.7,3.0,0.2],[-1.2,3.9,0.3],[-0.4,4.6,0.2]]],[0.7,0.9,[[0.6,2.9,-0.1],[1.0,3.6,-0.3],[1.9,3.9,-0.2]]],[2.4,0.8,[[0.3,3.0,0.6],[0.6,3.8,1.0],[0.3,4.4,1.5]]],[3.6,0.7,[[-0.2,2.8,-0.6],[0.2,3.5,-1.1],[0.9,3.7,-1.4]]]].forEach(function(l,k){
+      const pts=[top].concat(l[2]); DP.limb(pts,0.13,0.06,bark,wood,{ls:6,rs:7,seed:k}); limbs.push(pts);
+      const e=pts[pts.length-1]; DP.cyl(0.065,0.05,0xc9b89a,e[0],e[1]+0.02,e[2],wood,8);});      // each limb sawn off at its end
+    B.bake(wood,x,y,z,0.4);
+    const cs=Math.cos(0.4), sn=Math.sin(0.4);
+    limbs.forEach(function(pts){for(let i=1;i<pts.length;i++){const a=pts[i-1], b=pts[i], l=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]), m=Math.max(2,Math.round(l/0.16));
+      for(let k=(i>1?1:2);k<=m;k++){const t=k/m, px=a[0]+(b[0]-a[0])*t, py=a[1]+(b[1]-a[1])*t+0.1, pz=a[2]+(b[2]-a[2])*t; B.sph(0.03,lamp,x+px*cs+pz*sn,y+py,z-px*sn+pz*cs);}}});
+    for(let k=0;k<14;k++){const a=k*1.9, h=0.5+k*0.1; B.sph(0.03,lamp,x+Math.cos(a)*0.27,y+h,z+Math.sin(a)*0.27);}      // and wound round the trunk
+    [[-0.5,4.9,0.3,1.0],[1.6,4.2,-0.3,0.8],[0.5,4.7,1.5,0.85],[1.0,4.0,-1.4,0.7]].forEach(function(q,k){clump(C,x+q[0]*cs+q[2]*sn,y+q[1],z-q[0]*sn+q[2]*cs,q[3],q[3]*0.6,q[3],120,{cell:'broad',size:0.5,shell:0.45,seed:80+k});});      // what leaves it has left, high up
+    A.pool('L:street',0xffc070,x,AY+0.03,z+1.6,3.4,st,0.3);})();
+  /* on the café's paving by the garden's fence, two figures carved in grey stone on a block of washed concrete: one sits hugging its knees and smiles, the other leans on its back */
+  (function(){const x=10.42, z=23.55, b=B.at(x,U,z,-R/2), st2=A.MT(tex(128,128,function(g){const r=A.rng(919); g.fillStyle='#77736c'; g.fillRect(0,0,128,128);      // grey stone, pitted
+      for(let i=0;i<900;i++){g.fillStyle=r()<0.6?'rgba(60,58,54,0.5)':'rgba(170,166,158,0.45)'; g.beginPath(); g.arc(r()*128,r()*128,0.6+r()*1.6,0,7); g.fill();}},true),null,true);
+    b.geo(new THREE.BoxGeometry(0.58,0.62,0.5),washM,0,0.31,0);
+    b.sph(0.25,st2,0,0.85,-0.02,1,1.15,0.85); [-0.12,0.12].forEach(function(dx){b.sph(0.12,st2,dx,0.72,0.16,1,0.85,1.3);});      // hunched, its arms round its knees
+    b.sph(0.15,st2,0.02,1.13,0.12,1,1.05,1);      // its head bowed forward over them
+    b.sph(0.17,st2,-0.14,1.0,-0.26,0.9,1.25,0.8); b.sph(0.11,st2,-0.16,1.28,-0.22,1,1.05,1);})();      // and the other, leaning on its back
+  /* benches: one with its back to the drop under the cabinets, one each round the round squares, one by the winding path; lantern lamps in the beds; a bin */
+  function seat(x,z,o){bench(x,AY,z,o); gSeat.push([x,z,o]); const c=Math.cos(o), s=Math.sin(o), xs=[], zs=[];
+    [[-0.9,-0.32],[0.9,-0.32],[-0.9,0.12],[0.9,0.12]].forEach(function(p){xs.push(x+p[0]*c+p[1]*s); zs.push(z-p[0]*s+p[1]*c);}); gBlock.push([Math.min.apply(0,xs),Math.max.apply(0,xs),Math.min.apply(0,zs),Math.max.apply(0,zs)]);}
+  const rim=function(c,a,d){return [c[0]+Math.cos(a)*(c[2]-d),c[1]+Math.sin(a)*(c[2]-d),Math.atan2(-Math.cos(a),-Math.sin(a))];};      // a point d in from a round square's edge, and the way that faces its middle
+  seat(12.6,GZ-0.42,R); [rim(PC,3.6,0.45),rim(PC,5.2,0.45),rim(PW,4.9,0.45)].forEach(function(q){if(paved(q[0],q[1])<-0.3) seat(q[0],q[1],q[2]);});
+  (function(){const q=GP[1].pts, i=Math.round(q.length*0.55), a=q[i], b=q[i+1], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1, nx=dz/l, nz=-dx/l, d=GP[1].w/2-0.36; seat(a[0]+nx*d,a[1]+nz*d,Math.atan2(-nx,-nz));})();
+  mbin(11.6,AY,20.05); gBlock.push([11.3,11.9,19.75,20.35]);
+  const lantM=A.lampMat('L:street',0xeeebe0,0xffe7bd,0.95);
+  [[15.7,16.0],[6.4,15.8],[24.0,15.9],[11.0,10.6],[17.3,8.6]].forEach(function(q){if(!okAt(q[0],q[1],0.05)) return; const x=q[0], z=q[1], y=BH;      // dark green posts, a lantern on each
+    B.cyl(0.08,0.3,green,x,y+0.15,z,10,0.06); B.cyl(0.045,2.9,green,x,y+1.75,z,8); B.cyl(0.06,0.08,green,x,y+3.22,z,8,0.09);
+    B.cyl(0.08,0.3,lantM,x,y+3.41,z,8,0.13); B.cyl(0.17,0.07,green,x,y+3.6,z,8,0.05); B.sph(0.03,green,x,y+3.68,z);
+    A.pool('L:street',0xffd9a0,x,AY+0.03,z,4.4,st,0.42);});
+  /* up at the street's level: bushes, palms and big leaves in the bed behind the cabinets and the stone, flowers round the stone, palms and yuccas on the right */
+  [[11.3,23.2,0.6],[12.2,24.0,0.5],[11.2,26.4,0.55],[12.3,26.9,0.45],[11.6,22.8,0.4],[12.7,25.6,0.55],[14.3,25.3,0.5],[13.3,22.9,0.45],[15.0,24.4,0.38]].forEach(function(q,i){shrub(q[0],q[1],q[2],leaf[i%3],U);});
+  palm(13.6,24.1,2.6,0.9,U,18); palm(14.7,23.1,2.0,0.85,U,16);
+  [[12.3,23.7],[14.1,22.75],[13.8,26.0]].forEach(function(q){clump(B,q[0],U+0.55,q[1],0.5,0.5,0.5,34,{cell:'broad',size:0.9,droop:0.45,tint:0xd8ecb0});});
+  clump(B,CW+0.35,U+1.1,25.2,0.35,0.8,1.6,140,{cell:'bougain',size:0.4,shell:0.6});
+  [[13.7,27.7],[15.1,27.75],[14.0,26.8],[15.1,26.85]].forEach(function(q,i){const t=det.tree('shrub',{w:0.5,h:0.45,d:0.4,seed:60+i,n:50,size:0.28,flowers:true}); B.bake(t.crown,q[0],U+0.3,q[1],0);});
+  palm(21.6,24.9,3.6,1.0,U); yucca(20.2,23.2,2.2,1.0,U); yucca(23.6,26.8,2.6,1.05,U); yucca(19.1,25.4,1.6,0.9,U);
+  [[22.6,23.0,0.6],[20.6,26.4,0.5],[25.8,22.9,0.55],[24.0,25.4,0.5],[19.4,23.9,0.4],[26.2,26.6,0.45]].forEach(function(q,i){shrub(q[0],q[1],q[2],leaf[(i+1)%3],U);});
+  for(let z=GZ+0.6;z<PV-0.6;z+=1.2) clump(B,CW+0.3,U+0.7,z,0.3,0.55,0.5,50,{cell:'broad',size:0.6,droop:0.35,tint:0xd8ecb0});      // big leaves against the café's fence
+  ficus(10.35,29.3,1.0,0.6,U,true); ficus(24.4,29.35,1.05,2.2,U,true);      // the two old figs in the pavement, either end of the garden
   /* ---------- parked in the alley, as in the photos ---------- */
   function moto(x,y,z,o,c,kind,plate){B.bake(det.moto(kind,{color:c,plate:plate}),x,y,z,o);}       // nose along +z. kind: dirt, scooter, sport or covered
-  moto(1.35,U,SB+0.6,0,0x2b2d30,'dirt','63-418');                                                          // a dirt bike at the stair's foot, its yellow plate
-  moto(3.0,U,15.0,0.06,0,'covered'); moto(2.98,U,17.0,-0.04,0x2a2c2e,'scooter','82-574');                 // a covered bike and a maxi scooter against the garden fence
+  moto(1.35,AY,SB+0.6,0,0x2b2d30,'dirt','63-418');                                                          // a dirt bike at the stair's foot, its yellow plate
+  moto(3.0,AY,15.0,0.06,0,'covered'); moto(2.98,AY,17.0,-0.04,0x2a2c2e,'scooter','82-574');                 // a covered bike and a maxi scooter against the garden fence
   moto(2.95,LA,BL+1.5,-0.08,0x2346b8,'sport','71-905');                                                     // a blue sports bike down by the bridge
   [[0.6,LA,2.6,0],[0.9,LA,2.85,1.2],[0.7,LA,2.3,2.1]].forEach(function(q){B.sph(0.28,0x151617,q[0],q[1]+0.2,q[2],1.2,0.75,1); B.sph(0.07,0x151617,q[0]+0.08,q[1]+0.42,q[2],1,1.6,1);      // black rubbish bags against number 12's wall, knotted
     B.box(0.012,0.1,0.06,0x1d1e1f,q[0]+0.12,q[1]+0.48,q[2],q[3]);});
-  B.bake(det.bike('city',{color:0x9fd3c0,basket:true}),3.22,U,AL+0.7,0.05); B.bake(det.bike('mtb',{color:0x2b2d30,grip:0x3a3c3e}),0.42,U,SB+1.2,0);    // a mint town bike on the fence by the steps, a black one on number 12's wall
-  B.bake(det.cat(0xd98a3a),AW+0.06,U+0.22,7.4,-R/2+0.4); B.bake(det.cat(0x2b2d30,{lie:true}),1.4,LA,3.9,0.6);                                     // a ginger cat on the garden kerb, a black one asleep on the forecourt
+  B.bake(det.bike('city',{color:0x9fd3c0,basket:true}),3.22,AY,AL+0.7,0.05); B.bake(det.bike('mtb',{color:0x2b2d30,grip:0x3a3c3e}),0.42,AY,SB+1.2,0);    // a mint town bike on the fence by the steps, a black one on number 12's wall
+  B.bake(det.cat(0xd98a3a),AW+0.06,AY+KH,7.4,-R/2+0.4); B.bake(det.cat(0x2b2d30,{lie:true}),1.4,LA,3.9,0.6);                                     // a ginger cat on the garden kerb, a black one asleep on the forecourt
 
-  B.oz=C.oz=D8;      // from here to the cars, all of it stands D8 farther out than first drawn
-  /* ---------- the café of number 12, from the photo walking out: marble-topped bistro tables on black cast-iron feet, folding
-     chairs with wooden slats, big beige parasols with a heater glowing orange on each pole, an evaporative cooler, plants in
-     pots against the glass front; on the right the spare furniture stacked up, white plastic chairs and high chairs ---------- */
+  /* ---------- the café of number 12, from the photos from Haroe St: its terrace runs from the glass front to the garden's fence, square tables in checked
+     cloths, red and white, green and white or blue, white wicker chairs on cane-brown legs, big white parasols, strings of bulbs from the old fig over it
+     all; at the back, by the steps down into the garden, the evaporative cooler and a planter of rough stone; plants in pots against the glass ---------- */
   const marble=A.MT(tex(64,64,function(g){const r=A.rng(81); g.fillStyle='#e6e3dc'; g.fillRect(0,0,64,64); g.strokeStyle='rgba(150,145,135,0.5)'; g.lineWidth=1;
     for(let i=0;i<9;i++){g.beginPath(); let x=r()*64, y=r()*64; g.moveTo(x,y); for(let k=0;k<5;k++){x+=(r()-0.3)*20; y+=(r()-0.5)*14; g.lineTo(x,y);} g.stroke();}
-    g.fillStyle='#2f7d57'; g.beginPath(); g.arc(32,32,5,0,7); g.fill();},true),null,true);
-  const castIron=0x1b1c1d, slat=0xa66a35;
+    g.fillStyle='#2f7d57'; g.beginPath(); g.arc(32,32,5,0,7); g.fill();},true),null,true);      // the marble of the counter inside
+  const castIron=0x1b1c1d, cane=0x8a5e3a;
+  const weave=A.MT(tex(64,64,function(g){g.fillStyle='#f3efe4'; g.fillRect(0,0,64,64); g.strokeStyle='rgba(140,125,100,0.5)'; g.lineWidth=1.2;
+    for(let i=-64;i<128;i+=5){g.beginPath(); g.moveTo(i,0); g.lineTo(i+64,64); g.stroke(); g.beginPath(); g.moveTo(i,64); g.lineTo(i+64,0); g.stroke();}},true),null,true);
+  weave.side=THREE.DoubleSide;
+  const check=function(c){return A.MT(tex(64,64,function(g){g.fillStyle='#f7f5ef'; g.fillRect(0,0,64,64); g.fillStyle=c; g.globalAlpha=0.45;      // gingham: stripes each way, solid where they cross
+    for(let i=0;i<64;i+=8){g.fillRect(i,0,4,64); g.fillRect(0,i,64,4);} g.globalAlpha=1; for(let i=0;i<64;i+=8) for(let j=0;j<64;j+=8) g.fillRect(i,j,4,4);},true),null,true);};
+  const cloth=[check('#c42a3a'),check('#2f7d6a'),check('#2a5f9e')];
   const seats=[];                                                                // where people can sit: x, z and the way they face, in the street's frame
-  function fchair(x,z,o){const c=B.at(x,U,z,o); seats.push([x,z+B.oz,o]);          // folding chair, facing its local +z: black frame, wooden slats
-    [-0.2,0.2].forEach(function(dx){c.box(0.025,0.95,0.025,castIron,dx,0.47,-0.16,0,-0.12); c.box(0.025,0.5,0.025,castIron,dx,0.24,0.18,0,0.32);});
-    for(let i=0;i<5;i++) c.box(0.42,0.018,0.06,slat,0,0.46,-0.13+i*0.07);
-    for(let i=0;i<3;i++) c.box(0.42,0.05,0.016,slat,0,0.68+i*0.09,-0.23-i*0.012,0,-0.12);}
-  function bistro(x,z,n,a0){                                                       // round marble top on a black cast-iron base with three curved feet
-    B.cyl(0.33,0.025,marble,x,U+0.735,z,24); B.cyl(0.335,0.02,0xb9bcbe,x,U+0.715,z,24);
-    B.cyl(0.03,0.68,castIron,x,U+0.37,z,8);
-    for(let k=0;k<3;k++){const a=k*2.094+(a0||0); B.box(0.035,0.035,0.32,castIron,x+Math.sin(a)*0.15,U+0.1,z+Math.cos(a)*0.15,a,-0.35); B.sph(0.03,castIron,x+Math.sin(a)*0.3,U+0.03,z+Math.cos(a)*0.3);}
-    for(let i=0;i<n;i++){const a=(a0||0)+0.5+i*2*R/n; fchair(x+Math.sin(a)*0.6,z+Math.cos(a)*0.6,a+R);
-      if((i+Math.round(x*3))%3!==2){const cx=x+Math.sin(a)*0.2, cz=z+Math.cos(a)*0.2;                           // a cup on its saucer, a spoon, in front of most places
-        B.cyl(0.065,0.008,0xf6f4ee,cx,U+0.752,cz,16); B.cyl(0.04,0.06,0xf6f4ee,cx,U+0.786,cz,14,0.045); B.cyl(0.038,0.004,(i%2?0x5a3a22:0xc8a27a),cx,U+0.815,cz,12);
-        B.geo(new THREE.TorusGeometry(0.018,0.005,5,10),0xf6f4ee,cx+Math.cos(a)*0.05,U+0.79,cz-Math.sin(a)*0.05,a+R/2); B.box(0.006,0.003,0.08,0xc9cdd0,cx+0.05,U+0.758,cz,a);}}
-    if(n>2){B.cyl(0.03,0.1,0xe8f0f0,x,U+0.8,z,10,0.025); B.sph(0.035,[0xe84a5a,0xf2c84a,0xf6f4ee][Math.round(x+z)%3],x,U+0.88,z);}      // a little vase with a flower
-    else{B.box(0.08,0.1,0.06,0x2b2d30,x+0.05,U+0.8,z-0.05,0.4); B.box(0.07,0.085,0.004,0xf6f4ee,x+0.05,U+0.81,z-0.018,0.4);}               // or the menu in its holder
+  function wchair(x,z,o){const c=B.at(x,U,z,o); seats.push([x,z,o]);           // a wicker bistro chair, facing its local +z: a woven seat, a round woven back
+    [[-0.18,0.16],[0.18,0.16],[-0.17,-0.15],[0.17,-0.15]].forEach(function(q){c.cyl(0.013,0.46,cane,q[0],0.23,q[1],6);});
+    c.box(0.41,0.035,0.4,weave,0,0.475,0); c.box(0.42,0.025,0.025,cane,0,0.455,0.2);
+    c.geo(new THREE.CylinderGeometry(0.23,0.22,0.3,12,1,true,R-1.1,2.2),weave,0,0.7,0.02);
+    c.geo(new THREE.TorusGeometry(0.23,0.012,5,12,2.2),cane,0,0.85,0.02,R/2-1.1,-R/2);
+    [-1,1].forEach(function(s){c.cyl(0.012,0.42,cane,s*0.17,0.66,-0.15,6);});}
+  function ctable(x,z,cl,n,a0){                                                  // a square table in its checked cloth, chairs round it; cups, the napkins, salt and pepper
+    B.cyl(0.03,0.72,castIron,x,U+0.36,z,8); B.cyl(0.24,0.03,castIron,x,U+0.015,z,14);
+    B.box(0.78,0.012,0.78,cl,x,U+0.752,z); [[0,1],[1,0],[0,-1],[-1,0]].forEach(function(q){B.box(q[0]?0.006:0.78,0.16,q[0]?0.78:0.006,cl,x+q[0]*0.393,U+0.68,z+q[1]*0.393);});
+    for(let i=0;i<n;i++){const a=(a0||0)+i*2*R/n; wchair(x+Math.sin(a)*0.68,z+Math.cos(a)*0.68,a+R);
+      if((i+Math.round(x*3+z))%3!==2){const cx=x+Math.sin(a)*0.22, cz=z+Math.cos(a)*0.22;
+        B.cyl(0.065,0.008,0xf6f4ee,cx,U+0.763,cz,16); B.cyl(0.04,0.06,0xf6f4ee,cx,U+0.797,cz,14,0.045); B.cyl(0.038,0.004,(i%2?0x5a3a22:0xc8a27a),cx,U+0.826,cz,12);}}
+    B.box(0.09,0.09,0.06,0xd8d4ca,x+0.12,U+0.803,z-0.1); B.cyl(0.02,0.07,0xf6f4ee,x-0.1,U+0.793,z+0.08,8); B.cyl(0.02,0.07,0x3a3a3a,x-0.05,U+0.793,z+0.08,8);
   }
-  const heater=A.reg(new THREE.MeshLambertMaterial({color:0xff9440,emissive:0xd8601a}),'street');
-  function parasol(x,z,s){                                                         // a big square parasol on ribs, a valance round it
-    B.box(0.55,0.22,0.55,0x9a958c,x,U+0.11,z); B.cyl(0.05,2.8,0xb4a58c,x,U+1.4,z,10); B.cyl(0.045,0.6,heater,x,U+2.05,z,12);
-    for(let k=0;k<4;k++){const a=R/4+k*R/2; B.box(0.025,0.025,s*0.72,0x9c8f78,x+Math.sin(a)*s*0.33,U+2.62,z+Math.cos(a)*s*0.33,a,0.32);}
-    const g=new THREE.ConeGeometry(s*0.7071,0.55,4,1,true).toNonIndexed(); g.computeVertexNormals(); B.geo(g,0xe3d8c0,x,U+2.9,z,R/4);
+  function parasol(x,z,s){                                                         // a big square white parasol on its ribs, a valance round it
+    B.box(0.55,0.22,0.55,0x9a958c,x,U+0.11,z); B.cyl(0.045,2.8,0xd9d4c8,x,U+1.4,z,10);
+    for(let k=0;k<4;k++){const a=R/4+k*R/2; B.box(0.025,0.025,s*0.72,0xb9b2a2,x+Math.sin(a)*s*0.33,U+2.62,z+Math.cos(a)*s*0.33,a,0.32);}
+    const g=new THREE.ConeGeometry(s*0.7071,0.55,4,1,true).toNonIndexed(); g.computeVertexNormals(); B.geo(g,0xf1eee6,x,U+2.9,z,R/4);
     const gu=new THREE.ConeGeometry(s*0.7071,0.55,4,1,true).toNonIndexed(); const ix=gu.attributes.position; for(let i=0;i<ix.count;i+=3){const t=[ix.getX(i),ix.getY(i),ix.getZ(i)]; ix.setXYZ(i,ix.getX(i+2),ix.getY(i+2),ix.getZ(i+2)); ix.setXYZ(i+2,t[0],t[1],t[2]);}
-    gu.computeVertexNormals(); B.geo(gu,0xc9b48c,x,U+2.89,z,R/4);                  // its underside, warmer where the heater lights it
-    [[0,1],[1,0],[0,-1],[-1,0]].forEach(function(q){B.box(q[0]?0.02:s,0.22,q[0]?s:0.02,0xe0d5bc,x+q[0]*s/2,U+2.53,z+q[1]*s/2);});
+    gu.computeVertexNormals(); B.geo(gu,0xded7c8,x,U+2.89,z,R/4);                  // its underside
+    [[0,1],[1,0],[0,-1],[-1,0]].forEach(function(q){B.box(q[0]?0.02:s,0.22,q[0]?s:0.02,0xebe6da,x+q[0]*s/2,U+2.53,z+q[1]*s/2);});
   }
-  const CAFE=[[1.15,11.5,2,0.4],[1.15,13.0,2,0.2],[1.2,14.5,2,0.9],[1.2,16.0,2,0.3],[4.4,13.6,3,0.6],[5.9,14.2,2,1.0],[4.6,15.4,2,0.1],[6.2,15.8,2,0.5]], UMB=[[1.6,12.2,3.0],[1.6,15.0,3.0],[5.2,14.6,3.2]];      // tables down the café's side, the lane to our alley kept clear
-  UMB.forEach(function(q){parasol(q[0],q[1],q[2]);}); CAFE.forEach(function(q){bistro(q[0],q[1],q[2],q[3]);});
-  (function(){const x=3.55, z=10.5, cb=A.MT(tex(128,192,function(g){g.fillStyle='#22282a'; g.fillRect(0,0,128,192); g.strokeStyle='#8a6a48'; g.lineWidth=8; g.strokeRect(0,0,128,192);      // the chalk board out on the square
+  const CAFE=[[3.2,27.1,2,0,0],[3.2,25.4,2,0,1],[5.4,27.1,4,0,0],[5.4,25.4,2,0,2],[5.4,23.75,2,R/2,1],[7.6,27.1,2,0,1],[7.6,25.4,3,0.4,0],[9.9,27.1,2,0,0],[9.9,25.4,2,0,2]],
+    UMB=[[4.3,26.25,3.2],[8.75,26.25,3.2],[7.0,24.1,2.6]];      // the tables in rows out from the glass, a lane kept clear along it to the alley's steps, and a way through to the garden's
+  UMB.forEach(function(q){parasol(q[0],q[1],q[2]);}); CAFE.forEach(function(q){ctable(q[0],q[1],cloth[q[4]],q[2],q[3]);});
+  (function(){const x=0.95, z=27.95, cb=A.MT(tex(128,192,function(g){g.fillStyle='#22282a'; g.fillRect(0,0,128,192); g.strokeStyle='#8a6a48'; g.lineWidth=8; g.strokeRect(0,0,128,192);      // the chalk board out by the door
       g.fillStyle='#f4f0e2'; g.textAlign='center'; g.font='bold 20px sans-serif'; g.fillText('היום',64,30); g.font='15px sans-serif'; g.textAlign='right';
       [['הפוך','14'],['אספרסו','9'],['קרואסון','15'],['שקשוקה','52'],['סלט','48'],['לימונענע','16']].forEach(function(q,i){g.fillStyle=i%2?'#f2d36a':'#f4f0e2'; g.fillText(q[0],112,58+i*22); g.textAlign='left'; g.fillText(q[1],16,58+i*22); g.textAlign='right';});
       g.strokeStyle='#e8a0b0'; g.lineWidth=2; g.beginPath(); g.arc(64,180,6,0,7); g.stroke();}),null,true);
     [-1,1].forEach(function(s){const fr=B.at(x,U,z+s*0.12,0); fr.box(0.5,0.8,0.03,0x8a6a48,0,0.46,0,0,-s*0.15); fr.geo(new THREE.PlaneGeometry(0.44,0.72),cb,0,0.47,s*0.02,s>0?0:R,-s*0.15);});})();
-  B.box(0.12,0.1,0.12,0x8a6a48,1.15,U+0.8,11.5); [0.03,-0.02].forEach(function(o,i){B.box(0.012,0.1,0.03,i?0xf2d33a:0xf6f4ee,1.15+o,U+0.86,11.5);});      // a napkin box with sugar sachets
-  (function(){const c=B.at(0.45,U,10.85,R/2), w=0xe9ebeb;                          // the evaporative cooler on its castors, by the café's front, blowing at the tables
+  (function(){const c=B.at(7.0,U,22.78,0), w=0xe9ebeb;                            // the evaporative cooler on its castors, at the back, blowing at the tables
     c.box(0.78,0.36,0.52,w,0,0.26,0); c.box(0.74,0.85,0.48,w,0,0.86,0); c.box(0.78,0.1,0.52,0xdfe2e3,0,1.33,0);
     c.box(0.6,0.62,0.02,0xbfc4c6,0,0.9,0.245); c.cyl(0.26,0.02,0x9aa0a2,0,0.9,0.25,24,null,0,R/2); for(let i=0;i<7;i++) c.box(0.56,0.012,0.03,0x8e9598,0,0.66+i*0.08,0.262);
     c.box(0.02,0.6,0.36,0xbfc4c6,0.375,0.9,0); c.box(0.16,0.02,0.1,0x2c3a55,-0.2,1.385,0.1);
     [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){c.cyl(0.04,0.05,iron,q[0]*0.33,0.04,q[1]*0.2,6,null,0,R/2);});
   })();
-  for(let i=0;i<5;i++){const z=11.6+i*0.95; B.cyl(0.15,0.38,0x6f6a62,0.18,U+0.19,z,12,0.18); B.cyl(0.14,0.02,0x4d4334,0.18,U+0.38,z,12);
+  B.geo(new THREE.BoxGeometry(0.9,0.72,0.66),A.MT(ashlar,null,true),8.0,U+0.36,22.8); B.box(0.8,0.02,0.56,soil,8.0,U+0.73,22.8);      // the planter of rough stone beside it, at the top of the steps
+  shrub(8.0,22.8,0.32,leaf[1],U+0.72); clump(B,8.1,U+1.0,22.8,0.32,0.22,0.25,30,{cell:'bougain',size:0.22});
+  for(let i=0;i<5;i++){const z=11.6+D8+i*0.95; B.cyl(0.15,0.38,0x6f6a62,0.18,U+0.19,z,12,0.18); B.cyl(0.14,0.02,0x4d4334,0.18,U+0.38,z,12);
     const t=det.tree(i%2?'shrub':'yucca',i%2?{w:0.4,h:0.9,d:0.4,seed:i,n:70,size:0.34}:{h:0.6,s:0.8,trunks:2,seed:i}); B.bake(t.wood,0.18,U+0.38,z,i); B.bake(t.crown,0.18,U+0.38,z,i);}   // tall plants in pots along the glass front
-  (function(){const x=4.05, z=10.75;                                              // the spare furniture, stacked on the right
+  (function(){const x=5.9, z=22.95;                                               // the spare chairs, stacked by the back wall, and a cool box
     for(let i=0;i<6;i++){const c=B.at(x,U+i*0.07,z,0.15); c.box(0.44,0.03,0.42,0xf2f2ef,0,0.45,0); c.box(0.44,0.42,0.03,0xf2f2ef,0,0.68,-0.2,0,-0.15); [[-1],[1]].forEach(function(q){c.box(0.025,0.45,0.025,0xe6e6e2,q[0]*0.2,0.22,0.18,0,0.12);});}
-    [[0.55,0.25],[0.7,-0.25]].forEach(function(q){const c=B.at(x+q[0],U,z+q[1],-0.3); c.box(0.36,0.08,0.34,0xf4f4f1,0,0.6,0); c.box(0.36,0.3,0.04,0xf4f4f1,0,0.78,-0.15);
-      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(p){c.box(0.022,0.62,0.022,0xb9bdbf,p[0]*0.2,0.3,p[1]*0.18,0,p[1]*0.12);});});      // white high chairs on splayed legs
-    const t=B.at(x+0.6,U,z+0.75,0.1); t.box(0.7,0.04,0.7,0xb07a3e,0,0.76,0); t.cyl(0.035,0.72,castIron,0,0.38,0,8); t.box(0.5,0.04,0.04,castIron,0,0.04,0); t.box(0.04,0.04,0.5,castIron,0,0.04,0);
-    B.box(0.55,0.75,0.45,0xeef0ef,x-0.25,U+0.375,z+0.75); B.box(0.5,0.05,0.42,0x2c2f31,x-0.25,U+0.78,z+0.75);       // a white cool box under a black cover
-  })();
-  [0.95,2.35].forEach(function(x,i){B.box(1.25,0.45,0.45,0xf1efe8,x,U+0.225,17.55); B.box(1.17,0.02,0.37,0x4d4334,x,U+0.455,17.55);
-    const t=det.tree('hedge',{w:1.2,h:0.62,d:0.42,seed:40+i,n:150,size:0.3}); B.bake(t.crown,x,U+0.42,17.55,0);});      // hedge in white boxes along the pavement
-  B.cyl(0.22,0.6,0xe6dfcd,0.6,U+0.3,16.75,12,0.34); (function(){const t=det.tree('shrub',{w:0.8,h:0.6,d:0.8,seed:51,n:110,size:0.3,tint:0xc89aa8}); B.bake(t.crown,0.6,U+0.58,16.75,0);})();      // big pot of coleus by the corner
-  B.box(1.0,0.5,0.5,0xa39c92,10.25,U+0.25,14.9); shrub(10,14.9,0.26,leaf[1],U+0.45); clump(B,10.4,U+0.68,14.9,0.3,0.15,0.2,30,{cell:'bougain',size:0.22});      // brick planter with flowers
-  [[10.95,15.95],[11.45,15.05]].forEach(function(q){B.cyl(0.16,0.4,0xd9cdb4,q[0],U+0.2,q[1],10,0.22); palm(q[0],q[1],0.2,0.55,U+0.4,9);});
+    B.box(0.55,0.62,0.42,0xeef0ef,5.15,U+0.31,22.78); B.box(0.5,0.05,0.4,0x2c2f31,5.15,U+0.645,22.78);})();
+  [0.95,2.35].forEach(function(x,i){B.box(1.25,0.45,0.45,0xf1efe8,x,U+0.225,17.55+D8); B.box(1.17,0.02,0.37,0x4d4334,x,U+0.455,17.55+D8);
+    const t=det.tree('hedge',{w:1.2,h:0.62,d:0.42,seed:40+i,n:150,size:0.3}); B.bake(t.crown,x,U+0.42,17.55+D8,0);});      // hedge in white boxes along the pavement
+  B.cyl(0.22,0.6,0xe6dfcd,0.6,U+0.3,16.75+D8,12,0.34); (function(){const t=det.tree('shrub',{w:0.8,h:0.6,d:0.8,seed:51,n:110,size:0.3,tint:0xc89aa8}); B.bake(t.crown,0.6,U+0.58,16.75+D8,0);})();      // big pot of coleus by the corner
 
   /* ---------- street furniture ---------- */
   function sign(t,w,h,x,y,z,o,round,parent){            // a sign plate: a drawing on the face, grey behind
@@ -685,47 +904,85 @@ inRoom('street',function(){
     g.font='bold 17px sans-serif'; g.fillText('חניה',64,30); g.font='bold 14px sans-serif'; g.fillText('לבעלי תו אזורי',64,50); g.font='bold 34px sans-serif'; g.fillText('5',64,88);
     g.font='12px sans-serif'; g.fillText("א'-ה' 07:00-21:00",64,114); g.fillText("ו' 07:00-13:00",64,132); g.fillText('גרירה',64,150);});
   const hro=det.streetSign('הראה',"HARO'E"), msh=det.streetSign('משה שרת','MOSHE SHARET');
-  B.bake(det.sign([['cross',0.6]]),4.6,U,18,0.25);                                                              // zebra crossing sign
-  B.bake(det.sign([['park',0.45],{t:tZone,w:0.45,h:0.56}],{stripes:A.MT(stripe,null,true)}),2.2,U,18.05,0);     // the blue and white pole with the parking rules
-  B.bake(det.sign([['nomoto',0.6]]),10.4,U,13.75,0);                                                            // no motorcycles on the square
-  B.bake(det.sign([{t:hro,w:0.75,h:0.28},['nostop',0.5]],{h:2.9}),8.95,U,18.25,0);                              // the street's name, where the crossing begins; no stopping by the red and white kerb
-  B.bake(det.sign([['bump',0.7]]),22.2,U,18.2,R/2);                                                             // a speed bump ahead
-  B.bake(det.hydrant(),12.9,U,18.0,0.3);
-  [[6.2,15.5,'בזק'],[1.8,14.2,'ביוב'],[14.2,17.2,'מקורות']].forEach(function(q){B.bake(det.manhole(q[2],q[2]==='בזק'?0.3:0.34),q[0],U,q[1],0.4);});
-  B.bake(det.bin({color:0x2f6b3f}),-1.6,U,17.75,R); B.bake(det.bin({color:0xe8b81e,open:0.12}),-2.35,U,17.75,R); B.bake(det.bin({big:true,color:0x6d7174,lid:0x2f6b3f}),-3.6,U,17.6,R);      // the bins out by number 12, recycling and the big one
-  [5.3,8.9,10.3].forEach(function(x){B.cyl(0.12,0.7,0xa9aaa6,x,U+0.35,18.15,10); B.sph(0.12,0xa9aaa6,x,U+0.7,18.15);});      // concrete bollards
+  B.bake(det.sign([['cross',0.6]]),4.6,U,18+D8,0.25);                                                              // zebra crossing sign
+  B.bake(det.sign([['park',0.45],{t:tZone,w:0.45,h:0.56}],{stripes:A.MT(stripe,null,true)}),2.2,U,18.05+D8,0);     // the blue and white pole with the parking rules
+  B.bake(det.sign([{t:hro,w:0.75,h:0.28},['nostop',0.5]],{h:2.9}),8.95,U,18.25+D8,0);                              // the street's name, where the crossing begins; no stopping by the red and white kerb
+  B.bake(det.sign([['bump',0.7]]),22.2,U,18.2+D8,R/2);                                                             // a speed bump ahead
+  const disT=tex(96,96,function(g){g.fillStyle='#1f5fb4'; g.fillRect(0,0,96,96); g.strokeStyle='#fff'; g.lineWidth=4; g.strokeRect(5,5,86,86); g.fillStyle='#fff';      // parking for the disabled, the permit's number under it
+      g.beginPath(); g.arc(46,24,7,0,7); g.fill(); g.fillRect(41,32,10,24); g.fillRect(41,50,26,8); g.fillRect(60,50,8,22); g.lineWidth=6; g.strokeStyle='#fff'; g.beginPath(); g.arc(44,62,16,0.6,4.0); g.stroke();}),
+    numT=tex(96,28,function(g){g.fillStyle='#f2d23a'; g.fillRect(0,0,96,28); g.fillStyle='#222'; g.font='bold 18px sans-serif'; g.textAlign='center'; g.fillText('21-112-13',48,21);});
+  B.bake(det.sign([{t:disT,w:0.4,h:0.4},{t:numT,w:0.4,h:0.12}],{h:2.7,pole:0x2f5a3a}),10.75,U,28.2,0);
+  B.bake(det.hydrant(),12.9,U,18.0+D8,0.3);
+  [[6.2,15.5+D8,'בזק'],[1.8,14.2+D8,'ביוב'],[14.2,17.2+D8,'מקורות']].forEach(function(q){B.bake(det.manhole(q[2],q[2]==='בזק'?0.3:0.34),q[0],U,q[1],0.4);});
+  B.bake(det.bin({color:0x2f6b3f}),-1.6,U,17.75+D8,R); B.bake(det.bin({color:0xe8b81e,open:0.12}),-2.35,U,17.75+D8,R); B.bake(det.bin({big:true,color:0x6d7174,lid:0x2f6b3f}),-3.6,U,17.6+D8,R);      // the bins out by number 12, recycling and the big one
+  [5.3,8.9].forEach(function(x){B.cyl(0.12,0.7,0xa9aaa6,x,U+0.35,18.15+D8,10); B.sph(0.12,0xa9aaa6,x,U+0.7,18.15+D8);});      // concrete bollards
   function bench(x,y,z,o){const b=B.at(x,y,z,o), wood=0x8a5a3c;                                                // park bench, facing its local +z
     for(let i=0;i<3;i++){b.box(1.7,0.035,0.11,wood,0,0.44,-0.13+i*0.13); b.box(1.7,0.11,0.03,wood,0,0.58+i*0.13,-0.24-i*0.03);}
     [-0.7,0.7].forEach(function(dx){b.box(0.05,0.44,0.42,iron,dx,0.22,-0.02); b.box(0.05,0.5,0.05,iron,dx,0.68,-0.27);});}
-  bench(12,U,15.45,-R/2);
-  B.cyl(0.24,0.8,0x1f4a36,11.1,U+0.4,17.65,12,0.27); B.cyl(0.29,0.12,0x183b2b,11.1,U+0.86,17.65,12,0.2); B.box(0.16,0.16,0.01,0xe8c91a,11.1,U+0.5,17.925);      // municipal bin
-  function cabinet(x,z,o){const c=B.at(x,U,z,o); c.box(0.85,0.12,0.34,0x8f9492,0,0.06,0); c.box(0.85,1.3,0.32,0xb9bdbc,0,0.77,0); c.box(0.01,1.2,0.01,0x7d8280,0,0.77,0.162);}      // grey utility cabinet
-  cabinet(12,17.9,0);
-  const glow=A.lampMat('L:street',0xeeebe0,0xffe7bd,0.95), bulb=A.lampMat('L:street',0xf3eedc,0xffd28a,1);
-  [[AW-0.25,10.6,U],[9.4,10.6,U],[12.2,10.5,U]].forEach(function(q){                                               // globe lamps on green poles
-    B.cyl(0.045,3.0,green,q[0],q[2]+1.5,q[1],8); B.sph(0.2,glow,q[0],q[2]+3.15,q[1]); A.pool('L:street',0xffd9a0,q[0],q[2]+0.03,q[1]+B.oz,4.2,st,0.42);});
-  UMB.forEach(function(q){A.pool('L:street',0xffb070,q[0],U+0.03,q[1]+B.oz,2.4,st,0.35);});      // each heater warms the ground under its parasol
+  function mbin(x,y,z){B.cyl(0.24,0.8,0x1f4a36,x,y+0.4,z,12,0.27); B.cyl(0.29,0.12,0x183b2b,x,y+0.86,z,12,0.2); B.box(0.16,0.16,0.01,0xe8c91a,x,y+0.5,z+0.275);}      // municipal bin
+  mbin(13.9,U,29.65);
 
-  /* ---------- the fenced garden with the round memorial stone ---------- */
-  bed(12.5,18.9,11.55,17.85,0.35,U);
-  [[12.6,17.75,18.8,17.75],[18.8,17.75,18.8,11.65],[18.8,11.65,12.6,11.65],[12.6,11.65,12.6,17.75]].forEach(function(q){fence(q[0],q[1],q[2],q[3],U+0.35,0.7,green,true);});
-  palm(13.6,15.15,2.6,1.25,U+0.35); palm(16.1,15.85,3.6,1.3,U+0.35); palm(14.8,12.95,3.0,1.2,U+0.35); palm(17.9,16.75,2.2,1.1,U+0.35);
-  [[13.4,16.85,0.34,0x9fb04a],[16,17.05,0.3,leaf[1]],[17.1,15.75,0.4,0x9fb04a],[13.8,13.45,0.4,leaf[2]],[18,12.65,0.36,leaf[0]],[15.7,13.95,0.32,0x9fb04a]].forEach(function(q){shrub(q[0],q[1],q[2],q[3],U+0.35);});
-  (function(){const x=14.7, y=U+0.35+0.56, z=16.8, lean=0.15;
-    B.cyl(0.62,0.22,0xddd6c4,x,y,z,28,null,0,R/2-lean);
-    const t=tex(256,256,function(g){
-      g.fillStyle='#e9e3d2'; g.beginPath(); g.arc(128,128,128,0,7); g.fill(); const r=A.rng(3); for(let i=0;i<500;i++){g.fillStyle='rgba(120,110,90,'+(0.04+r()*0.08)+')'; g.fillRect(r()*256,r()*256,2,2);}
-      g.strokeStyle='#8f8672'; g.lineWidth=2; [[92,72],[164,72]].forEach(function(q){g.beginPath(); g.arc(q[0],q[1],15,0,7); g.stroke(); g.fillStyle='#8f8672'; g.fillRect(q[0]-14,q[1]+22,28,3);});      // two emblems
-      g.fillStyle='#7d7460'; g.textAlign='center'; g.font='bold 30px serif'; g.fillText('גינת שלום',128,142);
-      g.fillStyle='rgba(125,116,96,0.7)'; [[150,170],[112,192],[84,212]].forEach(function(q){let u=128-q[0]/2; while(u<128+q[0]/2-6){const w=8+r()*16; g.fillRect(u,q[1],Math.min(w,128+q[0]/2-u),4); u+=w+5;}});      // the rest of the inscription, too small to read from here
+  /* ---------- inside the garden's gate: the benches, the bin, the board with its rules, the memorial stone, and the cabinets on the pavement ---------- */
+  bench(17.95,U,23.5,-R/2); bench(17.95,U,25.3,-R/2); mbin(18.0,U,26.95);
+  B.bake(det.sign([['nomoto',0.5]],{h:2.5}),18.95,U,27.62,0);                                                // no motorcycles in the garden
+  B.box(0.06,1.25,0.06,0x8a8f92,19.2,U+0.62,27.6); B.box(0.34,0.42,0.1,0x2f6b45,19.2,U+1.35,27.6); B.box(0.28,0.34,0.01,0xe8d24a,19.2,U+1.35,27.656);      // a notice in a little green case
+  (function(){const x=19.95, z=27.45, bT=tex(320,448,function(g){g.scale(2,2); g.clearRect(0,0,160,224);      // the garden's board: brown wood, an arched top, the city's emblem, its name and its rules
+      g.fillStyle='#6a3024'; g.beginPath(); g.moveTo(4,220); g.lineTo(4,40); g.quadraticCurveTo(80,-8,156,40); g.lineTo(156,220); g.closePath(); g.fill();
+      g.strokeStyle='#a8705a'; g.lineWidth=3; g.stroke(); g.fillStyle='#d9c9a0'; g.beginPath(); g.arc(80,26,10,0,7); g.fill();
+      g.fillStyle='#ecdcb8'; g.textAlign='center'; g.textBaseline='middle'; g.font='bold 17px sans-serif'; g.fillText('גן ג\'ורי סלם',80,50);
+      g.font='7px sans-serif'; g.fillText('ע"ש קבלן מראשוני הקבלנים',80,64); g.fillText('והבונים ברמת גן',80,72); g.fillText('1909-1982',80,80);
+      g.fillStyle='#e0b850'; g.beginPath(); g.moveTo(10,88); g.quadraticCurveTo(80,76,150,88); g.lineTo(150,99); g.quadraticCurveTo(80,87,10,99); g.fill();
+      g.fillStyle='#6a3024'; g.font='bold 8px sans-serif'; g.fillText('כללי התנהגות בגן',80,87.5);
+      g.fillStyle='#ecdcb8'; g.textAlign='right'; g.font='5.5px sans-serif';
+      ['אין לפגוע בצמחים ובמתקני הגן','אין להרעיש בגן בין השעות 14:00-16:00','ובין השעות 21:00-07:00','הכניסה לגן ברכב אסורה','אין לאפשר לכלבים להסתובב ללא רסן','חובה על בעלי הכלבים לאסוף את הצואה','אין להקים אירועים ואין להבעיר אש בגן']
+        .forEach(function(t,i){const y=110+i*14; g.fillText(t,126,y); g.strokeStyle='#ecdcb8'; g.lineWidth=1.2; g.beginPath(); g.arc(138,y,5,0,7); g.stroke(); g.beginPath(); g.moveTo(134.5,y+3.5); g.lineTo(141.5,y-3.5); g.stroke();});}),
+      bm=A.MT(bT,null,true); bm.alphaTest=0.5;
+    [-0.5,0.5].forEach(function(dx){B.box(0.09,2.1,0.09,0x5a2a1e,x+dx,U+1.05,z);});
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.55),bm); m.position.set(x,U+1.35,z+0.05); st.add(m); B.box(1.0,1.35,0.04,0x5a2a1e,x,U+1.28,z+0.01);})();
+  const painted=[tex(192,320,function(g){      // two of them painted over by the city's artists: a woman in a striped shirt in her chair, after Picasso,
+      g.fillStyle='#e0b23a'; g.fillRect(0,0,192,320); g.fillStyle='#c9922a'; g.fillRect(0,250,192,70); g.fillStyle='#3c6fb0'; g.fillRect(36,170,124,22); g.fillRect(40,190,16,110); g.fillRect(140,190,16,110);      // the chair
+      g.fillStyle='#f2efe6'; g.beginPath(); g.moveTo(58,118); g.quadraticCurveTo(96,100,138,118); g.lineTo(150,232); g.lineTo(48,232); g.closePath(); g.fill();
+      g.fillStyle='#24356e'; for(let y=124;y<232;y+=12) g.fillRect(50+(232-y)*0.05,y,100-(232-y)*0.1,6);      // the stripes
+      g.fillStyle='#5b8fd0'; g.fillRect(48,232,104,46); g.fillStyle='#e9c9a8'; g.beginPath(); g.ellipse(96,74,28,36,0.15,0,7); g.fill();      // her skirt; her face
+      g.fillStyle='#1f1a17'; g.beginPath(); g.ellipse(84,52,34,30,-0.3,0,7); g.fill(); g.fillRect(56,52,16,64);      // her dark hair
+      g.fillStyle='#1f1a17'; g.beginPath(); g.ellipse(104,72,4,6,0,0,7); g.fill(); g.fillStyle='#c0392b'; g.fillRect(100,96,14,5);
+      g.fillStyle='#e9c9a8'; g.beginPath(); g.ellipse(118,108,10,22,-0.5,0,7); g.fill(); g.strokeStyle='#1f1a17'; g.lineWidth=2.5; g.strokeRect(2,2,188,316);}),
+    tex(192,320,function(g){      // and a white goat's long face on blue and red
+      g.fillStyle='#2f5fa8'; g.fillRect(0,0,192,190); g.fillStyle='#c0392b'; g.fillRect(0,190,192,130);
+      g.fillStyle='#f4f1ea'; g.beginPath(); g.moveTo(96,60); g.quadraticCurveTo(150,70,128,180); g.quadraticCurveTo(112,262,96,270); g.quadraticCurveTo(80,262,64,180); g.quadraticCurveTo(42,70,96,60); g.fill();
+      [-1,1].forEach(function(sd){g.beginPath(); g.ellipse(96+sd*52,104,34,12,sd*0.35,0,7); g.fill(); g.fillStyle='#1d1d1f'; g.beginPath(); g.ellipse(96+sd*24,132,6,8,0,0,7); g.fill(); g.fillStyle='#f4f1ea';});      // ears; eyes
+      g.fillStyle='#b8b0a4'; g.beginPath(); g.ellipse(96,252,12,8,0,0,7); g.fill(); g.fillStyle='#d9433a'; g.beginPath(); g.arc(96,58,12,0,7); g.fill(); g.fillStyle='#e8c14a'; g.beginPath(); g.arc(96,58,4,0,7); g.fill();      // its nose; a red flower on its head
+      g.strokeStyle='#1f1a17'; g.lineWidth=2.5; g.strokeRect(2,2,188,316);})];
+  [[11.28,0],[12.03,1],[12.78,2]].forEach(function(q){const x=q[0];      // the electricity cabinets in a row on a plinth: two painted, one grey, sprayed over and stuck with notices
+    B.box(0.72,1.25,0.4,0xb4b9b7,x,U+0.15+0.625,PV-0.25); B.box(0.74,0.04,0.42,0x9a9f9d,x,U+1.42,PV-0.25); B.box(0.01,1.15,0.01,0x7d8280,x+0.36,U+0.78,PV-0.045);
+    if(q[1]<2){panel(0.7,1.2,A.MT(painted[q[1]],null,true),x,U+0.8,PV-0.044,0); return;}
+    panel(0.7,1.2,A.MT(tex(96,160,function(g){const r=A.rng(70+q[1]); g.fillStyle='#b8bdbb'; g.fillRect(0,0,96,160); for(let i=0;i<300;i++){g.fillStyle='rgba(80,80,80,'+(r()*0.12)+')'; g.fillRect(r()*96,r()*160,2,2);}
+      g.lineWidth=3; g.lineCap='round'; for(let k=0;k<3;k++){g.strokeStyle=['#2b2d30','#4a4f8a','#3a3a3a','#8a3a3a'][(k+q[1])%4]; g.beginPath(); let x0=10+r()*30, y0=60+r()*60; g.moveTo(x0,y0); for(let j=0;j<7;j++){x0+=6+r()*8; y0+=(r()-0.5)*26; g.lineTo(x0,y0);} g.stroke();}      // tags
+      g.fillStyle=['#f2f0e8','#e8d24a','#f2f0e8'][q[1]]; g.fillRect(14+q[1]*12,18,30,40); g.fillStyle='#555'; for(let j=0;j<5;j++) g.fillRect(18+q[1]*12,24+j*7,22,2);}),null,true),x,U+0.8,PV-0.044,0);});
+  B.box(2.3,0.15,0.46,0x9a9d9a,12.03,U+0.075,PV-0.25);
+  (function(){const x=14.4, y=U+0.3+0.66, z=27.2, lean=0.15;      // the round memorial stone, standing in its bed, facing the street
+    B.box(0.9,0.14,0.42,0xcfc8b6,x,U+0.37,z); B.cyl(0.62,0.22,0xddd6c4,x,y,z,28,null,0,R/2-lean);
+    const t=tex(512,512,function(g){
+      g.scale(2,2); g.fillStyle='#e9e3d2'; g.beginPath(); g.arc(128,128,128,0,7); g.fill(); const r=A.rng(3); for(let i=0;i<500;i++){g.fillStyle='rgba(120,110,90,'+(0.04+r()*0.08)+')'; g.fillRect(r()*256,r()*256,2,2);}
+      g.strokeStyle='#8f8672'; g.lineWidth=2; [[92,52],[164,52]].forEach(function(q){g.beginPath(); g.arc(q[0],q[1],13,0,7); g.stroke(); g.beginPath(); g.moveTo(q[0],q[1]-8); g.lineTo(q[0]+7,q[1]+6); g.lineTo(q[0]-7,q[1]+6); g.closePath(); g.stroke();});      // the city's emblem and the fund's
+      g.fillStyle='#6f6754'; g.textAlign='center'; g.textBaseline='middle';      // the inscription, cut into the stone
+      [['bold 25px serif','גינת שלום',88],['16px serif','ע"ש סלים אברהם ג\'ורי ז"ל',114],['13px serif','תרס"ט-תשמ"ב',134],['13px serif','1909-1982',151],['13px serif','מראשוני הקבלנים והבונים',172],['13px serif','של העיר רמת-גן',190]]
+        .forEach(function(l){g.font=l[0]; g.fillText(l[1],128,l[2]);});
     });
-    const m=new THREE.Mesh(new THREE.CircleGeometry(0.6,28),A.MT(t)); m.position.set(x,y+Math.sin(lean)*0.113,z+Math.cos(lean)*0.113+B.oz); m.rotation.x=-lean; st.add(m);
+    const m=new THREE.Mesh(new THREE.CircleGeometry(0.6,28),A.MT(t)); m.position.set(x,y+Math.sin(lean)*0.113,z+Math.cos(lean)*0.113); m.rotation.x=-lean; st.add(m);
   })();
-  (function(){const b=B.at(18.6,U,17.85,0);                                           // old municipal notice board under a little green roof
-    b.box(0.08,1.9,0.08,0x5f6466,-0.6,0.95,0); b.box(0.08,1.9,0.08,0x5f6466,0.6,0.95,0); b.box(1.3,1.1,0.06,0xd98a2b,0,1.3,0); b.box(1.5,0.06,0.34,0x2f7d4f,0,1.95,0);
-    [[-0.35,1.5,0xf3ebdc],[0.1,1.35,0x9fc4d6],[0.4,1.6,0xf0d21c],[-0.2,1.0,0xfbfaf6]].forEach(function(q){b.box(0.26,0.34,0.01,q[2],q[0],q[1],0.036);});})();
+  const glow=A.lampMat('L:street',0xeeebe0,0xffe7bd,0.95), bulb=A.lampMat('L:street',0xf3eedc,0xffd28a,1);
+  [[3.75,22.62,U],[11.3,22.75,U],[18.6,22.7,U]].concat(gLamp.map(function(q){return [q[0],q[1],AY];})).forEach(function(q){            // globe lamps on green poles
+    B.cyl(0.045,3.0,green,q[0],q[2]+1.5,q[1],8); B.sph(0.2,glow,q[0],q[2]+3.15,q[1]); A.pool('L:street',0xffd9a0,q[0],q[2]+0.03,q[1],4.2,st,0.42);});
+  const wireM=new THREE.LineBasicMaterial({color:0x1d1f21});
+  function festoon(a,b,sag){const n=Math.max(4,Math.round(Math.hypot(b[0]-a[0],b[2]-a[2])/0.55)), pts=[];      // a string of bulbs, sagging between two points
+    for(let i=0;i<=n;i++){const t=i/n; pts.push(new THREE.Vector3(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t-sag*4*t*(1-t),a[2]+(b[2]-a[2])*t));}
+    st.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),wireM));
+    for(let i=1;i<n;i++){const p=pts[i]; B.cyl(0.012,0.04,0x2b2d2f,p.x,p.y-0.03,p.z,6); B.sph(0.035,bulb,p.x,p.y-0.08,p.z);}}
+  festoon([10.2,U+4.3,28.9],[0.08,U+3.3,23.4],0.35); festoon([10.2,U+4.3,28.9],[0.08,U+3.3,26.6],0.35); festoon([11.6,U+3.9,24.6],[0.08,U+3.2,25.0],0.3);      // from the old fig and the palm over the terrace to number 12
+  festoon([10.5,U+4.6,29.2],[24.3,U+4.6,29.3],0.5);                                                                                                       // and along the garden's front, fig to fig
+  [[4.3,25.6],[8.5,25.6],[5.6,27.4]].forEach(function(q){A.pool('L:street',0xffc070,q[0],U+0.03,q[1],2.6,st,0.3);});      // their light on the tables
 
-  B.oz=C.oz=0;
   /* ---------- parked cars ---------- */
   const pr=A.rng(808), plateNo=function(){const d=function(n){let t=''; for(let i=0;i<n;i++) t+=Math.floor(pr()*10); return t;}; return pr()<0.5?d(2)+'-'+d(3)+'-'+d(2):d(3)+'-'+d(2)+'-'+d(3);};
   function car(x,z,o,col,kind){B.bake(det.car(kind||'hatch',{color:col,plate:plateNo()}),x,RY,z,o);}                   // nose along its local +x
@@ -755,7 +1012,7 @@ inRoom('street',function(){
     [[-0.3,16.6+D8],[-1.9,16.05+D8]].forEach(function(q){                                        // two flags on poles off the front
       b.cyl(0.015,1.9,0xd9d9d2,q[0],U+3.3+0.59,q[1]+0.74,6,null,0,0.9);
       const m=panel(1.0,0.72,fm,q[0],U+3.72,q[1]+1.0,R/2,g); m.rotation.set(-0.55,R/2,0);});
-    [[16.05,4.3],[20.15,4.3],[0.95,3.3]].forEach(function(q,i){b.bake(det.ac({brand:['electra','tadiran','plain'][i],bracket:true,up:0.5,drain:1.2}),0.02,U+q[1]-0.28,q[0],R/2);});      // air conditioners on the flank, one high up by our doorway
+    [[16.05,4.3],[20.15,4.3],[0.95,3.3]].forEach(function(q,i){b.bake(det.ac({brand:['electra','tadiran','plain'][i],bracket:true,up:0.5,drain:1.2}),0.02,AY+q[1]-0.28,q[0],R/2);});      // air conditioners on the flank, one high up by our doorway
     /* the café's glass front, in brass-coloured frames, and the café inside it: dark wood and marble, the machine, cakes under glass */
     const cz=13.1+D8, cw=5.2, brass=0xc9b98f, wood=0x4a3424, glassC=A.reg(new THREE.MeshLambertMaterial({color:0xb8d0cc,transparent:true,opacity:0.16,depthWrite:false}),'street');
     panel(cw,2.7,glassC,0.03,U+1.35,cz,R/2,g).renderOrder=3; b.box(0.06,0.25,5.4,0xd8ccb2,0.03,U+2.82,cz);
@@ -844,32 +1101,42 @@ inRoom('street',function(){
       for(let x=1.25;x<FW-0.2;x+=0.25) F.box(0.006,0.6,0.006,0x3a3c3c,x,3.8,0.42);}
   });
   B.done(); C.done(); F.done();
-  A.street={st:st,X0:XS,fac:fac,U:U,RY:RY,LA:LA,KZ:KZ,RW:RW,D8:D8,AW:AW,GZ:GZ,SQ:SQ,BL:BL,FZ:FZ,AL:AL,seats:seats,cafe:CAFE.map(function(q){return [q[0],q[1]+D8];}),inside:A.street_cafe};
-  A.streetView=[st.localToWorld(new THREE.Vector3(2.3,U+1.62,12.2+D8)),st.localToWorld(new THREE.Vector3(1.1,1.1,0.4))];      // standing at the café, looking down the alley to our bridge
+  A.street={st:st,X0:XS,fac:fac,U:U,AY:AY,RY:RY,LA:LA,KZ:KZ,RW:RW,D8:D8,AW:AW,GZ:GZ,PV:PV,CW:CW,BL:BL,FZ:FZ,AL:AL,seats:seats,cafe:CAFE.map(function(q){return [q[0],q[1]];}),inside:A.street_cafe};
+  A.streetView=[st.localToWorld(new THREE.Vector3(2.3,U+1.62,24.6)),st.localToWorld(new THREE.Vector3(1.1,AY+0.9,0.4))];      // standing at the café, looking down the steps and the alley to our bridge
   /* Sims mode can walk out here: where the ground is (in this frame, turned into the model's), what stands in the way,
-     and how high the ground is: the bridges at the lobby's level, the forecourt and the patch a step below, the steps, the square, the road */
+     and how high the ground is: the bridges at the lobby's level, the forecourt a step below, the alley and the garden, the flights up, the street */
   const wr=function(q){return [XS+q[2],XS+q[3],ZC-q[1],ZC-q[0]];};
+  const gWalk=[];      // the garden's paving, in strips a cell deep along x, less a body's width from its walls (fillRect takes that much off every side)
+  for(let z=YY+0.1;z<GZ;z+=0.2){let x0=null; for(let x=AW+0.1;x<LBH+0.2;x+=0.2){const ok=x<LBH&&inside(x,z)>0.2&&paved(x,z)<-0.24&&!FL.some(function(f){return z>GZ-FLL-0.3&&x>f[0]-0.45&&x<f[1]+0.45;});      // onto a flight only at its foot
+    if(ok&&x0==null) x0=x; else if(!ok&&x0!=null){gWalk.push([x0-0.23,x+0.03,z-0.23,z+0.23]); x0=null;}}}
   A.rooms.street.rs=[[DL+0.05,DR-0.06,-0.2,LD0+0.02],[WX0+0.04,1.78,0.2,0.85],[WX0+0.04,2.08,0.5,1.12],[WX0+0.04,WX1-0.04,0.8,BL+0.5],      // our bridge, in steps along its slanting side; each overlaps the next, as each loses a body's width at its edges
-    [0.12,AW-0.12,BL+0.2,GZ+0.3],
-    [0.15,SQ-0.2,GZ-0.3,KZ-0.2],[-3.5,0.4,16.2+D8,KZ-0.2],[SQ-0.6,30,15.9+D8,KZ-0.2],[5.5,8.7,KZ-0.6,KZ+RW+0.6],[3.9,26,KZ+RW+0.1,28.8+D8]].map(wr);
-  const tb=CAFE.map(function(q){return [q[0]-0.72,q[0]+0.72,q[1]-0.72+D8,q[1]+0.72+D8];}).concat(UMB.map(function(q){return [q[0]-0.3,q[0]+0.3,q[1]-0.3+D8,q[1]+0.3+D8];}));
-  A.streetBlock=[[0,1.08,LT,SB],[0,0.5,2.2,3.7],[0.35,1.15,2.15,3.05],[1.05,1.65,SB-0.2,SB+1.4],[2.6,3.4,14.2,17.9],[2.55,3.4,BL+0.7,BL+2.3],[0,0.45,SB+0.7,SB+1.7],[3.0,3.4,AL+0.3,AL+1.1]].concat(tb,
-    [[0.05,0.85,10.45,11.25],[0,0.36,11.3,15.9],[3.55,5.3,10.35,11.85],[9.25,9.55,10.45,10.75],[0.3,4.4,17.3,17.8],[0.3,0.9,16.45,17.05],[11.55,12.45,17.7,18.1],[9.7,10.8,14.6,15.2],[10.75,11.65,14.85,16.15],
-    [10.3,10.5,13.65,13.85],[2.1,2.3,17.95,18.15],[4.5,4.7,17.9,18.1],[5.15,5.45,18.0,18.3],[8.75,9.05,18.0,18.3],[10.15,10.45,18.0,18.3],[10.8,11.4,17.35,17.95],
-    [11.7,12.2,14.55,16.35],[12.05,12.35,10.35,10.65],[12.4,19.0,11.45,17.95],[17.9,19.3,17.75,17.95]].map(function(b){return [b[0],b[1],b[2]+D8,b[3]+D8];}),
-    [[-3.95,-1.25,17.25+D8,18.1+D8],[12.7,13.1,17.8+D8,18.2+D8],[8.8,9.1,18.1+D8,18.4+D8],[22.05,22.35,18.05+D8,18.35+D8],[3.25,3.85,10.1+D8,10.9+D8],[4.2,4.6,KZ+RW+0.3,KZ+RW+0.6],[-2.25,-1.95,KZ+RW+0.3,KZ+RW+0.6],[1.15,1.65,3.65,4.15]]).map(wr);      // and what the detail added: bins, the hydrant, sign poles, the chalk board, a sleeping cat
-  /* behind number 12, the yard along flat 1's front and its east side, to flat 1's door on our floor (plan.js): at the street's level */
+    [0.12,AW-0.12,BL+0.2,GZ+0.3],[AW-0.4,AW+0.6,PG[0]+0.15,PG[1]-0.15],      // the forecourt, the alley and its steps up to the café; the way into the garden
+    [FL[1][0]+0.05,FL[1][1]-0.05,GZ-FLL-0.45,GZ+0.3],[FL[2][0]+0.05,FL[2][1]-0.05,GZ-FLL-0.45,GZ+0.3],      // the garden's two flights
+    [0.15,CW-0.12,GZ+0.02,KZ-0.2],[PLZ[0]+0.02,PLZ[1]-0.02,GZ+0.02,PLZ[3]],[ENT[0]+0.02,ENT[1]-0.02,PLZ[3]-0.3,PV+0.3],      // the café's terrace; the gravel square inside the garden's gate, and the gate
+    [-3.5,0.4,16.2+D8,KZ-0.2],[CW-0.4,30,PV+0.08,KZ-0.2],[5.5,8.7,KZ-0.6,KZ+RW+0.6],[3.9,26,KZ+RW+0.1,28.8+D8]].concat(gWalk).map(wr);      // the pavement, the crossing, the far side
+  const chairs=seats.map(function(q){return [q[0]-0.22,q[0]+0.22,q[1]-0.22,q[1]+0.22];});
+  const tb=CAFE.map(function(q){return [q[0]-0.45,q[0]+0.45,q[1]-0.45,q[1]+0.45];}).concat(UMB.map(function(q){return [q[0]-0.3,q[0]+0.3,q[1]-0.3,q[1]+0.3];}),chairs);
+  const pole=function(x,z,r){r=r||0.15; return [x-r,x+r,z-r,z+r];};
+  A.streetBlock=[[0,1.08,LT,SB],[0,0.5,2.2,3.7],[0.35,1.15,2.15,3.05],[1.05,1.65,SB-0.2,SB+1.4],[2.6,3.4,14.2,17.9],[2.55,3.4,BL+0.7,BL+2.3],[0,0.45,SB+0.7,SB+1.7],[3.0,3.4,AL+0.3,AL+1.1],[1.15,1.65,3.65,4.15]].concat(tb,
+    [[0,0.36,11.3+D8,15.9+D8],[6.55,7.45,22.45,23.1],[7.5,8.5,22.4,23.2],[10.12,10.8,23.25,23.85],[AW,FL[1][0],GZ-0.1,GZ+0.42],[5.55,6.25,22.6,23.3],[4.85,5.45,22.5,23.05],[0.55,1.35,27.7,28.2],      // the pots along the glass, the cooler, the stone planter, the low wall, the spare chairs, the cool box, the chalk board
+     [0.3,3.0,17.3+D8,17.8+D8],[0.3,0.9,16.45+D8,17.05+D8],[-3.95,-1.25,17.25+D8,18.1+D8],      // the hedges and the coleus by the corner, the bins by number 12
+     pole(4.6,18+D8),pole(2.2,18.05+D8),pole(8.95,18.25+D8),pole(22.2,18.2+D8),pole(12.9,18+D8,0.2),pole(5.3,18.15+D8),pole(8.9,18.15+D8),pole(13.9,29.65,0.3),pole(10.75,28.2),pole(10.35,29.3,0.55),pole(24.4,29.35,0.55),      // sign poles, the hydrant, bollards, a bin, the two figs
+     [17.68,18.3,22.6,24.4],[17.68,18.3,24.4,26.2],pole(18.0,26.95,0.3),pole(3.75,22.62),pole(18.6,22.7),[10.85,13.2,PV-0.5,PV+0.02],      // the benches inside the gate, the bin, two lamps, the cabinets
+     [4.2,4.6,KZ+RW+0.3,KZ+RW+0.6],[-2.25,-1.95,KZ+RW+0.3,KZ+RW+0.6]],gBlock).map(wr);      // and across the road; the benches, the bin and the fig on the garden's paving
+  /* behind number 12, the yard along flat 1's front and its east side, to flat 1's door on our floor (plan.js): at the alley's level */
   const SIDE=[[3.8,XS-0.1,ZC+0.1,25.3],[-4.7,4.4,24.3,25.3],[-5.1,-2.9,23.1,24.9]];      // each overlapping the next, as each loses a body's width at its edges
   A.rooms.street.rs=A.rooms.street.rs.concat(SIDE);
   A.streetPass=[[XS-0.4,XS+0.4,ZO-0.45,ZO+0.45],[A.LB.sideGate[0]+0.12,A.LB.sideGate[1]-0.12,ZC-0.35,ZC+0.35]];      // from the passage out onto the bridge, and into the yard behind number 12
   A.groundAt=function(x,z){
-    if(x<XS-0.05){for(let i=0;i<SIDE.length;i++){const r=SIDE[i]; if(x>r[0]-0.05&&x<r[1]+0.05&&z>r[2]-0.05&&z<r[3]+0.05) return U;} return 0;}
-    const q=x-XS;      // q: out from the front
+    if(x<XS-0.05){for(let i=0;i<SIDE.length;i++){const r=SIDE[i]; if(x>r[0]-0.05&&x<r[1]+0.05&&z>r[2]-0.05&&z<r[3]+0.05) return AY;} return 0;}
+    const q=x-XS, lx=ZC-z;      // q: out from the front; lx: along it
     if(q>=GZ) return q<KZ?U:q<KZ+RW?RY:U;
-    if(q<BL) return 0; if(q<BL+0.45) return LA*(q-BL)/0.45; if(q<FZ) return LA; if(q<AL) return LA+(U-LA)*(q-FZ)/(AL-FZ); return U;      // ours
+    if(q>GZ-FLL-0.05) for(let i=0;i<FL.length;i++) if(lx>FL[i][0]-0.05&&lx<FL[i][1]+0.05) return AY+(U-AY)*Math.max(0,(q-(GZ-FLL))/FLL);      // up a flight
+    if(lx>AW+0.02) return AY;      // the garden
+    if(q<BL) return 0; if(q<BL+0.45) return LA*(q-BL)/0.45; if(q<FZ) return LA; if(q<AL) return LA+(AY-LA)*(q-FZ)/(AL-FZ); return AY;      // ours
   };
   const tags=[['Bridge to the street'
-,1.6,1.5,BL/2],['Steps down to the forecourt',AW/2,U+1.3,FZ+0.2],['Number 12',0.3,U+3.4,13],['Café',4,U+3.4,13.5+D8],['Haroe St',12,U+0.6,KZ+3.5]]
+,1.6,1.5,BL/2],['Steps down to the forecourt',AW/2,AY+1.3,FZ+0.2],['Steps down from the café',AW/2,U+1.2,GZ-0.6],['Number 12',0.3,U+3.4,13],['Café',4,U+3.4,25.5],['Garden',18,AY+2.2,14],['Haroe St',12,U+0.6,KZ+3.5]]
     .map(function(q){return {el:A.tag(q[0]),pos:st.localToWorld(new THREE.Vector3(q[1],q[2],q[3]))};});
   A.labelFns.push(function(){const show=A.state.labels&&!A.simsOn; tags.forEach(function(t){A.place(t.el,t.pos,show);});});
   const lc=new THREE.Vector3(); let crowns=true;

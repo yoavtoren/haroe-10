@@ -174,7 +174,7 @@ A.frameFns.push(function(dt,t){
       if(d<=step){c.x=n[0]; c.z=n[1]; c.i+=c.dir; if(rnd()<0.5) c.wait=2+rnd()*5;} else {c.x+=dx/d*step; c.z+=dz/d*step;}
       c.h=ang(c.h,Math.atan2(dx,dz),Math.min(1,dt*5)); c.ph+=step*16;}
     const sw=(1-c.sit)*0.5; c.legs.forEach(function(l,k){l.rotation.x=Math.sin(c.ph+(k===0||k===3?0:R))*sw; if(k>1) l.rotation.x+=c.sit*-1.1;});
-    c.g.rotation.x=-c.sit*0.45; c.tail.rotation.z=Math.sin(t*1.7)*0.35; c.g.position.set(c.x,U+c.sit*0.05,c.z); c.g.rotation.y=c.h;})();
+    c.g.rotation.x=-c.sit*0.45; c.tail.rotation.z=Math.sin(t*1.7)*0.35; c.g.position.set(c.x,S.AY+c.sit*0.05,c.z); c.g.rotation.y=c.h;})();
   /* pigeons: peck and potter about; anyone coming close sends them up, to come down again a little way off */
   pigeons.forEach(function(b){b.t+=dt;
     if(b.mode==='peck'){
