@@ -27,44 +27,50 @@ const FF=H+0.24, TD=0.26, NT1=5, NT2=4, NT3=4, X1=SU+NT1*TD, XD=X1-NT3*TD, LO=GY
 const UPS=3, TOPW=UPS*FF+H;          // floors above ours; the top of the stairwell's walls
 A.LB.stairs={FF:FF,TD:TD,SW:SW,X1:X1,XD:XD,NT:[NT1,NT2,NT3],XB:XB,LO:LO,UPS:UPS};
 const terrazzo=canvasTex(256,256,function(g){          // the floor: speckled beige cement tiles, 20 cm
-  g.fillStyle='#d9cfb4'; g.fillRect(0,0,256,256); const r=A.rng(21), cs=['#a89a7a','#ebe3cf','#8f8468','#c2b394','#9a8d6e','#f2ece0','#7c705a'];
-  for(let i=0;i<2800;i++){g.fillStyle=cs[Math.floor(r()*cs.length)]; g.fillRect(r()*256,r()*256,1+r()*2.2,1+r()*2);}
-  for(let j=0;j<4;j++) for(let i=0;i<4;i++){g.fillStyle='rgba(110,95,70,'+(r()*0.07)+')'; g.fillRect(i*64,j*64,64,64);}
-  g.strokeStyle='#a69d8a'; g.lineWidth=2; for(let k=0;k<=4;k++){g.beginPath(); g.moveTo(k*64,0); g.lineTo(k*64,256); g.stroke(); g.beginPath(); g.moveTo(0,k*64); g.lineTo(256,k*64); g.stroke();}
+  g.fillStyle='#cfc09a'; g.fillRect(0,0,256,256); const r=A.rng(21), cs=['#a08f6c','#e8dfc4','#857a5c','#bcab84','#93845f','#efe7d2','#6f6450','#c9b88e'];
+  for(let i=0;i<3200;i++){g.fillStyle=cs[Math.floor(r()*cs.length)]; g.fillRect(r()*256,r()*256,1+r()*2.2,1+r()*2);}
+  for(let j=0;j<4;j++) for(let i=0;i<4;i++){g.fillStyle='rgba(110,95,60,'+(r()*0.09)+')'; g.fillRect(i*64,j*64,64,64);}
+  for(let i=0;i<10;i++){const x=r()*256, y=r()*256, q=10+r()*30, gr=g.createRadialGradient(x,y,0,x,y,q); gr.addColorStop(0,'rgba(80,60,35,0.12)'); gr.addColorStop(1,'rgba(80,60,35,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}      // worn and stained
+  g.strokeStyle='#9c927d'; g.lineWidth=2; for(let k=0;k<=4;k++){g.beginPath(); g.moveTo(k*64,0); g.lineTo(k*64,256); g.stroke(); g.beginPath(); g.moveTo(0,k*64); g.lineTo(256,k*64); g.stroke();}
 });
 terrazzo.wrapS=terrazzo.wrapT=THREE.RepeatWrapping;
 const ashlar=canvasTex(512,256,function(g){           // the cladding, from the photos: polished beige limestone, 60 by 30 cm slabs in courses, the joints barely there; 1.2 m by 0.6 m
-  const r=A.rng(5); g.fillStyle='#c6b99e'; g.fillRect(0,0,512,256);
+  const r=A.rng(5); g.fillStyle='#ab9b7e'; g.fillRect(0,0,512,256);
   for(let row=0;row<2;row++){const y=row*128, off=row?128:0;
-    for(let c=-1;c<3;c++){const x=c*256+off, w=256, t=r(), k=r();
-      g.fillStyle='rgb('+Math.round(218+t*10)+','+Math.round(206+t*9-k*5)+','+Math.round(178+t*9-k*9)+')'; g.fillRect(x+1.5,y+1.5,w-3,125);      // each slab its own cream to beige, all close
-      for(let i=0;i<5;i++){const cx=x+r()*w, cy=y+r()*128, q=60+r()*120, gr=g.createRadialGradient(cx,cy,0,cx,cy,q), dark=r()<0.5;      // broad faint clouds in the stone
-        gr.addColorStop(0,dark?'rgba(150,120,85,0.07)':'rgba(255,250,238,0.1)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(cx-q,cy-q,2*q,2*q);}
-      for(let i=0;i<220;i++){g.fillStyle=r()<0.5?'rgba(120,95,60,0.08)':'rgba(255,255,245,0.14)'; g.fillRect(x+r()*w,y+r()*128,1+r()*2,1);}      // its grain
-      if(r()<0.35){g.strokeStyle='rgba(140,112,78,0.14)'; g.lineWidth=1; g.beginPath(); let vx=x+40+r()*(w-80), vy=y+2; g.moveTo(vx,vy); for(let j=0;j<5;j++){vx+=(r()-0.5)*34; vy+=25; g.lineTo(vx,vy);} g.stroke();}      // a vein
+    for(let c=-1;c<3;c++){const x=c*256+off, w=256, t=r(), k=r(), tan=r()<0.22;
+      g.fillStyle='rgb('+Math.round((tan?196:206)+t*16)+','+Math.round((tan?174:188)+t*14-k*6)+','+Math.round((tan?132:148)+t*14-k*12)+')'; g.fillRect(x+1.5,y+1.5,w-3,125);      // each slab its own: cream, beige, a few gone tan
+      for(let i=0;i<7;i++){const cx=x+r()*w, cy=y+r()*128, q=40+r()*110, gr=g.createRadialGradient(cx,cy,0,cx,cy,q), dark=r()<0.55;      // broad clouds in the stone
+        gr.addColorStop(0,dark?'rgba(140,100,60,0.1)':'rgba(255,248,230,0.14)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(cx-q,cy-q,2*q,2*q);}
+      for(let i=0;i<320;i++){g.fillStyle=r()<0.5?'rgba(110,85,50,0.1)':'rgba(255,255,240,0.14)'; g.fillRect(x+r()*w,y+r()*128,1+r()*2,1);}      // its grain
+      g.fillStyle='rgba(60,45,30,0.18)'; g.fillRect(x+1.5,y+123,w-3,3); g.fillStyle='rgba(255,250,240,0.2)'; g.fillRect(x+1.5,y+1.5,w-3,2);      // the joint's shadow under each slab, a light edge over it
+      if(r()<0.45){g.strokeStyle='rgba(130,100,65,0.2)'; g.lineWidth=1; g.beginPath(); let vx=x+40+r()*(w-80), vy=y+2; g.moveTo(vx,vy); for(let j=0;j<5;j++){vx+=(r()-0.5)*34; vy+=25; g.lineTo(vx,vy);} g.stroke();}      // a vein
     }}
 });
 ashlar.wrapS=ashlar.wrapT=THREE.RepeatWrapping;
 const plaster=canvasTex(256,128,function(g){          // white plaster above it, scuffed and stained here and there
-  g.fillStyle='#f4f2ec'; g.fillRect(0,0,256,128); const r=A.rng(8);
-  for(let i=0;i<6;i++){const x=r()*256, y=r()*128, w=3+r()*9, h=2+r()*5; g.fillStyle='rgba(215,208,190,'+(0.2+r()*0.2)+')'; g.beginPath(); g.ellipse(x,y,w,h,r()*3,0,7); g.fill();}
-  for(let i=0;i<14;i++){g.fillStyle='rgba(90,85,75,'+(0.08+r()*0.1)+')'; g.fillRect(r()*256,r()*128,1+r()*2,1+r()*2);}
+  g.fillStyle='#f8f7f3'; g.fillRect(0,0,256,128); const r=A.rng(8);
+  for(let i=0;i<5;i++){const x=r()*256, y=r()*128, q=20+r()*50, gr=g.createRadialGradient(x,y,0,x,y,q); gr.addColorStop(0,'rgba(205,185,135,'+(0.12+r()*0.16)+')'); gr.addColorStop(1,'rgba(205,185,135,0)'); g.fillStyle=gr; g.fillRect(x-q,y-q,2*q,2*q);}      // yellowed in patches
+  for(let i=0;i<6;i++){const x=r()*256, y=r()*128, w=3+r()*9, h=2+r()*5; g.fillStyle='rgba(205,198,180,'+(0.2+r()*0.2)+')'; g.beginPath(); g.ellipse(x,y,w,h,r()*3,0,7); g.fill();}
+  for(let i=0;i<16;i++){g.fillStyle='rgba(90,85,75,'+(0.08+r()*0.1)+')'; g.fillRect(r()*256,r()*128,1+r()*2,1+r()*2);}
 });
 plaster.wrapS=THREE.RepeatWrapping;
 const peel=canvasTex(128,256,function(g){             // the pillar above its cladding: paint peeling in layers off old yellowed plaster
-  g.fillStyle='#ece6d8'; g.fillRect(0,0,128,256); const r=A.rng(33);
-  for(let i=0;i<26;i++){const x=r()*128, y=r()*256, w=6+r()*26, h=8+r()*40;
-    g.fillStyle=['#e2d2a6','#d9c79a','#cfc2a4','#f6f3ec'][i%4]; g.beginPath(); g.moveTo(x,y);
-    for(let k=0;k<7;k++) g.lineTo(x+Math.cos(k)*w*(0.6+r()*0.6),y+Math.sin(k*1.3)*h*(0.6+r()*0.6)); g.closePath(); g.fill();
-    g.strokeStyle='rgba(255,255,255,0.85)'; g.lineWidth=1.2; g.stroke();}
-  for(let i=0;i<40;i++){g.fillStyle='rgba(120,100,70,0.25)'; g.fillRect(r()*128,r()*256,1,2+r()*4);}
+  g.fillStyle='#e2d3ae'; g.fillRect(0,0,128,256); const r=A.rng(33);
+  for(let i=0;i<8;i++){const x=r()*128, y=r()*256, w=12+r()*28, h=14+r()*50;      // the paint gone in big patches: the plaster under it, white and grey
+    g.fillStyle=['#f4f2ec','#d9d5cc','#efeadf','#c9c4b8'][i%4]; g.beginPath(); g.moveTo(x,y);
+    for(let k=0;k<9;k++) g.lineTo(x+Math.cos(k*0.8)*w*(0.5+r()*0.6),y+Math.sin(k*0.8)*h*(0.5+r()*0.6)); g.closePath(); g.fill();
+    g.strokeStyle='rgba(255,252,245,0.9)'; g.lineWidth=2; g.stroke(); g.strokeStyle='rgba(120,100,60,0.3)'; g.lineWidth=0.8; g.stroke();}      // the curled edge of the paint, and its shadow
+  for(let i=0;i<60;i++){g.fillStyle='rgba(120,100,70,0.25)'; g.fillRect(r()*128,r()*256,1,2+r()*5);}
+  for(let i=0;i<5;i++){let x=r()*128, y=r()*256; g.strokeStyle='rgba(90,75,50,0.35)'; g.lineWidth=0.8; g.beginPath(); g.moveTo(x,y); for(let k=0;k<6;k++){x+=(r()-0.5)*14; y+=8+r()*10; g.lineTo(x,y);} g.stroke();}      // cracks
 });
 const stepT=canvasTex(128,64,function(g){             // the treads: worn beige stone with a darker nosing
   const r=A.rng(41); g.fillStyle='#d4c4a0'; g.fillRect(0,0,128,64);
   for(let i=0;i<500;i++){g.fillStyle=r()>0.5?'rgba(150,130,95,0.25)':'rgba(255,250,235,0.35)'; g.fillRect(r()*128,r()*64,1+r()*2,1);}
   g.fillStyle='rgba(120,100,70,0.18)'; g.fillRect(0,26,128,12);});
-const hallM=function(t){const m=new THREE.MeshLambertMaterial({map:t,emissive:0x4a4944}); m.emissiveMap=t; return A.reg(m,'hall');};      // lit a little from within, like the flat's walls, so the white reads as white
-[[XL,SU,L,RZ],[CX0,SU,RZ,EH],[SU,SD,EH-SW,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){A.floorQuad(q[0],q[1],q[2],q[3],terrazzo,0.8,'hall');});      // the landing, the way past the pillar, the strip beside the well to the head of the flight down, the corridor, the hall, the passage; nothing over the well
+const hallM=function(t){const m=new THREE.MeshLambertMaterial({map:t,emissive:0x4a4944}); m.emissiveMap=t; return A.reg(m,'hall');};
+const hallP=function(t,sp,sh){const m=new THREE.MeshPhongMaterial({map:t,emissive:0x4a4944,emissiveMap:t,specular:sp||0x2e2d2a,shininess:sh||30}); return A.reg(m,'hall');};      // the same, polished: the cladding and the floor catch the light      // lit a little from within, like the flat's walls, so the white reads as white
+const floorP=hallP(terrazzo,0x3a3934,50);
+[[XL,SU,L,RZ],[CX0,SU,RZ,EH],[SU,SD,EH-SW,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){const fq=A.floorQuad(q[0],q[1],q[2],q[3],terrazzo,0.8,'hall'); if(fq&&fq.material) fq.material=floorP;});      // the landing, the way past the pillar, the strip beside the well to the head of the flight down, the corridor, the hall, the passage; nothing over the well
 function bright(m,glow){m.emissive.setHex(glow); A.rooms.hall.mats.forEach(function(e){if(e.m===m) e.e=new THREE.Color(glow);}); return m;}      // a ceiling lit from below reads as the white it is
 [[XL,SU,L,RZ],[CX0,SU,RZ,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){bright(A.ceil('hall',q[0],q[1],q[2],q[3]).material,0xa6a6a0);});
 const en=D.entrance, XP=en[0]-0.1;                                                         // XP: our door frame's left edge
@@ -94,15 +100,16 @@ const HW=['h_s','h_s4','h_s4r','h_l3','h_rz','h_cl','h_n','h_f','h_ps','h_pf','h
   rect('h_ps',u0-0.05,u1+0.05,1.28,1.92,0xf4f4f1,0.012); rect('h_ps',u0,u1,1.33,1.87,0xcfd6d2,0.014);
   for(let i=0;i<=5;i++) rect('h_ps',u0+i*0.12-0.01,u0+i*0.12+0.01,1.28,1.92,0xf4f4f1,0.016); rect('h_ps',u0-0.05,u1+0.05,1.59,1.61,0xf4f4f1,0.016);})();
 A.rooms.hall.rs.push([XF-0.2,XS+0.02,PZ+0.02,ZC-0.02]);      // the passage is part of the lobby
-function clad(k,u0,u1,y0,y1){const t=ashlar.clone(); t.needsUpdate=true; t.repeat.set((u1-u0)/1.2,(y1-y0)/0.6); t.offset.x=(u0*0.37)%1; return rect(k,u0,u1,y0,y1,hallM(t),0.005);}
-function plas(k,u0,u1,y0,y1){const p=plaster.clone(); p.needsUpdate=true; p.repeat.set((u1-u0)/2.4,(y1-y0)/(H-CL)); p.offset.x=(u0*0.53)%1; return rect(k,u0,u1,y0,y1,hallM(p),0.004);}
+function clad(k,u0,u1,y0,y1){const t=ashlar.clone(); t.needsUpdate=true; t.repeat.set((u1-u0)/1.2,(y1-y0)/0.6); t.offset.x=(u0*0.37)%1; return rect(k,u0,u1,y0,y1,hallP(t),0.005);}
+const hallW=function(t){const m=new THREE.MeshLambertMaterial({map:t,emissive:0x57534b}); m.emissiveMap=t; return A.reg(m,'hall');};      // the plaster: a little warmer and brighter
+function plas(k,u0,u1,y0,y1){const p=plaster.clone(); p.needsUpdate=true; p.repeat.set((u1-u0)/2.4,(y1-y0)/(H-CL)); p.offset.x=(u0*0.53)%1; return rect(k,u0,u1,y0,y1,hallW(p),0.004);}
 HW.forEach(function(k){A.spans(k).forEach(function(s){clad(k,s[0],s[1],0,CL); plas(k,s[0],s[1],CL,H); rect(k,s[0],s[1],CL-0.05,CL+0.01,0xb3a78e,0.006);});});      // a darker course caps the cladding
 /* the stairwell's walls: plaster all the way up, cladding that climbs with the flights */
 function wallPoly(k,pts,mat,off){const w=A.walls[k], sh=new THREE.Shape(); pts.forEach(function(p,i){const x=w.s*(p[0]-w.len/2); if(i) sh.lineTo(x,p[1]); else sh.moveTo(x,p[1]);});
   const g=new THREE.ShapeGeometry(sh), P=g.attributes.position, U=g.attributes.uv;
   for(let i=0;i<P.count;i++) U.setXY(i,(P.getX(i)+w.len/2)/1.2,P.getY(i)/0.6);
   const m=new THREE.Mesh(g,mat); m.position.z=off||0.006; m.receiveShadow=true; w.g.add(m); return m;}
-const cladM=hallM(ashlar), uE=XE-SU, capT=function(p){return [p[0],Math.min(p[1],TOPW-0.01)];};
+const cladM=hallP(ashlar), uE=XE-SU, capT=function(p){return [p[0],Math.min(p[1],TOPW-0.01)];};
 plas('h_ss',0,uE,0,TOPW); plas('h_cf',0,EH-L,0,TOPW); plas('h_se',0,XE-CX1,0,TOPW);
 function cladFloor(y,rs){const ya=y+(NT1+1)*rs, yb=ya+(NT2+1)*rs, r1=NT1*TD, r2=NT2*TD;      // one storey's cladding, climbing with its flights and level along its landings, on the three walls
   wallPoly('h_ss',[[0,y],[r1,ya],[uE,ya],[uE,ya+CL],[r1,ya+CL],[0,y+CL]].map(capT),cladM);                                            // along the first flight and the corner landing
@@ -113,7 +120,7 @@ for(let f=0;f<UPS;f++) cladFloor(f*FF,FF/16); cladFloor(LO,-LO/16);
 inRoom('hall',function(){
   const pw=PX1-PX0, pd=PZ1-PZ0, pc=new THREE.Vector3((PX0+PX1)/2,0,(PZ0+PZ1)/2);
   box(pw,H,pd,M(0xeee8da),pc.x,H/2,pc.z).castShadow=false;
-  const pst=ashlar.clone(); pst.needsUpdate=true; pst.repeat.set(pw/1.2,2.02/0.6); const pcl=hallM(pst);
+  const pst=ashlar.clone(); pst.needsUpdate=true; pst.repeat.set(pw/1.2,2.02/0.6); const pcl=hallP(pst);
   box(pw+0.03,2.02,pd+0.03,pcl,pc.x,1.01,pc.z);                                            // big slabs of stone, a joint down the middle of each face
   box(0.006,2.0,0.02,0x9c8763,PX1+0.016,1.0,pc.z+0.06); box(0.02,2.0,0.006,0x9c8763,pc.x-0.05,1.0,PZ0-0.016); box(0.02,2.0,0.006,0x9c8763,pc.x+0.02,1.0,PZ1+0.016);
   box(pw+0.05,0.03,pd+0.05,0xcbb68b,pc.x,2.035,pc.z);                                     // its capping
@@ -137,9 +144,10 @@ inRoom('hall',function(){                                                       
 });
 /* the concrete vent screens high on the corridor's left, behind a white mesh */
 const ventT=canvasTex(128,96,function(g){
-  g.fillStyle='#f4f3ef'; g.fillRect(0,0,128,96); g.fillStyle='#d8d4ca'; g.fillRect(8,8,112,80);
-  g.fillStyle='#4f4d48'; for(let j=0;j<4;j++) for(let i=0;i<6;i++){g.beginPath(); g.arc(17+i*19+(j%2?9:0),20+j*19,7,0,7); g.fill();}
-  g.strokeStyle='rgba(250,250,248,0.85)'; g.lineWidth=1; for(let x=8;x<120;x+=4){g.beginPath(); g.moveTo(x,8); g.lineTo(x,88); g.stroke();} for(let y=8;y<88;y+=4){g.beginPath(); g.moveTo(8,y); g.lineTo(120,y); g.stroke();}
+  g.fillStyle='#f4f3ef'; g.fillRect(0,0,128,96); g.fillStyle='#cbc5b7'; g.fillRect(8,8,112,80);      // the white frame, the concrete blocks
+  for(let j=0;j<3;j++) for(let i=0;i<6;i++){const cx=17+i*18.7, cy=21+j*27;      // a big round hole in each, dark inside, its rim catching the light
+    g.fillStyle='#8c877b'; g.beginPath(); g.arc(cx+1,cy+1,9.5,0,7); g.fill(); g.fillStyle='#1e1d1b'; g.beginPath(); g.arc(cx,cy,8.5,0,7); g.fill(); g.fillStyle='#3a3834'; g.beginPath(); g.arc(cx-2,cy-2,5,0,7); g.fill();}
+  g.strokeStyle='rgba(252,252,250,0.9)'; g.lineWidth=1.1; for(let x=8;x<120;x+=4.5){g.beginPath(); g.moveTo(x,8); g.lineTo(x,88); g.stroke();} for(let y=8;y<88;y+=4.5){g.beginPath(); g.moveTo(8,y); g.lineTo(120,y); g.stroke();}      // the wire mesh over it
 });
 function vent(k,u,w){rect(k,u-w/2,u+w/2,1.58,2.4,A.MT(ventT,'hall'),0.012);}
 [ZE-0.9,ZE-2.3,ZE-3.75].forEach(function(z){vent('h_cl',z-PZ1,1.24);}); vent('h_cl',ZC-0.72-PZ1,1.2);
@@ -151,7 +159,7 @@ inRoom('hall',function(){
   function bulb(x,y,z,drop){const yb=y-(drop||0.28); box(0.01,y-yb,0.01,0x2a2c2e,x,(y+yb)/2,z).castShadow=false; cyl(0.03,0.05,0xe9e6dc,x,yb+0.02,z,null,10); sph(0.045,A.lampMat('L:hall',0xf6f1e2,0xfff0c8,1.1),x,yb-0.04,z); A.pool('L:hall',0xffe2b0,x,y-H+0.02,z,2.4,null,0.3);}
   bulb(0.45,H,L+1.6); bulb((CX0+CX1)/2,H,L+5.6); bulb(2.9,H,ZE+1.8); bulb((XF+XS)/2,H,(PZ+ZC)/2,0.2); for(let f=0;f<UPS;f++) bulb(XE-0.5,f*FF+6*FF/16+2.3,L+SW/2,0.3); for(let f=1;f<=UPS;f++) bulb(XB+0.6,f*FF+H,L+1.2,0.25); bulb(XB+0.6,LO+H,L+1.2,0.25);
   box(0.12,0.03,0.12,0xeeeeea,CX0+0.1,2.32,ZE-2.9); sph(0.05,A.lampMat('L:hall',0xf6f1e2,0xfff0c8,1.1),CX0+0.16,2.3,ZE-2.9);      // a bare bulb on the wall in the corridor
-  box(0.03,0.025,ZC-PZ1,0xf1f1ee,CX0+0.06,H-0.03,(PZ1+ZC)/2).castShadow=false;           // white trunking along the corridor ceiling
+  box(0.04,0.04,ZC-PZ1,0x6a6a65,CX0+0.1,H-0.04,(PZ1+ZC)/2).castShadow=false;             // a grey conduit along the corridor's ceiling
   box(0.13,0.05,0.13,0xf4f4f1,0.5,H-0.025,L+0.2); sph(0.055,0x2a2d30,0.5,H-0.06,L+0.2,null,1,0.8,1); box(SU+1.2-0.5,0.012,0.012,0xf1f1ee,(0.5+SU+1.2)/2,H-0.01,L+0.12);   // the dome camera over our door, its cable off along the ceiling to the stairs
   const welcome=canvasTex(128,80,function(g){g.fillStyle='#8a6a48'; g.fillRect(0,0,128,80); const r=A.rng(3); for(let i=0;i<700;i++){g.fillStyle=r()<0.5?'rgba(60,40,20,0.35)':'rgba(210,180,130,0.35)'; g.fillRect(r()*128,r()*80,1,2);}
     g.fillStyle='#2a2018'; g.font='bold 22px sans-serif'; g.textAlign='center'; g.fillText('WELCOME',64,48);});
@@ -188,7 +196,7 @@ inRoom('hall',function(){
   }
   function post(x,y,z){box(0.05,1.0,0.05,iron,x,y+0.5,z); box(0.07,0.06,0.07,wood,x,y+1.0,z);}      // a newel, capped in wood
   function floorAt(x0,x1,z0,z1,y){const g=new THREE.PlaneGeometry(x1-x0,z1-z0), U=g.attributes.uv; for(let i=0;i<U.count;i++) U.setXY(i,U.getX(i)*(x1-x0)/0.8,U.getY(i)*(z1-z0)/0.8);
-    const t=terrazzo.clone(); t.needsUpdate=true; const mm=hallM(t); mm.clippingPlanes=[A.cut]; const m=new THREE.Mesh(g,mm); m.rotation.x=-R/2; m.position.set((x0+x1)/2,y,(z0+z1)/2); m.receiveShadow=true; m.userData.floor=true; scene.add(m); return m;}
+    const t=terrazzo.clone(); t.needsUpdate=true; const mm=hallP(t,0x3a3934,50); mm.clippingPlanes=[A.cut]; const m=new THREE.Mesh(g,mm); m.rotation.x=-R/2; m.position.set((x0+x1)/2,y,(z0+z1)/2); m.receiveShadow=true; m.userData.floor=true; scene.add(m); return m;}
   const zr=L+SW+0.04, xr=X1-0.04, zq=EH-SW-0.04;      // where the rails stand: along the first flight's open side, the one across, the third's
   /* one storey of stairs, from y0 at the foot of the first flight to y1 where the third arrives: the three flights, the two corner landings, the handrail round the well */
   function storey(y0,y1){const rs=(y1-y0)/16, ya=y0+(NT1+1)*rs, yb=ya+(NT2+1)*rs;
