@@ -74,9 +74,11 @@ A.frameFns.push(function(dt){
   if(r.state==='ride'){if(c.hp<=0){leave(0); say('The taxi is done for.'); return;} const done=along(r,c,dt,11); sit(c); if(done){r.done=true; leave(r.fare);} return;}      /* wrecked under you: out, and no fare */
   if(r.state==='away'){if(along(r,c,dt,10)||A.t-r.since>20) release();}
 });
-/* a whistle: the nearest taxi passing within 16 m stops for you (with a waypoint set); quiet (no sound) when only asked whether one is there */
-function whistle(quiet){const p=SM.player; if(!p||p.lvl||ride) return false; let best=null, bd=16; D.live.forEach(function(c){if(!c.taxi||!c.traffic||c.held) return; const d=hyp(c.x-p.x,c.z-p.z); if(d<bd){bd=d; best=c;}});
-  if(quiet) return !!(best&&A.gtaWay.at); if(A.gtaSound&&A.gtaSound.whistle) A.gtaSound.whistle(); if(!best) return false; if(!A.gtaWay.at){say('Set a waypoint on the map (M) and whistle again: the taxi takes you there.'); return true;} return hail(best);}
+/* a whistle: the nearest taxi passing within 16 m stops for you (with a waypoint set). 'ask' only says whether one is there; 'quiet' (F)
+   hails without a sound and is nothing when there is none; 'loud' (H) is the whistle itself, heard whether or not one comes */
+function whistle(mode){const p=SM.player; if(!p||p.lvl||ride) return false; let best=null, bd=16; D.live.forEach(function(c){if(!c.taxi||!c.traffic||c.held) return; const d=hyp(c.x-p.x,c.z-p.z); if(d<bd){bd=d; best=c;}});
+  if(mode==='ask') return !!(best&&A.gtaWay.at); if(mode==='loud'&&A.gtaSound&&A.gtaSound.whistle) A.gtaSound.whistle(); if(!best) return false;
+  if(!A.gtaWay.at){if(mode==='loud') say('Set a waypoint on the map (M) and whistle again: the taxi takes you there.'); return mode==='loud';} return hail(best);}
 /* F on the way: out here, and the fare for the way so far */
 function cancel(){const r=ride, p=SM.player; if(!r||r.state!=='wait') return false; p.path=[]; p.cb=null; p.speed=1.4; release(); say('You wave the taxi on.'); return true;}      // F while it waits for you: never mind
 A.gtaTaxi={hail:hail,whistle:whistle,cancel:cancel,car:function(){return ride&&ride.state==='ride'?ride.car:null;},state:function(){return ride;},
