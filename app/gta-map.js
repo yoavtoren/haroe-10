@@ -50,8 +50,9 @@ function poly(g,p){g.beginPath(); p.forEach(function(q,i){const c=mp(q[0],q[1]);
   g.fillStyle=COL.home; (A.building.foot||[]).forEach(function(r){const a=mp(r[1],r[2]), b=mp(r[0],r[3]); g.fillRect(Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.abs(b[0]-a[0])+0.5,Math.abs(b[1]-a[1])+0.5);});
 })();
 /* the street names, for the big map only: along each street's longest stretch */
-const NAMES=(function(){const best={}; T.roads.forEach(function(r){if(!r.name||!r.w[0]) return; for(let j=1;j<r.p.length;j++){const a=r.p[j-1], b=r.p[j], l=hyp(b[0]-a[0],b[1]-a[1]); if(l>25&&(!best[r.name]||l>best[r.name].l)) best[r.name]={l:l,a:a,b:b,name:r.name,main:r.k===1||r.k===6||r.k===7};}});
-  return Object.keys(best).map(function(k){return best[k];});})();
+const NAMES=[];      /* every straight stretch of a named street long enough to carry its name: the map writes it along as many as fit */
+T.roads.forEach(function(r){if(!r.name||!r.w[0]) return; for(let j=1;j<r.p.length;j++){const a=r.p[j-1], b=r.p[j], l=hyp(b[0]-a[0],b[1]-a[1]); if(l>18) NAMES.push({l:l,a:a,b:b,name:r.name,main:r.k===1||r.k===6||r.k===7});}});
+NAMES.sort(function(p,q){return (q.main-p.main)||(q.l-p.l);});
 
 /* the parks and the named buildings, for the big map when it is close enough */
 const LABELS=T.mapData.parks.filter(function(q){return q.name&&q.p.length>3;}).map(function(q){let x=0,z=0; q.p.forEach(function(v){x+=v[0]; z+=v[1];}); return {x:x/q.p.length,z:z/q.p.length,name:q.name,park:true};})
@@ -164,9 +165,15 @@ function drawMap(){if(menu.hidden||tab!=='map') return; const d=sizeMap(), g=cvs
   g.fillStyle=COL.land; g.fillRect(0,0,W,H);
   const tl=c2w(0,0,d); g.imageSmoothingEnabled=true; g.drawImage(base,(tl[1]-TZ0)*PX,(TX0+TS-tl[0])*PX,W/s*PX,H/s*PX,0,0,W,H);
   /* street names when close enough to read them */
-  if(view.s>1.2){g.font='600 '+Math.round(12*d)+'px "Barlow Condensed",sans-serif'; g.textAlign='center'; g.textBaseline='middle';
-    NAMES.forEach(function(n){if(!n.main&&view.s<2.4) return; const a=w2c(n.a[0],n.a[1],d), b=w2c(n.b[0],n.b[1],d); const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2; if(mx<-50||my<-50||mx>W+50||my>H+50) return;
-      let an=Math.atan2(b[1]-a[1],b[0]-a[0]); if(an>R/2) an-=R; if(an<-R/2) an+=R; g.save(); g.translate(mx,my); g.rotate(an); g.lineWidth=3*d; g.strokeStyle='rgba(20,24,26,0.9)'; g.strokeText(n.name,0,0); g.fillStyle='#d6dadc'; g.fillText(n.name,0,0); g.restore();});}
+  if(view.s>1.2){const fs=Math.round(Math.min(17,Math.max(12,9+view.s*1.5))*d), boxes=[], seen={}; g.font='600 '+fs+'px "Barlow Condensed",sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+    NAMES.forEach(function(n){if(!n.main&&view.s<2.4) return; const a=w2c(n.a[0],n.a[1],d), b=w2c(n.b[0],n.b[1],d), mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2; if(mx<0||my<0||mx>W||my>H) return;
+      const tw=g.measureText(n.name).width; if(hyp(b[0]-a[0],b[1]-a[1])<tw+16*d) return;      /* only where the stretch is longer than the name */
+      let an=Math.atan2(b[1]-a[1],b[0]-a[0]); if(an>R/2) an-=R; if(an<-R/2) an+=R;
+      const ex=(Math.abs(Math.cos(an))*tw+Math.abs(Math.sin(an))*fs)/2+4*d, ey=(Math.abs(Math.sin(an))*tw+Math.abs(Math.cos(an))*fs)/2+4*d;
+      if(boxes.some(function(q){return Math.abs(q[0]-mx)<q[2]+ex&&Math.abs(q[1]-my)<q[3]+ey;})) return;      /* clear of the names already written */
+      if((seen[n.name]||[]).some(function(q){return hyp(q[0]-mx,q[1]-my)<tw*3+60*d;})) return;      /* and the same street's name not again close by */
+      boxes.push([mx,my,ex,ey]); (seen[n.name]||(seen[n.name]=[])).push([mx,my]);
+      g.save(); g.translate(mx,my); g.rotate(an); g.lineWidth=3*d; g.strokeStyle='rgba(20,24,26,0.9)'; g.strokeText(n.name,0,0); g.fillStyle='#d6dadc'; g.fillText(n.name,0,0); g.restore();});}
   if(view.s>1.5){g.font='italic 600 '+Math.round(13*d)+'px "Barlow Condensed",sans-serif'; g.textAlign='center'; LABELS.forEach(function(q){if(!q.park&&view.s<2.6) return; const c=w2c(q.x,q.z,d); if(c[0]<0||c[1]<0||c[0]>W||c[1]>H) return;
     g.lineWidth=3*d; g.strokeStyle='rgba(20,24,26,0.85)'; g.strokeText(q.name,c[0],c[1]); g.fillStyle=q.park?'#9fd39a':'#e8d9a8'; g.fillText(q.name,c[0],c[1]);});}
   /* the route */
