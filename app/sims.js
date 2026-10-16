@@ -223,7 +223,7 @@ Actor.prototype.sleep=function(on){
 /* up or down a flight of stairs: a path of [x,y,z] points, walked at an easy pace; at its end you are on floor lvl */
 Actor.prototype.climb=function(pts,lvl,cb){
   this.release(); this.path=[]; this.cb=null; let len=0; for(let i=1;i<pts.length;i++) len+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]);
-  this.script={pts:pts,i:1,lvl:lvl,cb:cb||null,y:pts[0][1]}; this.x=pts[0][0]; this.z=pts[0][2];
+  this.script={pts:pts,i:1,lvl:lvl,cb:cb||null,y:pts[0][1]}; this.x=pts[0][0]; this.z=pts[0][2]; this.stairY=null; this.stairTo=null; this.stairS=null;
 };
 Actor.prototype.update=function(dt){
   const p=this.p;
@@ -254,7 +254,8 @@ Actor.prototype.update=function(dt){
   }else{p.walking=!!this.manual; if(!this.manual) this.v=0;}
   this.h=angLerp(this.h,this.hT,Math.min(1,dt*8));
   p.moved=p.walking?Math.hypot(this.x-(this.lx==null?this.x:this.lx),this.z-(this.lz==null?this.z:this.lz)):0; this.lx=this.x; this.lz=this.z;      // ground covered this frame: the stride is measured from it
-  p.g.position.set(this.x,(this.lvl?lvY(this.lvl):this.seat?0:gy(this.x,this.z))+(this.airY||0),this.z); p.g.rotation.y=this.h; p.update(dt);      // airY: thrown by a car (gta-drive.js)
+  if(this===player&&A.stairAt) this.stairY=A.stairAt(this);      // on the stairs (floors.js): the treads under you
+  p.g.position.set(this.x,(this.stairY!=null?this.stairY:this.lvl?lvY(this.lvl):this.seat?0:gy(this.x,this.z))+(this.airY||0),this.z); p.g.rotation.y=this.h; p.update(dt);      // airY: thrown by a car (gta-drive.js)
   const rm=(!this.lvl&&A.town&&!this.script&&!inFine(this.x,this.z))?'street':A.roomAt(this.x,this.z,this.lvl)||this.room||'hall';      // out in the neighbourhood: the street
   if(rm!==this.room||this.ver!==A.lightVer||p.dirty){p.dirty=false; this.room=rm; this.ver=A.lightVer; p.tint(A.rooms[rm].tint);}
 };
@@ -664,7 +665,7 @@ function walkTo(x,z){
   const town=!player.lvl&&!!A.town&&!inFine(x,z);      // out in the neighbourhood
   if(!town&&(x<WB[0]||x>WB[1]||z<WB[2]||z>WB[3])) return;
   if(pj.asleep) return;
-  if(player.script) return;
+  if(player.script||(A.onStairs&&A.onStairs(player))) return;      // on a flight: walk it with the keys, or pick from the bar
   stopAction(); let tx, tz;
   if(town){const q=A.town.nearest(x,z); if(!q) return; tx=q[0]; tz=q[1];}
   else{const c=onLevel(player.lvl,function(){return nearest(x,z);}); if(c<0) return; tx=cx(c); tz=cz(c);}
@@ -689,6 +690,7 @@ function stick(el){
   return s;
 }
 let manSpeed=0;
+function canStep(x,z){const r=A.stairStep?A.stairStep(player,x,z):undefined; return r===undefined?isFree(x,z):r;}      // the stairs (floors.js) say where they are concerned; elsewhere the floor's grid
 const jMove=stick($('stickMove')), jLook=stick($('stickLook')), sphc=new THREE.Spherical(), offv=new THREE.Vector3();
 A.sticks={move:jMove,look:jLook};
 function showSticks(on){on=on&&TOUCH; $('stickMove').hidden=!on; $('stickLook').hidden=!on; document.body.classList.toggle('sticks',on);}
@@ -703,10 +705,10 @@ function driveSticksOn(dt){
     else{fx=controls.target.x-camera.position.x; fz=controls.target.z-camera.position.z; const n=Math.hypot(fx,fz)||1; fx/=n; fz/=n;}
     const mx=fx*(-jMove.y)-fz*jMove.x, mz=fz*(-jMove.y)+fx*jMove.x, want=(A.walkSpeed?A.walkSpeed(A.running):A.running?3.4:1.45)*Math.min(1,(mag-0.18)/0.72);      // Shift: run
     manSpeed+=(want-manSpeed)*Math.min(1,dt*7);
-    const base=Math.atan2(mx,mz), sp=manSpeed*dt, TRY=[0,0.45,-0.45,0.9,-0.9,1.35,-1.35];
+    const base=Math.atan2(mx,mz), sp=manSpeed*dt*(player.stairY!=null&&A.onStairs&&A.onStairs(player)?0.7:1), TRY=[0,0.45,-0.45,0.9,-0.9,1.35,-1.35];      // on the stairs, at a stair's pace
     for(let i=0;i<TRY.length;i++){                       // blocked straight ahead: slide round the obstacle
       const a=base+TRY[i], nx=player.x+Math.sin(a)*sp, nz=player.z+Math.cos(a)*sp;
-      if(isFree(nx,nz)&&isFree(player.x+Math.sin(a)*0.12,player.z+Math.cos(a)*0.12)){player.x=nx; player.z=nz; player.hT=i?base+TRY[i]*0.6:base; break;}
+      if(canStep(nx,nz)&&canStep(player.x+Math.sin(a)*0.12,player.z+Math.cos(a)*0.12)){player.x=nx; player.z=nz; player.hT=i?base+TRY[i]*0.6:base; break;}
     }
     player.manual=true;
   }else manSpeed=0;
@@ -778,7 +780,7 @@ A.labelFns.push(function(){
 function resetSims(){
   stopAction(); clearGuests(); timers.length=0;
   if(pj.on){pj.on=false; pj.asleep=false; S.pj=false; A.set('string',0); A.set('tv',0); K.tvShow='day'; if(player){player.sleep(false); player.p.outfit(false); player.ver=-1;}}
-  if(player){player.release(); player.path=[]; player.script=null; player.lvl=0; player.x=EX; player.z=SPAWN; player.h=player.hT=R;}
+  if(player){player.release(); player.path=[]; player.script=null; player.lvl=0; player.stairY=null; player.stairTo=null; player.stairS=null; player.x=EX; player.z=SPAWN; player.h=player.hT=R;}
   if(A.life) A.life.reset();
 }
 /* A new design while you are living in the flat: nobody is sent back to the door. Whoever sits on something the

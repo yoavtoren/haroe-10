@@ -119,16 +119,6 @@ function jumpStep(dt){const p=SM.player; if(!J.on||!p) {if(p) p.p.air=Math.max(0
   p.p.g.position.y+=J.y;}
 A.gtaJump={get y(){return J.y;},get on(){return J.on;}};
 
-/* ---------- stairs: walk into a flight and you go up or down it, as in GTA (the bar by the stairs still offers it too) ---------- */
-let stairT=0;
-function stairs(){const p=SM.player; if(!p||!p.manual||p.script||p.seat||p.driving||!A.stairsPath||!A.goStairs||!A.levels||A.t<stairT) return; const L=p.lvl||0;
-  let best=0, bd=0.75;
-  for(let dir=1;dir>=-1;dir-=2){const to=L+dir; if(!A.levels[to]) continue; const pts=A.stairsPath(L,to); if(!pts||pts.length<2) continue;
-    const s=pts[0], n=pts[1], d=Math.hypot(p.x-s[0],p.z-s[2]); if(d>bd) continue;
-    if(Math.abs(wrap(p.h-Math.atan2(n[0]-s[0],n[2]-s[2])))>0.9) continue;      // facing up (or down) the flight
-    best=dir; bd=d;}      /* the flight up and the one down start half a metre apart on our floor: the nearer one */
-  if(!best) return; stairT=A.t+2; A.goStairs(best); const cb=p.cb; p.path=[]; p.cb=null; if(cb) cb();}      // you are already at its foot: straight onto the steps (holding a key would cancel the walk there)
-
 /* ---------- how fast you go: a stroll, or Shift to run; the flat is too small to run flat out ---------- */
 A.walkSpeed=function(run){const out=outdoors(); if(!out) return run?3.1:1.45; return run?6.6:keys.alt?1.6:3.6;};      /* outside, as GTA on a keyboard: a jog, Shift to sprint, Alt to walk; the flat is too small for any of that */
 
@@ -153,17 +143,18 @@ function frame(dt){
   const aim=!c&&A.gtaAiming&&A.gtaAiming();
   if(aim){pv.x-=Math.cos(C.yaw)*0.55; pv.z+=Math.sin(C.yaw)*0.55; pv.y+=0.12; if(!C.aimWas) C.pitch=Math.max(C.pitch,-0.03);}      // aiming: over the right shoulder, looking level
   C.aimWas=aim;
-  if(p.script){C.pitch+=(-0.32-C.pitch)*Math.min(1,dt*3); C.yaw+=wrap(head-C.yaw)*Math.min(1,dt*3);}      /* climbing: close behind you, turning with you on the landings, under the flight above */
-  const base=aim?1.9:p.script?1.35:(c?CAR:FOOT)[1]*C.zoom*(out?1:0.72)+(c?Math.min(3,Math.abs(c.v)*0.09):0);
+  const onSt=!!p.script||!!(A.onStairs&&A.onStairs(p));      /* on the stairs, scripted or walked yourself */
+  if(onSt){C.pitch+=(-0.32-C.pitch)*Math.min(1,dt*3); C.yaw+=wrap(head-C.yaw)*Math.min(1,dt*3);}      /* climbing: close behind you, turning with you on the landings, under the flight above */
+  const base=aim?1.9:onSt?1.35:(c?CAR:FOOT)[1]*C.zoom*(out?1:0.72)+(c?Math.min(3,Math.abs(c.v)*0.09):0);
   C.dist+=(base-C.dist)*Math.min(1,dt*4);
   dir.set(Math.sin(C.yaw)*Math.cos(C.pitch),Math.sin(C.pitch),Math.cos(C.yaw)*Math.cos(C.pitch));
   want.copy(pv).addScaledVector(dir,-C.dist);
-  const lvT=p.script?Math.max(lvl,p.script.lvl):lvl;      // on the stairs: the ceiling of the floor you are going to, if it is higher
+  const lvT=Math.max(lvl,p.script?p.script.lvl:lvl,p.stairTo!=null?p.stairTo:lvl);      // on the stairs: the ceiling of the floor you are going to, if it is higher
   if(!out){const top=(lvT&&A.levels&&A.levels[lvT]?A.levels[lvT].y:0)+A.D.H-0.18; if(want.y>top) want.y=top;}
   const gy=(SM.ground?SM.ground(want.x,want.z):0)+0.35; if(out&&want.y<gy) want.y=gy;
   const rm=A.rooms[p.room], nd=rm?(rm.node||p.room):null; nodes={}; nodes[nd]=1;
   if(!lvl) LINKS.forEach(function(l){const d=A.door(l[2]); if(!d||d.cur<0.35) return; if(l[0]===nd) nodes[l[1]]=1; else if(l[1]===nd) nodes[l[0]]=1;});
-  let k=p.script?1:collide(pv,want,lvl,out);
+  let k=onSt?1:collide(pv,want,lvl,out);
   if(out&&!c&&!aim&&k<0.97){const kw=collide(pv,want,lvl,out,true); if(kw>k+0.1) for(let i=1;i<=5;i++){tw.copy(want); tw.y+=i*0.3; const kk=collide(pv,tw,lvl,out); if(kk>=kw-0.03){want.y=tw.y; k=kk; break;}}}      // a bench, a parked car, the bottle cage: up over it, not in against your head
   if(c&&!p.script){const minD=c.dim[0]/2+1.3; if(k*C.dist<minD){const kk=Math.min(1,minD/C.dist); tw.copy(pv); tw.y+=1.7; tw.addScaledVector(dir,-C.dist); if(collide(pv,tw,lvl,out)>=kk){want.copy(tw); k=Math.max(k,kk);} else k=kk;}}      /* never inside the car you are in, as GTA's never is: it rises over what is behind, or stops at the bumper */
   want.lerpVectors(pv,want,Math.max(k,0.08));      // in the stairwell, between floors, it keeps its distance
@@ -258,7 +249,7 @@ A.frameFns.push(function(dt){gamepad();});
 (function pausedPoll(){requestAnimationFrame(pausedPoll); if(!A.paused||!GP.on||!navigator.getGamepads) return; const gps=navigator.getGamepads(); let g=null; for(let i=0;gps&&i<gps.length;i++) if(gps[i]&&gps[i].connected){g=gps[i]; break;}
   if(!g) return; const q=g.buttons[9], now=!!(q&&q.pressed); if(now&&!GP.was[9]&&A.gtaMap) A.gtaMap.toggle(); GP.was[9]=now;})();      /* the frame functions rest while the map is open: Start is watched on its own, to close it */
 A.frameFns.push(function(dt){
-  jumpStep(dt); stairs(); frame(dt);
+  jumpStep(dt); frame(dt);
   const ck=A.simsOn+SM.camMode+C.on; if(ck!==camKey){camKey=ck; pressCams();}
   const show=A.simsOn&&TOUCH&&!!SM.player; if(pad.hidden===show) pad.hidden=!show;
   if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bRadio.hidden=!c; bCar.classList.toggle('on',c);

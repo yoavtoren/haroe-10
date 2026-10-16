@@ -536,7 +536,7 @@ A.frameFns.push(function(){      // the whole building seen from outside hides t
   const w=!!(A.bldWhole&&A.bldWhole()); if(w!==shut0){shut0=w; ground0.forEach(function(p){p.visible=!w;});}});
 A.frameFns.push(function(){
   const p=A.player, on=A.simsOn&&p;
-  let lv=0; if(on){lv=p.lvl||0; if(p.script) lv=Math.max(lv,p.script.lvl);}
+  let lv=0; if(on){lv=p.lvl||0; if(p.script) lv=Math.max(lv,p.script.lvl); if(p.stairTo!=null) lv=Math.max(lv,p.stairTo);}      // on the stairs, the upper floor of the two
   if(lv!==shownLvl){shownLvl=lv; for(const f in lvlGroups) lvlGroups[f].visible=+f===lv;
     wantHide.forEach(function(o){o.visible=lv>=0;}); A.touch(3);}
   /* in Sims mode the walls, the stairwell and the landings are cut at the ceiling of the floor you are on, so the flights above never stand
@@ -551,22 +551,63 @@ A.frameFns.push(function(){
 });
 
 /* ---------- what you can do on the stairs and at the doors (the bar that pops up by things in Sims mode) ---------- */
+function ensure(l){      // a floor is built the first time anyone sets off toward it
+  if(LV[l]&&l>0&&!built[l]){buildOver(l); buildCore(l); PF.forEach(function(n){buildFlat(n,l);}); A.navDirty(l); settleIn(flatOf('over'+l)); PF.forEach(function(n){settleIn(flatOf(pkey(n,l)));});}
+  if(l===-1&&!shelterBuilt){buildShelter(); A.navDirty(-1);}
+}
 function goStairs(dir){
   const p=A.player, S=A.sims; if(!p||p.script) return;
   const from=p.lvl||0, to=from+dir; if(to<-1||to>UPS) return;
-  if(LV[to]&&to>0&&!built[to]){buildOver(to); buildCore(to); PF.forEach(function(n){buildFlat(n,to);}); A.navDirty(to); settleIn(flatOf('over'+to)); PF.forEach(function(n){settleIn(flatOf(pkey(n,to)));});}
-  if(to===-1&&!shelterBuilt){buildShelter(); A.navDirty(-1);}
-  const pts=path(from,to);
+  ensure(to);
+  let pts=path(from,to);
   S.stop(); S.setDoing(dir>0?'going upstairs':'going downstairs');
-  p.goTo(pts[0][0],pts[0][2],function(){
-    p.climb(pts,to,function(){S.setDoing(''); S.toast(to===0?'Back on our floor.':NAMES[to]+'.'); if(A.unfightSoon) A.unfightSoon(100);});});
+  const done=function(){S.setDoing(''); S.toast(to===0?'Back on our floor.':NAMES[to]+'.'); if(A.unfightSoon) A.unfightSoon(100);};
+  if(p.stairY!=null){      // already on the stairs yourself: on from where you stand, by the nearest turn of the way
+    let bi=0, bd=1e9; for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-p.x,pts[i][2]-p.z)+Math.abs(pts[i][1]-p.stairY); if(d<bd){bd=d; bi=i;}}
+    pts=[[p.x,p.stairY,p.z]].concat(pts.slice(bi)); p.climb(pts,to,done); return;}
+  p.goTo(pts[0][0],pts[0][2],function(){p.climb(pts,to,done);});
 }
 A.goStairs=goStairs;
+
+/* ---------- walking the stairs yourself: with the keys or the stick you climb or go down a flight as you would, step by step. Nothing
+   takes you onto them: you are on the stairs only where you have walked onto a flight. The height under you follows the treads and the
+   corner landings, the rails and the well keep you on them, and the floor you step off onto becomes yours. ---------- */
+const IN=0.16;      // how far you keep off the stairwell's walls and rails
+function storeyY(s,x,z){      // the height of the stairs at x,z on the storey from floor s up to s+1, or null where there are no treads under x,z
+  const lo=LV[s], hi=LV[s+1]; if(!lo||!hi) return null; const y0=lo.y, y1=hi.y, rs=(y1-y0)/16, ya=y0+6*rs, yb=y0+11*rs;
+  if(x>XE-IN||z<L+IN||z>EH-IN) return null;
+  if(z<=L+SW-IN){if(x<SU-0.3) return null; if(x<=X1) return y0+(ya-y0)*Math.max(0,x-SU)/(X1-SU); return ya;}      // the first flight, from its foot on the landing of floor s, and the corner landing it climbs to
+  if(z<EH-SW+IN){if(x<X1+IN) return null; return Math.min(yb,Math.max(ya,ya+(yb-ya)*(z-(L+SW))/((EH-SW)-(L+SW))));}      // the flight across, along the far wall; beside it the well is open
+  if(x>=X1) return yb; if(x<XD-0.3) return null; return yb+(y1-yb)*Math.min(1,(X1-x)/(X1-XD));      // the second corner landing, and the third flight back to XD on floor s+1
+}
+function surfNear(x,z,yNow){let best=null, bs=null, bd=1e9;      // the storey whose treads at x,z are nearest the height you are at
+  for(let s=-1;s<UPS;s++){const y=storeyY(s,x,z); if(y==null) continue; const d=Math.abs(y-yNow); if(d<bd){bd=d; best=y; bs=s;}}
+  return best==null?null:{y:best,s:bs};}
+function nearLevel(y){let best=null, bd=0.6; for(const l in LV){const d=Math.abs(LV[l].y-y); if(d<bd){bd=d; best=+l;}} return best;}      // the floor at height y, if one is within reach of a step
+function heightOf(a){return a.stairY!=null?a.stairY:a.lvl?LV[a.lvl].y:0;}
+function nearWell(x,z){return x>XB-0.6&&x<XE+0.2&&z>L-0.6&&z<EH+0.8;}
+A.stairAt=function(a){      // every frame, for the player: the height of the treads under them, or null off the stairs; stepping off, the floor they have come to is theirs
+  if(a.lvl>UPS||a.lvl<-1) return null;
+  const r=surfNear(a.x,a.z,heightOf(a));
+  if(r){const up=Math.abs(r.y-(a.lvl?LV[a.lvl].y:0))>0.1;      // on the treads, not just at a flight's foot on the floor
+    if(up&&a.stairS!==r.s){a.stairS=r.s; ensure(r.s); ensure(r.s+1);} a.stairTo=up?r.s+1:null; return r.y;}
+  if(a.stairY!=null&&nearWell(a.x,a.z)){const l=nearLevel(a.stairY); if(l!=null&&l!==(a.lvl||0)){a.lvl=l; if(A.sims.refresh) A.sims.refresh();}}
+  a.stairS=null; a.stairTo=null; return null;
+};
+A.stairStep=function(a,x,z){      // may the player step to x,z? On the stairs the treads say; off them, the grid of the floor they stand on
+  const on=a.stairY!=null, yNow=heightOf(a), r=surfNear(x,z,yNow);
+  if(r) return Math.abs(r.y-yNow)<0.45;      // onto a flight or along it: never onto one far above or below you
+  if(!on) return undefined;
+  const l=nearLevel(yNow); if(l==null) return false;      // mid-flight, off the treads is the well or a wall
+  return A.sims.onLevel(l,function(){return A.sims.isFree(x,z);});
+};
+A.onStairs=function(a){return a.stairY!=null&&Math.abs(a.stairY-(a.lvl?LV[a.lvl].y:0))>0.1;};
 A.moreItems=function(out,p){
   const f=p.lvl||0, y=f?LV[f].y:0;
   const st=f===0?{x:SU-0.05,z:L+1.2,sx:SU-0.35,sz:L+1.0,h:R/2}:{x:SU-0.05,z:(zA+zB)/2,sx:SU-0.4,sz:(zA+zB)/2,h:R/2};
   const acts=[]; if(f<UPS) acts.push([f===-1?'Up to our floor':'Go upstairs',function(){goStairs(1);}]); if(f>-1) acts.push([f===1?'Down to our floor':f===0?'Down to the shelter':'Go downstairs',function(){goStairs(-1);}]);
   out.push({name:'Stairs',x:st.x,z:st.z,y:y+0.8,sx:st.sx,sz:st.sz,h:st.h,acts:acts,box:[SU-0.1,X1,y-0.05,y+1.2,L,L+SW]});
+  if(A.onStairs(p)) return;      // on a flight, between floors: the doors of the floor you left are not on offer
   Object.keys(doors).forEach(function(k){const d=doors[k]; if(d.lvl!==f) return; const fl=flatOf(k);
     if(Math.hypot(d.cx-p.x,d.cz-p.z)>4.5) return;      // only the doors close by
     let x,z,sx,sz,h,box;
