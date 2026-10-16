@@ -42,6 +42,7 @@ function model(kind){const g=new THREE.Group(), m=function(c){return new THREE.M
   if(kind==='bat'){const b=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.022,0.86,12),m(0xb9844a)); b.rotation.z=1.1; g.add(b);}
   else if(kind==='pistol'){const b=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.07,0.05),m(0x2a2c30)); g.add(b); const h=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.16,0.05),m(0x2a2c30)); h.position.set(-0.08,-0.09,0); h.rotation.z=-0.2; g.add(h);}
   else if(kind==='armour'){const b=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.42,0.12),m(0x2b4a7a)); g.add(b); const s=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.08,0.13),m(0xd8d8d8)); s.position.y=0.06; g.add(s);}
+  else if(kind==='cash'){const b=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.05,0.16),m(0x4a9a5a)); g.add(b); const s=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.056,0.17),m(0xe8e4d0)); g.add(s);}      // a fold of notes
   else{const b=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.26,0.12),m(0xf2f2ee)); g.add(b); const c1=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.06,0.13),m(0xd23b3b)), c2=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.2,0.13),m(0xd23b3b)); g.add(c1,c2);}
   const r=new THREE.Mesh(new THREE.RingGeometry(0.42,0.5,32).rotateX(-R/2),ring); r.position.y=-0.85; g.add(r);
   return g;}
@@ -58,14 +59,16 @@ function take(p){const S=SM.toast; p.back=A.t+(p.once?1e9:120); p.g.visible=fals
   if(p.kind==='bat'){const had=W.has.bat; W.has.bat=true; if(!had||W.cur==='fists') W.cur='bat'; S&&S('Baseball bat. Tab changes weapon.');}
   else if(p.kind==='pistol'){W.has.pistol=true; W.ammo+=24; if(!W.clip){W.clip=Math.min(12,W.ammo); W.ammo-=W.clip;} W.cur='pistol'; S&&S(TOUCH?'Pistol. The punch button shoots.':'Pistol. Hold the right mouse button to aim, click to fire. Tab changes weapon.');}
   else if(p.kind==='armour'){A.gtaArmor=100; S&&S('Body armour.');}
+  else if(p.kind==='cash'){if(A.floors&&A.floors.G){A.floors.G.loot+=p.amount||20; if(A.floors.drawHud) A.floors.drawHud();}}
   else{if(A.game.G){A.game.G.hp=100;} S&&S('First aid. Health restored.');}
   show(); hud(true); if(A.gtaSound) A.gtaSound.cash();}
 function pickups(dt){const p=SM.player; if(!p) return; const me=A.drive&&A.drive.on()?null:p;
   PU.forEach(function(q){if(!q.g.visible){if(A.t>q.back){q.g.visible=true;} return;} q.g.rotation.y+=dt*1.8; q.g.position.y=q.y+Math.sin(A.t*2.4+q.x)*0.08;
     if(me&&!p.lvl&&hyp(q.x-p.x,q.z-p.z)<1.1) take(q);});
   for(let i=PU.length-1;i>=0;i--){const q=PU[i]; if(q.once&&(!q.g.visible||A.t>q.until)){scene.remove(q.g); q.g.traverse(function(o){if(o.geometry) o.geometry.dispose(); if(o.material&&o.material!==ring) o.material.dispose();}); PU.splice(i,1);}}}      /* taken, or left a minute: gone, and freed */
-/* an officer down drops his pistol */
-function drops(){if(!A.gtaCops) return; A.gtaCops.foot.forEach(function(o){const s=o.a._g; if(s&&s.down&&!o.dropped){o.dropped=true; o.a.gun.visible=false; const q=place('pistol',o.a.x+0.6,o.a.z+0.3,true); q.ammoOnly=true;}});}
+/* an officer down drops his pistol; someone knocked down in the street drops a little money, as in GTA (once each) */
+function drops(){if(A.gtaCops) A.gtaCops.foot.forEach(function(o){const s=o.a._g; if(s&&s.down&&!o.dropped){o.dropped=true; o.a.gun.visible=false; const q=place('pistol',o.a.x+0.6,o.a.z+0.3,true); q.ammoOnly=true;}});
+  people().forEach(function(t){const a=t.a; if(!a||a.cop||a._cashed||t.sub==='cop') return; const s=A.game.state(t); if(!s||!s.down) return; a._cashed=true; if(Math.random()<0.75){const q=place('cash',a.x+0.5,a.z+0.4,true); q.amount=10+5*Math.floor(Math.random()*7);}});}
 
 /* =====================================================================
    Firing

@@ -39,7 +39,20 @@ function cars(dt){const me=D.on()?D.pos():null, p=SM.player; pt+=dt; const tick=
   D.live.forEach(function(c){if(c.hp==null||c.hp>=45) return; if(Math.hypot(c.x-p.x,c.z-p.z)>70) return;
     const f=c.fwd(), x=c.x+f[0]*(c.dim[0]/2-0.7), z=c.z+f[1]*(c.dim[0]/2-0.7), y=c.g.position.y+1.0, k=c.hp<20?1:0;
     if(Math.random()<(k?0.9:0.5)) puff(x+(Math.random()-0.5)*0.3,y,z+(Math.random()-0.5)*0.3,k?0x222222:0x8a8a8a,k?2.2:1.8,0.4,k?2.4:1.8,k?0.55:0.35,1.1+Math.random()*0.5);
-    if(c.hp<=10&&Math.random()<0.8) puff(x,y-0.15,z,Math.random()<0.5?0xff8a1a:0xffc23a,0.45,0.35,0.9,0.85,1.6,true);});}      // and flames when it is done for
+    if(c.hp<=10&&!c.blown&&Math.random()<0.8) puff(x,y-0.15,z,Math.random()<0.5?0xff8a1a:0xffc23a,0.45,0.35,0.9,0.85,1.6,true);      // and flames when it is done for
+    if(c.hp<=0&&!c.blown){c.deadT=(c.deadT||0)+0.05; if(c.deadT>5) explode(c);}});}      // which burns a while, and then goes up
+/* ---------- the blast, as GTA's: a fireball and black smoke, a bang that shakes the view, and whoever is near is thrown; the wreck is black ---------- */
+function explode(c){c.blown=true; const x=c.x, z=c.z, y=c.g.position.y+0.7;
+  for(let i=0;i<14;i++) puff(x+(Math.random()-0.5)*1.6,y+Math.random()*0.8,z+(Math.random()-0.5)*1.6,i%3?0xff8a1a:0xfff0a0,0.5+Math.random()*0.5,0.8,3.2+Math.random()*2.5,0.95,1.5+Math.random()*2,true);
+  for(let i=0;i<10;i++) puff(x+(Math.random()-0.5)*2,y+0.5,z+(Math.random()-0.5)*2,0x1a1a1a,3+Math.random()*2.5,1.2,4.5,0.6,1.4+Math.random(),false);
+  if(A.gtaShake) A.gtaShake(0.7); if(A.gtaSound&&A.gtaSound.boom) A.gtaSound.boom(x,z); if(A.gtaPanic) A.gtaPanic(x,z,40,2);
+  const p=SM.player, me=D.on()?D.pos():null, d=Math.hypot(p.x-x,p.z-z), G=A.game;
+  if(me===c){D.exit(true); if(G&&G.hurt) G.hurt(400);}      /* in it: that is the end of you */
+  else if(d<7&&!p.lvl&&G&&G.hurt){G.hurt(Math.round(120*(1-d/7)+20)); if(A.gtaHitFrom) A.gtaHitFrom(x,z);}
+  if(G&&G.all) G.all().forEach(function(t){if(t.kind!=='person'||!t.a||(t.lvl||0)) return; const a=t.a, dd=Math.hypot(a.x-x,a.z-z); if(dd>8||a.gone) return;
+    const s=G.state(t); s.hp-=70*(1-dd/9); G.knock(t,6); const ux=(a.x-x)/(dd||1), uz=(a.z-z)/(dd||1); fly.push({a:a,vx:ux*(9-dd),vz:uz*(9-dd),vy:3+(8-dd)*0.5}); a.p.twirl=1;});
+  D.live.forEach(function(k){if(k===c||Math.hypot(k.x-x,k.z-z)>6) return; k.hp=Math.max(0,k.hp-55); k.alarm=A.t+6;});      // the cars beside it take it too, and may go up in their turn
+  c.g.traverse(function(m){if(!m.isMesh||!m.material||m.material.transparent) return; m.material=m.material.clone(); m.material.color.setHex(0x16171a); if(m.material.emissive) m.material.emissive.setHex(0); if(m.material.specular) m.material.specular.setHex(0x111111); if(m.material.envMap) m.material.envMap=null; m.material.needsUpdate=true;});}
 
 /* ---------- people jump out of your way; the ones you hit fly ---------- */
 const fly=[];

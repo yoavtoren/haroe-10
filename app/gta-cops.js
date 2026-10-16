@@ -125,6 +125,8 @@ function unstick(u,dt,moving){const c=u.car;
 function carStep(u,dt){
   const c=u.car, m=me(), d=hyp(m.x-c.x,m.z-c.z), wantd=G.wanted>0;
   c.alarm=0; if(G.busted){c.v*=Math.pow(0.05,dt); move(c,dt); return;}
+  if(c.hp<=0){c.v*=Math.pow(0.05,dt); move(c,dt); u.dead=true; if(u.state==='block') u.state='out'; if(u.inside>0&&wantd) getOut(u);      /* wrecked: it stops where it is, and whoever was in it comes on foot */
+    if(!wantd){if(!u.left) u.left=A.t; if(A.t-u.left>20||(d>150&&!inView(c.x,c.z))) dropCar(u);} return;}
   if(u.state==='leave'){if(!unstick(u,dt,true)){if(!u.away){const q=A.gtaRoadPoint(c.x,c.z,120,200); u.away=q?[q.x,q.z]:[c.x+80,c.z]; u.route=null;} follow(u,u.away[0],u.away[1],11,dt);}
     if((d>150&&!inView(c.x,c.z))||A.t-u.left>40) dropCar(u); return;}
   if(!wantd){u.state='leave'; u.left=A.t; recall(u); return;}
@@ -181,7 +183,7 @@ function footStep(o,dt){
       if(o.los!==false&&d<48){a.p.act='aim'; if(A.t>o.fire){o.fire=A.t+0.9+Math.random()*0.7; shoot(o);}} else a.p.act=null;
       if(A.t>o.shout&&d<40){o.shout=A.t+6+Math.random()*4; a.say(rnd(SHOUT),1.8);} a.update(dt); return true;}}
   if(o.state==='back'||o.state==='walk'){a.p.act=null; a.gun.visible=false; a.speed=o.state==='back'?3.2:1.4;
-    const c=o.u&&o.u.car&&UNITS.indexOf(o.u)>=0?o.u.car:null;
+    const c=o.u&&o.u.car&&!o.u.dead&&UNITS.indexOf(o.u)>=0?o.u.car:null;      /* a wrecked car is no car to go back to */
     if(!c){if(!o.away){o.away=[a.x+(a.x-m.x)*3,a.z+(a.z-m.z)*3]; a.goTo(o.away[0],o.away[1]);} if((d>60&&!inView(a.x,a.z))||A.t-(o.t0||(o.t0=A.t))>30) return false; a.update(dt); return true;}
     if(hyp(c.x-a.x,c.z-a.z)<2.3){o.u.inside++; o.u.crew.splice(o.u.crew.indexOf(o),1); if(!o.u.crew.length&&o.u.state!=='leave'){o.u.state='drive';} return false;}      // in, and the door shuts
     if(A.t>o.next){o.next=A.t+1.5; a.goTo(c.x,c.z);} a.update(dt); return true;}

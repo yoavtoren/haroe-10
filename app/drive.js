@@ -244,6 +244,7 @@ function aheadClear(t,dist){const c=t.car, f=c.fwd(), p=SM.player;
   if(A.game&&A.game.all){const ps=A.game.all(); for(let i=0;i<ps.length;i++){const q=ps[i]; if(q.kind!=='person'||!q.a) continue; if(check(q.a.x,q.a.z,1.6)) return 'person';}}
   return null;}
 function trafficStep(t,dt){const c=t.car; if(c.held) return;
+  if(c.hp<=0){c.v=Math.max(0,c.v-8*dt); c.place(); return;}      /* wrecked: it rolls to a stop and stays there, smoking */
   if(t.stop>0){t.stop-=dt; c.v=Math.max(0,c.v-10*dt); c.place(); return;}
   const blk=aheadClear(t,9+c.v*0.6+(t.bus?4:0)); let want=blk?0:t.cruise;
   /* the lights at the junction ahead: red, or amber with room to stop, and it waits at the line */

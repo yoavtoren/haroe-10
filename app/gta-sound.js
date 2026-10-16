@@ -208,6 +208,11 @@ function shot(x,z,mine){const SM=A.sims, p=SM&&SM.player, c=shared(), t=c.curren
   const n=Math.floor(c.sampleRate*0.32), b=c.createBuffer(1,n,c.sampleRate), dd=b.getChannelData(0); for(let i=0;i<n;i++){const k=i/n; dd[i]=(Math.random()*2-1)*Math.pow(1-k,6)*(k<0.01?2:1);}
   const s=c.createBufferSource(), hp=c.createBiquadFilter(), lp=c.createBiquadFilter(), g=c.createGain(); s.buffer=b; hp.type='highpass'; hp.frequency.value=300; lp.type='lowpass'; lp.frequency.value=3800-Math.min(3000,d*30); g.gain.value=vol; s.connect(hp).connect(lp).connect(g).connect(B.out); s.start(t);
   tone(B.out,'sine',140,40,0.2,vol*0.9,t);}
+/* a car going up: a bang that drops into a long low rumble, duller and quieter the farther off */
+function boom(x,z){const SM=A.sims, p=SM&&SM.player, c=shared(), t=c.currentTime, d=p?Math.hypot(x-p.x,z-p.z):0, vol=clamp(1.2/(1+d*0.03),0.08,1);
+  const n=Math.floor(c.sampleRate*1.6), b=c.createBuffer(1,n,c.sampleRate), dd=b.getChannelData(0); for(let i=0;i<n;i++){const k=i/n; dd[i]=(Math.random()*2-1)*Math.pow(1-k,2.2)*(k<0.02?2.5:1);}
+  const s=c.createBufferSource(), lp=c.createBiquadFilter(), g=c.createGain(); s.buffer=b; lp.type='lowpass'; lp.frequency.setValueAtTime(2600-Math.min(2000,d*12),t); lp.frequency.exponentialRampToValueAtTime(180,t+1.4); g.gain.value=vol; s.connect(lp).connect(g).connect(B.out); s.start(t);
+  tone(B.out,'sine',70,28,1.2,vol*0.9,t); tone(B.out,'triangle',120,40,0.5,vol*0.5,t);}
 /* a scream down the street: a voice's 'ah', two formants over a rising, shaking pitch */
 let screamT=0;
 function scream(x,z){const SM=A.sims, p=SM&&SM.player; if(!p||A.t<screamT) return; screamT=A.t+1.5; const c=shared(), t=c.currentTime, d=Math.hypot(x-p.x,z-p.z), vol=clamp(0.1/(1+d*0.09),0.006,0.08), she=Math.random()<0.5;
@@ -231,5 +236,5 @@ A.frameFns.push(function(dt){if(!ctx){if(!A.simsOn) return; shared();}
   if(A.simsOn){steps(); traffic(); city(dt);} else if(B){B.out.gain.setTargetAtTime(0,ctx.currentTime,0.3); hush();}
   radio();});
 window.addEventListener('load',function(){if(A.gtaSet) A.gtaSet.on(function(k){if(k==='master'||k==='radio'||k==='sfx') volumes();});});
-A.gtaSound={ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,shot:shot,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,passed:passed,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
+A.gtaSound={boom:boom,ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,shot:shot,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,passed:passed,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
 })();
