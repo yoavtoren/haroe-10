@@ -77,6 +77,7 @@ A.gtaPanic=function(x,z,r,sev){const G=A.floors&&A.floors.G, cops=A.gtaCops&&A.g
     if(k<0.12&&d<12){a.busy=true; a.path=[]; a.cb=null; a.p.act='cower'; a._flee=A.t+5; a.hT=Math.atan2(x-a.x,z-a.z); SM.later(3+Math.random()*2,function(){if(a.p.act==='cower') a.p.act=null; a.busy=false; flee(a,x,z);},a); if(Math.random()<0.6) a.say(rnd(SCREAM),1.8); return;}
     a._flee=A.t+12; SM.later(lag,function(){flee(a,x,z);},a); if(Math.random()<0.45) a.say(rnd(SCREAM),1.8);});
   if(A.gtaSound&&A.gtaSound.scream&&Math.random()<0.8) A.gtaSound.scream(x,z);};
+A.gtaFlee=function(a,x,z){flee(a,x,z);};      /* for game.js: one person running from you */
 function flee(a,x,z){const dx=a.x-x, dz=a.z-z, d=hyp(dx,dz)||1, T=A.town; let tx=a.x+dx/d*32, tz=a.z+dz/d*32; const q=T&&T.nearest?T.nearest(tx,tz):null; if(q){tx=q[0]; tz=q[1];}
   a._flee=A.t+12; a.busy=true; a.release(); a.speed=3.3+Math.random()*0.8; a.p.act=null; if(T) T.quick=true; try{a.goTo(tx,tz,function(){a.busy=false; a.speed=a._role==='jog'?2.9:1.1;});} finally{if(T) T.quick=false;} SM.later(14,function(){if(a._flee&&A.t>a._flee){a.busy=false;}},a);}
 function call(a){a.busy=true; a.path=[]; a.cb=null; a.p.act='phone'; const m=SM.player; a.hT=Math.atan2(m.x-a.x,m.z-a.z); a._flee=A.t+8;

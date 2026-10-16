@@ -174,7 +174,9 @@ function afterFight(t){
   else if(t.a){const a=t.a; a.busy=false; a.next=A.t+8; if(a.flat){const r=A.rooms[a.flat.rooms[0]].rs[0]; a.goTo((r[0]+r[1])/2,(r[2]+r[3])/2);}}
 }
 const fighters=[];
-function fightBack(t){const s=state(t); if(s.fight) return; s.fight=A.t+14; s.next=A.t+0.6; fighters.push(t); bubble(t,rnd(['Oh, you want a fight?','Come here!','You will regret that!']),2); t.p.act='guard';}
+function fightBack(t){const s=state(t); if(s.fight) return;
+  if(A.gtaFlee&&t.a&&t.a.town&&!t.a.cop&&t.sub!=='cop'&&!s.fled&&Math.random()<0.65){s.fled=true; const p=SM.player; A.gtaFlee(t.a,p.x,p.z); bubble(t,rnd(['Help!','Leave me alone!','Aaah! Police!']),2); return;}      /* most people in the street run, as GTA's do; a few square up */
+  s.fight=A.t+14; s.next=A.t+0.6; fighters.push(t); bubble(t,rnd(['Oh, you want a fight?','Come here!','You will regret that!']),2); t.p.act='guard';}
 function fighterStep(t,dt){
   const s=state(t), p=SM.player, q=posOf(t,v1), d=Math.hypot(q.x-p.x,q.z-p.z);
   if(A.t>s.fight||s.down||d>12||p.lvl!==(t.lvl||0)||(A.drive&&A.drive.on&&A.drive.on())){s.fight=0; t.p.act=null; if(t.a) t.a.busy=false; return false;}
