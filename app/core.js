@@ -47,7 +47,7 @@ const WC=A.WC={x0:D.BLK,x1:3.9,z0:D.ZW,z1:L};    // guest toilet
 const LB=A.LB={XL:-1.85, CX0:0.3, CX1:2.55, RZ:L+2.3, SD:1.15, SU:1.25, D4:0.2, VW:2.75, EH:L+2.55, ZE:L+8.8, ZC:L+12.4, XF:BA.x1};      // VW: the second entrance's hall begins past the corridor's right wall
 LB.BZ=LB.EH;
 LB.XE=LB.XF-0.1;           // the stairwell's far wall
-LB.ZO=LB.ZC-0.85;          // centre of our doorway from the bridge: it is in the corner with number 12's wing, 20 cm from it
+LB.ZO=LB.ZC-1.22;          // centre of our doorway from the bridge: near the corner with number 12's wing, 57 cm from it, as the photos of the walk in have it
 LB.Z2=LB.ZC-8.35;           // the second bridge, further along the front, into a small hall of its own for flats 1 and 6
 
 const stage=A.stage=document.getElementById('stage'), labelsEl=A.labelsEl=document.getElementById('labels');

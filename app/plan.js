@@ -2,7 +2,7 @@
    flat 5, at the front on the west; flat 4 is behind it, flat 3 behind the landing, flats 2 and 1 along the back and the east end, and
    flat 6 at the front, east of ours, standing out four metres toward the street: its front is the one in the photos of the walk in,
    flush with the doorway, and its west side is the wing you see to the right out of our kitchen window. The doorway is at the end of a
-   short passage between flat 6 and number 12 that leads in to the hall.
+   short passage between flat 6 and number 12 that leads in to the hall; the passage's wall along flat 6 is in line with the doorway's right jamb.
    The drawing was laid over our flat (the jog in the wall between the bedrooms, the toilet, the bathroom and the front door all fall where
    the tape put them) to bring it into the model's frame: x out from the back toward the street, z from the west wall east. Where a flat
    meets the lobby, its walls are taken from the lobby as the photos have it.
@@ -26,13 +26,13 @@ const FLATS={
       ['bath4','Bathroom','bath',-2.15,-0.12,3.15,4.3],['hall4','Entrance','hall',-3.0,-0.12,4.4,6.5]],
      door:{all:['hall4','z+',-1.23,-0.37]}},      // beside ours, a little in front of it
   6:{rooms:[['bath6','Bathroom','bath',5.3,6.3,6.5,7.65],['wc6','Toilet','wc',5.3,6.3,7.75,8.95],['bed6b','Bedroom','bed',6.4,9.25,6.5,9.0],['hall6','Entrance','hall',2.65,6.1,9.05,11.6],
-      ['kitchen6','Kitchen','kitchen',6.2,9.25,9.1,10.9],['living6','Living room','living',6.2,9.25,11.0,14.95],['bed6a','Bedroom','bed',2.65,6.1,11.7,14.85],['study6','Study','bed',5.3,9.25,15.05,17.2]],
+      ['kitchen6','Kitchen','kitchen',6.2,9.25,9.1,10.9],['living6','Living room','living',6.2,9.25,11.0,14.95],['bed6a','Bedroom','bed',2.65,6.1,11.7,14.85],['study6','Study','bed',5.3,9.25,15.05,16.9]],
      door:{all:['hall6','x-',9.9,10.76]}}      // off the corridor's other side, where it meets the stairwell
 };
 /* the street front: flat 6's face, and the doorway's */
 const FRONT=Math.max.apply(null,FLATS[6].rooms.map(function(q){return q[4];}));
 /* the common parts: the landing, the stairwell, the corridor, the hall over the entrance, and the passage from the doorway to the hall */
-const CORE=[[-1.85,1.25,6.61,8.71],[1.15,5.14,6.41,8.96],[0.3,2.55,8.71,15.21],[0.3,5.24,14.91,18.81],[5.14,FRONT,17.2,18.81]];
+const CORE=[[-1.85,1.25,6.61,8.71],[1.15,5.14,6.41,8.96],[0.3,2.55,8.71,15.21],[0.3,5.24,14.91,18.81],[5.14,FRONT,16.96,18.81]];
 /* our own flat, as the model has it */
 const OURS=[];
 function ours(){if(!OURS.length) ['living','kitchen','bed1','bed2','bath','wc'].forEach(function(k){(A.rooms[k]&&A.rooms[k].rs||[]).forEach(function(r){OURS.push(r);});}); return OURS;}

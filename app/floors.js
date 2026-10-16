@@ -60,7 +60,7 @@ function doorSpec(n,f){const d=PL.doorOf(n,f), rm=PL.analyse(n).rooms.find(funct
 const DOORC=['#a9aeb1','#8a7f72','#9aa6b0','#7d6a5a','#6f7f75','#b9b2a6'];
 function landingDoors(){
   for(let f=1;f<=UPS;f++) hang('over'+f,f,LDS[0],L,0,R/2,'land'+f,['#a9aeb1','#7d6a5a','#9aa6b0'][f-1],String(NUM[f][0]),LDS[1]-LDS[0]);      // over ours, hung as ours is: it swings in toward the flat
-  for(let f=0;f<=UPS;f++) PF.forEach(function(n){const s=doorSpec(n,f); hang(pkey(n,f),f,s.hx,s.hz,s.closed,s.open,f?'land'+f:'hall',DOORC[(n+f)%DOORC.length],String(NUMOF(n,f)),s.u1-s.u0);});
+  for(let f=0;f<=UPS;f++) PF.forEach(function(n){const s=doorSpec(n,f); hang(pkey(n,f),f,s.hx,s.hz,s.closed,s.open,f?'land'+f:'hall',f?DOORC[(n+f)%DOORC.length]:DOORC[0],String(NUMOF(n,f)),s.u1-s.u0);});      // on our floor every door is the same grey steel, as in the photos
   hang('shelter',-1,XB,LDW[1],R/2,R*0.97,'land-1','#5a6a5e','מקלט',LDW[1]-LDW[0]); doors.shelter.locked=false;      // the shelter is open to all
 }
 
