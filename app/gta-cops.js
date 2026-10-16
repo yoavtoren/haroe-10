@@ -80,6 +80,7 @@ function roadblock(m){const f=m.car.fwd();
     const a=rn.r.p[rn.j-1], b=rn.r.p[rn.j], dx=b[0]-a[0], dz=b[1]-a[1], l=hyp(dx,dz)||1, t=clamp(((x-a[0])*dx+(z-a[1])*dz)/(l*l),0.15,0.85), qx=a[0]+dx*t, qz=a[1]+dz*t, ux=dx/l, uz=dz/l;
     if(l<24||Math.abs(ux*f[0]+uz*f[1])<0.8||T.kept(qx,qz)||!A.nav.isFree(qx,qz)) continue;
     const w=rn.r.w[0], u=[ux,uz], n=[uz,-ux], far=((m.x-qx)*ux+(m.z-qz)*uz)>0?-1:1, sp=Math.min(2.4,w/4+0.6), psi=Math.atan2(ux,uz);
+    if(D.live.some(function(k){return hyp(k.x-qx,k.z-qz)<k.dim[0]/2+sp+3;})) continue;      /* not on top of a car that is there */
     [-1,1].forEach(function(s,i){const cx=qx+n[0]*s*sp, cz=qz+n[1]*s*sp, c=new D.Car({kind:'sedan',col:0xf2f2ee,cop:true,x:cx,z:cz,psi:psi+(i?R:0)}); c.name='Police car'; c.v=0; strobes(c);
       const unit={car:c,inside:0,crew:[],state:'block',route:null,rt:0,stuck:0,rev:0,ghost:0,born:A.t,dir:u,far:far}; c.unit=unit; UNITS.push(unit);
       [-1,1].forEach(function(k){const ox=cx+u[0]*far*2.6+n[0]*k*0.9, oz=cz+u[1]*far*2.6+n[1]*k*0.9, ok=A.nav.isFree(ox,oz), o2=officer(ok?ox:cx+u[0]*far*2.6,ok?oz:cz+u[1]*far*2.6,Math.atan2(m.x-ox,m.z-oz));

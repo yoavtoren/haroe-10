@@ -30,7 +30,7 @@ function blocked(x,z,y,lvl,out,walls){
   if(out){const T=A.town; if(T&&T.inBuilding&&T.inBuilding(x,z,0.35)) return true;
     if(walls) return false;
     const OB=T&&T.obstacles, gy0=(SM.ground?SM.ground(x,z):0);
-    if(OB&&OB.grid&&y-gy0<2.7){const g=OB.G, l=OB.grid.get(Math.floor(x/g)+','+Math.floor(z/g)); if(l) for(let i=0;i<l.length;i++){const o=l[i]; if(o.off||o[2]<0.45||y-gy0>(o[2]>=1?2.7:1.85)) continue; if(Math.hypot(o[0]-x,o[1]-z)<o[2]+0.15) return true;}}      /* low, it keeps out of the bottle cages, benches, shelters and crates (thin poles it ignores) */
+    if(OB&&OB.grid&&y-gy0<2.7){const g=OB.G, i0=Math.floor(x/g), k0=Math.floor(z/g); for(let i=i0-1;i<=i0+1;i++) for(let k=k0-1;k<=k0+1;k++){const l=OB.grid.get(i+','+k); if(l) for(let n=0;n<l.length;n++){const o=l[n]; if(o.off||o[2]<0.45||y-gy0>(o[2]>=1?2.7:1.85)) continue; if(Math.hypot(o[0]-x,o[1]-z)<o[2]+0.15) return true;}}}      /* low, it keeps out of the bottle cages, benches, shelters and crates (thin poles it ignores) */
     if(A.drive&&A.drive.live){const me=car(), gy=gy0; if(y-gy<1.75){const L=A.drive.live; for(let i=0;i<L.length;i++){const k=L[i]; if(k===me||Math.abs(k.x-x)>4||Math.abs(k.z-z)>4) continue; const cs=k.circles(); for(let j=0;j<cs.length;j++) if(Math.hypot(cs[j][0]-x,cs[j][1]-z)<cs[j][2]+0.25) return true;}}}      /* low enough to be in a car's way */
     return false;}
   let inR=false;
@@ -195,14 +195,14 @@ function gamepad(){const gps=navigator.getGamepads?navigator.getGamepads():null;
   GP.on=true; const dz=function(v){return Math.abs(v)<0.14?0:v;}, b=function(i){const q=g.buttons[i]; return !!(q&&(q.pressed||q.value>0.5));}, once=function(i){const now=b(i), was=GP.was[i]; GP.was[i]=now; return now&&!was;};
   const lx=dz(g.axes[0]||0), ly=dz(g.axes[1]||0), rx=dz(g.axes[2]||0), ry=dz(g.axes[3]||0), rt=g.buttons[7]?g.buttons[7].value:0, lt=g.buttons[6]?g.buttons[6].value:0, c=car();
   if(A.paused) return;
-  if(S){if(c){S.move.x=lx; S.move.y=lt>0.1?lt:-rt; GP.moved=true;}      /* in a car the sticks are drive.js's own: steer, gas and brake */
-    else if(lx||ly){S.move.x=lx; S.move.y=ly; GP.moved=true;} else if(GP.moved){S.move.x=S.move.y=0; GP.moved=false;}
-    S.look.x=rx; S.look.y=ry;}
+  if(S){if(c&&(lx||lt>0.1||rt>0.1)){S.move.x=lx; S.move.y=lt>0.1?lt:-rt; GP.moved=true;}      /* in a car the sticks are drive.js's own: steer, gas and brake */
+    else if(!c&&(lx||ly)){S.move.x=lx; S.move.y=ly; GP.moved=true;} else if(GP.moved){S.move.x=S.move.y=0; GP.moved=false;}
+    if(rx||ry){S.look.x=rx; S.look.y=ry; GP.looked=true;} else if(GP.looked){S.look.x=S.look.y=0; GP.looked=false;}}      /* a pad that merely lies connected leaves the touch sticks alone */
   if(c){gpKey(' ','Space',b(0)); gpKey('h','KeyH',b(10)); gpKey('c','KeyC',b(11)); gpKey('f','KeyF',b(3)); if(once(5)) gpKey('q','KeyQ',true), gpKey('q','KeyQ',false);}
   else{gpKey('shift','ShiftLeft',rt>0.5); gpKey(' ','Space',b(0)); gpKey('e','KeyE',b(1)); gpKey('f','KeyF',b(3));
     const aim=lt>0.5&&!!A.gtaAimSet; if(aim!==!!GP.aim){GP.aim=aim; if(A.gtaAimSet) A.gtaAimSet(aim);}      /* only as the trigger goes down or up: the mouse's own aim stays */
     if(aim){if(once(2)&&A.gtaFire) A.gtaFire();} else gpKey('r','KeyR',b(2));
-    if(once(4)){gpKey('tab','Tab',true); gpKey('tab','Tab',false);}}
+    if(once(4)){gpKey('Tab','Tab',true); gpKey('Tab','Tab',false);}}      /* the weapon key reads e.key, 'Tab' as the browser spells it */
   if(once(9)&&A.gtaMap) A.gtaMap.toggle(); if(once(8)) cycle();
   if(once(12)) gpKey('q','KeyQ',true), gpKey('q','KeyQ',false);}
 /* a door standing open between the camera and you is not drawn while it is in the way */

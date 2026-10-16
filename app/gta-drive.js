@@ -52,7 +52,7 @@ function explode(c){c.blown=true; const x=c.x, z=c.z, y=c.g.position.y+0.7;
   if(G&&G.all) G.all().forEach(function(t){if(t.kind!=='person'||!t.a||(t.lvl||0)) return; const a=t.a, dd=Math.hypot(a.x-x,a.z-z); if(dd>8||a.gone) return;
     const s=G.state(t); s.hp-=70*(1-dd/9); G.knock(t,6); const ux=(a.x-x)/(dd||1), uz=(a.z-z)/(dd||1); fly.push({a:a,vx:ux*(9-dd),vz:uz*(9-dd),vy:3+(8-dd)*0.5}); a.p.twirl=1;});
   D.live.forEach(function(k){if(k===c||Math.hypot(k.x-x,k.z-z)>6) return; k.hp=Math.max(0,k.hp-55); k.alarm=A.t+6;});      // the cars beside it take it too, and may go up in their turn
-  c.g.traverse(function(m){if(!m.isMesh||!m.material||m.material.transparent) return; m.material=m.material.clone(); m.material.color.setHex(0x16171a); if(m.material.emissive) m.material.emissive.setHex(0); if(m.material.specular) m.material.specular.setHex(0x111111); if(m.material.envMap) m.material.envMap=null; m.material.needsUpdate=true;});}
+  c.g.traverse(function(m){if(!m.isMesh||!m.material||m.material.transparent) return; m.material=m.material.clone(); m.material.userData.own=true; m.material.color.setHex(0x16171a); if(m.material.emissive) m.material.emissive.setHex(0); if(m.material.specular) m.material.specular.setHex(0x111111); if(m.material.envMap) m.material.envMap=null; m.material.needsUpdate=true;});}
 
 /* ---------- people jump out of your way; the ones you hit fly ---------- */
 const fly=[];

@@ -8,7 +8,7 @@
 'use strict';
 const A=window.APP, T=A.town, det=A.det, SM=A.sims, R=Math.PI, scene=A.scene;
 if(!T||!det||!SM) return;
-const U=T.U, OUT=function(){return A.LAYER_OUT||5;}, TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const U=T.U, OUT=function(){return A.LAYER_OUT||5;}, TOUCH=!!(window.matchMedia&&(matchMedia('(pointer: coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(any-pointer: fine)').matches)));      /* a phone or a tablet, as the gta modules decide it: a laptop with a touch screen and a mouse plays as a computer */
 const $=function(id){return document.getElementById(id);};
 function ang(a,b,k){let d=b-a; while(d>R) d-=2*R; while(d<-R) d+=2*R; return a+d*k;}
 function wrap(d){while(d>R) d-=2*R; while(d<-R) d+=2*R; return d;}
@@ -75,7 +75,7 @@ Car.prototype.place=function(){const y=SM.ground?SM.ground(this.x,this.z):U; thi
 Car.prototype.fwd=function(){return [Math.cos(this.psi),-Math.sin(this.psi)];};
 Car.prototype.wheelsTurn=function(dt){const self=this; this.spin+=this.v*dt/0.31;
   this.wheels.forEach(function(w){w.rotation.x=-self.spin; w.rotation.y=R/2+(w.position.x>0?self.steer:0);});};
-Car.prototype.remove=function(){root.remove(this.g); const i=live.indexOf(this); if(i>=0) live.splice(i,1);};
+Car.prototype.remove=function(){root.remove(this.g); const i=live.indexOf(this); if(i>=0) live.splice(i,1); if(this.blown) this.g.traverse(function(m){if(m.isMesh&&m.material&&m.material.userData.own) m.material.dispose();});};      // a wreck's own blackened materials (gta-drive.js) go with it
 /* the car as three circles down its length: for bumping into other cars and people */
 Car.prototype.circles=function(){const f=this.fwd(), L=this.dim[0], r=this.dim[1]/2, n=Math.max(3,Math.ceil(L/2.2)), out=[]; for(let i=0;i<n;i++){const s=-L/2+r*0.8+(L-r*1.6)*i/(n-1); out.push([this.x+f[0]*s,this.z+f[1]*s,r]);} return out;};      // a long bus, more of them
 const live=[];
@@ -244,9 +244,8 @@ function aheadClear(t,dist){const c=t.car, f=c.fwd(), p=SM.player;
   if(A.game&&A.game.all){const ps=A.game.all(); for(let i=0;i<ps.length;i++){const q=ps[i]; if(q.kind!=='person'||!q.a) continue; if(check(q.a.x,q.a.z,1.6)) return 'person';}}
   return null;}
 function trafficStep(t,dt){const c=t.car; if(c.held) return;
-  if(c.hp<=0){c.v=Math.max(0,c.v-8*dt); c.place(); return;}      /* wrecked: it rolls to a stop and stays there, smoking */
   if(t.stop>0){t.stop-=dt; c.v=Math.max(0,c.v-10*dt); c.place(); return;}
-  const blk=aheadClear(t,9+c.v*0.6+(t.bus?4:0)); let want=blk?0:t.cruise;
+  const blk=aheadClear(t,9+c.v*0.6+(t.bus?4:0)); let want=blk||c.hp<=0?0:t.cruise;      /* wrecked: it rolls to a stop and stays there, smoking */
   /* the lights at the junction ahead: red, or amber with room to stop, and it waits at the line */
   {const rd=t.rd, q0=segPos(t), end=t.dir>0?rd.p[t.j+1]:rd.p[t.j], sig=T.signals&&T.signals.get(T.key(end));
     if(sig){const st=T.sigState(sig.grp.has(rd)?sig.grp.get(rd):0), toLine=(q0.l-t.s)-(sig.wo+3.2)-c.dim[0]/2;
@@ -255,7 +254,7 @@ function trafficStep(t,dt){const c=t.car; if(c.held) return;
   /* the bus pulls in at its stops and waits while people get on */
   if(t.bus&&T.stops) for(let i=0;i<T.stops.length;i++){const s=T.stops[i]; if(s.rd!==t.rd||t.last===s) continue; const f=c.fwd(), dx=s.x-c.x, dz=s.z-c.z, ahead=dx*f[0]+dz*f[1], side=Math.abs(dx*f[1]-dz*f[0]);
     if(side<5&&ahead<2&&ahead>-3){t.last=s; t.stop=7; if(A.busAt) A.busAt(s,c);}}
-  if(blk==='you'){t.wait=(t.wait||0)+dt; if(t.wait>3&&!t.honked){t.honked=true; horn();}} else{t.wait=0; t.honked=false;}
+  if(blk==='you'&&c.hp>0){t.wait=(t.wait||0)+dt; if(t.wait>3&&!t.honked){t.honked=true; horn();}} else{t.wait=0; t.honked=false;}
   c.v+=(want-c.v)*Math.min(1,dt*(want<c.v?3.5:1.2));
   let step=c.v*dt; let q=segPos(t);
   while(step>0){const rem=q.l-t.s; if(step<rem){t.s+=step; step=0;} else{step-=rem; nextSeg(t); q=segPos(t);}}

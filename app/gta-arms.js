@@ -61,6 +61,7 @@ function take(p){const S=SM.toast; p.back=A.t+(p.once?1e9:120); p.g.visible=fals
   else if(p.kind==='armour'){A.gtaArmor=100; S&&S('Body armour.');}
   else if(p.kind==='cash'){if(A.floors&&A.floors.G){A.floors.G.loot+=p.amount||20; if(A.floors.drawHud) A.floors.drawHud();}}
   else{if(A.game.G){A.game.G.hp=100;} S&&S('First aid. Health restored.');}
+  if(p.kind==='cash') return;      /* the display rings for the money itself (gta-hud.js) */
   show(); hud(true); if(A.gtaSound) A.gtaSound.cash();}
 function pickups(dt){const p=SM.player; if(!p) return; const me=A.drive&&A.drive.on()?null:p;
   PU.forEach(function(q){if(!q.g.visible){if(A.t>q.back){q.g.visible=true;} return;} q.g.rotation.y+=dt*1.8; q.g.position.y=q.y+Math.sin(A.t*2.4+q.x)*0.08;
