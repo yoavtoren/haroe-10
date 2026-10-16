@@ -692,7 +692,7 @@ let manSpeed=0;
 const jMove=stick($('stickMove')), jLook=stick($('stickLook')), sphc=new THREE.Spherical(), offv=new THREE.Vector3();
 A.sticks={move:jMove,look:jLook};
 function showSticks(on){on=on&&TOUCH; $('stickMove').hidden=!on; $('stickLook').hidden=!on; document.body.classList.toggle('sticks',on);}
-function driveSticks(dt){if(player.script||player.driving) return; onLevel(player.lvl,function(){driveSticksOn(dt);});}
+function driveSticks(dt){if(player.script||player.driving||player.riding) return; onLevel(player.lvl,function(){driveSticksOn(dt);});}
 function driveSticksOn(dt){
   const mag=Math.hypot(jMove.x,jMove.y);
   player.manual=false;

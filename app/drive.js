@@ -111,7 +111,7 @@ $('dOut').onclick=function(e){e.stopPropagation(); exit();}; $('dHorn').onclick=
 function honk(){horn(); const c=driving; if(!c) return; const f=c.fwd(); (A.game&&A.game.all?A.game.all():[]).forEach(function(t){if(t.kind!=='person'||(t.lvl||0)) return; const q=t.root.getWorldPosition(new THREE.Vector3()); const dx=q.x-c.x, dz=q.z-c.z; if(Math.hypot(dx,dz)<9&&dx*f[0]+dz*f[1]>0&&Math.random()<0.5&&A.game.say) A.game.say(t,['Alright, alright!','Hey! I am walking here!','Relax!'][Math.floor(Math.random()*3)]);});
   traffic.forEach(function(t){if(Math.hypot(t.car.x-c.x,t.car.z-c.z)<12) t.wait=Math.max(t.wait||0,0);});}
 function enter(c){
-  const p=SM.player; if(!c||driving||getting||p.lvl||(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted)) return; SM.stop(); if(A.game&&A.game.select) A.game.select(null);
+  const p=SM.player; if(!c||c.held||driving||getting||p.lvl||(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted)) return; SM.stop(); if(A.game&&A.game.select) A.game.select(null);
   if(c.traffic){carjack(c); return;}
   const f=c.fwd(), w=c.dim[1]/2+0.55, doors=[[c.x+f[1]*w,c.z-f[0]*w],[c.x-f[1]*w,c.z+f[0]*w]].filter(function(q){return A.nav.isFree(q[0],q[1]);});      // the driver's door on the left; or the other, and slide across
   const door=doors.sort(function(a,b){return Math.hypot(a[0]-p.x,a[1]-p.z)-Math.hypot(b[0]-p.x,b[1]-p.z);})[0]||[c.x+f[1]*w,c.z-f[0]*w];
@@ -150,8 +150,8 @@ function blockedAt(x,z){noDyn=true; try{if(T.kept(x,z)||!T.inside(x,z)) return !
 /* the cars as things in the way of whoever walks: the walking map asks */
 let noDyn=false;
 T.dyn=function(x,z,rad){if(noDyn) return false; for(let i=0;i<live.length;i++){const c=live[i]; if(c===driving||Math.abs(c.x-x)>3.5||Math.abs(c.z-z)>3.5) continue; const cs=c.circles(); for(let k=0;k<3;k++) if(Math.hypot(cs[k][0]-x,cs[k][1]-z)<cs[k][2]+rad) return true;} return false;};
-function hitsCar(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], L=c.dim[0], r=c.dim[1]/2;
-  for(let i=0;i<live.length;i++){const o=live[i]; if(o===c) continue; if(Math.hypot(o.x-x,o.z-z)>6) continue; const oc=o.circles();
+function hitsCar(c,x,z,psi,skipPk){const f=[Math.cos(psi),-Math.sin(psi)], L=c.dim[0], r=c.dim[1]/2;      // skipPk: the kerb-parked cars are not counted (the drivers that are not you)
+  for(let i=0;i<live.length;i++){const o=live[i]; if(o===c||(skipPk&&o.pk&&o!==driving)) continue; if(Math.hypot(o.x-x,o.z-z)>6) continue; const oc=o.circles();
     for(let s=-1;s<=1;s++){const px=x+f[0]*s*L/3, pz=z+f[1]*s*L/3; for(let k=0;k<3;k++) if(Math.hypot(oc[k][0]-px,oc[k][1]-pz)<oc[k][2]+r*0.82) return o;}}      /* a little under the true width: the lane beside the kerb-parked cars is only just wide enough, and a car in it must not be held by them */
   return null;}
 function outlineFree(c,x,z,psi){const f=[Math.cos(psi),-Math.sin(psi)], s=[f[1],-f[0]], L=c.dim[0]/2-0.05, W=c.dim[1]/2-0.05;
@@ -215,7 +215,7 @@ function chase(c,dt){const f=c.fwd(), back=7.4+Math.abs(c.v)*0.12, y=c.g.positio
    ===================================================================== */
 const traffic=[], MAXT=TOUCH?7:16, COLS=[0xe9e9e6,0x2f4f7a,0xb5372f,0x7a7f84,0xf2f2ee,0x1d1f21,0xb9bcbe,0x8a1f2a,0x3a4a5a,0x2e5e4e,0xdddddd,0x101214,0xc9b27a];
 const drivable=T.net.filter(function(r){return r.k===1||r.k===2||r.k===6||r.k===7;});
-function laneOff(rd){return rd.k===2?0.0:rd.k===1?0.95:2.1;}      // between the parked cars on a side street; on a main street, its own side
+function laneOff(rd){return rd.k===2||rd.k===3?0.0:rd.k===1?0.95:2.1;}      // between the parked cars on a side street; on a main street, its own side
 function segPos(t){const rd=t.rd, a=rd.p[t.j], b=rd.p[t.j+1], dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1, s=Math.min(t.s,l), n=[-dz/l,dx/l], lo=laneOff(rd)*t.dir;
   const along=t.dir>0?s:l-s, x=a[0]+dx/l*along+n[0]*lo, z=a[1]+dz/l*along+n[1]*lo; return {x:x,z:z,h:Math.atan2(dx*t.dir,dz*t.dir),l:l};}
 const mains=drivable.filter(function(r){return r.k!==2;});
@@ -238,7 +238,7 @@ function turnAt(t,pt,must){const n=T.nodes.get(T.key(pt)); if(!n) return false; 
 function cruiseOf(rd,bus){return bus?9.5:rd&&rd.k===2?8:12.5;}      /* as GTA's traffic: 45 km/h down the main streets, 29 in the side streets, the bus 34 */
 function aheadClear(t,dist){const c=t.car, f=c.fwd(), p=SM.player;
   const check=function(x,z,lat){const dx=x-c.x, dz=z-c.z, a=dx*f[0]+dz*f[1], s=Math.abs(dx*f[1]-dz*f[0]); return a>0&&a<dist&&s<lat;};
-  if(p&&!p.lvl&&!driving&&check(p.x,p.z,1.8)) return 'you';
+  if(p&&!p.lvl&&!driving&&!p.riding&&check(p.x,p.z,1.8)) return 'you';
   if(driving&&check(driving.x,driving.z,2.2)) return 'car';
   for(let i=0;i<live.length;i++){const o=live[i]; if(o!==c&&check(o.x,o.z,1.9)) return 'car';}
   if(A.game&&A.game.all){const ps=A.game.all(); for(let i=0;i<ps.length;i++){const q=ps[i]; if(q.kind!=='person'||!q.a) continue; if(check(q.a.x,q.a.z,1.6)) return 'person';}}

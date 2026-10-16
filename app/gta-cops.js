@@ -103,8 +103,8 @@ function drive(c,tx,tz,sp,dt){
   c.steer+=(clamp(da*1.7,-0.62,0.62)*(c.v<0?-1:1)-c.steer)*Math.min(1,dt*6);
   const s=sp*(Math.abs(da)>1.2?0.35:Math.abs(da)>0.55?0.65:1); c.v+=(s-c.v)*Math.min(1,dt*(s<c.v?2.6:1.5));
   move(c,dt);}
-function move(c,dt){const npsi=c.psi+c.v/c.dim[2]*Math.tan(c.steer)*dt, f=[Math.cos(npsi),-Math.sin(npsi)], nx=c.x+f[0]*c.v*dt, nz=c.z+f[1]*c.v*dt, hit=D.hitsCar(c,nx,nz,npsi);
-  if((!hit||(hit.pk&&hit!==D.pos()))&&D.outlineFree(c,nx,nz,npsi)){c.x=nx; c.z=nz; c.psi=npsi;}      /* the kerb-parked cars do not hold them: the lane beside them is too tight for a driver that is not you */
+function move(c,dt){const npsi=c.psi+c.v/c.dim[2]*Math.tan(c.steer)*dt, f=[Math.cos(npsi),-Math.sin(npsi)], nx=c.x+f[0]*c.v*dt, nz=c.z+f[1]*c.v*dt, hit=D.hitsCar(c,nx,nz,npsi,true);      /* the kerb-parked cars do not hold them: the lane beside them is too tight for a driver that is not you */
+  if(!hit&&D.outlineFree(c,nx,nz,npsi)){c.x=nx; c.z=nz; c.psi=npsi;}
   else{if(hit&&hit===D.pos()&&Math.abs(c.v)>3){D.crash(Math.abs(c.v)); hit.v*=0.7; if(A.gtaShake) A.gtaShake(0.25);} c.v*=-0.25;}
   c.place(); c.wheelsTurn(dt); A.touch(1);}
 function follow(u,tx,tz,sp,dt){const c=u.car, m=me();

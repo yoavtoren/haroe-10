@@ -46,8 +46,8 @@ function explode(c){c.blown=true; const x=c.x, z=c.z, y=c.g.position.y+0.7;
   for(let i=0;i<14;i++) puff(x+(Math.random()-0.5)*1.6,y+Math.random()*0.8,z+(Math.random()-0.5)*1.6,i%3?0xff8a1a:0xfff0a0,0.5+Math.random()*0.5,0.8,3.2+Math.random()*2.5,0.95,1.5+Math.random()*2,true);
   for(let i=0;i<10;i++) puff(x+(Math.random()-0.5)*2,y+0.5,z+(Math.random()-0.5)*2,0x1a1a1a,3+Math.random()*2.5,1.2,4.5,0.6,1.4+Math.random(),false);
   if(A.gtaShake) A.gtaShake(0.7); if(A.gtaSound&&A.gtaSound.boom) A.gtaSound.boom(x,z); if(A.gtaPanic) A.gtaPanic(x,z,40,2);
-  const p=SM.player, me=D.on()?D.pos():null, d=Math.hypot(p.x-x,p.z-z), G=A.game;
-  if(me===c){D.exit(true); if(G&&G.hurt) G.hurt(400);}      /* in it: that is the end of you */
+  const p=SM.player, me=D.on()?D.pos():(A.gtaTaxi?A.gtaTaxi.car():null), d=Math.hypot(p.x-x,p.z-z), G=A.game;
+  if(me===c){if(D.on()) D.exit(true); else if(A.gtaTaxi) A.gtaTaxi.out(); if(G&&G.hurt) G.hurt(400);}      /* in it, or riding in it: that is the end of you */
   else if(d<7&&!p.lvl&&(p.room==='street'||p.room==='town'||p.room==='out')&&G&&G.hurt){G.hurt(Math.round(120*(1-d/7)+20)); if(A.gtaHitFrom) A.gtaHitFrom(x,z);}      /* out in the street, not behind the building's walls */
   if(G&&G.all) G.all().forEach(function(t){if(t.kind!=='person'||!t.a||(t.lvl||0)) return; const a=t.a, dd=Math.hypot(a.x-x,a.z-z); if(dd>8||a.gone) return;
     const s=G.state(t); s.hp-=70*(1-dd/9); G.knock(t,6); const ux=(a.x-x)/(dd||1), uz=(a.z-z)/(dd||1); fly.push({a:a,vx:ux*(9-dd),vz:uz*(9-dd),vy:3+(8-dd)*0.5}); a.p.twirl=1;});

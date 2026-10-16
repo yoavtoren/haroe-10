@@ -87,7 +87,7 @@ function pick(aimed){const p=SM.player, list=people(); let best=null, bd=1e9;
       if(off>0.22+s*0.006) return; if(!clear(p.x,p.z,v1.x,v1.z)) return; if(s<bd){bd=s; best=t;}});}
   else{const y=A.gtaCam&&A.gtaCam()&&A.gta&&A.gta.cam?A.gta.cam.yaw:p.h, f=[Math.sin(y),Math.cos(y)]; list.forEach(function(t){chest(t,v1); const dx=v1.x-p.x, dz=v1.z-p.z, d=hyp(dx,dz); if(d>22||d<0.5) return; const c=(dx*f[0]+dz*f[1])/d; if(c<0.82) return; if(!clear(p.x,p.z,v1.x,v1.z)) return; const s=d*(1.6-c); if(s<bd){bd=s; best=t;}});}
   return best;}
-function fire(){const p=SM.player, k=kit(); if(!k||W.cur!=='pistol'||A.t<W.next||W.reload>A.t||p.driving||p.seat||p.script) return;
+function fire(){const p=SM.player, k=kit(); if(!k||W.cur!=='pistol'||A.t<W.next||W.reload>A.t||p.driving||p.riding||p.seat||p.script) return;
   if(W.clip<=0){if(W.ammo>0){W.reload=A.t+1.3; W.next=W.reload; SM.toast&&SM.toast('Reloading…'); SM.later(1.3,function(){const n=Math.min(12,W.ammo); W.clip=n; W.ammo-=n; hud(true);});} else{SM.toast&&SM.toast('Out of ammunition.'); W.has.pistol=false; cycle(1);} return;}
   W.next=A.t+0.32; W.clip--; hud(true); if(A.gtaStats) A.gtaStats.shots=(A.gtaStats.shots||0)+1;
   const t=pick(W.aim); if(t&&!W.aim){chest(t,v1); p.h=p.hT=Math.atan2(v1.x-p.x,v1.z-p.z);}
@@ -119,7 +119,7 @@ window.addEventListener('mouseup',function(e){if(e.button===2) W.aim=false;});
 window.addEventListener('blur',function(){W.aim=false;});
 window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||(e.target.closest&&e.target.closest('#gtaMenu,#modal'))||(e.target.closest&&e.target.closest('#panel')&&!document.body.classList.contains('nomenu'))) return;      /* Tab moves through the side panel only while it is shown */ if(e.key==='Tab'){e.preventDefault(); if(!e.repeat) cycle(e.shiftKey?-1:1);}});
 A.gtaAimSet=function(on){W.aim=!!on&&W.cur==='pistol';}; A.gtaFire=function(){if(A.gtaAiming()&&!A.paused) fire();};      /* for a gamepad (gta.js): the left trigger aims, the right one fires */
-A.gtaAiming=function(){return W.aim&&W.cur==='pistol'&&A.simsOn&&!!SM.player&&!SM.player.driving&&!!(A.gtaCam&&A.gtaCam());};
+A.gtaAiming=function(){return W.aim&&W.cur==='pistol'&&A.simsOn&&!!SM.player&&!SM.player.driving&&!SM.player.riding&&!!(A.gtaCam&&A.gtaCam());};
 
 /* ---------- on screen: the weapon and its rounds, the crosshair ---------- */
 const box=document.createElement('div'); box.id='gWeap'; box.style.cssText='pointer-events:none;text-align:right;color:#fff;opacity:0;transition:opacity .4s;font:700 15px/1.2 "Barlow Condensed",sans-serif;text-shadow:0 1px 4px rgba(0,0,0,.85);margin-top:4px';      // under the money, in the display's top-right stack

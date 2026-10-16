@@ -39,7 +39,7 @@ window.addEventListener('keyup',function(e){keys[keyOf(e)]=false; A.running=!!ke
 function keyOf(e){const c=e.code||''; return /^Key[A-Z]$/.test(c)?c.slice(3).toLowerCase():/^Digit\d$/.test(c)?c.slice(5):e.key.toLowerCase();}      /* the key itself: Option on a Mac turns W into a different letter */
 window.addEventListener('blur',function(){for(const k in keys) keys[k]=false; A.running=false;});
 function kbFrame(){
-  if(A.drive&&A.drive.on&&A.drive.on()) return;
+  if((A.drive&&A.drive.on&&A.drive.on())||(A.gtaTaxi&&A.gtaTaxi.car())) return;
   const st=A.sticks&&A.sticks.move; if(!st) return;
   if(G.down||(A.floors&&A.floors.G.busted)){if(kbOn){st.x=st.y=0; kbOn=false;} return;}      /* wasted, or busted: you do not walk off */
   const x=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0), y=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);

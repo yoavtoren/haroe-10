@@ -89,6 +89,7 @@ window.addEventListener('keydown',function(e){
   if(k===' '&&!car()){jump(); e.preventDefault();}
   else if(k==='v') cycle();
   else if(k==='r'&&!car()) punch();
+  else if(k==='h'&&!car()&&!e.repeat&&A.gtaTaxi&&A.gtaTaxi.whistle) A.gtaTaxi.whistle();      /* on foot, the horn key whistles for a taxi, as GTA's does */
   else if(/^[1-9]$/.test(k)) pick(+k-1);
 });
 window.addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=false;});
@@ -135,7 +136,7 @@ const UP=new THREE.Vector3(0,1,0);
 function frame(dt){
   const on=active();
   if(!on){if(hid.length) unhide(); if(C.headHid&&SM.player&&SM.camMode!=='eye'){C.headHid=false; SM.player.p.hideHead(false);} if(C.was){C.was=false; if(SM.camMode!=='eye') ctl.enabled=true; if(locked()) document.exitPointerLock(); if(SM.camMode!=='eye'){cam.fov=40; cam.updateProjectionMatrix();}} return;}
-  if(!C.was){C.was=true; C.snap=true; const p=SM.player; C.yaw=(car()?A.drive.heading():p.h); C.pitch=outdoors()||car()?-0.2:-0.4; if(A.gtaSet) C.zoom=A.gtaSet.get('dist');
+  if(!C.was){C.was=true; C.snap=true; const p=SM.player; C.yaw=(function(){const c0=car(); return c0?c0.psi+R/2:p.h;})();      /* behind the car you are in, the taxi too */ C.pitch=outdoors()||car()?-0.2:-0.4; if(A.gtaSet) C.zoom=A.gtaSet.get('dist');
     if(!p.lvl&&Math.hypot(p.x-SM.EX,p.z-SM.SPAWN)<0.4){C.yaw+=0.6; C.pitch=-0.5;}}      /* just in at the front door: looking in at an angle, not through the door frame */
   ctl.enabled=false; if(A.flying()) A.stopFly();
   const p=SM.player, c=car(), out=c?true:outdoors(), lvl=p.lvl||0, ls=A.sticks&&A.sticks.look;
@@ -202,7 +203,7 @@ function gamepad(){const gps=navigator.getGamepads?navigator.getGamepads():null;
   else{gpKey('shift','ShiftLeft',rt>0.5); gpKey(' ','Space',b(0)); gpKey('e','KeyE',b(1)); gpKey('f','KeyF',b(3));
     const aim=lt>0.5&&!!A.gtaAimSet; if(aim!==!!GP.aim){GP.aim=aim; if(A.gtaAimSet) A.gtaAimSet(aim);}      /* only as the trigger goes down or up: the mouse's own aim stays */
     if(aim){if(once(2)&&A.gtaFire) A.gtaFire();} else gpKey('r','KeyR',b(2));
-    if(once(4)){gpKey('Tab','Tab',true); gpKey('Tab','Tab',false);}}      /* the weapon key reads e.key, 'Tab' as the browser spells it */
+    if(once(4)){gpKey('Tab','Tab',true); gpKey('Tab','Tab',false);} if(once(10)&&A.gtaTaxi&&A.gtaTaxi.whistle) A.gtaTaxi.whistle();}      /* the weapon key reads e.key, 'Tab' as the browser spells it */
   if(once(9)&&A.gtaMap) A.gtaMap.toggle(); if(once(8)) cycle();
   if(once(12)) gpKey('q','KeyQ',true), gpKey('q','KeyQ',false);}
 /* a door standing open between the camera and you is not drawn while it is in the way */
@@ -241,10 +242,11 @@ A.stage.appendChild(pad);
 const hold=function(b,on,off){b.addEventListener('pointerdown',function(e){e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); on();}); ['pointerup','pointercancel'].forEach(function(n){b.addEventListener(n,function(){if(off) off();});});};
 hold(bRun,function(){A.running=true; bRun.classList.add('on');},function(){A.running=false; bRun.classList.remove('on');});
 hold(bJump,jump); hold(bHit,punch); hold(bRadio,function(){if(A.gtaSound) A.gtaSound.station(1);}); hold(bWeap,function(){if(A.gtaArms) A.gtaArms.cycle(1);}); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
-function carKey(){const dn=(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted); if(dn) return true; if(A.gtaTaxi&&A.gtaTaxi.out()) return true; if(car()){A.drive.exit(); return true;} return enterNear();}      /* wasted or busted, F does nothing at all */
+function carKey(){const dn=(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted); if(dn) return true; if(A.gtaTaxi&&(A.gtaTaxi.out()||A.gtaTaxi.cancel())) return true; if(car()){A.drive.exit(); return true;} return enterNear();}      /* wasted or busted, F does nothing at all */
 function enterNear(){const p=SM.player; if(!A.drive||!p||p.lvl) return false; let best=null, bd=4.5;
   A.drive.cars().forEach(function(c){const d=Math.hypot(c.x-p.x,c.z-p.z)-c.dim[0]/2; if(d<bd){bd=d; best=c;}});
-  if(best){if(best.taxi&&A.gtaTaxi&&A.gtaTaxi.hail(best)) return true; A.drive.enter(best); return true;} return false;}      /* a taxi, with a waypoint set: a ride, not a theft */
+  if(best&&(bd<2.4||!A.gtaTaxi||!A.gtaTaxi.whistle||!A.gtaTaxi.whistle(true))){if(best.taxi&&A.gtaTaxi&&A.gtaTaxi.hail(best)) return true; A.drive.enter(best); return true;}      /* a car within reach is taken (a taxi, with a waypoint set: a ride, not a theft); one farther off loses to a taxi passing */
+  if(best) return true; return !!(A.gtaTaxi&&A.gtaTaxi.whistle&&A.gtaTaxi.whistle());}
 A.gtaCar=carKey;
 
 let camKey='';

@@ -77,13 +77,13 @@ function cash(dt){const G=A.floors&&A.floors.G, v=G?G.loot:0;
 /* ---------- the street you are on, the car you got into ---------- */
 let street='', streetT=0, carWas=null, carT=0;
 const FLOOR={'-1':'The shelter',1:'First floor',2:'Second floor',3:'Third floor'};      // as floors.js names them
-function area(dt){const p=SM.player, c=A.drive&&A.drive.on()?A.drive.pos():null, x=c?c.x:p.x, z=c?c.z:p.z;
+function area(dt){const p=SM.player, taxi=A.gtaTaxi?A.gtaTaxi.car():null, c=A.drive&&A.drive.on()?A.drive.pos():taxi, x=c?c.x:p.x, z=c?c.z:p.z;      /* the taxi you ride in counts as the car you are in */
   let nm='';
   if(p.lvl) nm=FLOOR[p.lvl]?'Haroe 10, '+FLOOR[p.lvl].toLowerCase():'Haroe 10';
   else{const rm=A.rooms[p.room]; if(rm&&!rm.ext&&!c) nm='Haroe 10'; else if(p.room==='hall') nm='Haroe 10'; else{const q=T.roadNear(x,z); if(q&&q.d<8&&q.r.name) nm=q.r.name; else if(!T.inside(x,z)||T.kept(x,z)) nm='Haroe St';}}
   if(nm&&nm!==street){street=nm; streetT=4.5; $('gStreet').textContent=nm; $('gTown').textContent='Ramat Gan';}
   streetT=Math.max(0,streetT-dt); $('gArea').style.opacity=streetT>0?Math.min(1,streetT,(4.5-streetT)*3):0;
-  if(c!==carWas){carWas=c; if(c){carT=3.4; $('gCarName').textContent=c.name; if(A.gtaStats) A.gtaStats.cars++;}}
+  if(c!==carWas){carWas=c; if(c){carT=3.4; $('gCarName').textContent=c.name; if(A.gtaStats&&c!==taxi) A.gtaStats.cars++;}}
   carT=Math.max(0,carT-dt); $('gCarName').style.opacity=carT>0?Math.min(1,carT,(3.4-carT)*3):0;}
 /* ---------- a word in the corner: what a key does here ---------- */
 let helpKey='';
