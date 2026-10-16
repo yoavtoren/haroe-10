@@ -5,8 +5,8 @@
 (function(){
 'use strict';
 const A=window.APP, D=A.D, LB=A.LB, ST=LB.stairs, R=Math.PI, scene=A.scene, H=D.H, L=D.L;
-const FF=ST.FF, XB=ST.XB, SU=LB.SU, SD=LB.SD, XH=ST.XH, XHd=ST.XHd, XE=LB.XE, EH=LB.EH, ZA0=ST.ZA0, ZA1=ST.ZA1, ZB0=ST.ZB0, ZB1=ST.ZB1, LO=ST.LO, UPS=ST.UPS;
-const zA=(ZA0+ZA1)/2, zB=(ZB0+ZB1)/2, FLAT=['living','kitchen','bed1','bed2','bath','wc'];
+const FF=ST.FF, XB=ST.XB, SU=LB.SU, SD=LB.SD, SW=LB.SW, X1=ST.X1, XD=ST.XD, XE=LB.XE, EH=LB.EH, LO=ST.LO, UPS=ST.UPS;
+const zA=L+SW/2, zB=EH-SW/2, xA=XE-SW/2, FLAT=['living','kitchen','bed1','bed2','bath','wc'];
 const $=function(id){return document.getElementById(id);};
 
 /* ---------- the floors: where you come up the stairs on each, and its rooms ---------- */
@@ -17,7 +17,7 @@ LV[-1]={y:LO,spawn:[SU-0.35,zA],pass:[],block:[]};
 LV[0]={y:0,spawn:[0.9,L+0.6],pass:[],block:[]};      // our own floor: the flats round ours, behind their doors
 for(let f=1;f<=UPS;f++) LV[f]={y:f*FF,spawn:[SU-0.35,zB],pass:[],block:[]};
 /* the landing on each floor, and the shelter's own, are lobby rooms of their own */
-[-1].concat([1,2,3].slice(0,UPS)).forEach(function(f){A.addRoom('land'+f,{name:f<0?'Stairs down':'Landing, '+NAMES[f].toLowerCase(),rs:f<0?[[XB,SU,L,EH]]:[[XB,SU,L,EH],[LB.XL,SU,L+LB.D4,LB.RZ],[LB.CX0,LB.CX1,LB.RZ,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC]],win:null,dl:0.85,node:'hall',on:true,ext:true,lvl:f});});      // part of the stairwell: the lobby's light is theirs. Upstairs the landing is as wide as ours, and the corridor and the hall over the entrance go on as on our floor
+[-1].concat([1,2,3].slice(0,UPS)).forEach(function(f){A.addRoom('land'+f,{name:f<0?'Stairs down':'Landing, '+NAMES[f].toLowerCase(),rs:f<0?[[XB,SU,L,EH]]:[[XB,SU,L,EH],[SU-0.3,XD+0.1,EH-SW+0.02,EH+0.25],[LB.XL,SU,L+LB.D4,LB.RZ],[LB.CX0,LB.CX1,EH-0.25,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC]],win:null,dl:0.85,node:'hall',on:true,ext:true,lvl:f});});      // part of the stairwell: the lobby's light is theirs. Upstairs the landing is as wide as ours, and the corridor and the hall over the entrance go on as on our floor
 /* the flats of the plan (plan.js) on every floor, ours too: their rooms */
 const PL=A.PLAN, PF=[1,2,3,4,6];
 function pkey(n,f){return 'f'+n+'@'+f;}
@@ -28,10 +28,10 @@ for(let f=0;f<=UPS;f++) PF.forEach(function(n){PL.analyse(n).rooms.forEach(funct
 for(let f=1;f<=UPS;f++) FLAT.forEach(function(k){const r=A.rooms[k]; A.addRoom(k+'@'+f,{name:r.name,rs:r.rs.map(function(q){return q.slice();}),win:null,dl:r.dl,node:'up'+f,on:true,ext:true,lvl:f,of:k});});
 
 /* ---------- the stairs: a path for walking up or down one floor ---------- */
-function up(f){            // from floor f to f+1: flight A along the wall, round the half landing, flight B back to the landing above
-  const y=LV[f]?LV[f].y:0, m=y+FF/2, t=y+FF;
-  if(f===-1) return [[SU-0.3,y,zA],[SU,y,zA],[XH,m,zA],[XH+0.55,m,zA],[XH+0.55,m,zB],[XHd,m,zB],[SD+0.25,-0.12,zB],[1.25,0,L+1.32],[0.88,0,L+1.22]];
-  return [[SU-0.3,y,zA],[SU,y,zA],[XH,m,zA],[XH+0.55,m,zA],[XH+0.55,m,zB],[XH,m,zB],[SU,t,zB],[SU-0.35,t,zB]];
+function up(f){            // from floor f to f+1: the first flight along the wall, round the corner landing, the one across along the far wall, round the second landing, the third back to the landing above
+  const y=LV[f]?LV[f].y:0, t=f===-1?0:y+FF, rs=(t-y)/16, ya=y+6*rs, yb=y+11*rs;
+  const pts=[[SU-0.3,y,zA],[SU,y,zA],[X1,ya,zA],[xA,ya,zA],[xA,ya,L+SW],[xA,yb,EH-SW],[xA,yb,zB],[X1,yb,zB],[XD,t,zB]];
+  return pts.concat(f===-1?[[1.1,0,zB],[0.88,0,L+1.22]]:[[SU-0.35,t,zB]]);      // on our floor, on past the pillar to our door
 }
 function path(from,to){return to>from?up(from):up(to).slice().reverse();}
 A.stairsPath=path;
@@ -259,7 +259,7 @@ function buildCore(f){
   if(coreBuilt[f]||f<1) return; coreBuilt[f]=true;
   const g=groupFor(f), p=new THREE.Group(); p.position.y=LV[f].y; g.add(p); const k='land'+f, list=planWalls[f]=planWalls[f]||[], wc=0xf3f1ea, XL=LB.XL, D4=LB.D4, RZ=LB.RZ, CX0=LB.CX0, CX1=LB.CX1, ZE=LB.ZE, ZC=LB.ZC, XF=LB.XF;
   const terr=tex('terr',128,128,tiles('#e2d6b8','#b3a37f',4),[1,1]);
-  [[XL,XB,L+D4,RZ],[CX0,CX1,RZ,ZE],[CX0,XF,ZE,ZC]].forEach(function(r){floorPlane(p,r[0],r[1],r[2],r[3],tex('terr',128,128,tiles('#e2d6b8','#b3a37f',4),[(r[1]-r[0])/0.8,(r[3]-r[2])/0.8]),k); ceilPlane(p,r[0],r[1],r[2],r[3],k);});
+  [[XL,XB,L+D4,RZ],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC]].forEach(function(r){floorPlane(p,r[0],r[1],r[2],r[3],tex('terr',128,128,tiles('#e2d6b8','#b3a37f',4),[(r[1]-r[0])/0.8,(r[3]-r[2])/0.8]),k); ceilPlane(p,r[0],r[1],r[2],r[3],k);});
   const d3=doorSpec(3,f), d4=doorSpec(4,f), d2=doorSpec(2,f), d6=doorSpec(6,f), d1=doorSpec(1,f);
   wallRun(p,f,XL,L+D4,XL,RZ,wc,k,[[d3.u0-(L+D4),d3.u1-(L+D4),0,2.05]],list);                         // flat 3's door, on the landing's back wall
   wallRun(p,f,XL,L+D4,XB+0.08,L+D4,wc,k,[[d4.u0-XL,d4.u1-XL,0,2.05]],list); wallRun(p,f,XB+0.08,L+D4,XB+0.08,L,wc,k,[],list);      // flat 4's beside ours, a little in front of it
@@ -566,7 +566,7 @@ A.moreItems=function(out,p){
   const f=p.lvl||0, y=f?LV[f].y:0;
   const st=f===0?{x:SU-0.05,z:L+1.2,sx:SU-0.35,sz:L+1.0,h:R/2}:{x:SU-0.05,z:(zA+zB)/2,sx:SU-0.4,sz:(zA+zB)/2,h:R/2};
   const acts=[]; if(f<UPS) acts.push([f===-1?'Up to our floor':'Go upstairs',function(){goStairs(1);}]); if(f>-1) acts.push([f===1?'Down to our floor':f===0?'Down to the shelter':'Go downstairs',function(){goStairs(-1);}]);
-  out.push({name:'Stairs',x:st.x,z:st.z,y:y+0.8,sx:st.sx,sz:st.sz,h:st.h,acts:acts,box:[SU-0.1,XH,y-0.05,y+1.2,ZA0,ZA1]});
+  out.push({name:'Stairs',x:st.x,z:st.z,y:y+0.8,sx:st.sx,sz:st.sz,h:st.h,acts:acts,box:[SU-0.1,X1,y-0.05,y+1.2,L,L+SW]});
   Object.keys(doors).forEach(function(k){const d=doors[k]; if(d.lvl!==f) return; const fl=flatOf(k);
     if(Math.hypot(d.cx-p.x,d.cz-p.z)>4.5) return;      // only the doors close by
     let x,z,sx,sz,h,box;

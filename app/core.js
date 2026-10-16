@@ -40,13 +40,13 @@ const WC=A.WC={x0:D.BLK,x1:3.9,z0:D.ZW,z1:L};    // guest toilet
    long corridor, and at its end a landing: flat 3 on the left wall, flat 4 and our door (flat 5) on the far wall, the wide
    stone-clad pillar opposite our door at the corridor's end, and the stairwell on the right with flights up and down.
    XL: the landing's left wall (flat 3); CX0..CX1: the corridor, 2.25 wide and in line with our door (from the floor tiles in the photos);
-   RZ: the pillar, where the corridor's left wall begins; SD: the kerb on the left edge of the flight down, just past our door frame, and the
-   white pole at its corner; SU: where the flight up starts, beside our door; D4: how far flat 4's wall stands in front of ours; EH: the white railing across the end of
+   RZ: the pillar, where the corridor's left wall begins; SD: the head of the flight down, where the white pole stands, nearly a metre from the pillar, so the way from the corridor to
+   the doors is wide; SU: where the flight up starts, beside our door; D4: how far flat 4's wall stands in front of ours; EH: the white railing across the end of
    the corridor, over the flight down, and the stairwell's side behind the corridor's right wall; ZE..ZC: the square hall, ZC being the
    corner with number 12's wing; XF: the street front */
-const LB=A.LB={XL:-1.85, CX0:0.3, CX1:2.55, RZ:L+2.3, SD:1.15, SU:1.25, D4:0.2, VW:2.75, EH:L+2.55, ZE:L+8.8, ZC:L+12.4, XF:BA.x1};      // VW: the second entrance's hall begins past the corridor's right wall
+const LB=A.LB={XL:-1.85, CX0:0.3, CX1:2.55, RZ:L+2.3, SD:1.51, SU:1.25, SW:1.05, D4:0.2, VW:2.75, EH:L+3.14, ZE:L+8.8, ZC:L+12.4, XF:BA.x1};      // SW: the width of the stairs' flights; VW: the second entrance's hall begins past the corridor's right wall
 LB.BZ=LB.EH;
-LB.XE=LB.XF-0.1;           // the stairwell's far wall
+LB.XE=LB.SU+1.3+LB.SW;      // the stairwell's far wall: the first flight's run and a corner landing from its foot; a block of shafts fills the rest, to the front
 LB.ZO=LB.ZC-1.22;          // centre of our doorway from the bridge: near the corner with number 12's wing, 57 cm from it, as the photos of the walk in have it
 LB.Z2=LB.ZC-8.35;           // the second bridge, further along the front, into a small hall of its own for flats 1 and 6
 
@@ -84,7 +84,7 @@ const rooms=A.rooms={
   bed2:{name:'Bedroom 2',     rs:[[SPLIT+0.05,D.BX,AZ,0],[D.NX,SPLIT+0.05,D.NZ,0],[D.BX,D.BXB,AZ,AZ+2.0]], win:'bed2',    dl:1, shutter:true, node:'bed2'},
   bath:{name:'Bathroom',      rs:[[BA.x0,BA.x1,BA.z0,BA.z1]], win:null, dl:1, node:'bath'},
   wc:{name:'Guest toilet',    rs:[[WC.x0,WC.x1,WC.z0,WC.z1]], win:null, dl:0.85, node:'wc'},
-  hall:{name:'Lobby', rs:[[LB.XL,LB.SU,L+LB.D4,L+1.34],[LB.XL,LB.SD,L+0.9,LB.RZ],[LB.CX0+0.3,LB.SD,LB.RZ-0.3,LB.EH+0.45],[LB.CX0,LB.CX1,LB.EH,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC]], win:null, dl:0.85, node:'hall', on:true},      // the landing before the doors, its part by flat 3, the way past the pillar, corridor, the square hall by the bridge, the second entrance
+  hall:{name:'Lobby', rs:[[LB.XL,LB.SU,L+LB.D4,L+1.34],[LB.XL,LB.SU,L+0.9,LB.RZ],[LB.CX0+0.3,LB.SU,LB.RZ-0.3,LB.EH+0.45],[LB.SU-0.3,LB.SD,LB.EH-LB.SW+0.02,LB.EH+0.45],[LB.CX0,LB.CX1,LB.EH,LB.ZE],[LB.CX0,LB.XF,LB.ZE-0.3,LB.ZC]], win:null, dl:0.85, node:'hall', on:true},      // the landing before the doors, its part by flat 3, the way past the pillar, the strip beside the well to the head of the flight down, corridor, the square hall by the bridge, the passage
   out:{name:'Outside', rs:[], win:null, dl:1, node:'out', ext:true},      // the yard and the neighbouring building
   street:{name:'Street', rs:[], win:null, dl:1, node:'out', ext:true}     // the bridges, the garden, the square and Haroe St, lit by their own lamps in the evening; its walkable areas are added in exterior.js
 };

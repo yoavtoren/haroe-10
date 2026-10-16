@@ -16,13 +16,16 @@ const R=Math.PI, GY=-2.9;          // the yard is one floor down
    the landing: flat 3 on its left wall, flat 4 and our door, flat 5, side by side on the far wall. On the right the
    stairwell: a flight up along the wall beside our door, a flight down beside it behind a white railing with a white pole.
    Flats 2 and 6 open off the corridor, one on each side; flat 1 has its own door outside, at the east end (the plan in plan.js). */
-const LB=A.LB, XL=LB.XL, CX0=LB.CX0, CX1=LB.CX1, RZ=LB.RZ, SD=LB.SD, SU=LB.SU, D4=LB.D4, VW=LB.VW, EH=LB.EH, BZ=LB.BZ, ZE=LB.ZE, ZC=LB.ZC, XF=LB.XF, XE=LB.XE, ZO=LB.ZO, Z2=LB.Z2, Z2N=Z2+1.15, XS=A.PLAN.front, PZ=ZC-1.85;      // XS: the street front, flat 6's face; PZ: the passage's side along flat 6, in line with the doorway's right jamb
+const LB=A.LB, XL=LB.XL, CX0=LB.CX0, CX1=LB.CX1, RZ=LB.RZ, SD=LB.SD, SU=LB.SU, SW=LB.SW, D4=LB.D4, VW=LB.VW, EH=LB.EH, BZ=LB.BZ, ZE=LB.ZE, ZC=LB.ZC, XF=LB.XF, XE=LB.XE, ZO=LB.ZO, Z2=LB.Z2, Z2N=Z2+1.15, XS=A.PLAN.front, PZ=ZC-1.85;      // XS: the street front, flat 6's face; PZ: the passage's side along flat 6, in line with the doorway's right jamb
 const CL=1.47;                                                   // height of the stone cladding
 const PX0=CX0-0.85, PX1=CX0+0.28, PZ0=RZ-0.12, PZ1=RZ+0.5;          // the pillar: over a metre wide, it stands a little out into the corridor's mouth and well across the landing's back
-/* the stairs: two flights a floor, each 8 treads of 27 cm, half landings against the far wall */
-const FF=H+0.24, NT=8, TD=0.27, XH=SU+NT*TD, XHd=SD+NT*TD, ZA0=L+0.06, ZA1=L+1.26, ZB0=L+1.36, ZB1=EH-0.02, LO=GY, XB=0.0;   // floor to floor; where the half landings begin, above and below; the bands of the flights up (A) and down (B); the lower floor; the back of the landings above and below
+/* the stairs, from the photos: three flights a floor round an open well, each SW wide. The first climbs along the wall beside our door
+   (six risers) to a corner landing against the far wall; the second runs across, along the far wall (five), to a second corner landing;
+   the third comes back along the corridor's end (five) and arrives on the floor above at XD, nearly a metre out from the pillar, so the
+   way from the corridor to the doors is wide. From our own floor the same third flight goes on down, under the white railing. */
+const FF=H+0.24, TD=0.26, NT1=5, NT2=4, NT3=4, X1=SU+NT1*TD, XD=X1-NT3*TD, LO=GY, XB=0.0;      // floor to floor; a tread; the flights' treads; where the first flight ends and the third arrives; the lower floor; the back of the landings above and below
 const UPS=3, TOPW=UPS*FF+H;          // floors above ours; the top of the stairwell's walls
-A.LB.stairs={FF:FF,NT:NT,TD:TD,XH:XH,XHd:XHd,ZA0:ZA0,ZA1:ZA1,ZB0:ZB0,ZB1:ZB1,XB:XB,LO:LO,UPS:UPS};
+A.LB.stairs={FF:FF,TD:TD,SW:SW,X1:X1,XD:XD,NT:[NT1,NT2,NT3],XB:XB,LO:LO,UPS:UPS};
 const terrazzo=canvasTex(256,256,function(g){          // the floor: speckled beige cement tiles, 20 cm
   g.fillStyle='#d9cfb4'; g.fillRect(0,0,256,256); const r=A.rng(21), cs=['#a89a7a','#ebe3cf','#8f8468','#c2b394','#9a8d6e','#f2ece0','#7c705a'];
   for(let i=0;i<2800;i++){g.fillStyle=cs[Math.floor(r()*cs.length)]; g.fillRect(r()*256,r()*256,1+r()*2.2,1+r()*2);}
@@ -61,7 +64,7 @@ const stepT=canvasTex(128,64,function(g){             // the treads: worn beige 
   for(let i=0;i<500;i++){g.fillStyle=r()>0.5?'rgba(150,130,95,0.25)':'rgba(255,250,235,0.35)'; g.fillRect(r()*128,r()*64,1+r()*2,1);}
   g.fillStyle='rgba(120,100,70,0.18)'; g.fillRect(0,26,128,12);});
 const hallM=function(t){const m=new THREE.MeshLambertMaterial({map:t,emissive:0x4a4944}); m.emissiveMap=t; return A.reg(m,'hall');};      // lit a little from within, like the flat's walls, so the white reads as white
-[[XL,SU,L,ZB0-0.02],[XL,SD,ZB0-0.02,RZ],[CX0,SD,RZ,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){A.floorQuad(q[0],q[1],q[2],q[3],terrazzo,0.8,'hall');});      // no floor over the flight down
+[[XL,SU,L,RZ],[CX0,SU,RZ,EH],[SU,SD,EH-SW,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){A.floorQuad(q[0],q[1],q[2],q[3],terrazzo,0.8,'hall');});      // the landing, the way past the pillar, the strip beside the well to the head of the flight down, the corridor, the hall, the passage; nothing over the well
 function bright(m,glow){m.emissive.setHex(glow); A.rooms.hall.mats.forEach(function(e){if(e.m===m) e.e=new THREE.Color(glow);}); return m;}      // a ceiling lit from below reads as the white it is
 [[XL,SU,L,RZ],[CX0,SU,RZ,EH],[CX0,CX1,EH,ZE],[CX0,XF,ZE,ZC],[XF,XS,PZ,ZC]].forEach(function(q){bright(A.ceil('hall',q[0],q[1],q[2],q[3]).material,0xa6a6a0);});
 const en=D.entrance, XP=en[0]-0.1;                                                         // XP: our door frame's left edge
@@ -99,11 +102,13 @@ function wallPoly(k,pts,mat,off){const w=A.walls[k], sh=new THREE.Shape(); pts.f
   const g=new THREE.ShapeGeometry(sh), P=g.attributes.position, U=g.attributes.uv;
   for(let i=0;i<P.count;i++) U.setXY(i,(P.getX(i)+w.len/2)/1.2,P.getY(i)/0.6);
   const m=new THREE.Mesh(g,mat); m.position.z=off||0.006; m.receiveShadow=true; w.g.add(m); return m;}
-const cladM=hallM(ashlar), uH=XH-SU, uE=XE-SU;
+const cladM=hallM(ashlar), uE=XE-SU, capT=function(p){return [p[0],Math.min(p[1],TOPW-0.01)];};
 plas('h_ss',0,uE,0,TOPW); plas('h_cf',0,EH-L,0,TOPW); plas('h_se',0,XE-CX1,0,TOPW);
-[0,FF,2*FF].forEach(function(y){wallPoly('h_ss',[[0,y],[uH,y+FF/2],[uE,y+FF/2],[uE,y+FF/2+CL],[uH,y+FF/2+CL],[0,y+CL]],cladM);});      // along flight A and its half landing, on each floor
-[FF/2,FF*1.5,FF*2.5].forEach(function(y){wallPoly('h_cf',[[0,y],[EH-L,y],[EH-L,y+CL],[0,y+CL]],cladM);});                                    // round the half landings
-[0,FF,2*FF].forEach(function(y){wallPoly('h_se',[[0,y+FF/2],[XE-XH,y+FF/2],[XE-SU,y+FF],[XE-SU,y+FF+CL],[XE-XH,y+FF/2+CL],[0,y+FF/2+CL]].map(function(p){return [p[0],Math.min(p[1],TOPW-0.01)];}),cladM);});      // along flight B and its half landing
+function cladFloor(y,rs){const ya=y+(NT1+1)*rs, yb=ya+(NT2+1)*rs, r1=NT1*TD, r2=NT2*TD;      // one storey's cladding, climbing with its flights and level along its landings, on the three walls
+  wallPoly('h_ss',[[0,y],[r1,ya],[uE,ya],[uE,ya+CL],[r1,ya+CL],[0,y+CL]].map(capT),cladM);                                            // along the first flight and the corner landing
+  wallPoly('h_cf',[[0,ya],[SW,ya],[SW+r2,yb],[EH-L,yb],[EH-L,yb+CL],[SW+r2,yb+CL],[SW,ya+CL],[0,ya+CL]].map(capT),cladM);              // round that landing, up the flight across, round the second
+  wallPoly('h_se',[[0,yb],[XE-CX1,yb],[XE-CX1,yb+CL],[0,yb+CL]].map(capT),cladM);}                                                      // along the second landing
+for(let f=0;f<UPS;f++) cladFloor(f*FF,FF/16); cladFloor(LO,-LO/16);
 /* the pillar opposite our door: clad in a warmer stone to about two metres, the paint above it peeling in sheets */
 inRoom('hall',function(){
   const pw=PX1-PX0, pd=PZ1-PZ0, pc=new THREE.Vector3((PX0+PX1)/2,0,(PZ0+PZ1)/2);
@@ -144,7 +149,7 @@ for(let i=0;i<7;i++){const u=ZC-1.75-PZ1-0.33+i*0.11; rect('h_cl',u-0.01,u+0.01,
 rect('h_br',ZE-0.7-EH-0.3,ZE-0.7-EH+0.3,1.85,2.35,0x6b4a2f,0.009); rect('h_br',ZE-0.7-EH-0.26,ZE-0.7-EH+0.26,1.89,2.31,0xc9a46e,0.010);   // an empty cork board
 inRoom('hall',function(){
   function bulb(x,y,z,drop){const yb=y-(drop||0.28); box(0.01,y-yb,0.01,0x2a2c2e,x,(y+yb)/2,z).castShadow=false; cyl(0.03,0.05,0xe9e6dc,x,yb+0.02,z,null,10); sph(0.045,A.lampMat('L:hall',0xf6f1e2,0xfff0c8,1.1),x,yb-0.04,z); A.pool('L:hall',0xffe2b0,x,y-H+0.02,z,2.4,null,0.3);}
-  bulb(0.45,H,L+1.6); bulb((CX0+CX1)/2,H,L+5.6); bulb(2.9,H,ZE+1.8); bulb((XF+XS)/2,H,(PZ+ZC)/2,0.2); for(let f=0;f<UPS;f++) bulb(XE-0.6,f*FF+FF/2+2.4,L+0.7,0.3); for(let f=1;f<=UPS;f++) bulb(XB+0.6,f*FF+H,L+1.2,0.25); bulb(XB+0.6,LO+H,L+1.2,0.25);
+  bulb(0.45,H,L+1.6); bulb((CX0+CX1)/2,H,L+5.6); bulb(2.9,H,ZE+1.8); bulb((XF+XS)/2,H,(PZ+ZC)/2,0.2); for(let f=0;f<UPS;f++) bulb(XE-0.5,f*FF+6*FF/16+2.3,L+SW/2,0.3); for(let f=1;f<=UPS;f++) bulb(XB+0.6,f*FF+H,L+1.2,0.25); bulb(XB+0.6,LO+H,L+1.2,0.25);
   box(0.12,0.03,0.12,0xeeeeea,CX0+0.1,2.32,ZE-2.9); sph(0.05,A.lampMat('L:hall',0xf6f1e2,0xfff0c8,1.1),CX0+0.16,2.3,ZE-2.9);      // a bare bulb on the wall in the corridor
   box(0.03,0.025,ZC-PZ1,0xf1f1ee,CX0+0.06,H-0.03,(PZ1+ZC)/2).castShadow=false;           // white trunking along the corridor ceiling
   box(0.13,0.05,0.13,0xf4f4f1,0.5,H-0.025,L+0.2); sph(0.055,0x2a2d30,0.5,H-0.06,L+0.2,null,1,0.8,1); box(SU+1.2-0.5,0.012,0.012,0xf1f1ee,(0.5+SU+1.2)/2,H-0.01,L+0.12);   // the dome camera over our door, its cable off along the ceiling to the stairs
@@ -158,25 +163,46 @@ inRoom('hall',function(){
   const five=new THREE.Mesh(new THREE.PlaneGeometry(0.07,0.09),fiveM); five.position.set(0.425,1.62,0.026); ed.p.add(five);      // with a brass 5, and a bell button under it
   cyl(0.012,0.006,0x2a2c2e,0.425,1.52,0.027,ed.p,10).rotation.x=R/2;
 
-  /* ---------- the stairs ---------- */
+  /* ---------- the stairs: three flights a floor round an open well ---------- */
   const stepM=hallM(stepT), nose=M(0xb5a37d), soff=bright(M(0xf0eee7),0x6e6e68), wood=M(0x45301f), iron=M(0x1d1f21), white=M(0xf3f3ef);
   const stairMats=[stepM,nose,soff,wood,iron,white];
-  function flight(lx,dir,ly,hy,z0,z1,cap){              // NT treads from the low end (x lx, y ly) toward dir, rising to hy
-    const rs=(hy-ly)/(NT+1), w=z1-z0, zc=(z0+z1)/2;
-    for(let i=0;i<NT;i++){const y=ly+(i+1)*rs, x0=lx+dir*i*TD, x1=lx+dir*(i+1)*TD; if(cap&&y>cap) break;
-      box(TD+0.005,0.12,w,stepM,(x0+x1)/2,y-0.06,zc); box(0.035,0.02,w,nose,x0+dir*0.0175,y-0.01,zc); box(0.03,rs,w,stepM,x0+dir*0.015,y-rs/2,zc);}      // a tread, its nosing, and the riser under its front
-    const len=Math.hypot(NT*TD,NT*rs)+0.15, a=Math.atan2(rs,TD)*dir, xm=lx+dir*NT*TD/2, ym=ly+rs*NT/2;
-    const sf=box(len,0.2,w,soff,xm,ym-0.12-0.1,zc); sf.rotation.z=a;                            // its plastered underside: a smooth slab just under the treads and risers
-    return {rs:rs,nose:function(x){return ly+rs+rs*(x-lx)*dir/TD;}};
+  function flight(X,lo,dir,ly,hy,b0,b1,NT){              // NT treads along x (X) or along z, from the low end (lo along the axis, height ly) toward dir, rising to hy, between b0 and b1 across
+    const rs=(hy-ly)/(NT+1), w=b1-b0, bc=(b0+b1)/2;
+    const bx=function(al,h,ac,m,u,y){return X?box(al,h,ac,m,u,y,bc):box(ac,h,al,m,bc,y,u);};      // a box al long along the flight, h high, ac across, at u along it
+    for(let i=0;i<NT;i++){const y=ly+(i+1)*rs, u0=lo+dir*i*TD, u1=lo+dir*(i+1)*TD;
+      bx(TD+0.005,0.12,w,stepM,(u0+u1)/2,y-0.06); bx(0.035,0.02,w,nose,u0+dir*0.0175,y-0.01); bx(0.03,rs,w,stepM,u0+dir*0.015,y-rs/2);}      // a tread, its nosing, and the riser under its front
+    const len=Math.hypot(NT*TD,NT*rs)+0.15, a=Math.atan2(rs,TD)*dir, um=lo+dir*NT*TD/2, ym=ly+rs*NT/2;
+    const sf=bx(len,0.2,w,soff,um,ym-0.22); if(X) sf.rotation.z=a; else sf.rotation.x=-a;                 // its plastered underside: a smooth slab just under the treads and risers
+    return {X:X,rs:rs,nose:function(u){return ly+rs+rs*(u-lo)*dir/TD;}};
   }
+  function rail(fl,u0,u1,c,hand){                       // along a flight from u0 to u1, at c across, following its nosing line: a handrail, dark wood or black, on black bars
+    const n0=fl.nose(u0), n1=fl.nose(u1), y0=n0+0.88, y1=n1+0.88, len=Math.hypot(u1-u0,y1-y0), a=Math.atan2(y1-y0,u1-u0), X=fl.X;
+    const bx=function(al,h,ac,m,u,y){return X?box(al,h,ac,m,u,y,c):box(ac,h,al,m,c,y,u);}, tilt=function(m){if(X) m.rotation.z=a; else m.rotation.x=-a; return m;};
+    tilt(bx(len,hand?0.05:0.03,hand?0.06:0.035,hand?wood:iron,(u0+u1)/2,(y0+y1)/2+(hand?0.01:0))); tilt(bx(len,0.025,0.02,iron,(u0+u1)/2,(n0+n1)/2+0.12));
+    const d=Math.abs(u1-u0), sg=Math.sign(u1-u0); for(let t=0.06;t<d;t+=0.12){const u=u0+sg*t; bx(0.014,0.76,0.014,iron,u,fl.nose(u)+0.5);}
+  }
+  function hrail(x0,z0,x1,z1,y,hand){                   // a level railing between two points, along x or along z, standing on floor y
+    const al=Math.abs(x1-x0)>0.01, len=al?Math.abs(x1-x0):Math.abs(z1-z0), xc=(x0+x1)/2, zc=(z0+z1)/2, bx=function(l,h,t,m,yy){return al?box(l,h,t,m,xc,yy,zc):box(t,h,l,m,xc,yy,zc);};
+    bx(len,hand?0.05:0.03,hand?0.06:0.035,hand?wood:iron,y+0.9); bx(len,0.025,0.02,iron,y+0.12);
+    for(let t=0.06;t<len;t+=0.12) box(0.014,0.76,0.014,iron,al?Math.min(x0,x1)+t:xc,y+0.5,al?zc:Math.min(z0,z1)+t);
+  }
+  function post(x,y,z){box(0.05,1.0,0.05,iron,x,y+0.5,z); box(0.07,0.06,0.07,wood,x,y+1.0,z);}      // a newel, capped in wood
   function floorAt(x0,x1,z0,z1,y){const g=new THREE.PlaneGeometry(x1-x0,z1-z0), U=g.attributes.uv; for(let i=0;i<U.count;i++) U.setXY(i,U.getX(i)*(x1-x0)/0.8,U.getY(i)*(z1-z0)/0.8);
     const t=terrazzo.clone(); t.needsUpdate=true; const mm=hallM(t); mm.clippingPlanes=[A.cut]; const m=new THREE.Mesh(g,mm); m.rotation.x=-R/2; m.position.set((x0+x1)/2,y,(z0+z1)/2); m.receiveShadow=true; m.userData.floor=true; scene.add(m); return m;}
-  const fA=flight(SU,1,0,FF/2,ZA0,ZA1), fB=flight(XH,-1,FF/2,FF,ZB0,ZB1), ups=[];
-  for(let f=1;f<UPS;f++) ups.push([flight(SU,1,f*FF,(f+0.5)*FF,ZA0,ZA1),flight(XH,-1,(f+0.5)*FF,(f+1)*FF,ZB0,ZB1),f]);      // and on up, a pair of flights a floor
-  const fBd=flight(XHd,-1,LO/2,0,ZB0,ZB1), fAd=flight(SU,1,LO,LO/2,ZA0,ZA1);                 // and down: from our landing to the floor below
-  for(let f=0;f<UPS;f++){const y=(f+0.5)*FF; box(XE-XH,0.2,EH-L-0.02,stepM,(XH+XE)/2,y-0.1,(L+EH)/2);}      // half landings
-  box(XE-XHd,0.2,EH-ZA1-0.02,stepM,(XHd+XE)/2,LO/2-0.1,(ZA1+EH)/2); box(XE-XH,0.2,ZA1-L,stepM,(XH+XE)/2,LO/2-0.1,(L+ZA1)/2);
-  const slabM=bright(M(0xf3f1ea),0x6e6e68); slabM.clippingPlanes=[A.cut]; for(let f=1;f<=UPS;f++) box(SU-XB,FF-H-0.006,EH-L,slabM,(XB+SU)/2,f*FF-(FF-H)/2+0.003,(L+EH)/2);      // the slab of each landing above, its edge over the one below
+  const zr=L+SW+0.04, xr=X1-0.04, zq=EH-SW-0.04;      // where the rails stand: along the first flight's open side, the one across, the third's
+  /* one storey of stairs, from y0 at the foot of the first flight to y1 where the third arrives: the three flights, the two corner landings, the handrail round the well */
+  function storey(y0,y1){const rs=(y1-y0)/16, ya=y0+(NT1+1)*rs, yb=ya+(NT2+1)*rs;
+    const f1=flight(true,SU,1,y0,ya,L,L+SW,NT1), f2=flight(false,L+SW,1,ya,yb,X1,XE,NT2), f3=flight(true,X1,-1,yb,y1,EH-SW,EH,NT3);
+    box(XE-X1,0.2,SW,stepM,(X1+XE)/2,ya-0.1,L+SW/2); box(XE-X1,0.2,SW,stepM,(X1+XE)/2,yb-0.1,EH-SW/2);      // the corner landings
+    rail(f1,SU,X1,zr,true); rail(f2,L+SW,EH-SW,xr,true); rail(f3,X1,XD,zq,true);                                // the dark wooden handrail on black bars: up the first flight, across, and up the third
+    post(SU+0.02,y0,zr); post(xr,ya,zr); post(xr,yb,zq); post(XD,y1,zq);                                        // a newel at each turn
+    hrail(SU,L+SW,SU,EH-SW,y1,true); hrail(SU,zq,XD,zq,y1,true); post(SU,y1,zq);                                // on the floor it arrives at: along the landing's edge over the well, and the strip's, to the head of the next flight down
+    return {rs:rs,ya:ya,yb:yb};}
+  for(let f=0;f<UPS;f++) storey(f*FF,(f+1)*FF); storey(LO,0);      // ours and the floors above; the one below, from the shelter up to our floor
+  box(0.14,0.13,EH-L-2*SW,M(0xc9b791),SU-0.07,0.065,(L+EH)/2); box(0.16,0.02,EH-L-2*SW,0xd9c9a3,SU-0.07,0.14,(L+EH)/2);                  // on our floor a stone kerb under those rails: along the landing's edge over the well,
+  box(XD-SU+0.14,0.13,0.14,M(0xc9b791),(SU+XD)/2-0.07,0.065,EH-SW+0.07); box(XD-SU+0.16,0.02,0.16,0xd9c9a3,(SU+XD)/2-0.07,0.14,EH-SW+0.07);      // and along the strip's, to the head of the flight down
+  const slabM=bright(M(0xf3f1ea),0x6e6e68); slabM.clippingPlanes=[A.cut];
+  for(let f=1;f<=UPS;f++){const y=f*FF-(FF-H)/2+0.003; box(SU-XB,FF-H-0.006,EH-L,slabM,(XB+SU)/2,y,(L+EH)/2); box(XD-SU,FF-H-0.006,SW,slabM,(SU+XD)/2,y,EH-SW/2);}      // the slab of each landing above, and of its strip, their edges over the one below
   /* the landings above and below: a doorway in the wall at XB on each (to the west flat; below, the shelter), and above, a second in the wall
      at L right over our own door, into the flat over ours. floors.js hangs the doors in them and builds what lies behind. */
   const LDW=[L+0.78,L+1.62], LDS=[D.entrance[0],D.entrance[1]];          // the west doorway, along z; the south one, along x
@@ -187,7 +213,7 @@ inRoom('hall',function(){
   function frame(g,u0,u1){const fm=M(0xf3f2ee); [[u0-0.07,u0],[u1,u1+0.07]].forEach(function(q){const m=new THREE.Mesh(new THREE.BoxGeometry(q[1]-q[0],2.12,0.03),fm); m.position.set((q[0]+q[1])/2,1.06,0.015); g.add(m);});
     const t=new THREE.Mesh(new THREE.BoxGeometry(u1-u0+0.14,0.07,0.03),fm); t.position.set((u0+u1)/2,2.085,0.015); g.add(t);}
   [LO].concat([1,2,3].slice(0,UPS).map(function(f){return f*FF;})).forEach(function(y){
-    floorAt(XB,SU,L,EH,y+0.002);
+    floorAt(XB,SU,L,EH,y+0.002); if(y>0) floorAt(SU,XD,EH-SW,EH,y+0.002);      // the landing, and above the strip beside the well where the third flight arrives
     const wm=(function(){const m=hallM(plaster); m.clippingPlanes=[A.cut]; return m;})();
     if(y<0){const bk=new THREE.Group(); bk.position.set(XB+0.005,y,EH); bk.rotation.y=R/2; scene.add(bk);      // the wall at XB, its u running from EH toward L: below, the shelter's
     const hw=[EH-LDW[1],EH-LDW[0],0,2.05];
@@ -199,41 +225,21 @@ inRoom('hall',function(){
   });
   const top=new THREE.Mesh(new THREE.PlaneGeometry(XE-XB,EH-L),bright(M(0xf7f7f4),0xa6a6a0)); top.rotation.x=R/2; top.position.set((XB+XE)/2,TOPW,(L+EH)/2); scene.add(top);      // the stairwell's ceiling, under the roof
   floorAt(SU,XE,L,EH,LO+0.004);                                                            // and the floor of the shaft below
-  /* the shaft below our landing: plain white walls, its own faces closing it in */
+  /* the shaft below our landing: white walls on three sides, the flights below climbing them with their cladding */
   const shaftM=bright(M(0xf2f1ec),0x55554f);
   function plate(ry,x,z,pts){const sh=new THREE.Shape(); pts.forEach(function(p,i){if(i) sh.lineTo(p[0],p[1]); else sh.moveTo(p[0],p[1]);});
     const g=new THREE.ShapeGeometry(sh), P=g.attributes.position, U=g.attributes.uv; for(let i=0;i<P.count;i++) U.setXY(i,P.getX(i)/1.2,P.getY(i)/0.6);
     const m=new THREE.Mesh(g,shaftM); m.position.set(x,0,z); m.rotation.y=ry; scene.add(m); return m;}
-  plate(0,SU,L+0.006,[[0,LO],[uH,LO/2],[uE,LO/2],[uE,LO/2+CL],[uH,LO/2+CL],[0,LO+CL]]);      // along the flight down to the floor below, and its half landing
-  plate(R,XE,EH-0.006,[[XE-SD,-0.02],[XE-XHd,LO/2],[0,LO/2],[0,-0.02]]);                   // along the flight down, on its outer side
-  plate(-R/2,XE-0.006,L,[[0,LO/2],[EH-L,LO/2],[EH-L,LO/2+CL],[0,LO/2+CL]]);
-  /* railings: dark wooden handrail on black bars along the flights up, black along the flights down, white round the void */
-  function rail(x0,x1,f,z,hand,cap){                      // along a flight from x0 to x1, following its nosing line
-    const n0=f.nose(x0), n1=f.nose(x1), y0=n0+0.88, y1=n1+0.88, len=Math.hypot(x1-x0,y1-y0), a=Math.atan2(y1-y0,x1-x0);
-    if(!(cap&&Math.max(y0,y1)>cap)){const hr=box(len,hand?0.05:0.03,hand?0.06:0.035,hand?wood:iron,(x0+x1)/2,(y0+y1)/2+(hand?0.01:0),z); hr.rotation.z=a;}
-    const br=box(len,0.025,0.02,iron,(x0+x1)/2,(n0+n1)/2+0.12,z); br.rotation.z=a;
-    const d=Math.abs(x1-x0), sg=Math.sign(x1-x0);
-    for(let t=0.06;t<d;t+=0.12){const x=x0+sg*t, n=f.nose(x); if(cap&&n+0.88>cap) continue; box(0.014,0.76,0.014,iron,x,n+0.5,z);}
-  }
-  const zr=ZA1+0.05;
-  rail(SU,XH,fA,zr,true); rail(XH,SU,fB,ZB0-0.04,false); rail(SD,XHd,fBd,ZB0-0.04,false); rail(XH,SU,fAd,zr,false);
-  ups.forEach(function(q){const y=q[2]*FF; rail(SU,XH,q[0],zr,true); rail(XH,SU,q[1],ZB0-0.04,false);
-    box(0.05,1.0,0.05,iron,SU+0.02,y+0.5,ZA1+0.05); box(0.07,0.06,0.07,wood,SU+0.02,y+1.0,ZA1+0.05); box(0.04,0.04,ZB0-ZA1+0.08,wood,XH,y+FF/2+0.92,(ZA1+ZB0)/2);});      // each floor's newel, and the handrail round the well
-  /* the flight down's left edge, from the photos at our door: a stone kerb from beside our door frame to the corridor's end, black bars on it
-     under a dark wooden handrail that runs on down the flight */
-  box(0.14,0.13,EH-zr,M(0xc9b791),SD-0.07,0.065,(zr+EH)/2); box(0.16,0.02,EH-zr,0xd9c9a3,SD-0.07,0.14,(zr+EH)/2);
-  box(0.05,0.06,EH-zr,wood,SD-0.05,1.0,(zr+EH)/2); box(0.02,0.025,EH-zr,iron,SD-0.05,0.27,(zr+EH)/2); for(let z=zr+0.08;z<EH-0.04;z+=0.12) box(0.014,0.72,0.014,iron,SD-0.05,0.63,z);
-  box(0.05,1.0,0.05,iron,SD-0.03,0.5,zr);
-  box(0.05,1.0,0.05,iron,SU+0.02,0.5,ZA1+0.05); box(0.07,0.06,0.07,wood,SU+0.02,1.0,ZA1+0.05);   // the newel at the bottom
-  box(0.04,0.04,ZB0-ZA1+0.08,wood,XH,FF/2+0.92,(ZA1+ZB0)/2);                                   // and the handrail round the well at the half landing
-  box(CX1-SD+0.03,0.15,0.13,M(0xc9b791),(SD+CX1)/2-0.015,0.075,EH+0.045);                      // across the end of the corridor: a stone curb on the edge of the flight down,
-  box(CX1-SD+0.06,0.02,0.15,0xd9c9a3,(SD+CX1)/2-0.015,0.16,EH+0.045);
-  box(CX1-SD,0.04,0.04,white,(SD+CX1)/2,1.02,EH+0.05); box(CX1-SD,0.03,0.03,white,(SD+CX1)/2,0.27,EH+0.05);      // a white railing on it,
-  for(let x=SD+0.08;x<CX1-0.02;x+=0.115) box(0.018,0.76,0.018,white,x,0.64,EH+0.05);
-  cyl(0.024,H,white,SD-0.03,H/2,EH+0.05,null,10);                                               // and a white pole to the ceiling, flaking
-  [0.7,1.4,2.1].forEach(function(y){box(0.05,0.03,0.003,0x6b5a3a,SD-0.03,y,EH+0.075);});
-  A.rbox(0.66,0.86,0.025,0x1e2022,(SD+CX1)/2+0.2,0.62,EH+0.09,null,0.01); A.rbox(0.66,0.05,0.08,0x1e2022,(SD+CX1)/2+0.2,1.04,EH+0.05,null,0.02);   // a black rubber mat hung over it to dry
-
+  plate(0,SU,L+0.004,[[0,LO],[XE-SU,LO],[XE-SU,0],[0,0]]); plate(-R/2,XE-0.004,L,[[0,LO],[EH-L,LO],[EH-L,0],[0,0]]); plate(R,XE,EH-0.004,[[0,LO],[XE-SD,LO],[XE-SD,0],[0,0]]);
+  /* the white railing at the corridor's end, on a stone kerb over the head of the flight down, on every floor; on ours a white pole to the ceiling at its corner, flaking, and a black rubber mat hung over it to dry */
+  function corridorRail(y,ours){
+    box(CX1-SD+0.03,0.15,0.13,M(0xc9b791),(SD+CX1)/2-0.015,y+0.075,EH+0.045); box(CX1-SD+0.06,0.02,0.15,0xd9c9a3,(SD+CX1)/2-0.015,y+0.16,EH+0.045);
+    box(CX1-SD,0.04,0.04,white,(SD+CX1)/2,y+1.02,EH+0.05); box(CX1-SD,0.03,0.03,white,(SD+CX1)/2,y+0.27,EH+0.05);
+    for(let x=SD+0.08;x<CX1-0.02;x+=0.115) box(0.018,0.76,0.018,white,x,y+0.64,EH+0.05);
+    if(!ours) return;
+    cyl(0.024,H,white,SD-0.03,H/2,EH+0.05,null,10); [0.7,1.4,2.1].forEach(function(yy){box(0.05,0.03,0.003,0x6b5a3a,SD-0.03,yy,EH+0.075);});
+    A.rbox(0.66,0.86,0.025,0x1e2022,(SD+CX1)/2+0.2,0.62,EH+0.09,null,0.01); A.rbox(0.66,0.05,0.08,0x1e2022,(SD+CX1)/2+0.2,1.04,EH+0.05,null,0.02);}
+  corridorRail(0,true); for(let f=1;f<=UPS;f++) corridorRail(f*FF,false);
   stairMats.forEach(function(m){m.clippingPlanes=[A.cut];});                                  // the flights above are cut away with the walls when you cut them low
 
   /* ---------- the letter boxes and the meter cupboards, on the left as you come in ---------- */
@@ -313,7 +319,8 @@ inRoom('out',function(){
   const XS=A.PLAN.front, W6=6.5;      // flat 6's face to the street, and its side toward the yard
   [[X7,XF,AZ-0.4,L],[X7,XB,L,EH],[XE,XF,L,EH],[X7,XF,EH,ZC],[XF,XS,W6,ZC]].forEach(function(q,i){const m=box(q[1]-q[0],hh,q[3]-q[2],facade,(q[0]+q[1])/2,yc,(q[2]+q[3])/2,o); if(i===1||i===3) m.userData.hideBelow=true;});      // the two round the shelter step aside when you are down there
   box(D.BXB-XF+0.02,hh,-AZ+0.4,facade,(XF+D.BXB+0.02)/2,yc,(AZ-0.4)/2,o);
-  box(XF-3.94,H,L-A.BA.z1-0.04,0xe4ddcc,(3.92+XF)/2,H/2,(A.BA.z1+0.02+L-0.02)/2,o);        // a block of shafts between our bathroom and the stairs
+  box(XF-3.94,H,L-A.BA.z1-0.04,0xe4ddcc,(3.92+XF)/2,H/2,(A.BA.z1+0.02+L-0.02)/2,o);        // a block of shafts between our bathroom and the stairs,
+  box(XF-XE-0.05,TOPW,EH-L,0xe4ddcc,(XE+0.02+XF-0.03)/2,TOPW/2,(L+EH)/2,o);                 // and beside the stairwell, between it and the front, up to the roof
   const winTex=canvasTex(128,128,function(g){g.fillStyle='#e9e3d3'; g.fillRect(0,0,128,128); g.fillStyle='#8fb0bb'; g.fillRect(30,22,68,70); g.fillStyle='#f6f3ea'; g.fillRect(62,22,4,70); g.fillStyle='#cfc8b6'; g.fillRect(24,94,80,6);});
   winTex.wrapS=THREE.RepeatWrapping;
   function strip(len,x,y,z,rotY,hh){const t=winTex.clone(); t.needsUpdate=true; t.repeat.set(Math.round(len/2.6),1); const m=new THREE.Mesh(new THREE.PlaneGeometry(len,hh||2.6),A.MT(t)); m.position.set(x,y,z); m.rotation.y=rotY; o.add(m);}
