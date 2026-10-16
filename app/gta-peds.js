@@ -33,13 +33,17 @@ function slimAll(){folk().forEach(slim); if(A.gtaCops) A.gtaCops.list().forEach(
 
 /* ---------- the small parts of a person, hidden from far off ---------- */
 const NEAR=24;
-function small(p){if(p._small) return p._small; const out=[]; p.g.traverse(function(m){if(!m.isMesh||m.isInstancedMesh) return; const g=m.geometry; if(!g.boundingSphere) g.computeBoundingSphere();
-  const s=Math.max(Math.abs(m.scale.x),Math.abs(m.scale.y),Math.abs(m.scale.z)); if(g.boundingSphere.radius*s<0.035) out.push(m);}); p._small=out; return out;}
+function sized(p,key,lo,hi){if(p[key]) return p[key]; const out=[]; p.g.traverse(function(m){if(!m.isMesh||m.isInstancedMesh) return; const g=m.geometry; if(!g.boundingSphere) g.computeBoundingSphere();
+  const s=Math.max(Math.abs(m.scale.x),Math.abs(m.scale.y),Math.abs(m.scale.z)), r=g.boundingSphere.radius*s; if(r>=lo&&r<hi) out.push(m);}); p[key]=out; return out;}
+function small(p){return sized(p,'_small',0,0.035);}      // the fingers, the lashes, the lips: gone past 24 m
+function mid(p){return sized(p,'_mid',0.035,0.09);}      // the hands, the shoes, the neck, a cup: gone past 42 m, where they are a pixel or two
+const FAR2=42;
 let lodT=0;
 function lod(dt){lodT-=dt; if(lodT>0) return; lodT=0.25; const c=A.camera.position, pl=SM.player; if(!pl) return; const root=pl.p.g.parent; if(!root) return;
-  for(let i=0;i<root.children.length;i++){const g=root.children[i]; if(!g.visible) continue; const far=Math.hypot(g.position.x-c.x,g.position.z-c.z)>NEAR;
-    if(g.userData.far===far) continue; g.userData.far=far; const pp=g.userData.person; if(!pp) continue;
-    small(pp).forEach(function(m){if(far){if(m.visible){m.visible=false; m.userData.lodHid=true;}} else if(m.userData.lodHid){m.visible=true; m.userData.lodHid=false;}});}}      // only what was shown goes, and only that comes back
+  for(let i=0;i<root.children.length;i++){const g=root.children[i]; if(!g.visible) continue; const d=Math.hypot(g.position.x-c.x,g.position.z-c.z), tier=d>FAR2?2:d>NEAR?1:0;
+    if(g.userData.far===tier) continue; g.userData.far=tier; const pp=g.userData.person; if(!pp) continue;
+    const set=function(list,hide,flag){list.forEach(function(m){if(hide){if(m.visible){m.visible=false; m.userData[flag]=true;}} else if(m.userData[flag]){m.visible=true; m.userData[flag]=false;}});};      // only what was shown goes, and only that comes back
+    set(small(pp),tier>=1,'lodHid'); set(mid(pp),tier>=2,'lodHid2');}}
 /* the person behind each group: people.js does not say, so find it once from the actors we know */
 function tagPeople(){const all=[SM.player].concat(SM.guests||[],SM.extras||[],folk(),A.gtaCops?A.gtaCops.list():[]);
   all.forEach(function(a){if(a&&a.p&&!a.p.g.userData.person) a.p.g.userData.person=a.p;});}
