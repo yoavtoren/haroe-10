@@ -234,7 +234,7 @@ const bRun=btn('gRun','Run','run'), bJump=btn('gJump','Jump','jump'), bHit=btn('
 A.stage.appendChild(pad);
 const hold=function(b,on,off){b.addEventListener('pointerdown',function(e){e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); on();}); ['pointerup','pointercancel'].forEach(function(n){b.addEventListener(n,function(){if(off) off();});});};
 hold(bRun,function(){A.running=true; bRun.classList.add('on');},function(){A.running=false; bRun.classList.remove('on');});
-hold(bJump,jump); hold(bHit,punch); hold(bRadio,function(){if(A.gtaSound) A.gtaSound.station(1);}); hold(bWeap,function(){if(A.gtaArms) A.gtaArms.cycle(1);}); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
+hold(bJump,jump); hold(bHit,function(){punch(); if(A.gtaFireHold) A.gtaFireHold(true);},function(){if(A.gtaFireHold) A.gtaFireHold(false);}); hold(bRadio,function(){if(A.gtaSound) A.gtaSound.station(1);}); hold(bWeap,function(){if(A.gtaArms) A.gtaArms.wheel(true);}); hold(bCar,function(){carKey();}); hold(bHorn,function(){const h=$('dHorn'); if(h) h.click();});
 function carKey(){const dn=(A.game&&A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted); if(dn) return true; if(A.gtaTaxi&&(A.gtaTaxi.out()||A.gtaTaxi.cancel())) return true; if(car()){A.drive.exit(); return true;} return enterNear();}      /* wasted or busted, F does nothing at all */
 function edgeDist(c,x,z){const f=c.fwd(), dx=x-c.x, dz=z-c.z, al=Math.abs(dx*f[0]+dz*f[1])-c.dim[0]/2, sd=Math.abs(dx*f[1]-dz*f[0])-c.dim[1]/2; return Math.max(al,sd,0);}      /* how far you stand from the car's body */
 function enterNear(){const p=SM.player; if(!A.drive||!p||p.lvl) return false; let best=null, bd=3.0;
@@ -253,7 +253,7 @@ A.frameFns.push(function(dt){
   const ck=A.simsOn+SM.camMode+C.on; if(ck!==camKey){camKey=ck; pressCams();}
   const show=A.simsOn&&TOUCH&&!!SM.player; if(pad.hidden===show) pad.hidden=!show;
   if(show){const c=!!car(); bRun.hidden=c; bJump.hidden=c; bHit.hidden=c; bHorn.hidden=!c; bRadio.hidden=!c; bCar.classList.toggle('on',c);
-    const W=A.gtaWeapon; bWeap.hidden=c||!W||!(W.has.bat||W.has.pistol); const gun=W&&W.cur==='pistol'; if(bHit.dataset.gun!==String(gun)){bHit.dataset.gun=gun; bHit.lastChild.textContent=gun?'Shoot':'Punch';}}
+    const W=A.gtaWeapon, KD=A.gtaKinds||{}; bWeap.hidden=c||!W||!Object.keys(W.has).some(function(k){return k!=='fists'&&W.has[k];}); const gun=!!(W&&KD[W.cur]&&KD[W.cur].gun); if(bHit.dataset.gun!==String(gun)){bHit.dataset.gun=gun; bHit.lastChild.textContent=gun?'Shoot':'Punch';}}
 });
 if(A.gtaSet) A.gtaSet.on(function(k,v){if(k==='dist') C.zoom=v;});
 A.gta=Object.assign(A.gta||{},{cam:C,active:active,cycle:cycle,jump:jump,punch:punch,enterNear:enterNear,pressCams:pressCams});

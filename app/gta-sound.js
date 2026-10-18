@@ -204,10 +204,12 @@ function sting(kind){const c=shared(), t=c.currentTime, g=c.createGain(); g.gain
   if(kind==='wasted'){tone(g,'sine',90,30,2.6,0.4,t); burst(g,2.2,'lowpass',500,0.5,0.25,t); [196,185,174].forEach(function(f,i){tone(g,'sawtooth',f,f*0.97,1.8,0.04,t+0.6+i*0.25);});}
   else{tone(g,'sine',110,55,1.4,0.35,t); [523,415,349].forEach(function(f,i){tone(g,'square',f,f,0.3,0.03,t+0.5+i*0.32);}); burst(g,0.4,'bandpass',1800,1,0.08,t+0.1);}}
 /* a pistol shot: a crack and a thump, its echo off the blocks; quieter and duller the farther off */
-function shot(x,z,mine){const SM=A.sims, p=SM&&SM.player, c=shared(), t=c.currentTime, d=mine||!p?0:Math.hypot(x-p.x,z-p.z), vol=clamp(0.9/(1+d*0.08),0.05,0.8);
-  const n=Math.floor(c.sampleRate*0.32), b=c.createBuffer(1,n,c.sampleRate), dd=b.getChannelData(0); for(let i=0;i<n;i++){const k=i/n; dd[i]=(Math.random()*2-1)*Math.pow(1-k,6)*(k<0.01?2:1);}
+function shot(x,z,mine,auto){const SM=A.sims, p=SM&&SM.player, c=shared(), t=c.currentTime, d=mine||!p?0:Math.hypot(x-p.x,z-p.z), vol=clamp((auto?0.55:0.9)/(1+d*0.08),0.05,0.8);
+  const n=Math.floor(c.sampleRate*(auto?0.14:0.32)), b=c.createBuffer(1,n,c.sampleRate), dd=b.getChannelData(0); for(let i=0;i<n;i++){const k=i/n; dd[i]=(Math.random()*2-1)*Math.pow(1-k,6)*(k<0.01?2:1);}
   const s=c.createBufferSource(), hp=c.createBiquadFilter(), lp=c.createBiquadFilter(), g=c.createGain(); s.buffer=b; hp.type='highpass'; hp.frequency.value=300; lp.type='lowpass'; lp.frequency.value=3800-Math.min(3000,d*30); g.gain.value=vol; s.connect(hp).connect(lp).connect(g).connect(B.out); s.start(t);
   tone(B.out,'sine',140,40,0.2,vol*0.9,t);}
+/* a gun drawn: the slide racked, two clicks */
+function cock(){const c=shared(), t=c.currentTime; [0,0.09].forEach(function(o,i){burst(B.sfx,0.03,'highpass',i?2600:1800,1.5,0.09,t+o);});}
 /* a whistle through the fingers, for a taxi */
 function whistle(){const c=shared(), t=c.currentTime; tone(B.sfx,'sine',1900,2600,0.16,0.07,t); tone(B.sfx,'sine',2600,2000,0.24,0.07,t+0.17);}
 /* a car going up: a bang that drops into a long low rumble, duller and quieter the farther off */
@@ -238,5 +240,5 @@ A.frameFns.push(function(dt){if(!ctx){if(!A.simsOn) return; shared();}
   if(A.simsOn){steps(); traffic(); city(dt);} else if(B){B.out.gain.setTargetAtTime(0,ctx.currentTime,0.3); hush();}
   radio();});
 window.addEventListener('load',function(){if(A.gtaSet) A.gtaSet.on(function(k){if(k==='master'||k==='radio'||k==='sfx') volumes();});});
-A.gtaSound={boom:boom,whistle:whistle,ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,shot:shot,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,passed:passed,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
+A.gtaSound={boom:boom,whistle:whistle,cock:cock,ctx:shared,bus:function(n){shared(); return n==='out'?B.out:n==='radio'?B.radio:n==='master'?B.master:B.sfx;},engine:engine,rev:rev,scream:scream,shot:shot,jump:jumpS,land:landS,dispatch:dispatch,sting:sting,lost:lost,cash:cash,passed:passed,blip:blip,pause:pause,say:say,station:station,STATIONS:STATIONS,radio:RD};
 })();

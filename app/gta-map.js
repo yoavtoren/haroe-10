@@ -225,20 +225,33 @@ menu.querySelector('[data-p="settings"]').addEventListener('input',function(e){c
 menu.querySelector('[data-p="settings"]').addEventListener('click',function(e){const b=e.target.closest('button[data-k]'); if(!b) return; const k=b.dataset.k, v=b.dataset.v;
   A.gtaSet.set(k,typeof DEF[k]==='boolean'?v==='true':typeof DEF[k]==='number'?+v:v); drawSettings();});
 /* ---------- keys ---------- */
-function drawKeys(){const p=menu.querySelector('[data-p="keys"]');
-  const K=TOUCH?[['Left stick','Walk, run when pushed far; in a car, gas, brake and steer'],['Right stick or a drag','Look around'],['Run · Jump · Punch','The round buttons'],['Car','Get in the nearest car, or out; by a taxi, with a waypoint set, a ride there'],['Tap someone or something','What you can do with them'],['Radar','Opens this map']]:
-    [['W A S D','Jog outside, walk at home; in a car, gas, brake and steer'],['Mouse','Look around (click the view to take the mouse, Esc gives it back)'],['Shift','Sprint (run at home)'],['Alt','Walk, outside'],['Space','Jump; in a car, the handbrake'],['F','Get in or out of a car; with no car at hand, a whistle for a taxi'],['E','Do what is on offer'],['1 – 9','Pick from what is on offer'],['R or click','Punch'],['H','Horn; on foot, a whistle for a passing taxi (with a waypoint set)'],['Q','Next radio station'],['C','Look behind you in a car'],['V','Camera: near, middle, far, your eyes'],['Wheel','Zoom the camera'],['M','This map'],['Esc','Let go of the mouse, close the map']];
+function keyLists(){const K=TOUCH?[['Left stick','Walk, run when pushed far; in a car, gas, brake and steer'],['Right stick or a drag','Look around'],['Run · Jump · Punch','The round buttons'],['Car','Get in the nearest car, or out; by a taxi, with a waypoint set, a ride there'],['Tap someone or something','What you can do with them'],['Radar','Opens this map']]:
+    [['W A S D','Jog outside, walk at home; in a car, gas, brake and steer'],['Mouse','Look around (click the view to take the mouse, Esc gives it back)'],['Shift','Sprint (run at home)'],['Alt','Walk, outside'],['Space','Jump; in a car, the handbrake'],['F','Get in or out of a car; with no car at hand, a whistle for a taxi'],['E','Do what is on offer'],['1 – 9','Pick from what is on offer'],['R or click','Punch'],['H','Horn; on foot, a whistle for a passing taxi (with a waypoint set)'],['Q','Next radio station'],['C','Look behind you in a car'],['V','Camera: near, middle, far, your eyes'],['Wheel','Zoom the camera'],['M','This map'],['Tab','Next weapon; held, the weapon wheel'],['Esc','Let go of the mouse, close the map'],['I (held)','This list, over the game']];
   const GPK=[['Left stick','Walk; in a car, steer'],['Right stick','Look around'],['RT · LT','Run, aim the pistol; in a car, gas and brake'],['A · B · X · Y','Jump · do what is on offer · punch or shoot · car'],['LB · RB','Weapon · radio station'],['Start · Back','This map · camera'],['Stick clicks','Horn · look back']];
-  p.innerHTML='<div class="gmList">'+K.map(function(r){return '<div class="gmRow gmK"><b class="gmKey">'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('')+'<h4>A gamepad</h4>'+GPK.map(function(r){return '<div class="gmRow gmK"><b class="gmKey">'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('')+'</div>';}
+  return {K:K,GPK:GPK};}
+function drawKeys(){const p=menu.querySelector('[data-p="keys"]'), L=keyLists();
+  p.innerHTML='<div class="gmList">'+L.K.map(function(r){return '<div class="gmRow gmK"><b class="gmKey">'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('')+'<h4>A gamepad</h4>'+L.GPK.map(function(r){return '<div class="gmRow gmK"><b class="gmKey">'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('')+'</div>';}
+/* ---------- I held down: the keys, there and then, over the game (as GTA's controls card); let go and it is gone ---------- */
+const kc=document.createElement('div'); kc.id='gKeysCard'; kc.hidden=true; A.stage.appendChild(kc);
+function keysCard(on){if(on===!kc.hidden) return; kc.hidden=!on; if(!on) return; const L=keyLists();
+  const col=function(rows){return rows.map(function(r){return '<div class="kcRow"><b>'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('');};
+  const half=Math.ceil(L.K.length/2); kc.innerHTML='<div class="kcIn"><h3>Keys <small>hold I</small></h3><div class="kcCols"><div>'+col(L.K.slice(0,half))+'</div><div>'+col(L.K.slice(half))+'<h4>Gamepad</h4>'+col(L.GPK.slice(0,4))+'</div></div></div>';}
+window.addEventListener('keydown',function(e){if(!A.simsOn||!SM.player||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if(e.key.toLowerCase()==='i'&&!e.repeat&&!A.paused){keysCard(true); e.preventDefault();}});
+window.addEventListener('keyup',function(e){if(e.key.toLowerCase()==='i') keysCard(false);});
+window.addEventListener('blur',function(){keysCard(false);});
+A.frameFns.push(function(){if(!kc.hidden&&(!A.simsOn||!SM.player||A.paused)) keysCard(false);});
 
 /* ---------- your progress, kept in this browser as GTA keeps a save: money, weapons, armour, the time of day ---------- */
 let loaded=false, saveT=0;
 function load(){loaded=true; let s=null; try{s=JSON.parse(localStorage.getItem('haroe-gta-save')||'null');}catch(e){} if(!s) return;
   const G=A.floors&&A.floors.G, W=A.gtaWeapon; if(G&&typeof s.loot==='number') G.loot=Math.max(0,Math.floor(s.loot));
-  if(W&&s.w){['bat','pistol'].forEach(function(k){W.has[k]=!!s.w[k];}); W.ammo=Math.max(0,s.ammo|0); W.clip=Math.max(0,Math.min(12,s.clip|0)); if(W.has[s.cur]) W.cur=s.cur;}
+  if(W&&s.w){Object.keys(W.has).forEach(function(k){if(k!=='fists') W.has[k]=!!s.w[k];});
+    if(typeof s.ammo==='number'){W.ammo.pistol=Math.max(0,s.ammo|0); W.clip.pistol=Math.max(0,Math.min(12,s.clip|0));}      /* the save before the SMG: one count, the pistol's */
+    else{Object.keys(W.ammo).forEach(function(k){W.ammo[k]=Math.max(0,(s.ammo&&s.ammo[k])|0); W.clip[k]=Math.max(0,(s.clip&&s.clip[k])|0);});}
+    if(W.has[s.cur]) W.cur=s.cur;}
   if(typeof s.armour==='number') A.gtaArmor=Math.max(0,Math.min(100,s.armour)); if(typeof s.hour==='number'&&A.gtaSetHour&&SET.clock==='game') A.gtaSetHour(s.hour);
   if(A.floors&&A.floors.drawHud) A.floors.drawHud();}
-function store(){const G=A.floors&&A.floors.G, W=A.gtaWeapon; try{localStorage.setItem('haroe-gta-save',JSON.stringify({loot:G?G.loot:0,w:W?{bat:W.has.bat,pistol:W.has.pistol}:null,ammo:W?W.ammo:0,clip:W?W.clip:0,cur:W?W.cur:'fists',armour:A.gtaArmor||0,hour:A.gtaHour?A.gtaHour():10}));}catch(e){}}
+function store(){const G=A.floors&&A.floors.G, W=A.gtaWeapon; try{localStorage.setItem('haroe-gta-save',JSON.stringify({loot:G?G.loot:0,w:W?W.has:null,ammo:W?W.ammo:null,clip:W?W.clip:null,cur:W?W.cur:'fists',armour:A.gtaArmor||0,hour:A.gtaHour?A.gtaHour():10}));}catch(e){}}
 
 /* ---------- keys and the frame ---------- */
 window.addEventListener('keydown',function(e){if(!A.simsOn||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; const k=e.key.toLowerCase();
