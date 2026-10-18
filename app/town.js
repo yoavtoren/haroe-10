@@ -101,6 +101,17 @@ const gcan=document.createElement('canvas'); gcan.width=gcan.height=N;
   roads.forEach(function(s){if(s.w[0]>0) stroke(s.p,s.w[0]+0.4,'#e9e8e2');});                                                         // kerbs
   roads.forEach(function(s){if(s.w[0]>0) stroke(s.p,s.w[0],s.k===6?'#55595d':'#5c6064');});                                        // asphalt
   roads.forEach(function(s){if(s.w[0]>0) stroke(s.p,s.w[0]*0.55,'rgba(80,84,88,0.5)');});                                           // worn darker down the middle
+  /* the kerbs' paint, as the city has it: blue and white where you may park along the main streets, red and white at the junctions */
+  roads.forEach(function(s){if(!(s.k===1||s.k===6||s.k===7)||!s.w[0]) return; const half=s.w[0]/2+0.2; g.lineWidth=Math.max(1.5,0.26*K); g.lineCap='butt';
+    for(let i=1;i<s.p.length;i++){const a=s.p[i-1], b=s.p[i], dx=b[0]-a[0], dz=b[1]-a[1], l=hyp(dx,dz); if(l<6) continue; const ux=dx/l, uz=dz/l, nx=-dz/l, nz=dx/l;
+      for(let t=0;t<l-0.5;t+=1){const x=a[0]+ux*t, z=a[1]+uz*t; if(kept(x,z)||nearHome(x,z)) continue; const end=t<8||t>l-9, odd=Math.floor(t)%2;
+        [1,-1].forEach(function(sd){const c0=cp(x+nx*sd*half,z+nz*sd*half), c1=cp(x+ux*1+nx*sd*half,z+uz*1+nz*sd*half); g.strokeStyle=end?(odd?'#d9403a':'#f4f2ea'):(odd?'#2d63c8':'#f4f2ea'); g.beginPath(); g.moveTo(c0[0],c0[1]); g.lineTo(c1[0],c1[1]); g.stroke();});}}});
+  /* manhole covers down the middle, drains at the kerbs */
+  roads.forEach(function(s){if(!s.w[0]) return; const half=s.w[0]/2;
+    for(let i=1;i<s.p.length;i++){const a=s.p[i-1], b=s.p[i], dx=b[0]-a[0], dz=b[1]-a[1], l=hyp(dx,dz); if(l<12) continue; const ux=dx/l, uz=dz/l, nx=-dz/l, nz=dx/l;
+      for(let t=14+r()*20;t<l-6;t+=36+r()*30){const o=(r()-0.5)*2.4, c=cp(a[0]+ux*t+nx*o,a[1]+uz*t+nz*o); if(kept(a[0]+ux*t,a[1]+uz*t)) continue;
+        g.fillStyle='#3b3d3f'; g.beginPath(); g.arc(c[0],c[1],0.32*K,0,7); g.fill(); g.strokeStyle='#767a7e'; g.lineWidth=Math.max(1,0.05*K); g.stroke(); g.strokeStyle='#55585b'; g.beginPath(); g.arc(c[0],c[1],0.2*K,0,7); g.stroke();}
+      for(let t=10+r()*10;t<l-4;t+=22+r()*14){[1,-1].forEach(function(sd){const x=a[0]+ux*t+nx*sd*(half-0.3), z=a[1]+uz*t+nz*sd*(half-0.3); if(kept(x,z)||nearHome(x,z)) return; const c=cp(x,z); g.save(); g.translate(c[0],c[1]); g.rotate(Math.atan2(uz,ux)); g.fillStyle='#2e3032'; g.fillRect(-0.3*K,-0.12*K,0.6*K,0.24*K); g.strokeStyle='#5d6164'; g.lineWidth=Math.max(1,0.03*K); for(let k=-2;k<=2;k++){g.beginPath(); g.moveTo(k*0.1*K,-0.1*K); g.lineTo(k*0.1*K,0.1*K); g.stroke();} g.restore();});}}});
   for(let i=0;i<N*N/2600;i++){const x=TX0+r()*TS, z=TZ0+r()*TS; if(!onRoad(x,z,-0.3)) continue; const c=cp(x,z), k=r();      // the asphalt's history: repairs, oil, cracks
     if(k<0.35){const w=(1.2+r()*3)*K, h=(0.8+r()*1.8)*K; g.fillStyle='rgba(38,40,42,0.55)'; g.fillRect(c[0],c[1],w,h); g.strokeStyle='rgba(20,21,22,0.6)'; g.lineWidth=Math.max(1,0.06*K); g.strokeRect(c[0],c[1],w,h);}
     else if(k<0.7){g.fillStyle='rgba(25,24,22,'+(0.12+r()*0.18)+')'; g.beginPath(); g.ellipse(c[0],c[1],(0.3+r()*0.6)*K,(0.2+r()*0.4)*K,r()*3,0,7); g.fill();}
@@ -625,6 +636,32 @@ const signs2=A.batch(root);
         for(let k=0;k<2;k++) boxB(tb,bx-q.nx*sd*(0.25+k*0.14),y+0.46,bz-q.nz*sd*(0.25+k*0.14),2.6,0.04,0.12,ryS,C(0x9aa0a2));
         const sg=det.sign([['bus',0.42]],{h:2.7}); signs2.bake(sg,q.x-q.nx*sd*0.3+q.ux*2.6,y,q.z-q.nz*sd*0.3+q.uz*2.6,Math.atan2(-q.nx*sd,-q.nz*sd));
         addOb(bx,bz,1.0); stops.push({x:q.x,z:q.z,h:Math.atan2(-q.nx*sd,-q.nz*sd),rd:rd});}}});
+  /* the furniture of a street, as the city's have it: electrical cabinets by the walls, red hydrants, planters with a shrub, notice boards
+     with their posters; and benches in the side streets too, where there were none */
+  const CAB=C(0x9aa0a3), CABD=C(0x6f7579), RED=C(0xc8302a), CONC=C(0xb9b6ae), HEDGE=C(0x3f7a3a), POST=[C(0xe8c91a),C(0xd84a2a),C(0x2a7a9a),C(0xf2f2ee),C(0xc2457a),C(0x6b4a33)];
+  roads.forEach(function(rd){if(!rd.w[0]||rd.k===3) return; const main=rd.k===1||rd.k===6||rd.k===7, cw=rd.w[0]/2, pw=rd.w[1];
+    for(let j=1;j<rd.p.length;j++){const a=rd.p[j-1], b=rd.p[j], l=hyp(b[0]-a[0],b[1]-a[1]);
+      for(let t=9+r()*18;t<l-5;t+=main?22+r()*14:26+r()*18){const sd=r()<0.5?1:-1, kind=r(), q=P(rd,j,t,sd*(cw+pw*(kind<0.3?0.85:0.55))); if(!okAt(q.x,q.z,rd)||obAt(q.x,q.z,1.0)) continue;
+        const tb=bufOf(tileOf(q.x,q.z),PROP), y=U+PH, ry=Math.atan2(q.ux,q.uz), fx=q.nx*sd, fz=q.nz*sd;
+        if(kind<0.3){boxB(tb,q.x,y+0.65,q.z,0.95,1.3,0.42,ry,CAB); boxB(tb,q.x-fx*0.215,y+0.65,q.z-fz*0.215,0.8,1.1,0.01,ry,CABD); boxB(tb,q.x,y+1.32,q.z,1.0,0.05,0.48,ry,CABD); addOb(q.x,q.z,0.55);}      // an electrical cabinet by the wall
+        else if(kind<0.48){cylB(tb,q.x,y+0.38,q.z,0.11,0.76,null,RED,8); cylB(tb,q.x,y+0.8,q.z,0.13,0.1,null,RED,8); [-1,1].forEach(function(s2){boxB(tb,q.x+q.ux*s2*0.16,y+0.52,q.z+q.uz*s2*0.16,0.14,0.14,0.14,ry,RED);}); addOb(q.x,q.z,0.2);}      // a hydrant
+        else if(kind<0.66){boxB(tb,q.x,y+0.3,q.z,1.1,0.6,0.55,ry,CONC); boxB(tb,q.x,y+0.85,q.z,1.0,0.5,0.5,ry,HEDGE); addOb(q.x,q.z,0.6);}      // a planter, a shrub in it
+        else if(kind<0.84){cylB(tb,q.x,y+1.1,q.z,0.04,2.2,null,grey,6); boxB(tb,q.x,y+1.55,q.z,1.1,1.3,0.04,ry,C(0x3b3f43)); for(let k=0;k<4;k++) boxB(tb,q.x+q.ux*((k%2)*0.5-0.25)-fx*0.03,y+1.55+(k<2?0.3:-0.32),q.z+q.uz*((k%2)*0.5-0.25)-fz*0.03,0.42,0.55,0.01,ry,POST[Math.floor(r()*POST.length)]); addOb(q.x,q.z,0.25);}      // a notice board, its posters
+        else if(!main){for(let k=0;k<3;k++) boxB(tb,q.x-fx*(0.12-k*0.14),y+0.45,q.z-fz*(0.12-k*0.14),1.7,0.04,0.12,ry+R/2,wood); for(let k=0;k<2;k++) boxB(tb,q.x+fx*0.24,y+0.62+k*0.14,q.z+fz*0.24,1.7,0.1,0.03,ry+R/2,wood); [-0.7,0.7].forEach(function(s2){boxB(tb,q.x+q.ux*s2,y+0.22,q.z+q.uz*s2,0.05,0.44,0.5,ry+R/2,dark);}); addOb(q.x,q.z,0.6);}}}});      // a bench in a side street
+  /* playgrounds: a swing, a slide, a seesaw and benches, in the sand */
+  TD.G.forEach(function(a){if(a[0]!=='playground') return; const p=outline(a[2],true); let cx=0, cz=0; p.forEach(function(q){cx+=q[0]; cz+=q[1];}); cx/=p.length; cz/=p.length; if(kept(cx,cz)||nearHome(cx,cz)||!inPoly(p,cx,cz)||areaOf(p)<120) return;
+    const tb=bufOf(tileOf(cx,cz),PROP), y=U, ry=r()*R, ux=Math.sin(ry), uz=Math.cos(ry), nx=-uz, nz=ux, STEEL=C(0x2a7a9a), SEAT=C(0xe8c91a), CHUTE=C(0xd84a2a);
+    const sx=cx+nx*4, sz=cz+nz*4;      // the swing: two A-frames, the bar, two seats on their chains
+    if(inPoly(p,sx,sz)){[-1.6,1.6].forEach(function(s){[-0.5,0.5].forEach(function(k){boxB(tb,sx+ux*s+nx*k*0.6,y+1.1,sz+uz*s+nz*k*0.6,0.07,2.3,0.07,ry,STEEL);});}); boxB(tb,sx,y+2.22,sz,3.4,0.07,0.07,ry,STEEL);
+      [-0.6,0.6].forEach(function(s){[-0.18,0.18].forEach(function(k){boxB(tb,sx+ux*(s+k),y+1.4,sz+uz*(s+k),0.02,1.6,0.02,ry,grey);}); boxB(tb,sx+ux*s,y+0.6,sz+uz*s,0.42,0.04,0.18,ry,SEAT);}); addOb(sx-ux*1.6,sz-uz*1.6,0.4); addOb(sx+ux*1.6,sz+uz*1.6,0.4);}
+    const lx=cx-nx*4, lz=cz-nz*4;      // the slide: a ladder, a platform, the chute down in steps
+    if(inPoly(p,lx,lz)){for(let k=0;k<5;k++) boxB(tb,lx-ux*1.2,y+0.3+k*0.38,lz-uz*1.2,0.8,0.04,0.3,ry,grey); [-0.4,0.4].forEach(function(k){boxB(tb,lx-ux*1.2+nx*k,y+1.0,lz-uz*1.2+nz*k,0.05,2.0,0.05,ry,STEEL);});
+      boxB(tb,lx-ux*0.6,y+1.9,lz-uz*0.6,1.2,0.06,0.9,ry,STEEL); [-0.45,0.45].forEach(function(k){boxB(tb,lx-ux*0.6+nx*k,y+1.4,lz-uz*0.6+nz*k,0.06,1.9,0.06,ry,STEEL); boxB(tb,lx-ux*0.6+nx*k,y+2.2,lz-uz*0.6+nz*k,1.2,0.04,0.04,ry,STEEL);});
+      for(let k=0;k<8;k++) boxB(tb,lx+ux*(0.1+k*0.35),y+1.78-k*0.21,lz+uz*(0.1+k*0.35),0.4,0.06,0.7,ry,CHUTE); addOb(lx,lz,1.2);}
+    const wx=cx+ux*5, wz=cz+uz*5;      // the seesaw
+    if(inPoly(p,wx,wz)){boxB(tb,wx,y+0.25,wz,0.2,0.5,0.5,ry,STEEL); boxB(tb,wx,y+0.52,wz,3.0,0.05,0.3,ry,wood); [-1.35,1.35].forEach(function(s){boxB(tb,wx+ux*s,y+0.6,wz+uz*s,0.3,0.06,0.34,ry,SEAT); boxB(tb,wx+ux*s,y+0.75,wz+uz*s,0.03,0.3,0.03,ry,grey);}); addOb(wx,wz,0.5);}
+    [[-6,0],[0,-6]].forEach(function(o){const bx=cx+ux*o[0]+nx*o[1], bz=cz+uz*o[0]+nz*o[1]; if(!inPoly(p,bx,bz)) return; const rb=o[0]?ry:ry+R/2;      // a bench or two, for the parents
+      for(let k=0;k<3;k++) boxB(tb,bx,y+0.45,bz,1.7,0.04,0.12,rb,wood); boxB(tb,bx,y+0.62,bz,1.7,0.1,0.03,rb,wood); [-0.7,0.7].forEach(function(s2){boxB(tb,bx+Math.sin(rb)*s2,y+0.22,bz+Math.cos(rb)*s2,0.05,0.44,0.5,rb,dark);}); addOb(bx,bz,0.6);});});
   /* junctions: lights where a main street crosses, bollards on their corners, a stop sign where a side street meets a main one, the cages for bottles */
   cross.forEach(function(c){if(c.car.length<2||kept(c.x,c.z)||nearHome(c.x,c.z)) return; const mains=c.car.filter(function(x){return x.k===1||x.k===6||x.k===7;}), lights=mains.length>=1&&c.car.length>=2&&(mains.length>=2||c.car.length>=3||r()<0.5);
     const wo=Math.max.apply(null,c.car.map(function(x){return x.w[0]/2+x.w[1];})), sig=lights?{x:c.x,z:c.z,grp:new Map(),wo:wo}:null; if(sig) SIG.set(key([c.x,c.z]),sig);
