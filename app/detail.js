@@ -385,7 +385,7 @@ const cellUV=function(k){const c=CELL[k]; return [c[0]/LS,1-c[3]/LS,c[2]/LS,1-c[
 /* a crown: n cards scattered through an ellipsoid round c, each a sprig growing outward from where it starts.
    Both faces carry the same outward normal, so the crown is lit like one soft mass; cards deep inside are darker. */
 function crownGeo(o){
-  const r=A.rng(o.seed||1), uv=cellUV(o.cell||'broad'), pos=[], nor=[], col=[], uvs=[], idx=[];
+  const r=A.rng(o.seed||1), uv=cellUV(o.cell||'broad'), pos=[], nor=[], col=[], uvs=[], idx=[], cps=[];      // cps: each card's pivot, for gta-fx.js to shrink the cards by the camera
   const c=o.c||[0,0,0], rx=o.r[0], ry=o.r[1], rz=o.r[2], sz=o.size||0.5, tint=new THREE.Color(o.tint==null?0xffffff:o.tint), t2=new THREE.Color(o.tint2==null?(o.tint==null?0xe8f0c8:o.tint):o.tint2);
   const d=new THREE.Vector3(), u=new THREE.Vector3(), v=new THREE.Vector3(), q=new THREE.Vector3(), nn=new THREE.Vector3(), cc=new THREE.Color();
   for(let i=0;i<o.n;i++){
@@ -399,13 +399,13 @@ function crownGeo(o){
     const shade=(0.5+0.5*t)*(0.82+r()*0.3)*(o.dark||1); cc.copy(tint).lerp(t2,r()*0.6).multiplyScalar(shade);
     const pts=[[-w,0],[w,0],[w,h],[-w,h]];
     pts.forEach(function(k,j){const x=p[0]+v.x*k[0]+u.x*k[1], y=p[1]+v.y*k[0]+u.y*k[1], z=p[2]+v.z*k[0]+u.z*k[1];
-      pos.push(x,y,z); nn.set((x-c[0])/rx,(y-c[1])/ry+0.45,(z-c[2])/rz).normalize(); nor.push(nn.x,nn.y,nn.z); col.push(cc.r,cc.g,cc.b);
+      pos.push(x,y,z); cps.push(p[0],p[1],p[2]); nn.set((x-c[0])/rx,(y-c[1])/ry+0.45,(z-c[2])/rz).normalize(); nor.push(nn.x,nn.y,nn.z); col.push(cc.r,cc.g,cc.b);
       uvs.push((j===0||j===3)!==fl?uv[0]:uv[2], j<2?uv[1]:uv[3]);});
-    pts.forEach(function(k,j){pos.push(pos[(base+j)*3],pos[(base+j)*3+1],pos[(base+j)*3+2]); nor.push(nor[(base+j)*3],nor[(base+j)*3+1],nor[(base+j)*3+2]); col.push(cc.r,cc.g,cc.b); uvs.push(uvs[(base+j)*2],uvs[(base+j)*2+1]);});
+    pts.forEach(function(k,j){pos.push(pos[(base+j)*3],pos[(base+j)*3+1],pos[(base+j)*3+2]); cps.push(p[0],p[1],p[2]); nor.push(nor[(base+j)*3],nor[(base+j)*3+1],nor[(base+j)*3+2]); col.push(cc.r,cc.g,cc.b); uvs.push(uvs[(base+j)*2],uvs[(base+j)*2+1]);});
     idx.push(base,base+1,base+2,base,base+2,base+3, base+4,base+6,base+5,base+4,base+7,base+6);
   }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));
-  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2)); g.setIndex(idx); return g;
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2)); g.setAttribute('cpos',new THREE.Float32BufferAttribute(cps,3)); g.setIndex(idx); return g;
 }
 det.crownGeo=crownGeo;
 det.crown=function(o,p){return mk(crownGeo(o),leafM,0,0,0,p);};

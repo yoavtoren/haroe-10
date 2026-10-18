@@ -193,15 +193,18 @@ function headlights(){const D=A.drive; if(!D||!D.live) return; const n=A.simsOn?
 A.frameFns.push(function(dt){
   if(A.simsOn&&SM.player) tick(dt); else CK.ev=null;
   light(dt); headlights(); gloss(); fadeU.value=A.gtaCam&&A.gtaCam()?1:0;
-  if(fadeU.value&&SM.player){const pp=SM.player.p.g.position, d=camera.position.distanceTo(pp); fadeEnd.value=Math.max(1.2,d-0.6);
-    renderer.getDrawingBufferSize(fsz); fv.copy(pp); fv.y+=1.0; fv.project(camera); fadeC.value.set((fv.x+1)/2*fsz.x,(fv.y+1)/2*fsz.y,fsz.y*Math.min(0.6,1.4/Math.max(1,d)));}      /* round you on the screen: a circle about your size */
+  if(fadeU.value&&SM.player){const pp=SM.player.p.g.position, d=camera.position.distanceTo(pp); fadeEnd.value=Math.max(1.6,d-0.3);
+    renderer.getDrawingBufferSize(fsz); fadeRes.value.copy(fsz); fv.copy(pp); fv.y+=1.0; fv.project(camera); fadeC.value.set((fv.x+1)/2*fsz.x,(fv.y+1)/2*fsz.y,fsz.y*Math.min(0.6,1.4/Math.max(1,d)));}      /* round you on the screen: a circle about your size */
 });
-/* leaves right in front of the camera dissolve, as GTA's foliage does, so a low crown never blinds the view (Sims mode only) */
-const fadeU={value:0}, fadeEnd={value:2.6}, fadeC={value:new THREE.Vector3(0,0,1)};      /* on; how deep (up to just short of you); and where you are on the screen, and how far round */
+/* leaves right in front of the camera, and over you on the screen, shrink away toward their pivots, card by card, so a low crown never
+   blinds the view (Sims mode only): cleaner than the dither GTA's foliage uses, which showed as a halftone at this size */
+const fadeU={value:0}, fadeEnd={value:2.6}, fadeC={value:new THREE.Vector3(0,0,1)}, fadeRes={value:new THREE.Vector2(1,1)};      /* on; how deep (up to just short of you); where you are on the screen in pixels, and how far round; the screen's size */
 if(A.det&&A.det.leafM){const lm=A.det.leafM, prev=lm.onBeforeCompile;
-  lm.onBeforeCompile=function(sh,r){if(prev) prev(sh,r); sh.uniforms.uNearFade=fadeU; sh.uniforms.uFadeEnd=fadeEnd; sh.uniforms.uFadeC=fadeC;
-    sh.vertexShader='varying float vFadeZ;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n vFadeZ=-mvPosition.z;');
-    sh.fragmentShader='uniform float uNearFade, uFadeEnd; uniform vec3 uFadeC; varying float vFadeZ;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','#include <alphatest_fragment>\n if(uNearFade>0.5){float hh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715)))); float keep=max(smoothstep(uFadeEnd*0.45,uFadeEnd,vFadeZ),smoothstep(uFadeC.z*0.55,uFadeC.z,distance(gl_FragCoord.xy,uFadeC.xy))); if(hh>keep) discard;}');};      /* a fine even dither, from the camera to just short of you */
+  lm.onBeforeCompile=function(sh,r){if(prev) prev(sh,r); sh.uniforms.uNearFade=fadeU; sh.uniforms.uFadeEnd=fadeEnd; sh.uniforms.uFadeC=fadeC; sh.uniforms.uRes=fadeRes;
+    sh.vertexShader='attribute vec3 cpos; uniform float uNearFade, uFadeEnd; uniform vec3 uFadeC; uniform vec2 uRes; varying float vKeep, vNoPivot, vFadeZ;\n'+sh.vertexShader.replace('#include <begin_vertex>',
+      '#include <begin_vertex>\n vKeep=1.0; vNoPivot=0.0;\n if(uNearFade>0.5){ if(dot(cpos,cpos)<1e-8){ vNoPivot=1.0; } else { vec4 cv=vec4(position,1.0);\n #ifdef USE_INSTANCING\n cv=instanceMatrix*cv;\n #endif\n cv=modelViewMatrix*cv; vec4 cc=projectionMatrix*cv; vec2 sp=(cc.xy/max(cc.w,0.001)*0.5+0.5)*uRes; float keep=max(smoothstep(uFadeEnd*0.4,uFadeEnd,-cv.z),smoothstep(uFadeC.z*0.55,uFadeC.z,distance(sp,uFadeC.xy))); if(cc.w<0.0) keep=1.0; vKeep=keep; transformed=cpos+(position-cpos)*keep; } }')
+      .replace('#include <project_vertex>','#include <project_vertex>\n vFadeZ=-mvPosition.z;');      /* each corner of a card is drawn toward the card's pivot by its own nearness, so a leaf curls away from the camera and from over you; what is still close after that (and what has no pivot: fronds, hedges) dithers as before, over far less of the screen */
+    sh.fragmentShader='uniform float uNearFade, uFadeEnd; uniform vec3 uFadeC; varying float vKeep, vNoPivot, vFadeZ;\n'+sh.fragmentShader.replace('#include <alphatest_fragment>','#include <alphatest_fragment>\n if(uNearFade>0.5){ if(vKeep<0.04) discard; float hh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715)))); float keep=max(smoothstep(uFadeEnd*0.45,uFadeEnd,vFadeZ),smoothstep(uFadeC.z*0.55,uFadeC.z,distance(gl_FragCoord.xy,uFadeC.xy))); if(hh>keep) discard; }');};
   lm.needsUpdate=true;}
 /* the sun's shadows out in the streets cover a wide square and much of the town: drawn every other frame there, they still follow what moves */
 let odd=false;
