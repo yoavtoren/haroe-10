@@ -78,8 +78,8 @@ window.addEventListener('pointermove',function(e){if(!drag||e.pointerId!==drag.i
 window.addEventListener('pointerup',function(e){if(drag&&e.pointerId===drag.id) drag=null;});
 window.addEventListener('pointercancel',function(){drag=null;});
 cv.addEventListener('contextmenu',function(e){if(active()) e.preventDefault();});
-cv.addEventListener('wheel',function(e){if(!active()) return; e.preventDefault(); C.zoom=clamp(C.zoom+(e.deltaY>0?0.12:-0.12),0.55,1.7);},{passive:false});
-function turn(dx,dy,s){const S=A.gtaSet, k=S?Math.pow(3,(S.get('sens')-0.5)*2):1, inv=S&&S.get('invert')?-1:1; C.yaw-=dx*s*k; C.pitch=clamp(C.pitch-dy*s*k*inv,-1.25,0.55); C.look=A.t;}      /* mouse speed and up-and-down from the settings (gta-map.js) */
+cv.addEventListener('wheel',function(e){if(!active()) return; e.preventDefault(); if(A.gtaArms&&A.gtaArms.wheelOn) return; C.zoom=clamp(C.zoom+(e.deltaY>0?0.12:-0.12),0.55,1.7);},{passive:false});
+function turn(dx,dy,s){if(A.gtaArms&&A.gtaArms.wheelOn) return; const S=A.gtaSet, k=S?Math.pow(3,(S.get('sens')-0.5)*2):1, inv=S&&S.get('invert')?-1:1; C.yaw-=dx*s*k; C.pitch=clamp(C.pitch-dy*s*k*inv,-1.25,0.55); C.look=A.t;}      /* mouse speed and up-and-down from the settings (gta-map.js) */
 
 /* ---------- keys ---------- */
 const keys={};
@@ -194,8 +194,8 @@ function gamepad(){const gps=navigator.getGamepads?navigator.getGamepads():null;
     if(rx||ry){S.look.x=rx; S.look.y=ry; GP.looked=true;} else if(GP.looked){S.look.x=S.look.y=0; GP.looked=false;}}      /* a pad that merely lies connected leaves the touch sticks alone */
   if(c){gpKey(' ','Space',b(0)); gpKey('h','KeyH',b(10)); gpKey('c','KeyC',b(11)); gpKey('f','KeyF',b(3)); if(once(5)) gpKey('q','KeyQ',true), gpKey('q','KeyQ',false);}
   else{gpKey('shift','ShiftLeft',rt>0.5); gpKey(' ','Space',b(0)); gpKey('e','KeyE',b(1)); gpKey('f','KeyF',b(3));
-    const aim=lt>0.5&&!!A.gtaAimSet; if(aim!==!!GP.aim){GP.aim=aim; if(A.gtaAimSet) A.gtaAimSet(aim);}      /* only as the trigger goes down or up: the mouse's own aim stays */
-    if(aim){if(once(2)&&A.gtaFire) A.gtaFire();} else gpKey('r','KeyR',b(2));
+    const aim=lt>0.5&&!!A.gtaAimSet; if(aim!==!!GP.aim){GP.aim=aim; if(A.gtaAimSet) A.gtaAimSet(aim); if(aim) gpKey('r','KeyR',false);}      /* only as the trigger goes down or up: the mouse's own aim stays */
+    if(aim){if(A.gtaFireHold) A.gtaFireHold(b(2)); if(once(2)&&A.gtaFire) A.gtaFire();} else gpKey('r','KeyR',b(2));
     if(once(4)){gpKey('Tab','Tab',true); gpKey('Tab','Tab',false);} if(once(10)&&A.gtaTaxi&&A.gtaTaxi.whistle) A.gtaTaxi.whistle('loud');}      /* the weapon key reads e.key, 'Tab' as the browser spells it */
   if(once(9)&&A.gtaMap) A.gtaMap.toggle(); if(once(8)) cycle();
   if(once(12)) gpKey('q','KeyQ',true), gpKey('q','KeyQ',false);}

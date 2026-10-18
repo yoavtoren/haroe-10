@@ -55,7 +55,7 @@ function kit(){const p=SM.player; if(!p) return null; if(held&&held.p===p.p) ret
   bat.visible=knife.visible=gun.visible=uzi.visible=false; P.dirty=true;
   held={p:P,parts:{bat:bat,knife:knife,pistol:gun,uzi:uzi},muzzle:{pistol:muzzle,uzi:muzzle2}}; return held;}
 function show(){const k=kit(); if(!k) return; for(const n in k.parts) k.parts[n].visible=W.cur===n;}
-function equip(kind,quiet){if(!W.has[kind]||kind===W.cur) return; W.cur=kind; W.aim=false; W.drawT=A.t; show(); hud(true); if(!quiet&&A.gtaSound){if(K().gun&&A.gtaSound.cock) A.gtaSound.cock(); else A.gtaSound.blip();}}      // drawn: it grows into the hand (below), with the sound of it
+function equip(kind,quiet){if(!W.has[kind]||kind===W.cur) return; W.cur=kind; W.aim=false; W.firing=false; W.drawT=A.t; show(); hud(true); if(!quiet&&A.gtaSound){if(K().gun&&A.gtaSound.cock) A.gtaSound.cock(); else A.gtaSound.blip();}}      // drawn: it grows into the hand (below), with the sound of it
 function cycle(d){let i=ORDER.indexOf(W.cur); for(let n=0;n<ORDER.length;n++){i=(i+(d||1)+ORDER.length)%ORDER.length; if(W.has[ORDER[i]]) break;} equip(ORDER[i]);}
 
 /* =====================================================================
@@ -116,7 +116,7 @@ function pick(aimed){const p=SM.player, list=people(); let best=null, bd=1e9;
       if(off>0.22+s*0.006) return; if(!clear(p.x,p.z,v1.x,v1.z)) return; if(s<bd){bd=s; best=t;}});}
   else{const y=A.gtaCam&&A.gtaCam()&&A.gta&&A.gta.cam?A.gta.cam.yaw:p.h, f=[Math.sin(y),Math.cos(y)]; list.forEach(function(t){chest(t,v1); const dx=v1.x-p.x, dz=v1.z-p.z, d=hyp(dx,dz); if(d>22||d<0.5) return; const c=(dx*f[0]+dz*f[1])/d; if(c<0.82) return; if(!clear(p.x,p.z,v1.x,v1.z)) return; const s=d*(1.6-c); if(s<bd){bd=s; best=t;}});}
   return best;}
-function fire(){const p=SM.player, k=kit(), g=K(); if(!k||!g.gun||A.t<W.next||W.reload>A.t||p.driving||p.riding||p.seat||p.script||A.paused) return;
+function fire(){const p=SM.player, k=kit(), g=K(); if(!k||!g.gun||A.t<W.next||W.reload>A.t||p.driving||p.riding||p.seat||p.script||A.paused||wheelOn||(A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted)) return;
   const n=W.cur;
   if(W.clip[n]<=0){if(W.ammo[n]>0){W.reload=A.t+1.3; W.next=W.reload; SM.toast&&SM.toast('Reloading…'); SM.later(1.3,function(){const c=Math.min(g.clip,W.ammo[n]); W.clip[n]=c; W.ammo[n]-=c; hud(true);});} else{SM.toast&&SM.toast('Out of ammunition.'); W.has[n]=false; cycle(1);} return;}
   W.next=A.t+g.rate; W.clip[n]--; hud(true); if(A.gtaStats) A.gtaStats.shots=(A.gtaStats.shots||0)+1;
@@ -148,7 +148,7 @@ A.gtaFireHold=function(on){W.firing=!!on;};      // the SMG: as long as the butt
 /* ---------- aiming with the right mouse button; the left one fires, and keeps firing with the SMG ---------- */
 cv.addEventListener('mousedown',function(e){if(!A.simsOn||!SM.player||A.paused||wheelOn) return; if(e.button===2&&K().gun&&A.gtaCam&&A.gtaCam()){W.aim=true; e.preventDefault();} else if(e.button===0&&W.aim){fire(); W.firing=true; e.preventDefault(); e.stopImmediatePropagation();}},true);
 window.addEventListener('mouseup',function(e){if(e.button===2) W.aim=false; if(e.button===0) W.firing=false;});
-window.addEventListener('blur',function(){W.aim=false; W.firing=false; wheel(false);});
+window.addEventListener('blur',function(){W.aim=false; W.firing=false; tabHeld=false; wheel(false);});
 window.addEventListener('keydown',function(e){if(!A.simsOn||A.paused||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||(e.target.closest&&e.target.closest('#gtaMenu,#modal'))||(e.target.closest&&e.target.closest('#panel')&&!document.body.classList.contains('nomenu'))) return;      /* Tab moves through the side panel only while it is shown */
   if(e.key==='Tab'){e.preventDefault(); if(!e.repeat){tabAt=A.t; tabHeld=true; tabShift=e.shiftKey;}}
   if(e.key.toLowerCase()==='r'&&!e.repeat&&K().auto&&!SM.player.driving) W.firing=true;});
@@ -179,14 +179,14 @@ function drawWheel(){const g=wc.getContext('2d'), S=wc.width, c=S/2; g.clearRect
   g.fillStyle='#fff'; g.font='italic 700 '+Math.round(S*0.075)+'px "Barlow Condensed",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(KINDS[wheelPick||W.cur].name,c,c-S*0.01);
   g.font='600 '+Math.round(S*0.045)+'px "Barlow Condensed",sans-serif'; g.fillStyle='rgba(255,255,255,0.55)'; g.fillText(TOUCH?'tap to take':'let go to take',c,c+S*0.06);}
 function wheelAt(x,y){const n=ORDER.length; if(hyp(x,y)<12) return; let a=Math.atan2(y,x)+R/2+R/n; while(a<0) a+=2*R; const i=Math.floor(a/(2*R/n))%n; wheelPick=ORDER[i];}
-function wheel(on,take){if(on===wheelOn) return; const p=SM.player; if(on&&(!p||p.driving||p.riding||A.paused||(A.game.G&&A.game.G.down))) return;
+function wheel(on,take){if(on===wheelOn) return; const p=SM.player; if(on&&(!p||p.driving||p.riding||A.paused||(A.game.G&&A.game.G.down)||(A.floors&&A.floors.G.busted))) return;
   wheelOn=on; wc.style.display=on?'block':'none'; document.body.classList.toggle('gtaWheel',on);
   if(on){wheelPick=W.cur; wheelV.x=wheelV.y=0; scaleWas=A.timeScale||1; A.timeScale=0.25; W.aim=false; W.firing=false; drawWheel();}      // time slows while you choose, as GTA's does
-  else{A.timeScale=scaleWas; if(take&&wheelPick&&W.has[wheelPick]) equip(wheelPick);}}
-window.addEventListener('mousemove',function(e){if(!wheelOn) return; wheelV.x+=e.movementX||0; wheelV.y+=e.movementY||0; const l=hyp(wheelV.x,wheelV.y); if(l>80){wheelV.x*=80/l; wheelV.y*=80/l;} wheelAt(wheelV.x,wheelV.y); drawWheel();});
+  else{if(A.timeScale===0.25) A.timeScale=scaleWas; if(take&&wheelPick&&W.has[wheelPick]) equip(wheelPick);}}      /* only the slow-down it set: a busted or wasted card may have taken over meanwhile */
+window.addEventListener('mousemove',function(e){if(!wheelOn) return; wheelV.x+=e.movementX||0; wheelV.y+=e.movementY||0; const l=hyp(wheelV.x,wheelV.y); if(l>80){wheelV.x*=80/l; wheelV.y*=80/l;} const was=wheelPick; wheelAt(wheelV.x,wheelV.y); if(wheelPick!==was) drawWheel();});
 window.addEventListener('wheel',function(e){if(!wheelOn) return; e.preventDefault(); let i=ORDER.indexOf(wheelPick); i=(i+(e.deltaY>0?1:-1)+ORDER.length)%ORDER.length; wheelPick=ORDER[i]; drawWheel();},{passive:false});
-window.addEventListener('keydown',function(e){if(!wheelOn) return; const d=parseInt(e.key,10); if(d>=1&&d<=ORDER.length){wheelPick=ORDER[d-1]; drawWheel(); e.preventDefault(); e.stopImmediatePropagation();} else if(e.key==='Escape'){wheel(false); e.preventDefault(); e.stopImmediatePropagation();}},true);
-wc.addEventListener('pointerdown',function(e){e.preventDefault(); const r=wc.getBoundingClientRect(); wheelAt(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2)); drawWheel(); wheel(false,true);});      // on a phone: tap the one you want
+window.addEventListener('keydown',function(e){if(!wheelOn) return; const d=parseInt(e.key,10); if(d>=1&&d<=ORDER.length){wheelPick=ORDER[d-1]; drawWheel(); e.preventDefault(); e.stopImmediatePropagation();} else if(e.key==='Escape'){tabHeld=false; wheel(false); e.preventDefault(); e.stopImmediatePropagation();}},true);
+wc.addEventListener('pointerdown',function(e){e.preventDefault(); if(TOUCH||e.pointerType==='touch'){const r=wc.getBoundingClientRect(); wheelAt(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2)); drawWheel();} wheel(false,true);});      // on a phone: tap the one you want; with a mouse, the one lit
 A.stage.addEventListener('pointerdown',function(e){if(wheelOn&&TOUCH&&e.target!==wc) wheel(false);},true);
 
 /* ---------- on screen: the weapon and its rounds, the crosshair ---------- */
@@ -204,7 +204,7 @@ A.frameFns.push(function(dt){
   for(let i=fx.length-1;i>=0;i--){const f=fx[i]; if(A.t>f.until){scene.remove(f.o); if(f.geo) f.geo.dispose(); fx.splice(i,1);}}
   if(!A.simsOn||!SM.player){W.aim=false; W.firing=false; xh.style.display='none'; box.style.opacity=0; PU.forEach(function(q){q.g.visible=false;}); if(wheelOn) wheel(false); return;}
   if(!placed){placed=true; spots();}
-  const p=SM.player; if(lastPj!==p.p){lastPj=p.p; held=null; show();}      // a new body (Angela or Yoav): the weapon goes into its hand
+  const p=SM.player; if(lastPj!==p.p){lastPj=p.p; held=null; show(); hud();}      // a new body (Angela or Yoav): the weapon goes into its hand, and the display says what it is
   if(tabHeld&&!wheelOn&&A.t-tabAt>0.22) wheel(true);
   pickups(dt); drops();
   const aiming=A.gtaAiming(); xh.style.display=aiming?'block':'none';

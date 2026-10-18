@@ -236,7 +236,7 @@ const kc=document.createElement('div'); kc.id='gKeysCard'; kc.hidden=true; A.sta
 function keysCard(on){if(on===!kc.hidden) return; kc.hidden=!on; if(!on) return; const L=keyLists();
   const col=function(rows){return rows.map(function(r){return '<div class="kcRow"><b>'+r[0]+'</b><span>'+r[1]+'</span></div>';}).join('');};
   const half=Math.ceil(L.K.length/2); kc.innerHTML='<div class="kcIn"><h3>Keys <small>hold I</small></h3><div class="kcCols"><div>'+col(L.K.slice(0,half))+'</div><div>'+col(L.K.slice(half))+'<h4>Gamepad</h4>'+col(L.GPK.slice(0,4))+'</div></div></div>';}
-window.addEventListener('keydown',function(e){if(!A.simsOn||!SM.player||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if(e.key.toLowerCase()==='i'&&!e.repeat&&!A.paused){keysCard(true); e.preventDefault();}});
+window.addEventListener('keydown',function(e){if(!A.simsOn||!SM.player||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if(e.key.toLowerCase()==='i'&&!e.repeat&&!A.paused&&!e.metaKey&&!e.ctrlKey&&!e.altKey){keysCard(true); e.preventDefault();}});
 window.addEventListener('keyup',function(e){if(e.key.toLowerCase()==='i') keysCard(false);});
 window.addEventListener('blur',function(){keysCard(false);});
 A.frameFns.push(function(){if(!kc.hidden&&(!A.simsOn||!SM.player||A.paused)) keysCard(false);});
@@ -247,7 +247,7 @@ function load(){loaded=true; let s=null; try{s=JSON.parse(localStorage.getItem('
   const G=A.floors&&A.floors.G, W=A.gtaWeapon; if(G&&typeof s.loot==='number') G.loot=Math.max(0,Math.floor(s.loot));
   if(W&&s.w){Object.keys(W.has).forEach(function(k){if(k!=='fists') W.has[k]=!!s.w[k];});
     if(typeof s.ammo==='number'){W.ammo.pistol=Math.max(0,s.ammo|0); W.clip.pistol=Math.max(0,Math.min(12,s.clip|0));}      /* the save before the SMG: one count, the pistol's */
-    else{Object.keys(W.ammo).forEach(function(k){W.ammo[k]=Math.max(0,(s.ammo&&s.ammo[k])|0); W.clip[k]=Math.max(0,(s.clip&&s.clip[k])|0);});}
+    else{Object.keys(W.ammo).forEach(function(k){W.ammo[k]=Math.max(0,(s.ammo&&s.ammo[k])|0); W.clip[k]=Math.max(0,Math.min(A.gtaKinds&&A.gtaKinds[k]?A.gtaKinds[k].clip:99,(s.clip&&s.clip[k])|0));});}
     if(W.has[s.cur]) W.cur=s.cur;}
   if(typeof s.armour==='number') A.gtaArmor=Math.max(0,Math.min(100,s.armour)); if(typeof s.hour==='number'&&A.gtaSetHour&&SET.clock==='game') A.gtaSetHour(s.hour);
   if(A.floors&&A.floors.drawHud) A.floors.drawHud();}
