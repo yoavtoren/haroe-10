@@ -101,17 +101,12 @@ const gcan=document.createElement('canvas'); gcan.width=gcan.height=N;
   roads.forEach(function(s){if(s.w[0]>0) stroke(s.p,s.w[0]+0.4,'#e9e8e2');});                                                         // kerbs
   roads.forEach(function(s){if(s.w[0]>0) stroke(s.p,s.w[0],s.k===6?'#55595d':'#5c6064');});                                        // asphalt
   roads.forEach(function(s){if(s.w[0]>0) stroke(s.p,s.w[0]*0.55,'rgba(80,84,88,0.5)');});                                           // worn darker down the middle
-  /* the kerbs' paint, as the city has it: blue and white where you may park along the main streets, red and white at the junctions */
-  roads.forEach(function(s){if(!(s.k===1||s.k===6||s.k===7)||!s.w[0]) return; const half=s.w[0]/2+0.2; g.lineWidth=Math.max(1.5,0.26*K); g.lineCap='butt';
-    for(let i=1;i<s.p.length;i++){const a=s.p[i-1], b=s.p[i], dx=b[0]-a[0], dz=b[1]-a[1], l=hyp(dx,dz); if(l<6) continue; const ux=dx/l, uz=dz/l, nx=-dz/l, nz=dx/l;
-      for(let t=0;t<l-0.5;t+=1){const x=a[0]+ux*t, z=a[1]+uz*t; if(kept(x,z)||nearHome(x,z)) continue; const end=t<8||t>l-9, odd=Math.floor(t)%2;
-        [1,-1].forEach(function(sd){const c0=cp(x+nx*sd*half,z+nz*sd*half), c1=cp(x+ux*1+nx*sd*half,z+uz*1+nz*sd*half); g.strokeStyle=end?(odd?'#d9403a':'#f4f2ea'):(odd?'#2d63c8':'#f4f2ea'); g.beginPath(); g.moveTo(c0[0],c0[1]); g.lineTo(c1[0],c1[1]); g.stroke();});}}});
   /* manhole covers down the middle, drains at the kerbs */
   roads.forEach(function(s){if(!s.w[0]) return; const half=s.w[0]/2;
     for(let i=1;i<s.p.length;i++){const a=s.p[i-1], b=s.p[i], dx=b[0]-a[0], dz=b[1]-a[1], l=hyp(dx,dz); if(l<12) continue; const ux=dx/l, uz=dz/l, nx=-dz/l, nz=dx/l;
       for(let t=14+r()*20;t<l-6;t+=36+r()*30){const o=(r()-0.5)*2.4, c=cp(a[0]+ux*t+nx*o,a[1]+uz*t+nz*o); if(kept(a[0]+ux*t,a[1]+uz*t)) continue;
         g.fillStyle='#3b3d3f'; g.beginPath(); g.arc(c[0],c[1],0.32*K,0,7); g.fill(); g.strokeStyle='#767a7e'; g.lineWidth=Math.max(1,0.05*K); g.stroke(); g.strokeStyle='#55585b'; g.beginPath(); g.arc(c[0],c[1],0.2*K,0,7); g.stroke();}
-      for(let t=10+r()*10;t<l-4;t+=22+r()*14){[1,-1].forEach(function(sd){const x=a[0]+ux*t+nx*sd*(half-0.3), z=a[1]+uz*t+nz*sd*(half-0.3); if(kept(x,z)||nearHome(x,z)) return; const c=cp(x,z); g.save(); g.translate(c[0],c[1]); g.rotate(Math.atan2(uz,ux)); g.fillStyle='#2e3032'; g.fillRect(-0.3*K,-0.12*K,0.6*K,0.24*K); g.strokeStyle='#5d6164'; g.lineWidth=Math.max(1,0.03*K); for(let k=-2;k<=2;k++){g.beginPath(); g.moveTo(k*0.1*K,-0.1*K); g.lineTo(k*0.1*K,0.1*K); g.stroke();} g.restore();});}}});
+      for(let t=10+r()*10;t<l-4;t+=22+r()*14){[1,-1].forEach(function(sd){const x=a[0]+ux*t+nx*sd*(half-0.3), z=a[1]+uz*t+nz*sd*(half-0.3); if(kept(x,z)||nearHome(x,z)) return; const c=cp(x,z); g.save(); g.translate(c[0],c[1]); g.rotate(Math.atan2(-ux,uz)); g.fillStyle='#2e3032'; g.fillRect(-0.3*K,-0.12*K,0.6*K,0.24*K); g.strokeStyle='#5d6164'; g.lineWidth=Math.max(1,0.03*K); for(let k=-2;k<=2;k++){g.beginPath(); g.moveTo(k*0.1*K,-0.1*K); g.lineTo(k*0.1*K,0.1*K); g.stroke();} g.restore();});}}});
   for(let i=0;i<N*N/2600;i++){const x=TX0+r()*TS, z=TZ0+r()*TS; if(!onRoad(x,z,-0.3)) continue; const c=cp(x,z), k=r();      // the asphalt's history: repairs, oil, cracks
     if(k<0.35){const w=(1.2+r()*3)*K, h=(0.8+r()*1.8)*K; g.fillStyle='rgba(38,40,42,0.55)'; g.fillRect(c[0],c[1],w,h); g.strokeStyle='rgba(20,21,22,0.6)'; g.lineWidth=Math.max(1,0.06*K); g.strokeRect(c[0],c[1],w,h);}
     else if(k<0.7){g.fillStyle='rgba(25,24,22,'+(0.12+r()*0.18)+')'; g.beginPath(); g.ellipse(c[0],c[1],(0.3+r()*0.6)*K,(0.2+r()*0.4)*K,r()*3,0,7); g.fill();}
@@ -417,12 +412,13 @@ const lampSpots=[], treeSpots=[], carSpots=[], stops=[];
   /* in the gardens round the blocks, and in the parks */
   blds.forEach(function(b){const k=LITE?(b.area>300?1:0):b.area>300?3:b.area>120?2:1; for(let i=0;i<k;i++){const j=Math.floor(r()*b.p.length), q=b.p[j], dx=q[0]-b.c[0], dz=q[1]-b.c[1], l=hyp(dx,dz)||1, d=2.5+r()*3.5, x=q[0]+dx/l*d+(r()-0.5)*4, z=q[1]+dz/l*d+(r()-0.5)*4;
     if(kept(x,z)||nearHome(x,z)||inBuilding(x,z,1.8)||onRoad(x,z,1.5)) continue; treeSpots.push([x,z,r()<0.1?2:3]);}});
+  const plays=TD.G.filter(function(a){return a[0]==='playground';}).map(function(a){return outline(a[2],true);});      // the sand is for the swings, not the trees
   TD.G.forEach(function(a){if(a[0]!=='park'&&a[0]!=='garden'&&a[0]!=='dog_park') return; const p=outline(a[2],true), n=Math.min(160,areaOf(p)/90); let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; p.forEach(function(q){x0=Math.min(x0,q[0]); x1=Math.max(x1,q[0]); z0=Math.min(z0,q[1]); z1=Math.max(z1,q[1]);});
-    for(let i=0;i<n;i++){const x=x0+r()*(x1-x0), z=z0+r()*(z1-z0); if(!inPoly(p,x,z)||inBuilding(x,z,1.5)||onRoad(x,z,1)||kept(x,z)) continue; treeSpots.push([x,z,r()<0.2?2:3]);}});
+    for(let i=0;i<n;i++){const x=x0+r()*(x1-x0), z=z0+r()*(z1-z0); if(!inPoly(p,x,z)||inBuilding(x,z,1.5)||onRoad(x,z,1)||kept(x,z)||plays.some(function(pp){return inPoly(pp,x,z);})) continue; treeSpots.push([x,z,r()<0.2?2:3]);}});
 })();
 /* kerbs: a raised edge of white stone along every carriageway, broken where another street comes in */
 const crossKeys=new Set(cross.filter(function(c){return c.car.length>=2;}).map(function(c){return key([c.x,c.z]);})), pRuns=[];
-(function(){const kc=C(0xe4e2da), red=C(0xc23e33), wht=C(0xf1f0ea);
+(function(){const kc=C(0xe4e2da), red=C(0xc23e33), wht=C(0xf1f0ea), blue=C(0x2d63c8);
   roads.forEach(function(rd){if(!rd.w[0]) return; const cw=rd.w[0]/2+0.07;
     for(let j=1;j<rd.p.length;j++){const a=rd.p[j-1], b=rd.p[j], dx=b[0]-a[0], dz=b[1]-a[1], l=hyp(dx,dz); if(l<0.5) continue; const ux=dx/l, uz=dz/l, nx=-uz, nz=ux;
       const ja=crossKeys.has(key(a))&&rd.k!==3, jb=crossKeys.has(key(b))&&rd.k!==3;      // no stopping here: the kerb painted red and white, stone by stone
@@ -432,7 +428,7 @@ const crossKeys=new Set(cross.filter(function(c){return c.car.length>=2;}).map(f
           if(rd.w[1]>0.5) pRuns.push({rd:rd,a:a,ux:ux,uz:uz,nx:nx*sd,nz:nz*sd,t0:t0,t1:t1});      // the pavement behind this stretch of kerb
           const p0=ja?Math.min(t1,t0+12):t0, p1=jb?Math.max(p0,t1-12):t1;
           for(let t=t0;t<p0-0.05;t+=1) piece(t,Math.min(p0,t+1),Math.round(t-t0)%2?wht:red);
-          if(p1-p0>0.05) piece(p0,p1,kc);
+          if(p1-p0>0.05){if(rd.k===1||rd.k===6||rd.k===7) for(let t=p0;t<p1-0.05;t+=1) piece(t,Math.min(p1,t+1),Math.round(t-p0)%2?wht:blue); else piece(p0,p1,kc);}      // between them, along the main streets: blue and white, where you may park
           for(let t=p1;t<t1-0.05;t+=1) piece(t,Math.min(t1,t+1),Math.round(t1-t)%2?wht:red);};
         for(let t=0;t<=l;t+=1){const x=a[0]+ux*t+nx*sd*cw, z=a[1]+uz*t+nz*sd*cw, q=roadNear(x,z,rd), ok=!(q&&q.r.w[0]>0&&q.d<0.4)&&!kept(x,z)&&!nearHome(x,z)&&!inBuilding(x,z,0);
           if(ok&&run===null) run=Math.max(0,t-0.5); else if(!ok&&run!==null) flush(Math.max(run,t-0.5));}
@@ -616,6 +612,7 @@ ttiles.forEach(function(tt){if(!tt.hedges) return; tt.hedge=instanced(HEDGE,det.
    ===================================================================== */
 const SIG=new Map(), sigLamps=[0,1].map(function(){return ['r','a','g'].map(function(c){const m=new THREE.MeshLambertMaterial({color:c==='r'?0x5a1a16:c==='a'?0x5a4210:0x14401f}); return A.reg(m,'street');});});
 const signs2=A.batch(root);
+treeSpots.forEach(function(q){addOb(q[0],q[1],q[2]===1?0.35:0.25);}); lampSpots.forEach(function(q){addOb(q[0],q[1],0.2);});      // in the way before anything else looks for room
 (function(){const r=A.rng(97), grey=C(0x8e9599), dark=C(0x2a2d2f), green=C(0x2f5a3a), wood=C(0x8a5a3c);
   const P=function(rd,j,t,o){const a=rd.p[j-1], b=rd.p[j], l=hyp(b[0]-a[0],b[1]-a[1])||1, ux=(b[0]-a[0])/l, uz=(b[1]-a[1])/l; return {x:a[0]+ux*t+(-uz)*o,z:a[1]+uz*t+ux*o,ux:ux,uz:uz,nx:-uz,nz:ux};};
   const okAt=function(x,z,rd){return !kept(x,z)&&!nearHome(x,z)&&!inBuilding(x,z,0.6)&&!nearJunction(x,z,rd,4);};
@@ -642,26 +639,26 @@ const signs2=A.batch(root);
   roads.forEach(function(rd){if(!rd.w[0]||rd.k===3) return; const main=rd.k===1||rd.k===6||rd.k===7, cw=rd.w[0]/2, pw=rd.w[1];
     for(let j=1;j<rd.p.length;j++){const a=rd.p[j-1], b=rd.p[j], l=hyp(b[0]-a[0],b[1]-a[1]);
       for(let t=9+r()*18;t<l-5;t+=main?22+r()*14:26+r()*18){const sd=r()<0.5?1:-1, kind=r(), q=P(rd,j,t,sd*(cw+pw*(kind<0.3?0.85:0.55))); if(!okAt(q.x,q.z,rd)||obAt(q.x,q.z,1.0)) continue;
-        const tb=bufOf(tileOf(q.x,q.z),PROP), y=U+PH, ry=Math.atan2(q.ux,q.uz), fx=q.nx*sd, fz=q.nz*sd;
+        const tb=bufOf(tileOf(q.x,q.z),PROP), y=U+PH, ry=Math.atan2(q.ux,q.uz)+R/2, fx=q.nx*sd, fz=q.nz*sd;      /* boxB lays a box's width across the road and its depth along it: a quarter turn, so the length runs along the kerb */
         if(kind<0.3){boxB(tb,q.x,y+0.65,q.z,0.95,1.3,0.42,ry,CAB); boxB(tb,q.x-fx*0.215,y+0.65,q.z-fz*0.215,0.8,1.1,0.01,ry,CABD); boxB(tb,q.x,y+1.32,q.z,1.0,0.05,0.48,ry,CABD); addOb(q.x,q.z,0.55);}      // an electrical cabinet by the wall
         else if(kind<0.48){cylB(tb,q.x,y+0.38,q.z,0.11,0.76,null,RED,8); cylB(tb,q.x,y+0.8,q.z,0.13,0.1,null,RED,8); [-1,1].forEach(function(s2){boxB(tb,q.x+q.ux*s2*0.16,y+0.52,q.z+q.uz*s2*0.16,0.14,0.14,0.14,ry,RED);}); addOb(q.x,q.z,0.2);}      // a hydrant
         else if(kind<0.66){boxB(tb,q.x,y+0.3,q.z,1.1,0.6,0.55,ry,CONC); boxB(tb,q.x,y+0.85,q.z,1.0,0.5,0.5,ry,HEDGE); addOb(q.x,q.z,0.6);}      // a planter, a shrub in it
         else if(kind<0.84){cylB(tb,q.x,y+1.1,q.z,0.04,2.2,null,grey,6); boxB(tb,q.x,y+1.55,q.z,1.1,1.3,0.04,ry,C(0x3b3f43)); for(let k=0;k<4;k++) boxB(tb,q.x+q.ux*((k%2)*0.5-0.25)-fx*0.03,y+1.55+(k<2?0.3:-0.32),q.z+q.uz*((k%2)*0.5-0.25)-fz*0.03,0.42,0.55,0.01,ry,POST[Math.floor(r()*POST.length)]); addOb(q.x,q.z,0.25);}      // a notice board, its posters
-        else if(!main){for(let k=0;k<3;k++) boxB(tb,q.x-fx*(0.12-k*0.14),y+0.45,q.z-fz*(0.12-k*0.14),1.7,0.04,0.12,ry+R/2,wood); for(let k=0;k<2;k++) boxB(tb,q.x+fx*0.24,y+0.62+k*0.14,q.z+fz*0.24,1.7,0.1,0.03,ry+R/2,wood); [-0.7,0.7].forEach(function(s2){boxB(tb,q.x+q.ux*s2,y+0.22,q.z+q.uz*s2,0.05,0.44,0.5,ry+R/2,dark);}); addOb(q.x,q.z,0.6);}}}});      // a bench in a side street
+        else if(!main){for(let k=0;k<3;k++) boxB(tb,q.x-fx*(0.12-k*0.14),y+0.45,q.z-fz*(0.12-k*0.14),1.7,0.04,0.12,ry,wood); for(let k=0;k<2;k++) boxB(tb,q.x+fx*0.24,y+0.62+k*0.14,q.z+fz*0.24,1.7,0.1,0.03,ry,wood); [-0.7,0.7].forEach(function(s2){boxB(tb,q.x+q.ux*s2,y+0.22,q.z+q.uz*s2,0.05,0.44,0.5,ry,dark);}); addOb(q.x,q.z,0.6);}}}});      // a bench in a side street
   /* playgrounds: a swing, a slide, a seesaw and benches, in the sand */
   TD.G.forEach(function(a){if(a[0]!=='playground') return; const p=outline(a[2],true); let cx=0, cz=0; p.forEach(function(q){cx+=q[0]; cz+=q[1];}); cx/=p.length; cz/=p.length; if(kept(cx,cz)||nearHome(cx,cz)||!inPoly(p,cx,cz)||areaOf(p)<120) return;
-    const tb=bufOf(tileOf(cx,cz),PROP), y=U, ry=r()*R, ux=Math.sin(ry), uz=Math.cos(ry), nx=-uz, nz=ux, STEEL=C(0x2a7a9a), SEAT=C(0xe8c91a), CHUTE=C(0xd84a2a);
+    const tb=bufOf(tileOf(cx,cz),PROP), y=U, ry0=r()*R, ux=Math.sin(ry0), uz=Math.cos(ry0), nx=-uz, nz=ux, ry=ry0+R/2, rx=ry0, STEEL=C(0x2a7a9a), SEAT=C(0xe8c91a), CHUTE=C(0xd84a2a);      /* ry: a box's length along u; rx: across */
     const sx=cx+nx*4, sz=cz+nz*4;      // the swing: two A-frames, the bar, two seats on their chains
     if(inPoly(p,sx,sz)){[-1.6,1.6].forEach(function(s){[-0.5,0.5].forEach(function(k){boxB(tb,sx+ux*s+nx*k*0.6,y+1.1,sz+uz*s+nz*k*0.6,0.07,2.3,0.07,ry,STEEL);});}); boxB(tb,sx,y+2.22,sz,3.4,0.07,0.07,ry,STEEL);
       [-0.6,0.6].forEach(function(s){[-0.18,0.18].forEach(function(k){boxB(tb,sx+ux*(s+k),y+1.4,sz+uz*(s+k),0.02,1.6,0.02,ry,grey);}); boxB(tb,sx+ux*s,y+0.6,sz+uz*s,0.42,0.04,0.18,ry,SEAT);}); addOb(sx-ux*1.6,sz-uz*1.6,0.4); addOb(sx+ux*1.6,sz+uz*1.6,0.4);}
     const lx=cx-nx*4, lz=cz-nz*4;      // the slide: a ladder, a platform, the chute down in steps
-    if(inPoly(p,lx,lz)){for(let k=0;k<5;k++) boxB(tb,lx-ux*1.2,y+0.3+k*0.38,lz-uz*1.2,0.8,0.04,0.3,ry,grey); [-0.4,0.4].forEach(function(k){boxB(tb,lx-ux*1.2+nx*k,y+1.0,lz-uz*1.2+nz*k,0.05,2.0,0.05,ry,STEEL);});
+    if(inPoly(p,lx,lz)){for(let k=0;k<5;k++) boxB(tb,lx-ux*1.2,y+0.3+k*0.38,lz-uz*1.2,0.8,0.04,0.3,rx,grey); [-0.4,0.4].forEach(function(k){boxB(tb,lx-ux*1.2+nx*k,y+1.0,lz-uz*1.2+nz*k,0.05,2.0,0.05,ry,STEEL);});
       boxB(tb,lx-ux*0.6,y+1.9,lz-uz*0.6,1.2,0.06,0.9,ry,STEEL); [-0.45,0.45].forEach(function(k){boxB(tb,lx-ux*0.6+nx*k,y+1.4,lz-uz*0.6+nz*k,0.06,1.9,0.06,ry,STEEL); boxB(tb,lx-ux*0.6+nx*k,y+2.2,lz-uz*0.6+nz*k,1.2,0.04,0.04,ry,STEEL);});
       for(let k=0;k<8;k++) boxB(tb,lx+ux*(0.1+k*0.35),y+1.78-k*0.21,lz+uz*(0.1+k*0.35),0.4,0.06,0.7,ry,CHUTE); addOb(lx,lz,1.2);}
     const wx=cx+ux*5, wz=cz+uz*5;      // the seesaw
     if(inPoly(p,wx,wz)){boxB(tb,wx,y+0.25,wz,0.2,0.5,0.5,ry,STEEL); boxB(tb,wx,y+0.52,wz,3.0,0.05,0.3,ry,wood); [-1.35,1.35].forEach(function(s){boxB(tb,wx+ux*s,y+0.6,wz+uz*s,0.3,0.06,0.34,ry,SEAT); boxB(tb,wx+ux*s,y+0.75,wz+uz*s,0.03,0.3,0.03,ry,grey);}); addOb(wx,wz,0.5);}
-    [[-6,0],[0,-6]].forEach(function(o){const bx=cx+ux*o[0]+nx*o[1], bz=cz+uz*o[0]+nz*o[1]; if(!inPoly(p,bx,bz)) return; const rb=o[0]?ry:ry+R/2;      // a bench or two, for the parents
-      for(let k=0;k<3;k++) boxB(tb,bx,y+0.45,bz,1.7,0.04,0.12,rb,wood); boxB(tb,bx,y+0.62,bz,1.7,0.1,0.03,rb,wood); [-0.7,0.7].forEach(function(s2){boxB(tb,bx+Math.sin(rb)*s2,y+0.22,bz+Math.cos(rb)*s2,0.05,0.44,0.5,rb,dark);}); addOb(bx,bz,0.6);});});
+    [[-6,0],[0,-6]].forEach(function(o){const bx=cx+ux*o[0]+nx*o[1], bz=cz+uz*o[0]+nz*o[1]; if(!inPoly(p,bx,bz)) return; const h=o[0]?ry0+R/2:ry0, lx2=Math.sin(h), lz2=Math.cos(h), ax=-lz2, az=lx2;      // a bench or two, for the parents: its length (lx2,lz2) across the way to the middle, its back (ax,az) away from it
+      for(let k=0;k<3;k++) boxB(tb,bx-ax*(0.12-k*0.14),y+0.45,bz-az*(0.12-k*0.14),1.7,0.04,0.12,h+R/2,wood); for(let k=0;k<2;k++) boxB(tb,bx+ax*0.24,y+0.62+k*0.14,bz+az*0.24,1.7,0.1,0.03,h+R/2,wood); [-0.7,0.7].forEach(function(s2){boxB(tb,bx+lx2*s2,y+0.22,bz+lz2*s2,0.05,0.44,0.5,h+R/2,dark);}); addOb(bx,bz,0.6);});});
   /* junctions: lights where a main street crosses, bollards on their corners, a stop sign where a side street meets a main one, the cages for bottles */
   cross.forEach(function(c){if(c.car.length<2||kept(c.x,c.z)||nearHome(c.x,c.z)) return; const mains=c.car.filter(function(x){return x.k===1||x.k===6||x.k===7;}), lights=mains.length>=1&&c.car.length>=2&&(mains.length>=2||c.car.length>=3||r()<0.5);
     const wo=Math.max.apply(null,c.car.map(function(x){return x.w[0]/2+x.w[1];})), sig=lights?{x:c.x,z:c.z,grp:new Map(),wo:wo}:null; if(sig) SIG.set(key([c.x,c.z]),sig);
@@ -770,7 +767,6 @@ A.frameFns.push(function(){if(layered||A.LAYER_OUT==null) return; layered=true; 
    Walking it: what is in the way, and a coarse map for finding the way round
    ===================================================================== */
 function addOb(x,z,r){const k=Math.floor(x/OG)+','+Math.floor(z/OG), o=[x,z,r]; let l=OB.get(k); if(!l) OB.set(k,l=[]); l.push(o); return o;}
-treeSpots.forEach(function(q){addOb(q[0],q[1],q[2]===1?0.35:0.25);}); lampSpots.forEach(function(q){addOb(q[0],q[1],0.2);});
 parked.forEach(function(c){const ux=Math.sin(c.h), uz=Math.cos(c.h); c.ob=[-1.5,-0.5,0.5,1.5].map(function(s){return addOb(c.x+ux*s,c.z+uz*s,0.95);});});
 function obAt(x,z,rad){const i0=Math.floor((x-3)/OG), i1=Math.floor((x+3)/OG), k0=Math.floor((z-3)/OG), k1=Math.floor((z+3)/OG);
   for(let i=i0;i<=i1;i++) for(let k=k0;k<=k1;k++){const l=OB.get(i+','+k); if(!l) continue; for(let n=0;n<l.length;n++){const o=l[n]; if(o.off) continue; if(hyp(o[0]-x,o[1]-z)<o[2]+rad) return true;}} return false;}
