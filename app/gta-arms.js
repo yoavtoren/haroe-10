@@ -35,7 +35,7 @@ let held=null;
 function kit(){const p=SM.player; if(!p) return null; if(held&&held.p===p.p) return held;
   const P=p.p, mk=function(c,r,m){const mat=new THREE.MeshStandardMaterial({color:c,roughness:r==null?0.6:r,metalness:m||0}); P.mats.push({m:mat,b:new THREE.Color(c)}); return mat;};
   const box=function(g,w,h,d,mat,x,y,z){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x||0,y||0,z||0); g.add(m); return m;};
-  const dark=mk(0x161718,0.4), steel=mk(0xc9ccd0,0.25,0.8);
+  const dark=mk(0x161718,0.4), steel=mk(0xe2e5e8,0.3,0.35);      // bright steel: too much metal and it mirrors the dark of the sky
   /* the bat */
   const bat=new THREE.Group(); bat.position.set(0,-0.3,0.02); P.hand.add(bat);
   const wood=mk(0xb9844a,0.5), grip=mk(0x1d1f22,0.8); const b1=new THREE.Mesh(new THREE.CylinderGeometry(0.036,0.016,0.72,12),wood); b1.position.y=-0.38; bat.add(b1); const b2=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.16,10),grip); b2.position.y=0.04; bat.add(b2);
@@ -180,7 +180,7 @@ function drawWheel(){const g=wc.getContext('2d'), S=wc.width, c=S/2; g.clearRect
   g.font='600 '+Math.round(S*0.045)+'px "Barlow Condensed",sans-serif'; g.fillStyle='rgba(255,255,255,0.55)'; g.fillText(TOUCH?'tap to take':'let go to take',c,c+S*0.06);}
 function wheelAt(x,y){const n=ORDER.length; if(hyp(x,y)<12) return; let a=Math.atan2(y,x)+R/2+R/n; while(a<0) a+=2*R; const i=Math.floor(a/(2*R/n))%n; wheelPick=ORDER[i];}
 function wheel(on,take){if(on===wheelOn) return; const p=SM.player; if(on&&(!p||p.driving||p.riding||A.paused||(A.game.G&&A.game.G.down))) return;
-  wheelOn=on; wc.style.display=on?'block':'none';
+  wheelOn=on; wc.style.display=on?'block':'none'; document.body.classList.toggle('gtaWheel',on);
   if(on){wheelPick=W.cur; wheelV.x=wheelV.y=0; scaleWas=A.timeScale||1; A.timeScale=0.25; W.aim=false; W.firing=false; drawWheel();}      // time slows while you choose, as GTA's does
   else{A.timeScale=scaleWas; if(take&&wheelPick&&W.has[wheelPick]) equip(wheelPick);}}
 window.addEventListener('mousemove',function(e){if(!wheelOn) return; wheelV.x+=e.movementX||0; wheelV.y+=e.movementY||0; const l=hyp(wheelV.x,wheelV.y); if(l>80){wheelV.x*=80/l; wheelV.y*=80/l;} wheelAt(wheelV.x,wheelV.y); drawWheel();});
