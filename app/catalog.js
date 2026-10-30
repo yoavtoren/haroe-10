@@ -166,9 +166,23 @@ def('borgeby',{n:'BORGEBY coffee table',cat:'table',w:70,d:70,h:45,col:C.birch},
   cyl(0.35,0.03,f,0,0.435,0,g,40); cyl(0.3,0.02,f,0,0.16,0,g,36); [0,1,2,3].forEach(function(i){const a=i*R/2+R/4; cyl(0.02,0.42,f,Math.cos(a)*0.24,0.21,Math.sin(a)*0.24,g,10);});});
 def('hemnesCT',{n:'HEMNES coffee table',cat:'table',w:90,d:90,h:46,col:C.hemnes},function(g,c){const f=c.h;
   box(0.9,0.04,0.9,f,0,0.44,0,g); box(0.84,0.08,0.84,f,0,0.38,0,g); sqLegs(g,0.4,0.4,0.42,0.065,f); box(0.82,0.02,0.82,f,0,0.12,0,g);});
+/* an elliptical slab, rx along x and rz along z, with a small rounded edge; its grain runs along the longer axis */
+function ellip(rx,rz,h,color,x,y,z,parent,r){
+  r=Math.max(0.002,Math.min(r||0.006,h/2-0.001));
+  const lg=Math.max(rx,rz), sh2=Math.min(rx,rz), s=new THREE.Shape(); s.absellipse(0,0,lg-r,sh2-r,0,Math.PI*2,false,0);
+  const geo=new THREE.ExtrudeGeometry(s,{depth:h-2*r,bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:2,curveSegments:48});
+  geo.rotateX(-Math.PI/2); geo.translate(0,-(h/2-r),0); if(rz>rx) geo.rotateY(Math.PI/2);
+  const m=new THREE.Mesh(geo,M(color)); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m;
+}
+const RATTAN2=0xbf9d66; skin([['',RATTAN2]],A.surfaces.rattan);          // the darker, golden weave of the STOCKHOLM shelf
 def('stockholmCT',{n:'STOCKHOLM coffee table',cat:'table',w:180,d:59,h:40,col:skinOne('Walnut veneer',0x6b4630)},function(g,c){const f=c.h;
-  rbox(0.59,0.03,1.8,f,0,0.385,0,g,0.012,0.28); [[0.2,-0.7],[-0.2,-0.7],[0.2,0.7],[-0.2,0.7]].forEach(function(q){cyl(0.022,0.37,f,q[0],0.185,q[1],g,10,0.016).rotation.x=-Math.sign(q[1])*0.06;});
-  rbox(0.46,0.02,1.5,RATTAN,0,0.14,0,g,0.008,0.2);});          // the shelf under it is woven rattan
+  ellip(0.295,0.9,0.03,f,0,0.385,0,g,0.006);                                                     // the top: a true ellipse, 180 × 59, 3 cm thick, pointed at the ends
+  const T=[0.15,0.37,0.56], F=[0.235,0,0.64];                                                     // where a leg meets the top and where its foot stands (across, up, along): the legs splay out both ways
+  [-1,1].forEach(function(sx){[-1,1].forEach(function(sz){
+    const a=new THREE.Vector3(sx*F[0],F[1],sz*F[2]), b=new THREE.Vector3(sx*T[0],T[1],sz*T[2]), d=b.clone().sub(a), l=d.length();
+    cyl(0.013,l,f,(a.x+b.x)/2,(a.y+b.y)/2,(a.z+b.z)/2,g,12,0.019).quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());});});   // round legs, tapered toward the foot
+  ellip(0.2,0.63,0.012,f,0,0.144,0,g,0.003); ellip(0.185,0.615,0.012,RATTAN2,0,0.153,0,g,0.003);   // the shelf between the legs: woven rattan in a walnut rim
+});
 function skinOne(n,h){skin([[n,h]],WOOD); return [[n,h]];}
 def('nest',{n:'Nesting tables',q:'nesting tables set of 2',cat:'table',w:80,d:72,h:44,col:skin([['Oak and white',OAK,WHITE],['Black-brown and oak',0x3a312c,OAK]],WOOD).concat([['White',0xf2f1ec,0xf2f1ec]])},function(g,c,o){
   cyl(0.36,0.035,c.h,0,0.42,-0.12,g,36); [0,2.1,4.2].forEach(function(a){cyl(0.014,0.4,c.h2,Math.cos(a)*0.26,0.2,-0.12+Math.sin(a)*0.26,g,6);});
