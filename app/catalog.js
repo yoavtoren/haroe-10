@@ -15,7 +15,7 @@ const ROLE={sofa:'main',arm:'accent',table:'wood',media:'case',shelf:'case',eket
 const WOOD=A.surfaces.wood, WEAVE=A.surfaces.weave;
 function skin(list,t){list.forEach(function(c){if(!A.texFor[c[1]]) A.texFor[c[1]]=t;}); return list;}
 const C=A.IKEA={
-  kivik:skin([['Tresund light beige',0xd5cab4],['Tibbleby beige/grey',0xb1a998],['Kelinge grey-turquoise',0x5d7c79],['Tresund anthracite',0x4a4b4e]],WEAVE),
+  kivik:skin([['Tresund light beige',0xd5cab4],['Tibbleby beige/grey',0xb1a998],['Kelinge grey-turquoise',0x5d7c79],['Tresund anthracite',0x4a4b4e],['Tresund black',0x303134]],WEAVE),
   soder:skin([['Fridtuna light beige',0xd8cdb6],['Gransel natural',0xdfd5c1],['Tonerud grey',0x8e8e8a],['Fridtuna dark grey',0x535457],['Fridtuna dark grey-blue',0x3e4a59],['Viarp beige/brown',0xa79075],['Tonerud red',0x9a3a2f]],WEAVE),
   ektorp:skin([['Hallarp beige',0xcbbfa6],['Kilanda light beige',0xe1d8c6],['Remmarn light grey',0xc3c3bf],['Hallarp grey',0x8d8f8e]],WEAVE),
   vimle:skin([['Gunnared beige',0xc9b99c],['Hallarp beige',0xcbbfa6],['Gunnared medium grey',0x7d7e80],['Saxemara light blue',0x9fb3c2],['Djuparp dark green',0x2f4a3c]],WEAVE),

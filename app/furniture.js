@@ -192,7 +192,7 @@ function lay(o){for(const k in COMMON) if(!(k in o)) o[k]=COMMON[k]; for(const k
 const LAY={
   n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.24,TVZ,R], station:[0.30,0.72,0],
      dining:[pc,0.48,0], chairA:[pc-0.92,0.50,0], chairB:[pc+0.92,0.50,R], rack1:[1.2,1.38,0], rack2:[2.55,1.5,0]},
-  a:lay({arm:[1.4,2.4,-R/4], rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], shoeCab:CAB}),      // the EKET combination is 140, in the 150 between the fridge side and the bathroom door frame
+  a:lay({arm:[1.35,2.3,-R/4], rug:[1.6,SZ,0], ctable:[1.75,SZ,0], tvUnit:[W-0.19,TVZ,R], shoeCab:CAB}),      // the EKET combination is 140, in the 150 between the fridge side and the bathroom door frame
   b:lay({rugB:[1.6,SZ,0], nest:[1.8,SZ,0], towerB:[W-0.195,2.75,R], benchB:[W-0.205,3.63,R], cart:[KX-0.24,1.65,R], poufB1:[1.75,SZ+1.0,0], hallBench:HALL}),
   c:lay({rugC:[1.6,SZ,0], table:[1.75,SZ,0], tvOld:[W-0.24,TVZ,R], poufA1:[1.75,SZ+1.03,0], hallBench:HALL}),
   d:lay({rugC:[1.6,SZ,0], round:[1.8,SZ,0], towerB:[W-0.195,2.75,R], benchB:[W-0.205,3.63,R], poufA1:[1.75,SZ-1.0,0], poufA2:[1.75,SZ+1.0,0], shoeCab:CAB}),
@@ -209,8 +209,7 @@ const LAY={
 /* what each design puts in each catalog piece: the piece, its colour by IKEA's name, and its settings */
 function sp(type,colour,cfg){const d=CAT[type]; let ci=0; if(colour!=null){ci=d.col.findIndex(function(c){return c.n===colour;}); if(ci<0){console.warn('No colour',colour,'for',type); ci=0;}} return [type,ci,cfg||null];}
 const SPEC=A.SPEC={
-  a:{kivik:sp('kivik2','Tibbleby beige/grey'), arm:sp('ekenaset','Walnut effect, Axvall dark grey-blue'), ctable:sp('stockholmCT','Walnut veneer'), rug:sp('langsted','Beige'), tvUnit:sp('eketTV',null,{base:'legs',legs:'metal',tv:true,mods:[{t:'o',x:0,y:0,c:7},{t:'W2',x:2,y:0,c:7},{t:'o',x:6,y:0,c:7}]}),
-     sofaFrames:sp('frameTrio','Oak',{n:3,w:0.62,h:0.82,gap:0.7,seeds:[0,1,3]})},
+  a:{kivik:sp('kivik3','Tresund black'), arm:sp('ekenaset','Walnut effect, Axvall dark grey-blue'), ctable:sp('stockholmCT','Walnut veneer'), rug:sp('langsted','Beige'), tvUnit:sp('eketTV',null,{base:'legs',legs:'metal',tv:true,mods:[{t:'o',x:0,y:0,c:7},{t:'W2',x:2,y:0,c:7},{t:'o',x:6,y:0,c:7}]})},
   b:{kivik:sp('kivik3','Tresund light beige')},
   c:{kivik:sp('kivik3','Tibbleby beige/grey')},
   d:{kivik:sp('kivik3','Tresund light beige')},
@@ -255,9 +254,9 @@ const DESIGNS=A.DESIGNS={
       ['Guest toilet','A small basin in the corner by the door with a black-framed mirror; the toilet on its tiled ledge with prints, a plant and candles.'],
       ['Guest toilet','Its own door, at a right angle to the bathroom door.'],
       ['Bedroom 2','Wardrobe in a niche on the left, cube shelf in the 85 cm between the wall and the column, bed behind it 40 cm from the TV wall, bike, desk under the big window facing the wardrobe, chest of drawers by the door.']]},
-  a:{name:'A', title:'A · Walnut and grey', sub:'A grey KIVIK two-seater and an EKENÄSET armchair round a walnut STOCKHOLM table, the TV on a walnut EKET combination, a beige rug under it all.', table:['Open the dining table for four','Close it to a console'], pal:['#b1a998','#3e4f62','#6b4630','#cdbfa3','#fbfaf6'],
+  a:{name:'A', title:'A · Walnut and black', sub:'Your black KIVIK and an EKENÄSET armchair round a walnut STOCKHOLM table, the TV on a walnut EKET combination, a beige rug under it all.', table:['Open the dining table for four','Close it to a console'], pal:['#303134','#3e4f62','#6b4630','#cdbfa3','#fbfaf6'],
      list:[
-      ['Sofa','IKEA KIVIK 2-seat, 190 × 95 cm, in Tibbleby beige/grey, a soft grey herringbone. It is 1.4 m shorter than the sofa you have, which leaves room for an armchair at its end.'],
+      ['Sofa','Your KIVIK 3-seat, 228 × 95 cm, in Tresund black, on the long wall. It leaves 1.5 m of wall toward the record corner, where the armchair stands at its end.'],
       ['Armchair','An EKENÄSET in Axvall dark grey-blue on a walnut-effect frame, 65 × 74 × 75, at the record-corner end of the sofa, turned toward the TV.'],
       ['Coffee table','STOCKHOLM in walnut veneer, 180 × 59 × 40: an oval top on splayed legs with a rattan shelf under it. It runs the length of the sofa.'],
       ['Rug','LANGSTED in beige, 170 × 240, low pile, under the table and the front of the sofa.'],
