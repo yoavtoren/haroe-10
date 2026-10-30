@@ -50,7 +50,9 @@ const sh=A.shade=function(c,f){const q=new THREE.Color(c); q.multiplyScalar(f); 
 function barXY(m,x0,y0,x1,y1){m.position.x=(x0+x1)/2; m.position.y=(y0+y1)/2; m.rotation.z=Math.atan2(y1-y0,x1-x0); m.scale.x=Math.hypot(x1-x0,y1-y0); return m;}
 function legs(g,dx,dz,h,col,r,rt){[[-dx,-dz],[dx,-dz],[-dx,dz],[dx,dz]].forEach(function(q){cyl(r||0.018,h,col,q[0],h/2,q[1],g,10,rt);});}
 function sqLegs(g,dx,dz,h,s,col){[[-dx,-dz],[dx,-dz],[-dx,dz],[dx,dz]].forEach(function(q){box(s,h,s,col,q[0],h/2,q[1],g);});}
-function tvOn(g,x,y){box(0.24,0.03,0.5,0x101214,x,y+0.015,0,g); box(0.04,0.08,0.06,0x101214,x-0.02,y+0.06,0,g); K.tv(g,x-0.02,y+0.44,0);}   // a 55" TV on its stand
+function tvOn(g,x,y){                                 // the 55" TV as it is: the panel on two thin legs at its ends, a low runner and a short upright each, the screen 8 cm above the top
+  [-0.42,0.42].forEach(function(z){box(0.22,0.02,0.025,0x101214,x-0.02,y+0.01,z,g); box(0.02,0.06,0.02,0x101214,x-0.02,y+0.05,z,g);});
+  K.tv(g,x-0.02,y+0.435,0);}
 function glass(m,op){[].concat(m.material).forEach(function(q){q.transparent=true; q.opacity=op||0.4; q.depthWrite=false;}); m.castShadow=false; return m;}
 
 /* ---------- the catalog itself ---------- */
@@ -316,7 +318,7 @@ def('ourOak',{n:'Our oak shelf',q:'',site:'none',cat:'shelf',w:150,d:30,h:205,co
 /* ======================= EKET: cubes you combine ======================= */
 const EKM=A.EKM={
   o:{w:1,h:1,n:'Open cube',q:'EKET cabinet 35x35x35'}, d:{w:1,h:1,n:'Cube with door',q:'EKET cabinet with door'}, w:{w:1,h:1,n:'Cube, 2 drawers',q:'EKET cabinet with 2 drawers'},
-  O2:{w:2,h:1,n:'70 × 35 open',q:'EKET cabinet 70x35x35'}, W3:{w:2,h:1,n:'70 × 35, 3 drawers',q:'EKET cabinet with 3 drawers'}, O3:{w:3,h:1,n:'105 × 35, 3 compartments',q:'EKET cabinet 105x35x35'},
+  O2:{w:2,h:1,n:'70 × 35 open',q:'EKET cabinet 70x35x35'}, W2:{w:2,h:1,n:'70 × 35, 2 drawers',q:'EKET cabinet with 2 drawers 70x35x35'}, W3:{w:2,h:1,n:'70 × 35, 3 drawers',q:'EKET cabinet with 3 drawers'}, O3:{w:3,h:1,n:'105 × 35, 3 compartments',q:'EKET cabinet 105x35x35'},
   T:{w:1,h:2,n:'35 × 70, door and shelf',q:'EKET cabinet with door and 1 shelf'}, Q:{w:2,h:2,n:'70 × 70, 4 compartments',q:'EKET cabinet with 4 compartments'}, D2:{w:2,h:2,n:'70 × 70, 2 doors',q:'EKET cabinet with 2 doors and 1 shelf'}
 };
 const EK=0.35, HALF=0.175;
@@ -326,14 +328,14 @@ function eketModule(g,t,col,dd,x,y,z){
   box(dd,p,w,f,x,y+p/2,z,g); box(dd,p,w,f,x,y+h-p/2,z,g); box(dd,h,p,f,x,y+h/2,z-w/2+p/2,g); box(dd,h,p,f,x,y+h/2,z+w/2-p/2,g); box(0.006,h-0.02,w-0.02,sh(col,0.9),x-dd/2+0.003,y+h/2,z,g);
   const fx=x+dd/2+0.009;
   if(t==='d'||t==='T'){box(0.018,h-0.006,w-0.006,fr,fx,y+h/2,z,g); box(0.003,0.08,0.012,sh(col,0.8),fx+0.01,y+h/2,z+w/2-0.03,g); if(t==='T') box(dd-0.02,p,w-2*p,f,x,y+h/2,z,g);}
-  else if(t==='w'||t==='W3'){const n=t==='w'?2:3; for(let i=0;i<n;i++){const dh=(h-0.006)/n; box(0.018,dh-0.004,w-0.006,fr,fx,y+0.003+dh*(i+0.5),z,g); box(0.004,0.012,w*0.4,sh(col,0.72),fx+0.011,y+0.003+dh*(i+1)-0.03,z,g);}}
+  else if(t==='w'||t==='W2'||t==='W3'){const n=t==='W3'?3:2; for(let i=0;i<n;i++){const dh=(h-0.006)/n; box(0.018,dh-0.004,w-0.006,fr,fx,y+0.003+dh*(i+0.5),z,g); box(0.004,0.012,w*0.4,sh(col,0.72),fx+0.011,y+0.003+dh*(i+1)-0.03,z,g);}}
   else if(t==='D2'){[-1,1].forEach(function(s){box(0.018,h-0.006,w/2-0.005,fr,fx,y+h/2,z+s*w/4,g); box(0.003,0.08,0.012,sh(col,0.8),fx+0.01,y+h/2,z+s*0.03,g);}); box(dd-0.02,p,w-2*p,f,x,y+h/2,z,g);}
   else{if(T.w>1) for(let i=1;i<T.w;i++) box(dd-0.01,h-2*p,p,f,x,y+h/2,z-w/2+i*EK,g); if(T.h>1) box(dd-0.01,p,w-2*p,f,x,y+h/2,z,g);}
 }
 function eket(g,c,o){
   const cfg=o.cfg, b=A.eketBounds(cfg), dd=(cfg.d||35)/100, y0=cfg.base==='legs'?0.1:cfg.base==='wall'?0:0.005, zc=(b.x0+b.x1)/2, EC=C.eket;
   (cfg.mods||[]).forEach(function(m){const T=EKM[m.t]; eketModule(g,m.t,EC[Math.max(0,Math.min(EC.length-1,m.c||0))][1],dd,0,y0+m.y*HALF,m.x*HALF+T.w*EK/2-zc);
-    if(cfg.base==='legs'&&m.y===0) [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){cyl(0.012,0.1,0x2b2b2b,q[0]*(dd/2-0.04),0.05,m.x*HALF-zc+(q[1]<0?0.04:T.w*EK-0.04),g,10);});});
+    if(cfg.base==='legs'&&m.y===0) [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){cyl(0.012,0.1,cfg.legs==='metal'?STEEL:0x2b2b2b,q[0]*(dd/2-0.04),0.05,m.x*HALF-zc+(q[1]<0?0.04:T.w*EK-0.04),g,10);});});
   if(cfg.base==='wall') box(0.012,0.04,b.w-0.04,0x8d9092,-dd/2-0.004,b.h-0.06,0,g);      // the suspension rail
   if(cfg.tv){let top=0; cfg.mods.forEach(function(m){const T=EKM[m.t]; if(m.x*HALF<=zc+0.3&&m.x*HALF+T.w*EK>=zc-0.3) top=Math.max(top,m.y*HALF+T.h*EK);}); tvOn(g,-0.02,y0+top);}
   if(cfg.tt){let best=null; cfg.mods.forEach(function(m){const T=EKM[m.t], top=m.y*HALF+T.h*EK; if(T.w*EK>=0.35&&(!best||top>best.top)) best={top:top,z:m.x*HALF+T.w*EK/2-zc};}); if(best) turntable(K.dec(g,'turntable'),0.0,y0+best.top,best.z,OAK,g);}
