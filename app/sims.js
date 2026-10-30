@@ -543,7 +543,7 @@ function refresh(){
   let h='';
   h+=seated?btn('stand','Stand up','primary'):btn('sit','Sit on the sofa','primary');
   h+=tvOn?btn('tv','Turn the TV off','on'):btn('lunch','Sit at the table');
-  if(d.table&&!pj.on) h+=btn('table2',S.table===2?'Close the dining table':'Open the table for two')+btn('table',S.table===1?'Close the dining table':'Open the table for four')+(S.design==='a'?btn('lift',S.lift?'Lower the coffee table':'Raise the coffee table','full'):'');
+  if(d.table&&!pj.on) h+=btn('table2',S.table===2?'Close the dining table':'Open the table for two')+btn('table',S.table===1?'Close the dining table':'Open the table for four')+(A.hasLift()?btn('lift',S.lift?'Lower the coffee table':'Raise the coffee table','full'):'');
   $('acts').innerHTML=h;
   const hint=guests.length?'<p class="note" style="grid-column:1/-1;margin:0">Tap a friend to send them home.</p>':'';
   let s='';

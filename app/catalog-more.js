@@ -520,7 +520,7 @@ def('oskarshamn',{n:'OSKARSHAMN wing chair',cat:'arm',w:82,d:86,h:99,col:fab([['
   rbox(0.1,0.4,0.52,f,-0.23,0.66,0,g,0.05).rotation.z=0.14;
   [-1,1].forEach(function(e){rbox(0.6,0.26,0.11,f,0.07,0.5,e*0.355,g,0.05); const w=rbox(0.3,0.44,0.1,f,-0.22,0.8,e*0.345,g,0.06); w.rotation.y=-e*0.18;});
 });
-def('ekenaset',{n:'EKENÄSET armchair',cat:'arm',w:64,d:78,h:76,col:fab([['Kilanda light beige',0xe1d8c6,0xc9a66b],['Kilanda grey-turquoise',0x5f7f7c,0xc9a66b]]),
+def('ekenaset',{n:'EKENÄSET armchair',cat:'arm',w:64,d:78,h:76,col:fab([['Kilanda light beige',0xe1d8c6,0xc9a66b],['Kilanda grey-turquoise',0x5f7f7c,0xc9a66b],['Walnut effect, Axvall dark grey-blue',0x3e4f62,0x4a3426]]),
   seats:[{id:'',lx:0.04,lz:0,y:0.45,type:'sit',recline:0.15}]},function(g,c){
   const f=c.h, w=c.h2;
   [-1,1].forEach(function(e){const z=e*0.29;

@@ -166,7 +166,7 @@ def('hemnesCT',{n:'HEMNES coffee table',cat:'table',w:90,d:90,h:46,col:C.hemnes}
   box(0.9,0.04,0.9,f,0,0.44,0,g); box(0.84,0.08,0.84,f,0,0.38,0,g); sqLegs(g,0.4,0.4,0.42,0.065,f); box(0.82,0.02,0.82,f,0,0.12,0,g);});
 def('stockholmCT',{n:'STOCKHOLM coffee table',cat:'table',w:180,d:59,h:40,col:skinOne('Walnut veneer',0x6b4630)},function(g,c){const f=c.h;
   rbox(0.59,0.03,1.8,f,0,0.385,0,g,0.012,0.28); [[0.2,-0.7],[-0.2,-0.7],[0.2,0.7],[-0.2,0.7]].forEach(function(q){cyl(0.022,0.37,f,q[0],0.185,q[1],g,10,0.016).rotation.x=-Math.sign(q[1])*0.06;});
-  rbox(0.46,0.02,1.5,f,0,0.14,0,g,0.008,0.2);});
+  rbox(0.46,0.02,1.5,RATTAN,0,0.14,0,g,0.008,0.2);});          // the shelf under it is woven rattan
 function skinOne(n,h){skin([[n,h]],WOOD); return [[n,h]];}
 def('nest',{n:'Nesting tables',q:'nesting tables set of 2',cat:'table',w:80,d:72,h:44,col:skin([['Oak and white',OAK,WHITE],['Black-brown and oak',0x3a312c,OAK]],WOOD).concat([['White',0xf2f1ec,0xf2f1ec]])},function(g,c,o){
   cyl(0.36,0.035,c.h,0,0.42,-0.12,g,36); [0,2.1,4.2].forEach(function(a){cyl(0.014,0.4,c.h2,Math.cos(a)*0.26,0.2,-0.12+Math.sin(a)*0.26,g,6);});
@@ -231,6 +231,20 @@ def('kallaxLegs',{n:'KALLAX on oak legs (DIY)',q:'KALLAX 147x42',cat:'eket',w:14
   const s=G(g); s.position.y=0.15; const k=K.kallax(s,['x  x'],c.h,{box:RATTAN});
   [[-0.15,-0.66],[0.15,-0.66],[-0.15,0.66],[0.15,0.66]].forEach(function(q){cyl(0.022,0.15,OAK,q[0],0.075,q[1],g,10,0.03);});
   tvOn(g,-0.02,0.15+k.h);
+});
+def('fryksas',{n:'FRYKSÅS TV bench, rattan',q:'FRYKSÅS TV bench',cat:'media',w:157,d:41,h:49,lh:1.75,col:skinOne('Eucalyptus veneer and rattan',0xdcc49c),
+  note:'Eucalyptus veneer with a rattan door at each end and two open shelves in the middle. 157 cm: 7 cm longer than the 150 between the fridge and the bathroom door frame.'},function(g,c,o){
+  const f=c.h, t=0.018, y0=0.06, h=0.49-y0, cz=0.785;                                                               // a 6 cm plinth, the carcass above it: a door 48 wide at each end, the open middle 53
+  box(0.35,y0,1.49,sh(f,0.9),-0.02,y0/2,0,g);                                                                       // the plinth, set back under the body
+  box(0.41,t,1.57,f,0,0.49-t/2,0,g); box(0.39,t,1.57-2*t,f,-0.01,y0+t/2,0,g);                                       // top and bottom
+  [-1,1].forEach(function(e){box(0.41,h,t,f,0,y0+h/2,e*(cz-t/2),g); box(0.39,h-2*t,t,f,-0.01,y0+h/2,e*0.265,g);});   // the sides and the two dividers
+  box(0.01,h-2*t,1.57-2*t,sh(f,0.96),-0.2,y0+h/2,0,g);                                                              // back panel
+  box(0.37,t,0.53-t,f,-0.01,y0+h/2,0,g);                                                                            // the shelf in the middle
+  [-1,1].forEach(function(e){const z=e*0.52, dw=0.48, dh=h-2*t-0.008;                                                // the doors: a rattan panel in a thin frame, flush with the front
+    box(0.012,dh,dw,RATTAN,0.197,y0+h/2,z,g);
+    [-1,1].forEach(function(s){box(0.016,dh,0.03,f,0.197,y0+h/2,z+s*(dw/2-0.015),g); box(0.016,0.03,dw,f,0.197,y0+h/2+s*(dh/2-0.015),z,g);});});
+  if(!o.cfg.bare){K.bookStack(g,0.0,y0+h/2+t/2,0.12,3,15); K.bush(g,0.02,y0+t,-0.1,0.055,0xe6ddcd);}                 // a few books on the shelf, a small plant below it
+  tvOn(g,-0.03,0.49);
 });
 
 /* ======================= SHELVES AND STORAGE ======================= */

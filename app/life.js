@@ -439,7 +439,7 @@ function items(){
   add('Cooktop',{x:HOB[0],z:HOB[1],sx:HOB[0],sz:0.98,h:R},[['Cook a meal',DO.cook]],[A.KL.hx-0.31,A.KL.hx+0.31,0.1,0.96,0.02,0.62]);
   add('Fridge',{x:W+0.36,z:KZ-0.36,sx:W+0.22,sz:KZ-1.42,h:0.2},[['Grab a snack',DO.snack]],[W+0.01,W+0.71,0,1.75,KZ-0.72,KZ]);
   const cs=cupSpot(); if(cs) add('Espresso machine',{x:cs.c.x,z:cs.c.z,sx:cs.s.sx,sz:cs.s.sz,h:cs.s.h},[['Make a coffee',DO.coffee]],cs.obj);
-  add('Television',firstPiece(['tvOld','kbench','benchB','benchA'],1.1),[['Netflix',function(){DO.tv('netflix');}],['Football',function(){DO.tv('football');}]].concat(A.goal('tv')>0.5?[['Turn it off',DO.tvOff]]:[]));
+  add('Television',firstPiece(['tvOld','kbench','tvUnit','benchB','benchA'],1.1),[['Netflix',function(){DO.tv('netflix');}],['Football',function(){DO.tv('football');}]].concat(A.goal('tv')>0.5?[['Turn it off',DO.tvOff]]:[]));
   add('Sink',{x:SX,z:KZ-0.32,sx:SX,sz:KZ-1.02,h:0},[[st.dishes?'Wash the dishes ('+st.dishes+')':'Sink is clean',DO.wash],[KIT.cab[0]&&KIT.cab[0].target>0.5?'Close the yellow cupboard':'Open the yellow cupboard',DO.cab]],[SX-0.31,SX+0.31,0.86,1.25,KZ-0.56,KZ-0.03]);
   const tacts=function(id){return SM.who==='angela'?[['Use the toilet',function(){DO.toilet(id,false);}]]:[['Pee standing up',function(){DO.toilet(id,true);}],['Sit down',function(){DO.toilet(id,false);}]];};
   add('Guest toilet',{x:WCS.x1-0.45,z:mzW,sx:WCS.x1-1.07,sz:mzW,h:R/2},tacts('guest'),[WCS.x1-0.7,WCS.x1-0.2,0,0.7,mzW-0.2,mzW+0.2]);
