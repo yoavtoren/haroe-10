@@ -72,7 +72,7 @@ A.seatsFor=function(k,prefix){const d=CAT[k]; return (d&&d.seats||[]).map(functi
 
 /* ======================= SOFAS ======================= */
 function sofa(g,c,o){
-  const f=c.h, W=o.w, D=o.d, aw=o.aw, iw=W-2*aw, n=o.n, lh=o.lh, base=o.sh-o.ch, leg=o.legC==null?0x2a2622:o.legC, ci=o.chaise?(o.chaise>0?n-1:0):-1, cd=o.cd||0, cw=iw/n;
+  const f=c.h, W=o.w, D=o.d, aw=o.aw, iw=W-2*aw, n=o.cush||o.n, lh=o.lh, base=o.sh-o.ch, leg=o.legC==null?0x2a2622:o.legC, ci=o.chaise?(o.chaise>0?n-1:0):-1, cd=o.cd||0, cw=iw/n;   // n: the cushions, which may be fewer than the seats
   const feet=[[-D/2+0.07,-W/2+0.07],[D/2-0.07,-W/2+0.07],[-D/2+0.07,W/2-0.07],[D/2-0.07,W/2-0.07]];
   if(o.chaise) feet.push([D/2+cd-0.07,o.chaise*(W/2-0.07)],[D/2+cd-0.07,o.chaise*(W/2-cw-aw+0.07)]);
   feet.forEach(function(q){cyl(o.lr||0.022,lh,leg,q[0],lh/2,q[1],g,10,o.lt);});
@@ -83,7 +83,7 @@ function sofa(g,c,o){
     if(o.arm==='roll'){const hh=o.ah-lh-aw*0.45; rbox(L,hh,aw,f,x,lh+hh/2,z,g,0.04); cyl(aw*0.55,L,f,x,o.ah-aw*0.5,z,g,18).rotation.z=R/2;}
     else rbox(L,o.ah-lh,aw,f,x,lh+(o.ah-lh)/2,z,g,o.arm==='slab'?0.025:0.07,o.arm==='slab'?0.01:0.05);
   });
-  rbox(o.bd,o.bh-base+0.02,iw+0.04,f,-D/2+o.bd/2,base+(o.bh-base)/2,0,g,0.06);                        // back frame
+  rbox(o.bd,o.bh-base+0.02,iw+0.04,f,-D/2+o.bd/2,base+(o.bh-base)/2,0,g,Math.min(0.06,o.bd/4));       // back frame (a bevel wider than a quarter of a thin slab makes it overshoot)
   const sd=D-o.bd-0.01, seam=sh(f,0.8);
   for(let i=0;i<n;i++){
     const z=-iw/2+cw*(i+0.5), ext=i===ci?cd:0;
@@ -107,17 +107,17 @@ function sofaDef(k,n,o,meta){
   meta.w=Math.round(o.w*100); meta.d=Math.round((o.d+(o.cd||0))*100); meta.h=meta.h||83; meta.cat=meta.cat||'sofa'; meta.seats=sofaSeats(o); meta.seatAs=meta.seatAs||'sofa';
   return def(k,meta,function(g,c){sofa(g,c,o);});
 }
-const KV={w:2.28,d:0.95,aw:0.24,ah:0.64,bh:0.62};
-sofaDef('kivik3',3,KV,{n:'KIVIK 3-seat sofa',q:'KIVIK 3-seat sofa',col:C.kivik,note:'Deep, soft seat with memory foam. Covers are removable and machine washable.'});
-sofaDef('kivik4',4,Object.assign({},KV,{w:3.18,n:4}),{n:'KIVIK 4-seat sofa',q:'KIVIK 4-seat sofa',col:C.kivik,note:'318 cm: about the length of the sofa you have now.'});
+const KV={w:2.28,d:0.95,aw:0.24,ah:0.64,bh:0.62,bd:0.13,bct:0.22,bch:0.40,cush:2};      // 228 × 95 × 83: seat 180 × 60 at 45, arms 24; a slim back frame, a 22 cm back cushion leaning on it, two seat and two back cushions
+sofaDef('kivik3',3,KV,{n:'KIVIK 3-seat sofa',q:'KIVIK 3-seat sofa',col:C.kivik,note:'228 × 95 × 83 cm: seat 180 × 60 at 45 cm, armrests 24 cm wide, two seat and two back cushions. Deep, soft seat with memory foam. Covers are removable and machine washable.'});
+sofaDef('kivik4',4,Object.assign({},KV,{w:3.18,n:4,cush:3}),{n:'KIVIK 4-seat sofa',q:'KIVIK 4-seat sofa',col:C.kivik,note:'318 cm: about the length of the sofa you have now.'});
 sofaDef('kivik2',2,Object.assign({},KV,{w:1.9,n:2}),{n:'KIVIK 2-seat sofa',q:'KIVIK 2-seat sofa',col:C.kivik});
-sofaDef('kivikChR',3,Object.assign({},KV,{w:2.8,chaise:-1,cd:0.68}),{n:'KIVIK 3-seat with chaise, right',q:'KIVIK 3-seat sofa with chaise longue',col:C.kivik,note:'The chaise is on your right as you face the sofa.'});
-sofaDef('kivikChL',3,Object.assign({},KV,{w:2.8,chaise:1,cd:0.68}),{n:'KIVIK 3-seat with chaise, left',q:'KIVIK 3-seat sofa with chaise longue',col:C.kivik,note:'The chaise is on your left as you face the sofa.'});
+sofaDef('kivikChR',3,Object.assign({},KV,{w:2.8,chaise:-1,cd:0.68,cush:3}),{n:'KIVIK 3-seat with chaise, right',q:'KIVIK 3-seat sofa with chaise longue',col:C.kivik,note:'The chaise is on your right as you face the sofa.'});
+sofaDef('kivikChL',3,Object.assign({},KV,{w:2.8,chaise:1,cd:0.68,cush:3}),{n:'KIVIK 3-seat with chaise, left',q:'KIVIK 3-seat sofa with chaise longue',col:C.kivik,note:'The chaise is on your left as you face the sofa.'});
 sofaDef('soderhamn3',3,{w:1.98,d:0.99,aw:0.06,ah:0.6,bh:0.6,sh:0.4,ch:0.16,lh:0.1,legC:0x2a2622,arm:'slab',bct:0.2,bch:0.38,tilt:0.1},{n:'SÖDERHAMN 3-seat sofa',q:'SÖDERHAMN 3-seat sofa',col:C.soder,note:'Low and deep, with thin armrests and loose back cushions.'});
 sofaDef('ektorp3',3,{w:2.18,d:0.88,aw:0.2,ah:0.66,bh:0.66,lh:0.02,arm:'roll'},{n:'EKTORP 3-seat sofa',q:'EKTORP 3-seat sofa',col:C.ektorp,h:88});
 sofaDef('vimle3',3,{w:2.41,d:0.98,aw:0.15,ah:0.68,bh:0.62,sh:0.48},{n:'VIMLE 3-seat sofa',q:'VIMLE 3-seat sofa',col:C.vimle});
 sofaDef('landskrona3',3,{w:2.04,d:0.89,aw:0.14,ah:0.62,bh:0.6,sh:0.44,ch:0.14,lh:0.17,legC:OAK,lr:0.02,lt:0.026,bct:0.18,bch:0.36},{n:'LANDSKRONA 3-seat sofa',q:'LANDSKRONA 3-seat sofa',col:C.landskrona,h:78,note:'Slim arms on tall wooden legs.'});
-sofaDef('kivikArm',1,Object.assign({},KV,{w:1.1,n:1}),{n:'KIVIK armchair',q:'KIVIK armchair',col:C.kivik,cat:'arm',seatAs:null});
+sofaDef('kivikArm',1,Object.assign({},KV,{w:1.1,n:1,cush:1}),{n:'KIVIK armchair',q:'KIVIK armchair',col:C.kivik,cat:'arm',seatAs:null});
 
 /* ======================= ARMCHAIRS AND POUFS ======================= */
 def('strandmon',{n:'STRANDMON wing chair',cat:'arm',w:82,d:96,h:101,col:C.strandmon,seats:[{id:'',lx:0.08,lz:0,y:0.45,type:'sit',recline:0.15}]},function(g,c){
