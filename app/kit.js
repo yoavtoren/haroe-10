@@ -443,6 +443,47 @@ A.frameFns.push(function(dt,t){
   if(v>0.02&&t-tvLast>0.07){tvLast=t; drawTV(t);}
 });
 /* TV panel facing +x, centred at (x,y,z) */
+/* ---------- IKEA NORDEN gateleg table, from IKEA's drawing and photos: 26/89/152 × 80 × 74 cm, solid birch.
+   Built with its 80 cm width along x and its length along z: the 26 cm middle is a cabinet on four corner posts, with three drawers
+   stacked in each narrow end (x = ±0.4). Each leaf (63 cm) hangs from the long edge of the middle top down to 11 cm above the floor.
+   Under each leaf a gate (a leg and two rails on a hinge stile) folds flat against the long side of the cabinet; it is hinged at the
+   corner diagonally opposite the other gate's, and swings out about 44° so its leg stands 12 cm in from the end of the raised leaf
+   (128 cm between the two legs, as IKEA's drawing has it). set(back, front) opens each side 0..1: the leaf rises first, then its gate
+   swings under it; closing runs the other way. ---------- */
+K.norden=function(p,f){
+  const g=A.G(p), T=0.02, TOP=0.74, UND=TOP-T, PX=0.3725, PZ=0.1075, PS=0.045, dark=A.shade(f,0.92), seam=A.shade(f,0.62);
+  if(A.texFor[f]&&!A.texFor[dark]) A.texFor[dark]=A.texFor[f];                                                 // the drawers' sides between the rails: the same birch, a shade darker
+  box(0.8,T,0.26,f,0,TOP-T/2,0,g);                                                                               // the middle top
+  [-1,1].forEach(function(sx){[-1,1].forEach(function(sz){box(PS,UND,PS,f,sx*PX,UND/2,sz*PZ,g);});});            // the four corner posts
+  [-1,1].forEach(function(sx){                                                                                   // each narrow end: a rail under the top, three drawers, a rail at the bottom
+    const xf=sx*(PX+PS/2-0.006);                                                                                // flush with the posts, 2 mm inside the edge of the top
+    box(0.012,0.03,0.17,f,xf,UND-0.015,0,g); box(0.012,0.05,0.17,f,xf,0.105,0,g);
+    for(let i=0;i<3;i++){const y0=0.135+i*0.183, h=0.177, y=y0+h/2;
+      box(0.018,h,0.166,f,xf-sx*0.003,y,0,g);                                                                    // the drawer front, solid birch
+      box(0.004,0.022,0.034,seam,xf+sx*0.0045,y0+h-0.011,0,g);}                                                   // the notch cut into its top edge for a handle
+  });
+  [-1,1].forEach(function(sz){const z=sz*(PZ+PS/2-0.008);                                                        // each long side: the drawers' sides seen between rails, under the hanging leaf
+    box(0.7,UND-0.12,0.004,dark,0,0.12+(UND-0.12)/2,sz*(PZ+0.004),g);
+    [0.12,0.315,0.498,0.69].forEach(function(y){box(0.7,0.024,0.016,f,0,y,z,g);});});
+  const leaves=[], gates=[], L=0.695, PHI=0.776;                                                                 // the gate: 69.5 cm from its hinge to the middle of its leg, open 44.5°
+  [-1,1].forEach(function(s){
+    const lg=A.G(g); lg.position.set(0,UND,s*0.1525);                                                            // the leaf hinges just outside the cabinet, so it hangs clear of the folded gate
+    box(0.8,T,0.63,f,0,T/2,s*0.2925,lg); box(0.79,0.002,0.003,seam,0,T+0.0002,-s*0.0215,lg).castShadow=false;    // the leaf, and the joint line where it meets the middle top
+    leaves.push({g:lg,s:s});
+    const gp=A.G(g); gp.position.set(-s*PX,0,s*0.139);                                                           // the gate, hinged at a corner post: front gate at -x, back gate at +x
+    const gg=A.G(gp); if(s<0) gg.rotation.y=Math.PI;
+    box(0.03,0.56,0.018,f,0.04,0.40,0,gg);                                                                       // hinge stile
+    box(L-0.04,0.05,0.018,f,L/2+0.01,UND-0.035,0,gg); box(L-0.04,0.045,0.018,f,L/2+0.01,0.11,0,gg);             // top and bottom rails
+    box(0.035,UND,0.022,f,L,UND/2,0,gg);                                                                         // the leg
+    gates.push({g:gp,s:s});
+  });
+  function set(back,front){
+    leaves.forEach(function(l){const u=l.s>0?front:back, a=Math.min(1,u/0.55); l.g.rotation.x=l.s*(1-a)*Math.PI/2;});
+    gates.forEach(function(q){const u=q.s>0?front:back, b=Math.max(0,Math.min(1,(u-0.45)/0.55)); q.g.rotation.y=-b*PHI;});
+  }
+  set(0,0);
+  return {g:g,set:set,top:TOP};
+};
 K.tv=function(p,x,y,z){
   box(0.04,0.71,1.23,0x101214,x,y,z,p);
   const s=new THREE.Mesh(new THREE.PlaneGeometry(1.19,0.67),tvMat); s.position.set(x+0.0215,y,z); s.rotation.y=Math.PI/2; p.add(s);

@@ -1065,12 +1065,8 @@ def('ekedalen',{n:'EKEDALEN extendable table, 120/180',q:'EKEDALEN extendable ta
 def('melltorp',{n:'MELLTORP table, 125',q:'MELLTORP table',cat:'dining',w:125,d:75,h:74,col:[['White',PAINT,PAINT],['Marble effect, white',0xe6e4df,PAINT]]},function(g,c){
   const f=c.h2; box(0.75,0.025,1.25,c.h,0,0.7275,0,g);
   [-1,1].forEach(function(s){box(0.03,0.04,1.14,f,s*0.33,0.695,0,g); box(0.66,0.04,0.03,f,0,0.695,s*0.585,g);}); sqLegs(g,0.335,0.59,0.715,0.03,f);});
-def('norden',{n:'NORDEN gateleg table, open',q:'NORDEN gateleg table',cat:'dining',w:152,d:80,h:74,col:skin([['Birch',BIRCH]],WOOD).concat([['White',PAINT]]),
-  note:'26, 89 or 152 cm long: both leaves up here. Six drawers in the middle.'},function(g,c){
-  const f=c.h; box(0.8,0.025,1.52,f,0,0.7275,0,g); [-0.13,0.13].forEach(function(z){box(0.79,0.002,0.003,sh(f,0.7),0,0.7405,z,g);});
-  box(0.7,0.6,0.22,f,0,0.4,0,g); box(0.8,0.05,0.24,f,0,0.025,0,g); box(0.7,0.04,0.2,f,0,0.07,0,g);
-  [-1,1].forEach(function(s){for(let i=0;i<3;i++){const y=0.18+i*0.18; front(g,s>0?0.35:-0.368,y,0,0.165,0.2,f); knob(g,s>0?0.368:-0.395,y,0,0x7a6a55);}
-    const x=s*0.27, z=s*0.62; box(0.04,0.7,0.04,f,x,0.36,z,g); box(0.035,0.04,0.5,f,x,0.69,s*0.36,g); box(0.035,0.04,0.5,f,x,0.1,s*0.36,g);});});
+def('norden',{n:'NORDEN gateleg table, open',q:'NORDEN gateleg table',cat:'dining',w:152,d:80,h:74,col:skin([['Birch',0xe2cba0]],WOOD).concat([['White',PAINT]]),
+  note:'26, 89 or 152 cm long, 80 wide, 74 high: both leaves up here, each on its gate. Three drawers in each end of the middle.'},function(g,c){K.norden(g,c.h).set(1,1);});
 def('skogsta',{n:'SKOGSTA dining table, acacia, 235',q:'SKOGSTA dining table',cat:'dining',w:235,d:100,h:74,col:skin([['Acacia',0x8a5a36]],WOOD)},function(g,c){
   const f=c.h; box(1.0,0.04,2.35,f,0,0.72,0,g); box(0.8,0.1,2.05,f,0,0.65,0,g); sqLegs(g,0.4,1.03,0.7,0.08,f);});
 def('tommaryd',{n:'TOMMARYD table, 130',q:'TOMMARYD table',cat:'dining',w:130,d:70,h:75,col:[['White',PAINT,PAINT],['White stained oak veneer, anthracite',0xdccfb7,0x3a3c3f]]},function(g,c){

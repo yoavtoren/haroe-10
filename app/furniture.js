@@ -116,19 +116,12 @@ piece('fold',{label:'Fold-down table',h:1.15,isNew:true,shop:['Wall-mounted drop
     struts.forEach(function(m){barYZ(m,0.2,0.03,0.745-Math.sin(th)*0.5,0.03+Math.cos(th)*0.5);});
   });
 });
-/* ---------- option C: drop-leaf table. A 26 cm console against the wall, opens to 75 x 150 for four ---------- */
-piece('gate',{label:'Drop-leaf dining table',h:1.15,isNew:true,shop:['Gateleg table','NORDEN gateleg table','ikea','Closed it is a narrow console with drawers; both leaves up seats four.']},function(g){
-  A.rbox(0.75,0.03,0.26,OAK,0,0.745,0,g,0.01,0.004); box(0.6,0.51,0.18,WHITE,0,0.475,0,g);       // top and leaves have square corners, so they meet along the hinges; the body sits 1 cm inside the legs
-  [-0.2,0.05].forEach(function(y){box(0.52,0.004,0.004,0xcfc8b8,0,0.47+y,0.091,g); box(0.52,0.004,0.004,0xcfc8b8,0,0.47+y,-0.091,g);});
-  [[-.29,-.08],[.29,-.08],[-.29,.08],[.29,.08]].forEach(function(p){box(0.04,0.72,0.04,OAK,p[0],0.36,p[1],g);});
-  const leaves=[1,-1].map(function(s){const lg=G(g); lg.position.set(0,0.745,s*0.13); A.rbox(0.75,0.026,0.62,OAK,0,0,s*0.31,lg,0.01,0.004); return {g:lg,s:s};});
-  const legs=[1,-1].map(function(s){return box(0.04,0.72,0.04,OAK,0,0.36,s*0.68,g);});
-  const stuff=G(g); cyl(0.06,0.2,BLUE,0.18,0.86,0,stuff,14,0.035); sph(0.07,0x3f9160,0.18,1.0,0,stuff); K.bookStack(stuff,-0.18,0.76,0,3,3);
-  tableFns.push(function(t){
-    const front=Math.max(t,A.halfT||0);                 // the leaf facing the room also opens on its own, for two
-    leaves.forEach(function(l){l.g.rotation.x=l.s*(1-(l.s>0?front:t))*R/2;});
-    legs.forEach(function(m,i){const q=i===0?front:t; m.visible=q>0.05; m.scale.y=Math.max(0.01,q); m.position.y=0.73-0.36*q;});
-  });
+/* ---------- the drop-leaf table: IKEA NORDEN in birch (kit.js). A 26 cm console under the painting; one leaf up seats two, both seat four ---------- */
+const NORDEN_BIRCH=0xe2cba0; A.texFor[NORDEN_BIRCH]=A.surfaces.wood;
+piece('gate',{label:'NORDEN gateleg table',h:1.15,isNew:true,shop:['NORDEN gateleg table, birch','NORDEN gateleg table','ikea','26/89/152 × 80 × 74 cm, solid birch. Closed it is a 26 cm console with three drawers in each end; each leaf rests on a gate that swings out from the middle. One leaf up seats two, both up seat four.']},function(g){
+  const n=K.norden(g,NORDEN_BIRCH);
+  const stuff=G(g); cyl(0.06,0.2,BLUE,0.18,n.top+0.1,0,stuff,14,0.035); sph(0.07,0x3f9160,0.18,n.top+0.24,0,stuff); K.bookStack(stuff,-0.18,n.top,0,3,3);
+  tableFns.push(function(t){n.set(t,Math.max(t,A.halfT||0));});            // the leaf facing the room also opens on its own, for two
 });
 
 /* ---------- the proposals' pieces. Each comes from the catalog, so it can be swapped for another piece or recoloured. ---------- */
@@ -151,7 +144,7 @@ slot('hallBench','tjusig',{cfg0:{deco:1},seatPrefix:'hall'}); slot('shoeCab','sh
 slot('sofaFrames','frameTrio',{y0:1.37,cfg0:{n:3,w:0.62,h:0.82,gap:0.93,seeds:[0,1,3]}});
 slot('recFrames','frameTrio',{y0:1.38,cfg0:{n:2,w:0.48,h:0.6,gap:0.6,seeds:[2,7]}});
 slot('recShelves','oakShelves3',{y0:1.185,cfg0:{deco:1}});
-/* chairs round the drop-leaf table */
+/* chairs round the drop-leaf table (option A has FRÖSVI folding chairs) */
 for(let i=1;i<=4;i++) slot('gc'+i,'ingolf',{col0:2,seatLabel:'Table chair '+i,label:false});
 for(let i=1;i<=2;i++) slot('fc'+i,'terje',{col0:2,seatLabel:'Table chair '+i,label:false});
 /* places the newer designs fill, each with whatever the design puts there */
@@ -187,7 +180,7 @@ A.only(A.rect('left',0.1,1.75,0.08,H,0xa9c4ad,0.003),'f');                      
 
 /* ---------- layouts: x, z, rotation, and for things on a wall its height. A piece that is not listed is hidden. ---------- */
 const TVZ=KZ+0.03, HALL=[1.6,L-0.225,R/2], CAB=[1.6,L-0.135,R/2], KS=[0.485,SZ,0];      // the TV bench (148) fills the 150 from the far side of the fridge to the bathroom door frame; a few mm clear of the entrance wall, which is also the lobby's wall
-const COMMON={kivik:KS, music:[0.22,0.9,0], gate:[DC,0.17,0], rack1:[0.45,-2.0,R/2], sofaFrames:[0.0155,SZ,0], recFrames:[0.0155,0.9,0]};   // the drying rack lives in the study; every proposal keeps the record corner and the drop-leaf table
+const COMMON={kivik:KS, music:[0.22,0.9,0], gate:[DC,0.18,0], rack1:[0.45,-2.0,R/2], sofaFrames:[0.0155,SZ,0], recFrames:[0.0155,0.9,0]};   // the drying rack lives in the study; every proposal keeps the record corner and the drop-leaf table
 function lay(o){for(const k in COMMON) if(!(k in o)) o[k]=COMMON[k]; for(const k in o) if(o[k]===null) delete o[k]; return o;}
 const LAY={
   n:{sofa:[0.60,SZ,0], table:[1.8,SZ+0.05,0], tvOld:[W-0.24,TVZ,R], station:[0.30,0.72,0],
@@ -209,7 +202,8 @@ const LAY={
 /* what each design puts in each catalog piece: the piece, its colour by IKEA's name, and its settings */
 function sp(type,colour,cfg){const d=CAT[type]; let ci=0; if(colour!=null){ci=d.col.findIndex(function(c){return c.n===colour;}); if(ci<0){console.warn('No colour',colour,'for',type); ci=0;}} return [type,ci,cfg||null];}
 const SPEC=A.SPEC={
-  a:{kivik:sp('kivik3','Tresund black'), arm:sp('ekenaset','Walnut effect, Axvall dark grey-blue'), ctable:sp('stockholmCT','Walnut veneer'), rug:sp('langsted','Beige'), tvUnit:sp('eketTV',null,{base:'legs',legs:'metal',tv:true,mods:[{t:'o',x:0,y:0,c:7},{t:'W2',x:2,y:0,c:7},{t:'o',x:6,y:0,c:7}]})},
+  a:{gc1:sp('frosvi','Black, Knisa dark grey'), gc2:sp('frosvi','Black, Knisa dark grey'), gc3:sp('frosvi','Black, Knisa dark grey'), gc4:sp('frosvi','Black, Knisa dark grey'),
+     kivik:sp('kivik3','Tresund black'), arm:sp('ekenaset','Walnut effect, Axvall dark grey-blue'), ctable:sp('stockholmCT','Walnut veneer'), rug:sp('langsted','Beige'), tvUnit:sp('eketTV',null,{base:'legs',legs:'metal',tv:true,mods:[{t:'o',x:0,y:0,c:7},{t:'W2',x:2,y:0,c:7},{t:'o',x:6,y:0,c:7}]})},
   b:{kivik:sp('kivik3','Tresund light beige')},
   c:{kivik:sp('kivik3','Tibbleby beige/grey')},
   d:{kivik:sp('kivik3','Tresund light beige')},
@@ -231,7 +225,7 @@ const SPEC=A.SPEC={
      plant1:sp('monstera','Terracotta'), plant2:sp('fiddle','Rattan basket'), hang1:sp('hangingPlant','Terracotta',{seed:44}), hang2:sp('hangingPlant','White',{seed:47}), pouf1:sp('pouf','Sage'), hall:sp('tjusig','Oak, white',{deco:1})}
 };
 const OPEN={gate:[2.15,1.05,0], gc1:[1.52,0.7,0], gc3:[1.52,1.4,0], gc2:[2.78,0.7,R], gc4:[2.78,1.4,R]};   // table set for four
-const OPEN2={gc1:[DC-0.57,0.55,0], gc2:[DC,1.2,R/2]};      // one leaf up, table still against the wall: seats two
+const OPEN2={gc1:[DC-0.57,0.62,0], gc2:[DC+0.57,0.62,R]};      // one leaf up, table still against the wall: two face each other across the raised leaf, clear of its gate leg
 const PJ={    // pajama party: the coffee table is put away and two mattresses go down
   n:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], table:null, rack1:null, rack2:null},
   a:{mat1:[1.95,SZ,0], mat2:[2.0,1.6,R/2], ctable:null, arm:null},
@@ -261,7 +255,7 @@ const DESIGNS=A.DESIGNS={
       ['Coffee table','STOCKHOLM in walnut veneer, 180 × 59 × 40: an oval top on splayed legs with a rattan shelf under it. It runs the length of the sofa.'],
       ['Rug','LANGSTED in beige, 170 × 240, low pile, under the table and the front of the sofa.'],
       ['TV wall','The TV stands on your EKET combination in brown walnut effect, 140 × 35 × 45: an open cube at each end and a 70 cm cabinet with two drawers between them, all on 10 cm metal legs, in front of the fridge side. It leaves 10 cm of the 150 between the fridge and the bathroom door frame. In Edit mode, long-press a cube to change it.'],
-      ['Dining','The drop-leaf table: a 26 cm console with drawers under the bus painting. With one leaf up it stays against the wall and seats two. With both up it moves out and seats four at 75 × 150, clear of both bedroom doors.'],
+      ['Dining','A NORDEN gateleg table in birch: closed it is a 26 × 80 console under the bus painting, with three drawers in each end. With one leaf up it stays against the wall and seats two, facing each other. With both up it moves out and seats four at 152 × 80, clear of both bedroom doors. Each leaf rests on a gate that swings out from the middle. The chairs are four FRÖSVI folding chairs in black with Knisa dark grey pads.'],
       ['Record corner','Where the coffee station was: a low white and oak sideboard with the turntable, a speaker and a lamp. The espresso machine moves to the kitchen counter.'],
       ['Entrance','The wardrobe goes. A slim white shoe cabinet with an oak top takes its place, with the round mirror beside it.'],
       ['Light','The flush round ceiling lights stay. Added: lamp at the record corner, picture light, string lights, candles.'],
@@ -270,7 +264,7 @@ const DESIGNS=A.DESIGNS={
   b:{name:'B', title:'B · Light and open', sub:'The same bones with the lightest furniture: nesting tables and a coffee cart.', table:['Open the dining table for four','Close it to a console'], pal:['#d5cab4','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
       ['Sofa','KIVIK 3-seat in Tresund light beige.'],
-      ['Dining','The drop-leaf table, as in option A.'],
+      ['Dining','The NORDEN drop-leaf table, as in option A.'],
       ['Coffee table','Two round nesting tables, easy to push aside, and one light blue pouf.'],
       ['Record corner','As in option A. Here the coffee moves onto a RÅSKOG trolley in the kitchen, by the window.'],
       ['TV wall','A white 1 × 4 cube tower, 42 cm wide, stands against the side of the fridge and hides it from the sofa. Next to it the TV stands on a white bench with an oak top, 130 cm, which ends exactly at the bathroom door frame.'],
@@ -280,7 +274,7 @@ const DESIGNS=A.DESIGNS={
   c:{name:'C', title:'C · Keep what works', sub:'The least to buy: your oak coffee table and white TV bench stay; the sofa becomes a KIVIK.', table:['Open the dining table for four','Close it to a console'], pal:['#b1a998','#8fbd9b','#9fc4d6','#C99A5B','#fbfaf6'],
      list:[
       ['Sofa','KIVIK 3-seat in Tibbleby beige/grey, a soft herringbone.'],
-      ['Dining','The drop-leaf table replaces the white dining table, as in option A.'],
+      ['Dining','The NORDEN drop-leaf table replaces the white dining table, as in option A.'],
       ['Coffee table','Your oak and black-steel table stays, on a jute rug, with a linen pouf.'],
       ['Record corner','As in option A, with the espresso machine on the kitchen counter.'],
       ['TV wall','Your white TV bench and the TV stay exactly as they are.'],
@@ -659,6 +653,6 @@ $('cCut').onchange=function(e){A.cut.constant=e.target.checked?1.25:100;};
 $('note').textContent='Scaled from photos and a video, not measured. The living room width (3.1 m) is the least certain number; one tape measurement from the sofa wall to the TV wall would settle it. New furniture is drawn at IKEA catalogue sizes.';
 A.renderer.domElement.addEventListener('pointerdown',function(){A.stopFly(); $('hint').style.opacity=0;});
 A.NAMES={table:'Coffee table',chairA:'Chair',chairB:'Chair',rack1:'Drying rack',rack2:'Drying rack',sofa:'Sofa',tvOld:'TV bench',station:'Coffee station',dining:'Dining table',
-  lift:'Lift-top table',fold:'Fold-down table',gate:'Drop-leaf dining table',mat1:'Mattress',mat2:'Mattress'};
+  lift:'Lift-top table',fold:'Fold-down table',gate:'NORDEN gateleg table',mat1:'Mattress',mat2:'Mattress'};
 A.CUSTOMCAT={sofa:'sofa',table:'table',tvOld:'media',station:'shelf',dining:'dining',chairA:'chair',chairB:'chair',rack1:'hall',rack2:'hall',lift:'table',fold:'dining',gate:'dining'};
 })();

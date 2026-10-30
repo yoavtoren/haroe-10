@@ -395,6 +395,20 @@ def('officeChair',{n:'Office chair',q:'MILLBERGET swivel chair',cat:'chair',w:60
 function chairDef(k,n,col,meta){return def(k,Object.assign({n:n,cat:'chair',w:41,d:47,h:90,col:col,seats:[{id:'',lx:0.02,lz:0,y:0.5,type:'sit'}]},meta||{}),function(g,c){K.chair(g,c.h,c.h2==null?c.h:c.h2);});}
 chairDef('ingolf','INGOLF chair',[['White',0xf4f4f1,0xf4f4f1],['White, sage seat',0xf4f4f1,SAGE],['White, light blue seat',0xf4f4f1,BLUE],['Brown-black',0x3a312c,0x3a312c]]);
 chairDef('terje','TERJE folding chair',skin([['Beech',0xd2b07a,0xd2b07a]],WOOD).concat([['White',WHITE,WHITE],['White, sage seat',WHITE,SAGE]]));
+/* FRÖSVI folding chair, 43 × 49 × 78, seat 38 × 36 at 48 (IKEA's figures). Facing +x: the long side members run from a foot at the front
+   up to the top of the back, the rear legs from under the front of the seat down and back to the floor, crossing them; a padded seat
+   on a board, a padded panel between the tops of the side members, a rod behind the seat and one low between each pair of legs */
+def('frosvi',{n:'FRÖSVI folding chair',q:'FRÖSVI folding chair',cat:'chair',w:43,d:49,h:78,
+  col:skin([['Black, Knisa dark grey',0x3c3d40,0x1e1e1f],['White, Knisa light grey',0xc4c4c0,0xf2f1ec]],WEAVE),
+  seats:[{id:'',lx:0.02,lz:0,y:0.48,type:'sit'}],note:'Solid beech frame and padded seat and back in Knisa. Folds flat to 9 cm.'},function(g,c){
+  const fab=c.h, fr=c.h2, rod=function(r,len,x,y){cyl(r,len,fr,x,y,0,g,10).rotation.x=R/2;};
+  [-1,1].forEach(function(e){
+    barXY(box(1,0.03,0.022,fr,0,0,e*0.204,g),0.15,0.0,-0.235,0.78);                       // side member: front foot to the top of the back
+    barXY(box(1,0.028,0.02,fr,0,0,e*0.181,g),0.10,0.445,-0.29,0.0);});                      // rear leg
+  rbox(0.36,0.018,0.34,fr,0.01,0.443,0,g,0.006,0.015); rbox(0.36,0.028,0.38,fab,0.01,0.466,0,g,0.012,0.03);   // seat board and its pad
+  rod(0.009,0.43,-0.097,0.5); rod(0.009,0.43,0.086,0.13); rod(0.009,0.384,-0.17,0.12);      // behind the seat; low at the front; low at the back
+  rbox(0.03,0.16,0.386,fab,-0.19,0.7,0,g,0.01,0.01).rotation.z=0.459;                       // the padded back, along the slope of the side members
+});
 chairDef('odger','ODGER chair',[['White/beige',0xece6da,0xd8c8a6],['Anthracite',0x3a3c3f,0x3a3c3f],['Blue',0x3e5a80,0x3e5a80]]);
 chairDef('lisaboChair','LISABO chair',skin([['Ash veneer',0xd8c3a0,0xd8c3a0]],WOOD).concat([['Black',0x262626,0x262626]]));
 
